@@ -1,0 +1,54 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mcdgs"
+version = "0.1.0"
+description = "mcdgs"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Bing Li", email = "bing.li@ess.eu" }]
+dependencies = [
+    "h5py>=3.10",
+    "matplotlib>=3.8",
+    "mcstasscript>=0.0.94,<0.0.95",
+    "mcstastox @ git+https://github.com/mads-bertelsen-agentic/McStasToX@af80792680397168f5fd185afa392116bd4cf848",
+    "numpy>=1.26",
+    "pyyaml>=6,<7",
+    "scipp>=25.12.0",
+    "scippneutron>=26.9.1",
+    "scipy>=1.11",
+    "tabulate>=0.10.0,<0.11",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=9.1.1", "pytest-cov>=7.1.0"]
+
+[tool.hatch.metadata]
+# mcstastox is not on PyPI; it is pinned to a git commit
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mcdgs"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+# numpydoc docstrings and type hints, for the package (not the tests and scripts)
+extend-select = ["D", "ANN"]
+ignore = [
+    "ANN401",  # Any: params is any params_class, values may be anything
+    "D105",  # magic methods: a docstring only where they do something unusual
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["D", "ANN"]
+"scripts/**" = ["D", "ANN"]

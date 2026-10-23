@@ -1,0 +1,9 @@
+.pixi/
+__pycache__/
+*.egg-info/
+dist/
+mcstas_input/
+mcstas_output/
+.pytest_cache/
+.DS_Store
+.coverage
