@@ -33,7 +33,8 @@ allow-direct-references = true
 packages = ["src/mcdgs"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["tests", "src"]
+addopts = "--doctest-modules"  # the Examples in the docstrings are tests too
 
 [tool.ruff]
 line-length = 100

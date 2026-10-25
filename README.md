@@ -18,7 +18,6 @@ src/mcdgs/
   samples/       ready-made samples
   io/            instruments to and from dicts and YAML files
   mcstas/        build the McStasScript instrument, run simulations, read NeXus output
-  plot/          pictures of any instrument
   reduction/     data reduction
 scripts/         build, run and plot
 tests/
@@ -28,5 +27,5 @@ output/          figures
 ```
 
 Dependencies point inwards: `core` imports nothing from the other layers; `instruments` and
-`samples` build on it; `io`, `mcstas`, `plot` and `reduction` are adapters that work with any
+`samples` build on it; `io`, `mcstas` and `reduction` are adapters that work with any
 instrument.

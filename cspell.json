@@ -4,6 +4,7 @@
   "ignorePaths": [".pixi", "mcstas_input", "mcstas_output", "output", "*.cif"],
   "words": [
     "mcdgs", "McStas", "Stas", "mcstas", "mcstasscript", "mcstastox", "mcrun", "mccode", "MCPL",
-    "scipp", "scippneutron", "scippnexus", "pixi", "pytest", "dataclass", "kwargs"
+    "scipp", "scippneutron", "scippnexus", "pixi", "pytest", "dataclass", "kwargs",
+    "Lmin", "Lmax", "tmax", "tfocus", "beamline", "yheight"
   ]
 }
