@@ -9,11 +9,10 @@ from .base import Component
 class Guide_gravity(Component):
     """A straight or tapered rectangular guide, as McStas ``Guide_gravity``.
 
-    Gravity acts only if ``G`` is set; McStas's default is 0, none.
-
     Name and instance keywords (``name``, ``at``, ...) are as in :class:`.Component`. The
-    McStas parameters left out here (channels, chamfers, sections, rotation, reflectivity file)
-    keep McStas's defaults.
+    McStas parameters left out here (channels ``nslit``, ``d``, ``nhslit``; chamfers
+    ``chamfers``, ``chamfers_z``, ``chamfers_lr``, ``chamfers_tb``; sections ``nelements``;
+    rotation ``nu``, ``phase``; reflectivity file ``reflect``) keep McStas's defaults.
 
     Parameters
     ----------
@@ -30,25 +29,26 @@ class Guide_gravity(Component):
     Qc:
         Critical scattering vector in 1/Å.
     alpha:
-        Slope of the reflectivity in Å.
+        Slope of the reflectivity in Å, of every mirror whose own is -1.
     m:
-        m-value of all mirrors whose own is -1. 0 is completely absorbing.
+        m-value of every mirror whose own is -1. 0 is completely absorbing.
     W:
         Width of the supermirror cut-off in 1/Å.
     G:
         Gravitational acceleration in m/s². 0 is no gravity.
     aleft, aright, atop, abottom:
-        Slope of the reflectivity (``alpha``) of each mirror. -1 uses ``alpha``.
+        Slope of the reflectivity of the left, right, top and bottom mirror. -1 uses ``alpha``.
     wavy:
         Waviness of the mirrors in deg.
     wavy_z, wavy_tb, wavy_lr:
         Waviness in deg along the guide, and across the top/bottom and the left/right mirrors.
 
-    ``w1``, ``h1`` and ``l`` are required, as in McStas; every default is McStas's.
+    ``w1``, ``h1`` and ``l`` are required, as in McStas. Every default is McStas's.
 
     Examples
     --------
     >>> guide_1 = Guide_gravity(
+    ...     name="guide_1",
     ...     w1=0.089955,
     ...     h1=0.029992,
     ...     w2=0.082455,
