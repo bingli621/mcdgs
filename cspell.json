@@ -5,6 +5,7 @@
   "words": [
     "mcdgs", "McStas", "Stas", "mcstas", "mcstasscript", "mcstastox", "mcrun", "mccode", "MCPL",
     "scipp", "scippneutron", "scippnexus", "pixi", "pytest", "dataclass", "kwargs",
-    "Lmin", "Lmax", "tmax", "tfocus", "beamline", "yheight"
+    "Lmin", "Lmax", "tmax", "tfocus", "beamline", "yheight",
+    "xwidth", "zdepth", "nowritefile", "username"
   ]
 }

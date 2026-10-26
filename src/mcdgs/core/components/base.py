@@ -57,7 +57,8 @@ class Component:
     which of its values a run sets: the instrument declares its instrument parameters.
 
     A McStas string parameter is a plain ``str`` (``sector="W"``), never one in C quotes: the
-    McStas builder adds the quotes.
+    McStas builder adds the quotes. A string parameter that McStas leaves unset (``"NULL"``) is
+    ``None``, which the builder writes as McStas's ``"NULL"``.
 
     A component does not know the file it came from. A value that follows from its own values is
     computed when used; one that depends on other components is left to the instrument.

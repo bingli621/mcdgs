@@ -2,7 +2,14 @@ from dataclasses import dataclass
 
 import pytest
 
-from mcdgs.core.components import Arm, Component, ESS_butterfly, Guide_gravity, Progress_bar
+from mcdgs.core.components import (
+    Arm,
+    Component,
+    ESS_butterfly,
+    Guide_gravity,
+    Monitor_nD,
+    Progress_bar,
+)
 
 
 @dataclass(kw_only=True, repr=False)
@@ -176,3 +183,26 @@ def test_guide_gravity_needs_only_its_entrance_and_length():
     assert (guide.w2, guide.h2, guide.mleft) == (0, 0, -1)  # McStas's defaults
     with pytest.raises(TypeError, match="'l'"):
         Guide_gravity(w1=0.05, h1=0.1)
+
+
+def test_monitor_nd():
+    monitor = Monitor_nD(
+        name="lambda_monitor",
+        at=[0, 0, 0.5],
+        relative="sample_arm",
+        xwidth=0.1,
+        yheight=0.1,
+        options="lambda limits=[0.5 5] bins=50",
+    )
+    parameters = monitor.mcstas_parameters()
+    assert monitor.component_name == "Monitor_nD"
+    assert len(parameters) == 19
+    assert parameters["options"] == "lambda limits=[0.5 5] bins=50"
+    assert "user0" not in parameters and "username0" not in parameters
+
+
+def test_monitor_nd_defaults_are_mcstas_s():
+    monitor = Monitor_nD()
+    assert (monitor.min, monitor.max) == (-1e40, 1e40)
+    assert (monitor.options, monitor.filename, monitor.geometry) == (None, None, None)
+    assert (monitor.bins, monitor.restore_neutron, monitor.nowritefile) == (0, 0, 0)

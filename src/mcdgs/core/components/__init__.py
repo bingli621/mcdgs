@@ -9,7 +9,8 @@ depends on other components, such as the positions, is left to the instrument.
 
 from .base import Component
 from .misc import Arm, Progress_bar
+from .monitors import Monitor_nD
 from .optics import Guide_gravity
 from .source import ESS_butterfly
 
-__all__ = ["Arm", "Component", "ESS_butterfly", "Guide_gravity", "Progress_bar"]
+__all__ = ["Arm", "Component", "ESS_butterfly", "Guide_gravity", "Monitor_nD", "Progress_bar"]
