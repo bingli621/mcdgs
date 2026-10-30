@@ -252,6 +252,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/regex-2026.9.29-py313h995f894_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/rpds-py-2026.9.1-py313ha296275_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/rsync-3.4.4-hffd6c76_1.conda
+      - conda: https://conda.anaconda.org/conda-forge/linux-64/ruff-0.17.3-hf19af3b_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/scikit-learn-1.9.1-np2py313h4900a6c_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/scipp-25.12.0-py313h4faf06b_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/scippneutron_algorithms-26.7.0-h2d3adb8_1.conda
@@ -918,6 +919,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/regex-2026.9.29-py314hcd3153d_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/rpds-py-2026.9.1-py314hc05cd11_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/rsync-3.4.2-h6a2b517_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/ruff-0.17.3-ha19a7bb_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/scikit-learn-1.9.1-np2py314hf2dd71b_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/scipp-25.12.0-py314h1a6a25c_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/scipy-1.18.1-py314hd9f3d4e_1.conda
@@ -5065,6 +5067,21 @@ packages:
   run_exports: {}
   size: 378345
   timestamp: 1787924788514
+- conda: https://conda.anaconda.org/conda-forge/linux-64/ruff-0.17.3-hf19af3b_0.conda
+  sha256: 0fa86916266c0a9e1e94858020b3748372a72c0322ec606ede691f8bc1fd799c
+  md5: ef22fda7cf64c677fe2b27f949682358
+  depends:
+  - __glibc >=2.17,<3.0.a0
+  - libgcc >=15
+  constrains:
+  - __glibc >=2.17
+  license: MIT
+  license_family: MIT
+  purls:
+  - pkg:pypi/ruff?source=compressed-mapping
+  run_exports: {}
+  size: 8920954
+  timestamp: 1793090814487
 - conda: https://conda.anaconda.org/conda-forge/linux-64/scikit-learn-1.9.1-np2py313h4900a6c_1.conda
   sha256: 4553efa6d85c0394768dc952c2d0235d01d61cb643c54009b33318a0105598e4
   md5: 3e0b2f6fe6ea16259a7892fd1a18b5ef
@@ -12384,6 +12401,20 @@ packages:
   run_exports: {}
   size: 348562
   timestamp: 1779262284477
+- conda: https://conda.anaconda.org/conda-forge/osx-arm64/ruff-0.17.3-ha19a7bb_0.conda
+  sha256: 945d86e2be4b50a4f0b02354af4f66d342b49a434bb13169fd15c874a4c0bc47
+  md5: 163208563b274065a94db26f321db693
+  depends:
+  - __osx >=11.0
+  constrains:
+  - __osx >=11.0
+  license: MIT
+  license_family: MIT
+  purls:
+  - pkg:pypi/ruff?source=compressed-mapping
+  run_exports: {}
+  size: 8159412
+  timestamp: 1793090840966
 - conda: https://conda.anaconda.org/conda-forge/osx-arm64/scikit-learn-1.9.1-np2py314hf2dd71b_1.conda
   sha256: 1cf3137a462ba758ed4e9a70225350af1f923609a107a298bb0322093dccef82
   md5: bdea5004d8df56da5615c18241de5b30

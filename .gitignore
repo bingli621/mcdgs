@@ -1,9 +1,54 @@
-.pixi/
-__pycache__/
+# pixi environments
+.pixi/*
+!.pixi/config.toml
 *.egg-info/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
 dist/
+*.egg
+.eggs/
+
+# Virtual environments (in case you ever use one outside Pixi)
+.venv/
+venv/
+env/
+
+# Testing / coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.mypy_cache/
+.ruff_cache/
+
+# VS Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS cruft
+.DS_Store
+Thumbs.db
+
+# Env / secrets
+.env
+.env.*
+
+# OFF files and Excel sheets 
+OFF_files*/
+*.xlsx
+
+# McStas files
 mcstas_input/
 mcstas_output/
-.pytest_cache/
-.DS_Store
-.coverage
+
