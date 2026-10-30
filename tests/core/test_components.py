@@ -8,6 +8,7 @@ from mcdgs.core.components import (
     ESS_butterfly,
     Guide_gravity,
     Monitor_nD,
+    Pol_bender,
     Progress_bar,
 )
 
@@ -206,3 +207,23 @@ def test_monitor_nd_defaults_are_mcstas_s():
     assert (monitor.min, monitor.max) == (-1e40, 1e40)
     assert (monitor.options, monitor.filename, monitor.geometry) == (None, None, None)
     assert (monitor.bins, monitor.restore_neutron, monitor.nowritefile) == (0, 0, 0)
+
+
+def test_a_bender_keeps_the_defaults_of_mcstas():
+    bender = Pol_bender(xwidth=0.06, yheight=0.04, length=0.05, radius=7.2)
+    parameters = bender.mcstas_parameters()
+    assert (parameters["G"], parameters["nslit"], parameters["drawOption"]) == (9.8, 1, 1)
+    assert parameters["rRightDownPar"] == [0.99, 0.0219, 6.07, 2.0, 0.003]
+
+
+def test_a_bender_needs_its_size():
+    with pytest.raises(TypeError):
+        Pol_bender(xwidth=0.06, yheight=0.04, length=0.05)
+
+
+def test_two_benders_share_no_mirror():
+    first = Pol_bender(xwidth=0.06, yheight=0.04, length=0.05, radius=7.2)
+    second = Pol_bender(xwidth=0.06, yheight=0.04, length=0.05, radius=7.2)
+    first.rTopUpPar[3] = 4.0
+    assert second.rTopUpPar[3] == 2.0
+    assert first.rTopDownPar[3] == 2.0

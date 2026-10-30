@@ -1,6 +1,6 @@
-"""Neutron optics: guides."""
+"""Neutron optics: guides and benders."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from .base import Component
 
@@ -86,3 +86,70 @@ class Guide_gravity(Component):
     wavy_z: float = 0
     wavy_tb: float = 0
     wavy_lr: float = 0
+
+
+def _default_mirror() -> list[float]:
+    """Return McStas's default mirror parameters of ``Pol_bender``: R0, Qc, alpha, m, W."""
+    return [0.99, 0.0219, 6.07, 2.0, 0.003]
+
+
+@dataclass(kw_only=True, repr=False)  # repr: Component's
+class Pol_bender(Component):
+    """A curved multi-channel guide that can polarise, as McStas ``Pol_bender``.
+
+    Name and instance keywords (``name``, ``at``, ...) are as in :class:`.Component`. The
+    McStas parameters left out here (reflectivity files ``rTopUpData`` ... ``rRightDownData``;
+    ``debug``) keep McStas's defaults.
+
+    Parameters
+    ----------
+    xwidth, yheight:
+        Width and height at the entrance in m.
+    length:
+        Length along the centre in m.
+    radius:
+        Radius of curvature in m. Positive curves left, negative curves right.
+    G:
+        Gravitational acceleration in m/s². 0 is no gravity.
+    nslit:
+        Number of slits.
+    d:
+        Width of the spacers between the slits in m.
+    endFlat:
+        If positive, the entrance and exit planes are parallel.
+    rTopUpPar, rTopDownPar, rBotUpPar, rBotDownPar:
+        Reflectivity of the top and bottom mirrors for spin up and down, as
+        ``[R0, Qc, alpha, m, W]``.
+    rLeftUpPar, rLeftDownPar, rRightUpPar, rRightDownPar:
+        Reflectivity of the left and right mirrors for spin up and down, as
+        ``[R0, Qc, alpha, m, W]``.
+    drawOption:
+        Drawing detail: 1 is fine, 2 normal, 3 rough.
+
+    ``xwidth``, ``yheight``, ``length`` and ``radius`` are required, as in McStas. Every default
+    is McStas's. Identical up and down values make the bender spin-independent.
+
+    Examples
+    --------
+    >>> bender = Pol_bender(name="bender", xwidth=0.06, yheight=0.04, length=0.05, radius=7.2)
+    >>> bender.mcstas_parameters()["rTopUpPar"]
+    [0.99, 0.0219, 6.07, 2.0, 0.003]
+    """
+
+    xwidth: float
+    yheight: float
+    length: float
+    radius: float
+    G: float = 9.8
+    nslit: int = 1
+    d: float = 0.0
+    endFlat: int = 0
+    rTopUpPar: list[float] = field(default_factory=_default_mirror)
+    rTopDownPar: list[float] = field(default_factory=_default_mirror)
+    rBotUpPar: list[float] = field(default_factory=_default_mirror)
+    rBotDownPar: list[float] = field(default_factory=_default_mirror)
+    rLeftUpPar: list[float] = field(default_factory=_default_mirror)
+    rLeftDownPar: list[float] = field(default_factory=_default_mirror)
+    rRightUpPar: list[float] = field(default_factory=_default_mirror)
+    rRightDownPar: list[float] = field(default_factory=_default_mirror)
+    drawOption: int = 1
