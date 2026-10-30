@@ -1,0 +1,863 @@
+/********************************************************************************
+* 
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2008, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+* 
+* This file was written by McStasScript, which is a 
+* python based McStas instrument generator written by 
+* Mads Bertelsen in 2019 while employed at the 
+* European Spallation Source Data Management and 
+* Software Centre
+* 
+* Instrument: trex_primary
+* 
+* %Identification
+* Written by: Bing Li
+* Date: 17:24:57 on September 30, 2026
+* Origin: DMSC
+* %INSTRUMENT_SITE: Generated_instruments
+* 
+* !!Please write a short instrument description (1 line) here!!
+* 
+* %Description
+* Please write a longer instrument description here!
+* 
+* 
+* %Parameters
+* L0: [unit] wavelength in [Å] used to calculate the minimum and maximum wavelength for the source component by adding and subtracting a set wavelength
+* RRM: [unit] repetition rate multiplication
+* mode: [unit] HR for High Resolution, HF for High Flux
+* bender: [unit] bender out = 0, bender in = 1
+* b_rot: [unit] in [deg], rotation of the cold neutron bender = -atan(0.05/7.2), full deflection since endFlat=0
+* 
+* %Link 
+* 
+* %End 
+********************************************************************************/
+
+DEFINE INSTRUMENT trex_primary (
+L0 = 2.4, // wavelength in [Å] used to calculate the minimum and maximum wavelength for the source component by adding and subtracting a set wavelength
+int RRM = 4, // repetition rate multiplication
+string mode = "HF", // HR for High Resolution, HF for High Flux
+int bender = 0, // bender out = 0, bender in = 1
+double b_rot = -0.397881 // in [deg], rotation of the cold neutron bender = -atan(0.05/7.2), full deflection since endFlat=0
+)
+
+DECLARE 
+%{
+double T_offset = 0.0017; // Time offset in [s] to shift to the center of long pulse
+double f = 14.0; // Source frequency in [Hz]
+double frac = 0.3; // Used in the Source component. Defines the statistical fraction of eventsemitted from the cold part of the moderator, the value is determined later in the file depending on the moderator type that was chosen
+
+
+    double lamb_1, lamb_2, d_lamb;
+    double tof_BW1, tof_BW2, tof_P1, tof_P2, tof_M1, tof_M2;
+
+    // characteristic wavelength
+    double v0, v1, v2;
+
+    // distances
+    double L_BW1 = 32;
+    double L_BW2 = 40;
+    double L_P1 = 107.95;
+    double L_P2 = 108.05;
+    double L_M1 = 162.0325-0.005;
+    double L_M2 = 162.0325+0.005;
+
+    
+
+
+    // BW1 Chopper
+    double f_BW1;
+    double delay_BW1; 
+
+    // BW2 Chopper
+    double f_BW2;
+    double delay_BW2; 
+
+    // P1 Chopper
+    double f_P1;
+    double delay_P1;
+
+    // P2 Chopper
+    double f_P2;
+    double delay_P2;
+
+    // M1 Chopper
+    double f_M1;
+    double delay_M1; 
+
+    // M2 Chopper
+    double f_M2;
+    double delay_M2; 
+
+    
+
+    // Monitor positions (geometric, taken from the guide chain) - used ONLY to
+    // frame monitor time windows. These are NOT chopper phasing distances, and
+    // nothing physical depends on them: Monitor_nD time limits are a histogram
+    // range, not an optical element. Update if the guide geometry moves.
+
+    double L_BW2mon = 41.984942; // BW2_monitor_ToF, 13.7 mm past the Guide_15B exit
+    double L_Pmon   = 111.098;   // P_monitor_ToF_cm2, exit of Guide_33
+    double L_Smon   = 163.800;   // sample monitor sits AT Sample_pos
+
+    // monitor definitions
+
+    int lbin;
+    int ebin;
+    char setBM1[256];
+
+double slit_edges_BW_Chopper_1[2] = {-30.7, 30.7};
+double slit_edges_BW_Chopper_2[2] = {-31.65, 31.65};
+double slit_edges_PS_Chopper_1[8] = {-10, 10, 107.5, 142.5, 170, 190, 287.5, 322.5};
+double slit_edges_PS_Chopper_2[8] = {-10, 10, 107.5, 142.5, 170, 190, 287.5, 322.5};
+double slit_edges_MC_Chopper_1[4] = {178.25, 181.25, 362.8, 367.2};
+double slit_edges_MC_Chopper_2[4] = {-1.25, 1.25, 182.8, 187.2};
+%}
+
+INITIALIZE 
+%{
+// Start of initialize for generated trex_primary
+
+    // frequencies
+
+    f_BW1 = f;
+    f_BW2 = f_BW1;
+    f_P1 = RRM*f*0.75;
+    f_P2 = -f_P1;
+    f_M1 = RRM*f;
+    f_M2 = f_M1;
+
+    // Resolution Settings
+    if (strcmp(mode, "HF") == 0){
+        for (int i = 0; i < 8; i++) {
+            slit_edges_PS_Chopper_1[i] += 55;
+            slit_edges_PS_Chopper_2[i] += 55;
+        }
+        for (int i = 0; i < 4; i++) {
+            slit_edges_MC_Chopper_1[i] += 175;
+            slit_edges_MC_Chopper_2[i] += 175;
+        }
+    } else if (strcmp(mode, "HR") != 0) {
+        printf("Need valid resolution option, 'HR' or 'HF'");
+    }
+
+    // characteristic wavelength 
+    d_lamb = 3956.0 / (f * RRM * 162);
+    lamb_1 = L0-d_lamb*0.5;
+    lamb_2 = L0+d_lamb*0.5;
+
+    v0 = 2*PI*K2V/L0; // speed center neutron
+    v1 = 2*PI*K2V/lamb_1;   // slowest neutron
+	v2 = 2*PI*K2V/lamb_2;   // fastest neutron
+
+
+
+    // time of flight and chopper phases
+    tof_BW1 = T_offset + L_BW1/v0;
+    tof_BW2 = T_offset + L_BW2/v0;
+    tof_P1 = T_offset + L_P1/v0;
+    tof_P2 = T_offset + L_P2/v0;
+    tof_M1 = T_offset + L_M1/v0;
+    tof_M2 = T_offset + L_M2/v0;
+
+    //time delay
+    delay_BW1 = tof_BW1; 
+    delay_BW2 = tof_BW2; 
+    delay_P1 = tof_P1; 
+    delay_P2 = tof_P2;
+    delay_M1 = tof_M1;
+    delay_M2 = tof_M2;
+    
+
+// Monitors
+
+lbin = round((lamb_2-lamb_1)/0.002);    // number of bins for TOF monitors
+
+sprintf(setBM1, "time limits [%g %g] bins = [%i]", T_offset + L_BW2mon/v1, T_offset + L_BW2mon/v2, lbin);
+%}
+
+TRACE 
+COMPONENT origin = Progress_bar(
+ percent = 10)
+AT (0, 0, 0) ABSOLUTE
+ROTATED (0, 0, 0) ABSOLUTE
+
+COMPONENT source = ESS_butterfly(
+ sector = "W", beamline = 7,
+ yheight = 0.03, cold_frac = frac,
+ dist = 2, focus_xw = 0.095,
+ focus_yh = 0.035, Lmin = 0.1,
+ Lmax = 10.0, n_pulses = 1,
+ acc_power = 2)
+AT (0, 0, 0) ABSOLUTE
+ROTATED (0, 0, 0) ABSOLUTE
+
+COMPONENT Diag_after_source = Monitor_nD(
+ xwidth = 100, yheight = 100,
+ restore_neutron = 1, options = "previous n x y z vx vy vz t, list 50001",
+ filename = "Diag_after_source.diag")
+AT (0, 0, 0) ABSOLUTE
+ROTATED (0, 0, 0) ABSOLUTE
+
+COMPONENT arm_NBOA = Arm()
+AT (-0.002022812155423534, 0, 1.89593) ABSOLUTE
+ROTATED (0, -0.21346450360137775, 0) ABSOLUTE
+
+COMPONENT Guide_1 = Guide_gravity(
+ w1 = 0.089955, h1 = 0.029992,
+ w2 = 0.082455, h2 = 0.034937,
+ l = 0.9994, mleft = 1.5,
+ mright = 1.5, mtop = 4,
+ mbottom = 4)
+AT (0, 0, 0) RELATIVE arm_NBOA
+ROTATED (0, 0, 0) RELATIVE arm_NBOA
+
+COMPONENT Guide_2 = Guide_gravity(
+ w1 = 0.082447, h1 = 0.034941,
+ w2 = 0.074948, h2 = 0.03916,
+ l = 0.9992, mleft = 1.5,
+ mright = 1.5, mtop = 4,
+ mbottom = 4)
+AT (0, 0, 1.0004) RELATIVE arm_NBOA
+ROTATED (0, 0, 0) RELATIVE arm_NBOA
+
+COMPONENT Guide_3 = Guide_gravity(
+ w1 = 0.074939, h1 = 0.039164,
+ w2 = 0.063838, h2 = 0.044511,
+ l = 1.4792, mleft = 1.5,
+ mright = 1.5, mtop = 4,
+ mbottom = 4)
+AT (0, 0, 2.0008) RELATIVE arm_NBOA
+ROTATED (0, 0, 0) RELATIVE arm_NBOA
+
+COMPONENT Guide_4a = Guide_gravity(
+ w1 = 0.063838, h1 = 0.04459,
+ w2 = 0.06026, h2 = 0.04615,
+ l = 0.481, mleft = 1.5,
+ mright = 1.5, mtop = 3.5,
+ mbottom = 3.5)
+WHEN (bender==0)
+AT (0, 0, 3.50472) RELATIVE arm_NBOA
+ROTATED (0, 0, 0) RELATIVE arm_NBOA
+
+COMPONENT bender = Pol_bender(
+ xwidth = 0.063466, yheight = 0.044759,
+ length = 0.05, radius = 7.2,
+ G = 0, nslit = 426,
+ d = 1e-06, endFlat = 0,
+ rTopUpPar = {0.99,0.0219,3.02,4.0,0.003}, rTopDownPar = {0.99,0.0219,3.02,4.0,0.003},
+ rBotUpPar = {0.99,0.0219,3.02,4.0,0.003}, rBotDownPar = {0.99,0.0219,3.02,4.0,0.003},
+ rLeftUpPar = {0.99,0.0219,3.02,4.0,0.003}, rLeftDownPar = {0.99,0.0219,3.02,4.0,0.003},
+ rRightUpPar = {0.99,0.0219,3.02,4.0,0.003}, rRightDownPar = {0.99,0.0219,3.02,4.0,0.003},
+ drawOption = 2)
+WHEN (bender==1)
+AT (0, 0, 3.50472) RELATIVE arm_NBOA
+ROTATED (0, b_rot, 0) RELATIVE arm_NBOA
+
+COMPONENT Guide_4b = Guide_gravity(
+ w1 = 0.063466, h1 = 0.044759,
+ w2 = 0.060256, h2 = 0.046152,
+ l = 0.431, mleft = 1.5,
+ mright = 1.5, mtop = 3.5,
+ mbottom = 3.5)
+WHEN (bender==1)
+AT (0, 0, 3.5547200000000005) RELATIVE arm_NBOA
+ROTATED (0, 0, 0) RELATIVE arm_NBOA
+
+COMPONENT arm_after_bender = Arm()
+AT (0, 0, 3.9857199999999997) RELATIVE arm_NBOA
+ROTATED (0, 0, 0) RELATIVE arm_NBOA
+
+COMPONENT Guide_5 = Guide_gravity(
+ w1 = 0.06, h1 = 0.04626,
+ w2 = 0.06, h2 = 0.05398,
+ l = 2.7625, mleft = 1.5,
+ mright = 1.5, mtop = 3.5,
+ mbottom = 3.5)
+AT (0, 0, 0.03435000000000077) RELATIVE arm_after_bender
+ROTATED (0, 0.22005948655574817, 0) RELATIVE arm_after_bender
+
+COMPONENT Guide_6 = Guide_gravity(
+ w1 = 0.06, h1 = 0.054015,
+ w2 = 0.06, h2 = 0.060228,
+ l = 2.7625, mleft = 1.5,
+ mright = 1.5, mtop = 3,
+ mbottom = 3)
+AT (0, 0, 2.7755) RELATIVE Guide_5
+ROTATED (0, 0.013252036336546666, 0) RELATIVE Guide_5
+
+COMPONENT Guide_7 = Guide_gravity(
+ w1 = 0.06, h1 = 0.060255,
+ w2 = 0.06, h2 = 0.067416,
+ l = 4.0, mleft = 1.5,
+ mright = 1.5, mtop = 3,
+ mbottom = 3)
+AT (0, 0, 2.7755) RELATIVE Guide_6
+ROTATED (0, 0.01620634996768997, 0) RELATIVE Guide_6
+
+COMPONENT Guide_8 = Guide_gravity(
+ w1 = 0.06, h1 = 0.067419,
+ w2 = 0.06, h2 = 0.072976,
+ l = 4.0, mleft = 1.5,
+ mright = 1.5, mtop = 3,
+ mbottom = 3)
+AT (0, 0, 4.001999999999999) RELATIVE Guide_7
+ROTATED (0, 0.01910814246761295, 0) RELATIVE Guide_7
+
+COMPONENT Guide_9 = Guide_gravity(
+ w1 = 0.06, h1 = 0.072979,
+ w2 = 0.06, h2 = 0.076525,
+ l = 3.2167, mleft = 1.5,
+ mright = 1.5, mtop = 3,
+ mbottom = 3)
+AT (0, 0, 4.001999999999999) RELATIVE Guide_8
+ROTATED (0, 0.017238151463754726, 0) RELATIVE Guide_8
+
+COMPONENT Guide_10 = Guide_gravity(
+ w1 = 0.06, h1 = 0.076538,
+ w2 = 0.06, h2 = 0.078024,
+ l = 1.588, mleft = 2,
+ mright = 2, mtop = 2.5,
+ mbottom = 2.5)
+AT (0, 0, 3.2297000000000016) RELATIVE Guide_9
+ROTATED (0, 0.011532446753910292, 0) RELATIVE Guide_9
+
+COMPONENT Guide_11 = Guide_gravity(
+ w1 = 0.06, h1 = 0.078035,
+ w2 = 0.06, h2 = 0.080842,
+ l = 3.6349, mleft = 1.5,
+ mright = 2.5, mtop = 2.5,
+ mbottom = 2.5)
+AT (0, 0, 1.6010000000000018) RELATIVE Guide_10
+ROTATED (0, 0.01253082571192575, 0) RELATIVE Guide_10
+
+COMPONENT Guide_12 = Guide_gravity(
+ w1 = 0.06, h1 = 0.080848,
+ w2 = 0.06, h2 = 0.082063,
+ l = 1.9998, mleft = 1.5,
+ mright = 2.5, mtop = 2.5,
+ mbottom = 2.5)
+AT (0, 0, 3.6444400000000012) RELATIVE Guide_11
+ROTATED (0, 0.013497405512311449, 0) RELATIVE Guide_11
+
+COMPONENT Guide_13A = Guide_gravity(
+ w1 = 0.06, h1 = 0.082065,
+ w2 = 0.06, h2 = 0.083061,
+ l = 1.9998, mleft = 1.5,
+ mright = 2.5, mtop = 2.5,
+ mbottom = 2.5)
+AT (0, 0, 2.0030999999999994) RELATIVE Guide_12
+ROTATED (0, 0.009564097995221264, 0) RELATIVE Guide_12
+
+COMPONENT Arm_BWC1 = Arm()
+AT (0, 0, 1.9998) RELATIVE Guide_13A
+ROTATED (0, 0.004845790552318937, 0) RELATIVE Guide_13A
+
+COMPONENT BW_Chopper_1 = NXdisk_chopper(
+ slit_edges = slit_edges_BW_Chopper_1, n_edges = 2,
+ radius = 0.35, yheight = 0.085,
+ xwidth = 0.0, nu = f_BW1,
+ delay = delay_BW1, park_angle = 0,
+ beam_angle = 0, zero_angle = 0,
+ jitter = 0, abs_out = 0,
+ verbose = 1)
+AT (0, 0, 0.015) RELATIVE Arm_BWC1
+ROTATED (0, 0, 0) RELATIVE Arm_BWC1
+
+COMPONENT Guide_13B = Guide_gravity(
+ w1 = 0.06, h1 = 0.083074,
+ w2 = 0.06, h2 = 0.083856,
+ l = 1.9998, mleft = 1.5,
+ mright = 2.5, mtop = 2.5,
+ mbottom = 2.5)
+AT (0, 0, 0.03) RELATIVE Arm_BWC1
+ROTATED (0, 0.004845790552318937, 0) RELATIVE Arm_BWC1
+
+COMPONENT Guide_14A = Guide_gravity(
+ w1 = 0.06, h1 = 0.083857,
+ w2 = 0.06, h2 = 0.084433,
+ l = 1.9998, mleft = 1.5,
+ mright = 2.5, mtop = 2.5,
+ mbottom = 2.5)
+AT (0, 0, 2.003100000000003) RELATIVE Guide_13B
+ROTATED (0, 0.009564097995221281, 0) RELATIVE Guide_13B
+
+COMPONENT Guide_14B = Guide_gravity(
+ w1 = 0.06, h1 = 0.084433,
+ w2 = 0.06, h2 = 0.084803,
+ l = 1.9633, mleft = 1.5,
+ mright = 2.5, mtop = 2.5,
+ mbottom = 2.5)
+AT (0, 0, 2.000500000000002) RELATIVE Guide_14A
+ROTATED (0, 0.009464546578317296, 0) RELATIVE Guide_14A
+
+COMPONENT Guide_15A = Guide_gravity(
+ w1 = 0.06, h1 = 0.084803,
+ w2 = 0.06, h2 = 0.084983,
+ l = 1.9908, mleft = 1.5,
+ mright = 2.5, mtop = 2.5,
+ mbottom = 2.5)
+AT (0, 0, 1.966609999999999) RELATIVE Guide_14B
+ROTATED (0, 0.009455522493043971, 0) RELATIVE Guide_14B
+
+COMPONENT Diag_after_Guide_15A = Monitor_nD(
+ xwidth = 100, yheight = 100,
+ restore_neutron = 1, options = "previous n x y z vx vy vz t, list 50001",
+ filename = "Diag_after_Guide_15A.diag")
+AT (0, 0, 1.966609999999999) RELATIVE Guide_14B
+ROTATED (0, 0.009455522493043971, 0) RELATIVE Guide_14B
+
+COMPONENT Arm_BWC2 = Arm()
+AT (0, 0, 1.9908) RELATIVE Guide_15A
+ROTATED (0, 0.004824304635001532, 0) RELATIVE Guide_15A
+
+COMPONENT BW_Chopper_2 = NXdisk_chopper(
+ slit_edges = slit_edges_BW_Chopper_2, n_edges = 2,
+ radius = 0.35, yheight = 0.085,
+ xwidth = 0.0, nu = f_BW2,
+ delay = delay_BW2, park_angle = 0,
+ beam_angle = 0, zero_angle = 0,
+ jitter = 0, abs_out = 0,
+ verbose = 1)
+AT (0, 0, 0.015) RELATIVE Arm_BWC2
+ROTATED (0, 0, 0) RELATIVE Arm_BWC2
+
+COMPONENT Diag_after_BW_Chopper_2 = Monitor_nD(
+ xwidth = 100, yheight = 100,
+ restore_neutron = 1, options = "previous n x y z vx vy vz t, list 50001",
+ filename = "Diag_after_BW_Chopper_2.diag")
+AT (0, 0, 0.015) RELATIVE Arm_BWC2
+ROTATED (0, 0, 0) RELATIVE Arm_BWC2
+
+COMPONENT Guide_15B = Guide_gravity(
+ w1 = 0.06, h1 = 0.084984,
+ w2 = 0.06, h2 = 0.084965,
+ l = 2.0012, mleft = 1.5,
+ mright = 2.5, mtop = 2.5,
+ mbottom = 2.5)
+AT (0, 0, 0.03) RELATIVE Arm_BWC2
+ROTATED (0, 0.004849132806123866, 0) RELATIVE Arm_BWC2
+
+COMPONENT Arm_BM1 = Arm()
+AT (0, 0, 2.007819999999998) RELATIVE Guide_15B
+ROTATED (0, 0.004856867736358124, 0) RELATIVE Guide_15B
+
+COMPONENT BM1 = Monitor_nD(
+ xwidth = 0.06, yheight = 0.084,
+ restore_neutron = 1, options = setBM1,
+ filename = "BM1_tof.dat")
+AT (0, 0, 0.01) RELATIVE Arm_BM1
+ROTATED (0, 0, 0) RELATIVE Arm_BM1
+
+COMPONENT Guide_16 = Guide_gravity(
+ w1 = 0.06, h1 = 0.085,
+ w2 = 0.06, h2 = 0.085,
+ l = 3.9967, mleft = 1.5,
+ mright = 2.5, mtop = 2.5,
+ mbottom = 2.5)
+AT (0, 0, 0.02368999999999886) RELATIVE Arm_BM1
+ROTATED (0, 0.009606783350958508, 0) RELATIVE Arm_BM1
+
+COMPONENT Guide_17 = Guide_gravity(
+ w1 = 0.06, h1 = 0.085,
+ w2 = 0.06, h2 = 0.085,
+ l = 3.9967, mleft = 1.5,
+ mright = 2.5, mtop = 2.5,
+ mbottom = 2.5)
+AT (0, 0, 4.0000000000000036) RELATIVE Guide_16
+ROTATED (0, 0.01909859317102746, 0) RELATIVE Guide_16
+
+COMPONENT Guide_18 = Guide_gravity(
+ w1 = 0.06, h1 = 0.085,
+ w2 = 0.06, h2 = 0.085,
+ l = 3.9967, mleft = 1.5,
+ mright = 2.5, mtop = 2.5,
+ mbottom = 2.5)
+AT (0, 0, 4.0000000000000036) RELATIVE Guide_17
+ROTATED (0, 0.01909859317102746, 0) RELATIVE Guide_17
+
+COMPONENT Guide_19 = Guide_gravity(
+ w1 = 0.06, h1 = 0.085,
+ w2 = 0.06, h2 = 0.085,
+ l = 3.9967, mleft = 1.5,
+ mright = 2.5, mtop = 2.5,
+ mbottom = 2.5)
+AT (0, 0, 4.0000000000000036) RELATIVE Guide_18
+ROTATED (0, 0.01909859317102746, 0) RELATIVE Guide_18
+
+COMPONENT Guide_20 = Guide_gravity(
+ w1 = 0.06, h1 = 0.085,
+ w2 = 0.06, h2 = 0.085,
+ l = 3.9967, mleft = 1.5,
+ mright = 2.5, mtop = 2.5,
+ mbottom = 2.5)
+AT (0, 0, 4.0000000000000036) RELATIVE Guide_19
+ROTATED (0, 0.01909859317102746, 0) RELATIVE Guide_19
+
+COMPONENT Guide_21 = Guide_gravity(
+ w1 = 0.06, h1 = 0.085,
+ w2 = 0.06, h2 = 0.085,
+ l = 3.9967, mleft = 1.5,
+ mright = 2.5, mtop = 2.5,
+ mbottom = 2.5)
+AT (0, 0, 4.0000000000000036) RELATIVE Guide_20
+ROTATED (0, 0.01909859317102746, 0) RELATIVE Guide_20
+
+COMPONENT Guide_22 = Guide_gravity(
+ w1 = 0.06, h1 = 0.085,
+ w2 = 0.06, h2 = 0.085,
+ l = 3.9967, mleft = 1.5,
+ mright = 2.5, mtop = 2.5,
+ mbottom = 2.5)
+AT (0, 0, 3.999999999999996) RELATIVE Guide_21
+ROTATED (0, 0.019098593171027422, 0) RELATIVE Guide_21
+
+COMPONENT Guide_23 = Guide_gravity(
+ w1 = 0.06, h1 = 0.085,
+ w2 = 0.06, h2 = 0.085,
+ l = 3.9967, mleft = 1.5,
+ mright = 2.5, mtop = 2.5,
+ mbottom = 2.5)
+AT (0, 0, 3.999999999999996) RELATIVE Guide_22
+ROTATED (0, 0.019098593171027422, 0) RELATIVE Guide_22
+
+COMPONENT Guide_24 = Guide_gravity(
+ w1 = 0.06, h1 = 0.085,
+ w2 = 0.06, h2 = 0.085,
+ l = 3.9967, mleft = 1.5,
+ mright = 2.5, mtop = 2.5,
+ mbottom = 2.5)
+AT (0, 0, 3.999999999999996) RELATIVE Guide_23
+ROTATED (0, 0.019098593171027422, 0) RELATIVE Guide_23
+
+COMPONENT Guide_25 = Guide_gravity(
+ w1 = 0.06, h1 = 0.085,
+ w2 = 0.06, h2 = 0.085,
+ l = 3.9967, mleft = 1.5,
+ mright = 2.5, mtop = 2.5,
+ mbottom = 2.5)
+AT (0, 0, 3.999999999999996) RELATIVE Guide_24
+ROTATED (0, 0.019098593171027422, 0) RELATIVE Guide_24
+
+COMPONENT Guide_26 = Guide_gravity(
+ w1 = 0.06, h1 = 0.085,
+ w2 = 0.06, h2 = 0.085,
+ l = 3.9967, mleft = 1,
+ mright = 2.5, mtop = 2.5,
+ mbottom = 2.5)
+AT (0, 0, 3.999999999999996) RELATIVE Guide_25
+ROTATED (0, 0.019098593171027422, 0) RELATIVE Guide_25
+
+COMPONENT Guide_27 = Guide_gravity(
+ w1 = 0.06, h1 = 0.085,
+ w2 = 0.06, h2 = 0.085,
+ l = 3.9967, mleft = 1,
+ mright = 2.5, mtop = 2.5,
+ mbottom = 2.5)
+AT (0, 0, 3.999999999999996) RELATIVE Guide_26
+ROTATED (0, 0.019098593171027422, 0) RELATIVE Guide_26
+
+COMPONENT Guide_28 = Guide_gravity(
+ w1 = 0.06, h1 = 0.085,
+ w2 = 0.06, h2 = 0.085,
+ l = 3.9967, mleft = 1,
+ mright = 2.5, mtop = 2.5,
+ mbottom = 2.5)
+AT (0, 0, 3.999999999999996) RELATIVE Guide_27
+ROTATED (0, 0.019098593171027422, 0) RELATIVE Guide_27
+
+COMPONENT Guide_29 = Guide_gravity(
+ w1 = 0.06, h1 = 0.085,
+ w2 = 0.06, h2 = 0.085,
+ l = 1.998, mleft = 1,
+ mright = 2.5, mtop = 2.5,
+ mbottom = 2.5)
+AT (0, 0, 3.999999999999996) RELATIVE Guide_28
+ROTATED (0, 0.014327048399660852, 0) RELATIVE Guide_28
+
+COMPONENT Guide_30 = Guide_gravity(
+ w1 = 0.06, h1 = 0.085,
+ w2 = 0.06, h2 = 0.085,
+ l = 3.997, mleft = 1,
+ mright = 1, mtop = 2.5,
+ mbottom = 2.5)
+AT (0, 0, 2.0010000000000003) RELATIVE Guide_29
+ROTATED (0, 0, 0) RELATIVE Guide_29
+
+COMPONENT Guide_31 = Guide_gravity(
+ w1 = 0.06, h1 = 0.085,
+ w2 = 0.06, h2 = 0.085,
+ l = 3.997, mleft = 1,
+ mright = 1, mtop = 2.5,
+ mbottom = 2.5)
+AT (0, 0, 4.0) RELATIVE Guide_30
+ROTATED (0, 0, 0) RELATIVE Guide_30
+
+COMPONENT Guide_32 = Guide_gravity(
+ w1 = 0.06, h1 = 0.085,
+ w2 = 0.06, h2 = 0.085,
+ l = 3.89375, mleft = 1,
+ mright = 1, mtop = 2.5,
+ mbottom = 2.5)
+AT (0, 0, 4.0) RELATIVE Guide_31
+ROTATED (0, 0, 0) RELATIVE Guide_31
+
+COMPONENT Diag_after_Guide_32 = Monitor_nD(
+ xwidth = 100, yheight = 100,
+ restore_neutron = 1, options = "previous n x y z vx vy vz t, list 50001",
+ filename = "Diag_after_Guide_32.diag")
+AT (0, 0, 4.0) RELATIVE Guide_31
+ROTATED (0, 0, 0) RELATIVE Guide_31
+
+COMPONENT Arm_PSC = Arm()
+AT (0, 0, 3.897450000000009) RELATIVE Guide_32
+ROTATED (0, 0, 0) RELATIVE Guide_32
+
+COMPONENT PS_Chopper_1 = NXdisk_chopper(
+ slit_edges = slit_edges_PS_Chopper_1, n_edges = 8,
+ radius = 0.35, yheight = 0.095,
+ xwidth = 0.0, nu = f_P1,
+ delay = delay_P1, park_angle = 0,
+ beam_angle = 180, zero_angle = 0,
+ jitter = 0, abs_out = 0,
+ verbose = 1)
+AT (0, 0, 0.05) RELATIVE Arm_PSC
+ROTATED (0, 0, 0) RELATIVE Arm_PSC
+
+COMPONENT PS_Chopper_2 = NXdisk_chopper(
+ slit_edges = slit_edges_PS_Chopper_2, n_edges = 8,
+ radius = 0.35, yheight = 0.095,
+ xwidth = 0.0, nu = f_P2,
+ delay = delay_P2, park_angle = 0,
+ beam_angle = 180, zero_angle = 0,
+ jitter = 0, abs_out = 0,
+ verbose = 1)
+AT (0, 0, 0.15000000000000002) RELATIVE Arm_PSC
+ROTATED (0, 0, 0) RELATIVE Arm_PSC
+
+COMPONENT Diag_after_PS_Chopper_2 = Monitor_nD(
+ xwidth = 100, yheight = 100,
+ restore_neutron = 1, options = "previous n x y z vx vy vz t, list 50001",
+ filename = "Diag_after_PS_Chopper_2.diag")
+AT (0, 0, 0.15000000000000002) RELATIVE Arm_PSC
+ROTATED (0, 0, 0) RELATIVE Arm_PSC
+
+COMPONENT Guide_33 = Guide_gravity(
+ w1 = 0.06, h1 = 0.085,
+ w2 = 0.06, h2 = 0.085,
+ l = 2.9943, mleft = 1,
+ mright = 1, mtop = 2.5,
+ mbottom = 2.5)
+AT (0, 0, 0.20370000000000915) RELATIVE Arm_PSC
+ROTATED (0, 0, 0) RELATIVE Arm_PSC
+
+COMPONENT Guide_34 = Guide_gravity(
+ w1 = 0.060129, h1 = 0.085,
+ w2 = 0.064343, h2 = 0.085,
+ l = 4.0, mleft = 1,
+ mright = 1, mtop = 2.5,
+ mbottom = 2.5)
+AT (0, 0, 2.9943) RELATIVE Guide_33
+ROTATED (0, 0, 0) RELATIVE Guide_33
+
+COMPONENT Guide_35 = Guide_gravity(
+ w1 = 0.064343, h1 = 0.085,
+ w2 = 0.067329, h2 = 0.085,
+ l = 4.0, mleft = 1,
+ mright = 1, mtop = 2.5,
+ mbottom = 2.5)
+AT (0, 0, 4.0) RELATIVE Guide_34
+ROTATED (0, 0, 0) RELATIVE Guide_34
+
+COMPONENT Guide_36 = Guide_gravity(
+ w1 = 0.067329, h1 = 0.085,
+ w2 = 0.069247, h2 = 0.085,
+ l = 4.0, mleft = 1,
+ mright = 1, mtop = 2.5,
+ mbottom = 2.5)
+AT (0, 0, 4.0) RELATIVE Guide_35
+ROTATED (0, 0, 0) RELATIVE Guide_35
+
+COMPONENT Guide_37 = Guide_gravity(
+ w1 = 0.069247, h1 = 0.085,
+ w2 = 0.069542, h2 = 0.085,
+ l = 0.902, mleft = 1,
+ mright = 1, mtop = 2.5,
+ mbottom = 2.5)
+AT (0, 0, 4.0) RELATIVE Guide_36
+ROTATED (0, 0, 0) RELATIVE Guide_36
+
+COMPONENT Guide_38 = Guide_gravity(
+ w1 = 0.069542, h1 = 0.084998,
+ w2 = 0.070266, h2 = 0.084562,
+ l = 4.0, mleft = 1,
+ mright = 1, mtop = 2.5,
+ mbottom = 2.5)
+AT (0, 0, 0.902) RELATIVE Guide_37
+ROTATED (0, 0, 0) RELATIVE Guide_37
+
+COMPONENT Guide_39 = Guide_gravity(
+ w1 = 0.070266, h1 = 0.084562,
+ w2 = 0.070052, h2 = 0.08334,
+ l = 4.0, mleft = 1,
+ mright = 1, mtop = 2.5,
+ mbottom = 2.5)
+AT (0, 0, 4.0) RELATIVE Guide_38
+ROTATED (0, 0, 0) RELATIVE Guide_38
+
+COMPONENT Guide_40 = Guide_gravity(
+ w1 = 0.070052, h1 = 0.08334,
+ w2 = 0.068891, h2 = 0.081295,
+ l = 4.0, mleft = 1,
+ mright = 1, mtop = 2.5,
+ mbottom = 2.5)
+AT (0, 0, 4.0) RELATIVE Guide_39
+ROTATED (0, 0, 0) RELATIVE Guide_39
+
+COMPONENT Guide_41 = Guide_gravity(
+ w1 = 0.068891, h1 = 0.081295,
+ w2 = 0.066734, h2 = 0.078364,
+ l = 4.0, mleft = 1,
+ mright = 1, mtop = 2.5,
+ mbottom = 2.5)
+AT (0, 0, 4.0) RELATIVE Guide_40
+ROTATED (0, 0, 0) RELATIVE Guide_40
+
+COMPONENT Guide_42 = Guide_gravity(
+ w1 = 0.066734, h1 = 0.078364,
+ w2 = 0.06348, h2 = 0.074442,
+ l = 4.0, mleft = 1,
+ mright = 1, mtop = 3,
+ mbottom = 3)
+AT (0, 0, 4.0) RELATIVE Guide_41
+ROTATED (0, 0, 0) RELATIVE Guide_41
+
+COMPONENT Guide_43 = Guide_gravity(
+ w1 = 0.06348, h1 = 0.074442,
+ w2 = 0.058948, h2 = 0.069361,
+ l = 4.0, mleft = 1.5,
+ mright = 1.5, mtop = 3,
+ mbottom = 3)
+AT (0, 0, 4.0) RELATIVE Guide_42
+ROTATED (0, 0, 0) RELATIVE Guide_42
+
+COMPONENT Guide_44 = Guide_gravity(
+ w1 = 0.058948, h1 = 0.069361,
+ w2 = 0.053665, h2 = 0.063733,
+ l = 3.509, mleft = 1.5,
+ mright = 1.5, mtop = 3,
+ mbottom = 3)
+AT (0, 0, 4.0) RELATIVE Guide_43
+ROTATED (0, 0, 0) RELATIVE Guide_43
+
+COMPONENT Guide_45 = Guide_gravity(
+ w1 = 0.053665, h1 = 0.063733,
+ w2 = 0.045385, h2 = 0.055335,
+ l = 4.0, mleft = 1.5,
+ mright = 1.5, mtop = 3,
+ mbottom = 3)
+AT (0, 0, 3.5960000000000174) RELATIVE Guide_44
+ROTATED (0, 0, 0) RELATIVE Guide_44
+
+COMPONENT Guide_47 = Guide_gravity(
+ w1 = 0.045385, h1 = 0.055335,
+ w2 = 0.038918, h2 = 0.049103,
+ l = 2.399, mleft = 2,
+ mright = 2, mtop = 4,
+ mbottom = 4)
+AT (0, 0, 4.0) RELATIVE Guide_45
+ROTATED (0, 0, 0) RELATIVE Guide_45
+
+COMPONENT Guide_48B = Guide_gravity(
+ w1 = 0.038918, h1 = 0.049103,
+ w2 = 0.035667, h2 = 0.046092,
+ l = 1.0, mleft = 2,
+ mright = 2, mtop = 4.5,
+ mbottom = 4.5)
+AT (0, 0, 2.4039999999999955) RELATIVE Guide_47
+ROTATED (0, 0, 0) RELATIVE Guide_47
+
+COMPONENT Guide_49 = Guide_gravity(
+ w1 = 0.035657, h1 = 0.046082,
+ w2 = 0.022433, h2 = 0.034987,
+ l = 2.982, mleft = 2,
+ mright = 2, mtop = 4.5,
+ mbottom = 4.5)
+AT (0, 0, 1.002999999999986) RELATIVE Guide_48B
+ROTATED (0, 0, 0) RELATIVE Guide_48B
+
+COMPONENT Diag_after_Guide_49 = Monitor_nD(
+ xwidth = 100, yheight = 100,
+ restore_neutron = 1, options = "previous n x y z vx vy vz t, list 50001",
+ filename = "Diag_after_Guide_49.diag")
+AT (0, 0, 1.002999999999986) RELATIVE Guide_48B
+ROTATED (0, 0, 0) RELATIVE Guide_48B
+
+COMPONENT Arm_MC = Arm()
+AT (0, 0, 2.982) RELATIVE Guide_49
+ROTATED (0, 0, 0) RELATIVE Guide_49
+
+COMPONENT MC_Chopper_1 = NXdisk_chopper(
+ slit_edges = slit_edges_MC_Chopper_1, n_edges = 4,
+ radius = 0.35, yheight = 0.045,
+ xwidth = 0.0, nu = f_M1,
+ delay = delay_M1, park_angle = 0,
+ beam_angle = 180, zero_angle = 0,
+ jitter = 0, abs_out = 0,
+ verbose = 1)
+AT (0, 0, 0.0425) RELATIVE Arm_MC
+ROTATED (0, 0, 0) RELATIVE Arm_MC
+
+COMPONENT MC_Chopper_2 = NXdisk_chopper(
+ slit_edges = slit_edges_MC_Chopper_2, n_edges = 4,
+ radius = 0.35, yheight = 0.045,
+ xwidth = 0.0, nu = f_M2,
+ delay = delay_M2, park_angle = 0,
+ beam_angle = 0, zero_angle = 0,
+ jitter = 0, abs_out = 0,
+ verbose = 1)
+AT (0, 0, 0.0525) RELATIVE Arm_MC
+ROTATED (0, 0, 0) RELATIVE Arm_MC
+
+COMPONENT Diag_after_MC_Chopper_2 = Monitor_nD(
+ xwidth = 100, yheight = 100,
+ restore_neutron = 1, options = "previous n x y z vx vy vz t, list 50001",
+ filename = "Diag_after_MC_Chopper_2.diag")
+AT (0, 0, 0.0525) RELATIVE Arm_MC
+ROTATED (0, 0, 0) RELATIVE Arm_MC
+
+COMPONENT Guide_50A = Guide_gravity(
+ w1 = 0.022433, h1 = 0.034987,
+ w2 = 0.014184, h2 = 0.029556,
+ l = 1.003, mleft = 3.5,
+ mright = 3.5, mtop = 4.5,
+ mbottom = 4.5)
+AT (0, 0, 0.0979999999999859) RELATIVE Arm_MC
+ROTATED (0, 0, 0) RELATIVE Arm_MC
+
+COMPONENT slitMC = Slit(
+ xwidth = 0.0205, yheight = 0.0345)
+AT (0, 0, 1.1199999999999761) RELATIVE Arm_MC
+ROTATED (0, 0, 0) RELATIVE Arm_MC
+
+COMPONENT Diag_after_slitMC = Monitor_nD(
+ xwidth = 100, yheight = 100,
+ restore_neutron = 1, options = "previous n x y z vx vy vz t, list 50001",
+ filename = "Diag_after_slitMC.diag")
+AT (0, 0, 1.1199999999999761) RELATIVE Arm_MC
+ROTATED (0, 0, 0) RELATIVE Arm_MC
+
+COMPONENT Sample_pos = Arm()
+AT (0, 0, 1.8149999999999977) RELATIVE Arm_MC
+ROTATED (0, 0, 0) RELATIVE Arm_MC
+
+FINALLY 
+%{
+// Start of finally for generated trex_primary
+%}
+
+END
