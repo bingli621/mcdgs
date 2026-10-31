@@ -1,6 +1,11 @@
-"""Create T-Rex up to guide 4, the thermal and the cold path, and print it."""
+"""Create T-Rex up to guide 4, the thermal and the cold path, print it, and write its .instr file
+to mcstas_input/trex_extraction/ of the repository.
+"""
 
 from dataclasses import dataclass
+from pathlib import Path
+
+from mcstasscript.interface.instr import McStas_instr
 
 from mcdgs.core.base import Instrument
 from mcdgs.core.components import (
@@ -14,6 +19,9 @@ from mcdgs.core.components import (
 from mcdgs.core.params import InstrParam, param
 from mcdgs.instruments.trex.guides_extraction import BENDER_ROTATION, guides_extraction
 from mcdgs.instruments.trex.trex import source
+from mcdgs.mcstas.builder import build_mcstas, default_input_dir
+
+WORK_DIR = Path(__file__).resolve().parents[1]  # the repository, wherever the script runs from
 
 
 @dataclass(frozen=True)
@@ -87,10 +95,20 @@ class Extraction(Instrument):
         ]
 
 
-def main() -> None:
-    """Create the extraction section and print its summary."""
-    print(Extraction())
+def build() -> McStas_instr:
+    """Create the extraction section, print its summary and return its McStas instrument."""
+    extraction = Extraction()
+    print(extraction)
+
+    input_path = default_input_dir(extraction, WORK_DIR)
+    return build_mcstas(extraction, input_path=input_path)
 
 
 if __name__ == "__main__":
-    main()
+    trex_extraction = build()
+    trex_extraction.write_full_instrument()
+    print(f"\nWritten to {trex_extraction.input_path}")
+
+    trex_extraction.show_components()
+    trex_extraction.show_diagram()
+    # trex_extraction.show_instrument(backend="matplotlib_2d", projection="zx")  # requires matplotlib

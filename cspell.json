@@ -6,6 +6,6 @@
     "mcdgs", "McStas", "Stas", "mcstas", "mcstasscript", "mcstastox", "mcrun", "mccode", "MCPL",
     "scipp", "scippneutron", "scippnexus", "pixi", "pytest", "dataclass", "kwargs",
     "Lmin", "Lmax", "tmax", "tfocus", "beamline", "yheight",
-    "xwidth", "zdepth", "nowritefile", "username"
+    "xwidth", "zdepth", "nowritefile", "username", "NBOA"
   ]
 }
