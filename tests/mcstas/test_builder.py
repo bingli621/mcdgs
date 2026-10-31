@@ -8,7 +8,7 @@ import pytest
 from mcdgs.core.base import Instrument
 from mcdgs.core.components import Arm, ESS_butterfly, Monitor_nD, Progress_bar
 from mcdgs.core.params import InstrParam
-from mcdgs.instruments.trex.trex import TRex
+from mcdgs.instruments.trex.model import TRex
 from mcdgs.mcstas.builder import build_mcstas, default_input_dir
 from mcdgs.samples import aluminum, la2ni7
 

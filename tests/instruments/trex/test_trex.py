@@ -3,7 +3,7 @@ import pytest
 from mcdgs.core.components import Guide_gravity
 from mcdgs.core.geometry import place_absolute
 from mcdgs.instruments.trex.guides_extraction import half_taper_angle
-from mcdgs.instruments.trex.trex import TRex
+from mcdgs.instruments.trex.model import TRex
 from mcdgs.samples import aluminum
 
 

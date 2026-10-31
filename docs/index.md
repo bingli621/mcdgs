@@ -7,7 +7,7 @@ An instrument is described once, as a Python class holding its components and pa
 mcdgs builds the McStas instrument from that description, runs it and reads the output.
 
 ```python
-from mcdgs.instruments.trex.trex import TRex
+from mcdgs.instruments.trex.model import TRex
 
 trex = TRex()
 print(trex)  # every parameter and component, with its position in the lab frame

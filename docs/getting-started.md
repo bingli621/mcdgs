@@ -27,7 +27,7 @@ An instrument is a Python object, and creating one does not start McStas. Printi
 parameters and its components in beam order:
 
 ```python
-from mcdgs.instruments.trex.trex import TRex
+from mcdgs.instruments.trex.model import TRex
 
 trex = TRex()
 print(trex)
@@ -64,7 +64,7 @@ from mcdgs.core.base import Instrument
 from mcdgs.core.components import Monitor_nD, Progress_bar
 from mcdgs.core.params import InstrParam
 from mcdgs.instruments.trex.guides_extraction import guides_extraction
-from mcdgs.instruments.trex.trex import Params, source
+from mcdgs.instruments.trex.model import Params, source
 from mcdgs.mcstas.simulation import Simulation
 
 

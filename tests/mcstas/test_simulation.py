@@ -3,7 +3,7 @@ from pathlib import Path
 import h5py
 import pytest
 
-from mcdgs.instruments.trex.trex import TRex
+from mcdgs.instruments.trex.model import TRex
 from mcdgs.mcstas import simulation
 from mcdgs.mcstas.simulation import Simulation, _run_points_in_parallel
 
