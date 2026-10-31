@@ -5,8 +5,8 @@ bender, through the thermal guide 4a, gives the intensity to compare with. The f
 curve per band, divided by that intensity.
 
 :func:`simulate` runs McStas into two folders of mcstas_output/, replacing the earlier ones.
-:func:`plot` only reads them, and draws the figure into output/. To replot without simulating,
-leave out ``simulate()`` at the end of this file.
+:func:`plot` only reads them, and draws the figure of the documentation. To replot without
+simulating, leave out ``simulate()`` at the end of this file.
 """
 
 from dataclasses import dataclass
@@ -27,7 +27,7 @@ from mcdgs.mcstas.run_folders import default_output_dir
 from mcdgs.mcstas.simulation import Simulation
 
 WORK_DIR = Path(__file__).resolve().parents[1]  # the repository, wherever the script runs from
-FIGURE = WORK_DIR / "output" / "diagnose_bender.png"
+FIGURE = WORK_DIR / "docs" / "instruments" / "trex" / "figures" / "diagnose_bender.png"
 SCAN_FILE = default_output_dir(WORK_DIR) / "bender_scan" / "mccode.h5"
 BENDER_OUT_FILE = default_output_dir(WORK_DIR) / "bender_out" / "mccode.h5"
 WAVELENGTH_EDGES = np.arange(0.5, 5.25, 0.4)  # Å, evenly spaced: the bins of the monitor

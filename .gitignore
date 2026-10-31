@@ -52,3 +52,6 @@ OFF_files*/
 mcstas_input/
 mcstas_output/
 
+# Documentation site
+site/
+

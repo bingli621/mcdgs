@@ -43,6 +43,8 @@ class Monitor_nD(Component):
         NeXus output only: -1 stores no bin information, 0 stores it for event lists, 1 for any
         monitor.
 
+    Notes
+    -----
     Every default is McStas's; ``None`` is McStas's unset string, ``"NULL"``.
 
     Examples

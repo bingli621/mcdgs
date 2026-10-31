@@ -1,13 +1,13 @@
 {
   "version": "0.2",
   "language": "en,en-GB",
-  "ignorePaths": [".pixi", "mcstas_input", "mcstas_output", "output", "*.cif"],
+  "ignorePaths": [".pixi", "mcstas_input", "mcstas_output", "site", "*.cif"],
   "words": [
     "mcdgs", "McStas", "Stas", "mcstas", "mcstasscript", "mcstastox", "mcrun", "mccode", "MCPL",
     "scipp", "scippneutron", "scippnexus", "pixi", "pytest", "dataclass", "kwargs",
     "Lmin", "Lmax", "tmax", "tfocus", "beamline", "yheight",
     "xwidth", "zdepth", "nowritefile", "username", "NBOA", "ncount",
     "Angs", "polyfit", "polyval", "errorbar", "axvline", "axhline", "linestyle", "xlabel", "ylabel",
-    "figsize", "sharex", "ylim", "fontsize", "supxlabel", "supylabel", "frameon", "cmap", "markersize"
+    "zensical", "griffe", "mkdocstrings", "figsize", "sharex", "ylim", "fontsize", "supxlabel", "supylabel", "frameon", "cmap", "markersize"
   ]
 }

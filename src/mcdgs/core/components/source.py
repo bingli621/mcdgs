@@ -44,6 +44,8 @@ class ESS_butterfly(Component):
     tfocus_time, tfocus_width:
         Time and width of the time-focusing window in s.
 
+    Notes
+    -----
     ``Lmin`` and ``Lmax`` are required, as in McStas. ``sector``, ``beamline`` and
     ``acc_power`` default to ``"W"``, 7 and 2 MW; every other default is McStas's.
 

@@ -50,6 +50,8 @@ class Single_crystal(Component):
     order:
         Maximum scattering order. 0 is unlimited; 1 is single scattering only, much faster.
 
+    Notes
+    -----
     ``lattice_params``, ``along_beam``, ``in_plane`` and ``reflections`` are required. Every
     other default is McStas's.
 

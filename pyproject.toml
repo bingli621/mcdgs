@@ -5,8 +5,9 @@ build-backend = "hatchling.build"
 [project]
 name = "mcdgs"
 version = "0.1.0"
-description = "mcdgs"
+description = "Monte Carlo simulation of the Direct Geometry Spectrometer (DGS) at the European Spallation Source (ESS). From McStas to S(Q,E)."
 readme = "README.md"
+license = "BSD-3-Clause"
 requires-python = ">=3.10"
 authors = [{ name = "Bing Li", email = "bing.li@ess.eu" }]
 dependencies = [

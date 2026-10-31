@@ -22,7 +22,7 @@ SAMPLE_ROTATION = 0.430122381481144  # deg, current estimate, not in the sheet
 
 @dataclass(frozen=True)
 class Params:
-    """Control parameters of the diffractometer.
+    """Control parameters of T-Rex.
 
     Frozen: change them with ``TRex.update_params``. Each field's unit and comment are in its
     metadata.

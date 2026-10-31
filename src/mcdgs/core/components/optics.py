@@ -43,6 +43,8 @@ class Guide_gravity(Component):
     wavy_z, wavy_tb, wavy_lr:
         Waviness in deg along the guide, and across the top/bottom and the left/right mirrors.
 
+    Notes
+    -----
     ``w1``, ``h1`` and ``l`` are required, as in McStas. Every default is McStas's.
 
     Examples
@@ -126,6 +128,8 @@ class Pol_bender(Component):
     drawOption:
         Drawing detail: 1 is fine, 2 normal, 3 rough.
 
+    Notes
+    -----
     ``xwidth``, ``yheight``, ``length`` and ``radius`` are required, as in McStas. Every default
     is McStas's. Identical up and down values make the bender spin-independent.
 

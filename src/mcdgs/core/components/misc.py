@@ -18,6 +18,8 @@ class Progress_bar(Component):
     percent:
         Interval between progress reports, in % of the simulation (0 to 100).
 
+    Notes
+    -----
     The default is McStas's.
 
     Examples
