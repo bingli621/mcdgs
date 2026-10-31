@@ -6,6 +6,8 @@
     "mcdgs", "McStas", "Stas", "mcstas", "mcstasscript", "mcstastox", "mcrun", "mccode", "MCPL",
     "scipp", "scippneutron", "scippnexus", "pixi", "pytest", "dataclass", "kwargs",
     "Lmin", "Lmax", "tmax", "tfocus", "beamline", "yheight",
-    "xwidth", "zdepth", "nowritefile", "username", "NBOA"
+    "xwidth", "zdepth", "nowritefile", "username", "NBOA", "ncount",
+    "Angs", "polyfit", "polyval", "errorbar", "axvline", "axhline", "linestyle", "xlabel", "ylabel",
+    "figsize", "sharex", "ylim", "fontsize", "supxlabel", "supylabel", "frameon", "cmap", "markersize"
   ]
 }
