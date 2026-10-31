@@ -2,12 +2,7 @@ import pytest
 
 from mcdgs.core.components import Guide_gravity
 from mcdgs.core.geometry import place_absolute
-from mcdgs.instruments.trex.guides_extraction import (
-    GUIDE_1_IN_Z,
-    GUIDE_3_OUT_WIDTH,
-    GUIDE_3_OUT_Z,
-    NBOA_TAPER_ANGLE,
-)
+from mcdgs.instruments.trex.guides_extraction import half_taper_angle
 from mcdgs.instruments.trex.trex import TRex
 from mcdgs.samples import aluminum
 
@@ -20,6 +15,7 @@ def test_the_components_are_in_beam_order():
         "guide_1",
         "guide_2",
         "guide_3",
+        "arm_guide_4",
         "guide_4a",
         "bender",
         "guide_4b",
@@ -113,13 +109,13 @@ def test_the_guide_starts_on_the_bisector_of_the_fixed_wall():
     trex = TRex()
     x, y, z = trex.positions()["guide_1"]
     assert x == pytest.approx(-0.0020228, abs=1e-6)
-    assert (y, z) == (0.0, GUIDE_1_IN_Z)
+    assert (y, z) == (0.0, 1.895927)
     assert x - trex.guide_1.w1 / 2 == pytest.approx(-0.047, abs=1e-6)  # the -x wall
 
 
 def test_the_tilt_is_half_the_taper_of_the_sheet():
     # cell N13 is atan(dw / L): half of it differs from atan(dw / L / 2) by about 3e-6 deg
-    assert NBOA_TAPER_ANGLE == pytest.approx(0.42999016682346453 / 2, abs=1e-5)
+    assert TRex().arm_NBOA.rotated[1] == pytest.approx(-0.42999016682346453 / 2, abs=1e-5)
 
 
 def test_the_centre_line_tilts_towards_minus_x():
@@ -127,16 +123,54 @@ def test_the_centre_line_tilts_towards_minus_x():
     instr_param_dict = {p.name: p.value for p in trex.instr_params}
     (position, rot) = place_absolute(trex.components, instr_param_dict)["guide_1"]
     axis = rot[2]  # the guide's z axis in the lab frame
-    at_exit = position + axis / axis[2] * (GUIDE_3_OUT_Z - GUIDE_1_IN_Z)
-    assert at_exit[0] == pytest.approx(-0.047 + GUIDE_3_OUT_WIDTH / 2, abs=1e-6)
+    at_exit = position + axis / axis[2] * (5.375927 - 1.895927)
+    assert at_exit[0] == pytest.approx(-0.047 + 0.063838 / 2, abs=1e-6)
     assert at_exit[1] == pytest.approx(0)
+
+
+def test_guide_4_tilts_by_half_its_own_taper():
+    # cell N25, with the same difference to atan(dw / L / 2) as for cell N13
+    trex = TRex()
+    tilt = trex.arm_guide_4.rotated[1]
+    assert tilt == pytest.approx(-0.42669474420770109 / 2, abs=1e-5)
+    guide_4b = trex.guide_4b
+    assert half_taper_angle(guide_4b.w1, guide_4b.w2, guide_4b.l) == pytest.approx(tilt, abs=1e-12)
+
+
+def test_guides_4a_4b_and_the_bender_hang_off_one_arm():
+    trex = TRex()
+    assert trex.guide_4a.relative == trex.bender.relative == trex.guide_4b.relative == "arm_guide_4"
+    assert trex.guide_4a.at == trex.bender.at == [0, 0, 0]
+    assert trex.guide_4b.at[:2] == [0, 0]
+    assert trex.arm_guide_4.when is None  # guide 4a and the bender need it in either mode
+
+
+@pytest.mark.parametrize("name", ["guide_4a", "guide_4b"])
+def test_the_minus_x_wall_of_guide_4_is_the_fixed_wall(name):
+    trex = TRex()
+    instr_param_dict = {p.name: p.value for p in trex.instr_params}
+    (position, rot) = place_absolute(trex.components, instr_param_dict)[name]
+    guide = getattr(trex, name)
+    # the rows of rot are the guide's axes in the lab frame
+    at_entrance = position - rot[0] * guide.w1 / 2
+    at_exit = position - rot[0] * guide.w2 / 2 + rot[2] * guide.l
+    assert at_entrance[0] == pytest.approx(-0.047, abs=1e-8)
+    assert at_exit[0] == pytest.approx(-0.047, abs=1e-8)
 
 
 def test_the_bender_selects_guide_4a_or_guide_4b():
     trex = TRex()
-    assert trex.params.bender == 0
-    assert trex.guide_4a.when == "bender==0"
-    assert trex.bender.when == trex.guide_4b.when == "bender==1"
+    assert trex.params.bender_in is False
+    assert trex.guide_4a.when == "bender_in==0"
+    assert trex.bender.when == trex.guide_4b.when == "bender_in==1"
+
+
+def test_every_when_names_an_instrument_parameter():
+    trex = TRex()
+    names = {p.name for p in trex.instr_params}
+    whens = [c.when for c in trex.components.values() if c.when is not None]
+    assert whens
+    assert all(when.split("==")[0] in names for when in whens)
 
 
 def test_guides_4a_and_4b_share_their_exit():
@@ -152,7 +186,7 @@ def test_the_bender_is_rotated_by_its_full_deflection():
     assert trex.bender.rotated == [0, "b_rot", 0]
     assert trex.params.b_rot == pytest.approx(-0.397881, abs=1e-6)
     assert {p.name: p.value for p in trex.instr_params} == {
-        "bender": 0,
+        "bender_in": 0,
         "b_rot": trex.params.b_rot,
     }
 
