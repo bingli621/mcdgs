@@ -94,6 +94,14 @@ def test_equality_compares_name_params_and_components():
     assert Toy() != renamed
 
 
+def test_the_summary_aligns_values_to_the_left():
+    lines = repr(Toy()).splitlines()
+    header = lines[lines.index("Params:") + 1]
+    omega, ei = lines[lines.index("Params:") + 3 : lines.index("Params:") + 5]
+    assert omega[header.index("value")] == "0"
+    assert ei[header.index("value")] == "2"
+
+
 def test_the_summary_shows_params_instr_params_and_components():
     text = repr(Toy())
     assert text.startswith("Toy 'toy'")

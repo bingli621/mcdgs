@@ -121,4 +121,4 @@ class Component:
             for f in fields(self)
             if not (f.name in optional and getattr(self, f.name) is None) and f.name != "name"
         ]
-        return f"{title}:\n{tabulate(rows, ('parameter', 'value'))}"
+        return f"{title}:\n{tabulate(rows, ('parameter', 'value'), disable_numparse=True)}"

@@ -174,10 +174,10 @@ class Instrument:
                 f"{type(self).__name__} {self.name!r}",
                 "",
                 "Params:",
-                tabulate(params, ("param", "value", "unit", "comment")),
+                tabulate(params, ("param", "value", "unit", "comment"), disable_numparse=True),
                 "",
                 "Instrument parameters (McStas):",
-                tabulate(instr_params, ("name", "value", "unit", "comment")),
+                tabulate(instr_params, ("name", "value", "unit", "comment"), disable_numparse=True),
                 "",
                 "Components, in the order of the beam (m, deg):",
                 tabulate(
