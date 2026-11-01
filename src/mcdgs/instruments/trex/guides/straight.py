@@ -4,7 +4,7 @@ Dimensions are from the Table of Optics V3.2 (the .xlsx file in ``reference/``),
 named in the comments. The values are the sheet's, not rounded. The m-values are those at the
 entrance, which are the same as at the exit.
 
-The axis is straight from ``arm_end_of_curve`` of :mod:`.guides_curve` on, so nothing here is
+The axis is straight from ``arm_end_of_curve`` of :mod:`.curve` on, so nothing here is
 rotated.
 
 Guides 34 to 50a approximate the horizontal and vertical ellipses of the sheet with straight
@@ -13,7 +13,7 @@ tapered sections.
 
 from mcdgs.core.components import Arm, Component, Slit
 
-from .guides_curve import GUIDE_29_OUT_Z, chain, gap, guide
+from .curve import GUIDE_29_OUT_Z, chain, gap, guide
 
 
 def guides_straight() -> dict[str, Component]:

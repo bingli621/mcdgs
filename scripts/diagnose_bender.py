@@ -21,7 +21,7 @@ from numpy.typing import NDArray
 from mcdgs.core.base import Instrument
 from mcdgs.core.components import Guide_gravity, Monitor_nD, Progress_bar
 from mcdgs.core.params import InstrParam, param
-from mcdgs.instruments.trex.guides_extraction import BENDER_ROTATION, guides_extraction
+from mcdgs.instruments.trex.guides.extraction import BENDER_ROTATION, guides_extraction
 from mcdgs.instruments.trex.model import source
 from mcdgs.mcstas.run_folders import default_output_dir
 from mcdgs.mcstas.simulation import Simulation

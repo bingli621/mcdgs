@@ -14,9 +14,9 @@ from mcdgs.core.components import (
 )
 from mcdgs.core.params import InstrParam, param
 
-from .guides_curve import guides_curve
-from .guides_extraction import BENDER_ROTATION, guides_extraction
-from .guides_straight import guides_straight
+from .guides.curve import guides_curve
+from .guides.extraction import BENDER_ROTATION, guides_extraction
+from .guides.straight import guides_straight
 
 
 @dataclass(frozen=True)

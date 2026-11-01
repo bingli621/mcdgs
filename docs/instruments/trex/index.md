@@ -48,7 +48,7 @@ and heights in mm, and z is the lab position of the entrance.
 | `guide_4b` | 5.45065 | 0.431 | 63.466 → 60.256 | 44.759 → 46.152 | 1.5 | 3.5 |
 
 The dimensions of guide 4 are rounded here to 0.001 mm. The model uses the sheet's full values, in
-`guides_extraction.py`, with each cell named in the comments.
+`guides/extraction.py`, with each cell named in the comments.
 
 For the top of guide 3, the sheet has 4 to 3.5 and marks it "issue". The model uses 4.
 

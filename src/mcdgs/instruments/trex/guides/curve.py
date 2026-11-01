@@ -29,7 +29,7 @@ from typing import Any
 
 from mcdgs.core.components import Arm, Component, Guide_gravity
 
-from .guides_extraction import GUIDE_4_TILT, GUIDE_4A_IN_Z, z_along_arm
+from .extraction import GUIDE_4_TILT, GUIDE_4A_IN_Z, z_along_arm
 
 CURVE_RADIUS = 12000.0  # m, cell N32
 GUIDE_29_OUT_Z = 95.99955  # m, cell C106
