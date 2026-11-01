@@ -288,8 +288,8 @@ def guides_straight() -> dict[str, Component]:
     return {
         **chain(sections),
         "slit_mc": Slit(
-            xwidth=0.0205,  # not in the sheet: from trex_primary.txt
-            yheight=0.0345,  # not in the sheet: from trex_primary.txt
+            xwidth=0.0205,  # FIXME, not in Table of Optics v3.2
+            yheight=0.0345,  # FIXME, not in Table of Optics v3.2
             at=[0, 0, slit_mc_z - arm_mc_z],
             relative="arm_mc",
         ),

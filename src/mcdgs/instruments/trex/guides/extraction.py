@@ -25,7 +25,7 @@ import math
 from mcdgs.core.components import Arm, Component, Guide_gravity, Pol_bender
 
 BENDER_LENGTH = 0.05  # m, cell B25 minus cell B24
-BENDER_RADIUS = 7.2  # m, not in the sheet: from trex_primary.txt
+BENDER_RADIUS = 7.2  # FIXME, not in Table of Optics v3.2, in m
 BENDER_ROTATION = -math.degrees(math.atan(BENDER_LENGTH / BENDER_RADIUS))  # −0.39788 deg
 
 
@@ -64,7 +64,7 @@ def entrance_x(width: float, tilt: float) -> float:
     :
         x of the entrance centre in lab frame, in m.
     """
-    nboa_fixed_wall_x = -0.047  # m, the -x wall of the NBOA is fixed at -47 mm
+    nboa_fixed_wall_x = -0.047  # FIXME, not in Table of Optics v3.2, in m
     return width * math.cos(math.radians(tilt)) / 2 + nboa_fixed_wall_x
 
 
@@ -122,8 +122,8 @@ def guides_extraction() -> dict[str, Component]:
     guide_4b_length = 0.431  # m, cell D25
 
     # bender constants
-    # 63.84mm x 46mm x 50mm (WxHxL), 0.15mm Si channels/ NiTi m=4 curve=7.2m
-    bender_mirror = (0.99, 0.0219, 3.02, 4.0, 0.003)  # R0, Qc, alpha, m, W,
+    # Si channels, NiTi coating. The mirror values are R0, Qc, alpha, m and W
+    bender_mirror = (0.99, 0.0219, 3.02, 4.0, 0.003)  # FIXME, not in Table of Optics v3.2
 
     return {
         "arm_NBOA": Arm(
@@ -185,14 +185,15 @@ def guides_extraction() -> dict[str, Component]:
             relative="arm_guide_4",
             when="bender_in==0",
         ),
-        "bender": Pol_bender(  # the rest from trex_primary.txt
-            xwidth=0.06384,  # not in the sheet: from trex_guide_anyshape.ipynb
-            yheight=0.046,  # not in the sheet: from trex_guide_anyshape.ipynb
+        # 63.84mm x 46mm x 50mm (WxHxL), 0.15mm Si channels/ NiTi m=4 curve=7.2m
+        "bender": Pol_bender(
+            xwidth=0.06384,  # FIXME, not in Table of Optics v3.2
+            yheight=0.046,  # FIXME, not in Table of Optics v3.2
             length=BENDER_LENGTH,
             radius=BENDER_RADIUS,
             G=0,  # as every Guide_gravity
-            nslit=426,
-            d=1e-6,
+            nslit=426,  # FIXME, not in Table of Optics v3.2
+            d=1e-6,  # FIXME, not in Table of Optics v3.2
             drawOption=2,
             rTopUpPar=list(bender_mirror),
             rTopDownPar=list(bender_mirror),
