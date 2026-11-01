@@ -1,7 +1,8 @@
 # T-Rex
 
 T-Rex is modelled from the source to the sample position, as a chain of guides. There are no
-choppers, polarizers, collimators or detector yet, though the chopper gaps are in place as arms.
+choppers, polarizers, collimators or detector yet, though the chopper gaps are in place as arms
+and the [`NXdisk_chopper`](../../reference/components.md) component is ready for them.
 `sample_pos` is on the beam axis, 163.8 m along it from the origin.
 
 [Extraction results](extraction.md) shows what the model gives so far. The code is in
@@ -111,7 +112,8 @@ fixed −x wall ends there.
 | 26 to 29 | 82.00155 | 60 | 85 | 1, 2.5 | 2.5 |
 
 Positions here and in the sheet are distances along the beam axis, not lab z. The two differ by
-2.8 mm at the sample position.
+2.8 mm at the sample position. The tables here and below summarise the sheet: the model uses its
+full values, in `guides/curve.py` and `guides/straight.py`, with each cell named in the comments.
 
 ## Straight guides
 

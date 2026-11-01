@@ -5,8 +5,8 @@ This page takes you from a fresh clone to a simulated spectrum at the exit of T-
 ## Install
 
 mcdgs is not on PyPI. It runs from a clone of the repository, in an environment managed by
-[pixi](https://pixi.sh), on Linux (x86-64) or macOS (Apple silicon). The environment includes
-McStas itself.
+[pixi](https://pixi.sh), on Linux (x86-64) or macOS 14 or later (Apple silicon). The environment
+includes McStas itself.
 
 ```bash
 git clone https://github.com/bingli621/mcdgs.git
@@ -17,9 +17,9 @@ pixi run pytest
 
 !!! warning "Run everything through pixi"
 
-    Use `pixi run python my_script.py`, or open a `pixi shell` first. McStas compiles each
-    instrument, and calling the environment's Python directly leaves out the settings the compiler
-    needs: the run stops with `'napi.h' file not found`.
+    Use `pixi run python my_script.py`, or open a `pixi shell` first. Calling the environment's
+    Python directly leaves out the settings that locate McStas: building an instrument stops with
+    `No component named Progress_bar in McStas installation`.
 
 ## Look at T-Rex
 
