@@ -8,6 +8,7 @@ depends on other components, such as the positions, is left to the instrument.
 """
 
 from .base import Component
+from .choppers import NXdisk_chopper
 from .crystal import Single_crystal
 from .misc import Arm, Progress_bar
 from .monitors import Monitor_nD
@@ -20,6 +21,7 @@ __all__ = [
     "ESS_butterfly",
     "Guide_gravity",
     "Monitor_nD",
+    "NXdisk_chopper",
     "Pol_bender",
     "Progress_bar",
     "Single_crystal",

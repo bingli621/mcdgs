@@ -10,6 +10,8 @@ each one does.
 
 ::: mcdgs.core.components.optics
 
+::: mcdgs.core.components.choppers
+
 ::: mcdgs.core.components.monitors
 
 ::: mcdgs.core.components.crystal

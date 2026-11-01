@@ -8,6 +8,7 @@ from mcdgs.core.components import (
     ESS_butterfly,
     Guide_gravity,
     Monitor_nD,
+    NXdisk_chopper,
     Pol_bender,
     Progress_bar,
 )
@@ -227,3 +228,32 @@ def test_two_benders_share_no_mirror():
     first.rTopUpPar[3] = 4.0
     assert second.rTopUpPar[3] == 2.0
     assert first.rTopDownPar[3] == 2.0
+
+
+def test_the_chopper_defaults_are_those_of_mcstas():
+    parameters = NXdisk_chopper(slit_edges=[-10, 10]).mcstas_parameters()
+    assert parameters == {
+        "slit_edges": [-10, 10],
+        "n_edges": 2,
+        "radius": 0.35,
+        "yheight": 0,
+        "xwidth": 0,
+        "nu": 0,
+        "delay": 0,
+        "park_angle": 0,
+        "beam_angle": 0,
+        "zero_angle": 0,
+        "jitter": 0,
+        "abs_out": 0,
+        "verbose": 0,
+    }
+
+
+def test_the_chopper_counts_its_edges():
+    chopper = NXdisk_chopper(slit_edges=[0, 10, 90, 100])
+    assert chopper.mcstas_parameters()["n_edges"] == 4
+
+
+def test_the_chopper_requires_its_edges():
+    with pytest.raises(TypeError):
+        NXdisk_chopper()
