@@ -84,5 +84,4 @@ neutrons in part 2 is the number in the file.
 - Part 2 runs in the frame of `sample_pos`, so anything after it must be placed `relative` to it,
   not in the lab frame.
 
-T-Rex cannot use this yet: nothing is modelled between guide 4 and `sample_pos`, and it has no
-detector.
+T-Rex cannot use this yet: it has no detector.

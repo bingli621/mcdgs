@@ -1,4 +1,4 @@
-"""Neutron optics: guides and benders."""
+"""Neutron optics: guides, benders and slits."""
 
 from dataclasses import dataclass, field
 
@@ -157,3 +157,27 @@ class Pol_bender(Component):
     rRightUpPar: list[float] = field(default_factory=_default_mirror)
     rRightDownPar: list[float] = field(default_factory=_default_mirror)
     drawOption: int = 1
+
+
+@dataclass(kw_only=True, repr=False)  # repr: Component's
+class Slit(Component):
+    """A rectangular opening in an absorbing plane, as McStas ``Slit``.
+
+    Name and instance keywords (``name``, ``at``, ...) are as in :class:`.Component`. The
+    McStas parameters left out here (edges ``xmin``, ``xmax``, ``ymin``, ``ymax``; a circular
+    opening's ``radius``) keep McStas's defaults.
+
+    Parameters
+    ----------
+    xwidth, yheight:
+        Width and height of the opening in m.
+
+    Examples
+    --------
+    >>> slit = Slit(name="slit", xwidth=0.02, yheight=0.03)
+    >>> slit.mcstas_parameters()
+    {'xwidth': 0.02, 'yheight': 0.03}
+    """
+
+    xwidth: float
+    yheight: float

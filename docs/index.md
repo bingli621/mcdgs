@@ -21,7 +21,7 @@ print(trex)  # every parameter and component, with its position in the lab frame
 
 | Part | State |
 | ---- | ----- |
-| [T-Rex](instruments/trex/index.md) | Modelled from the source to guide 4, including the bender. The rest of the instrument is not modelled yet. |
+| [T-Rex](instruments/trex/index.md) | Modelled from the source to the sample position, guides only. The choppers, the polarizers, the collimators and the detector are not modelled yet. |
 | Simulation | Single runs, parameter scans and split runs at the sample position. |
 | Reading the output | Monitors and detector pixels from McStas NeXus files. |
 | Instrument files | Not written yet. |

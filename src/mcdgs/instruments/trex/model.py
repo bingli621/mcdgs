@@ -10,14 +10,13 @@ from mcdgs.core.components import (
     Pol_bender,
     Progress_bar,
     Single_crystal,
+    Slit,
 )
 from mcdgs.core.params import InstrParam, param
 
+from .guides_curve import guides_curve
 from .guides_extraction import BENDER_ROTATION, guides_extraction
-
-SAMPLE_X = 0.8301227276790154  # m, current estimate, not in the sheet
-SAMPLE_Z = 163.8  # m, current estimate, cell C148
-SAMPLE_ROTATION = 0.430122381481144  # deg, current estimate, not in the sheet
+from .guides_straight import guides_straight
 
 
 @dataclass(frozen=True)
@@ -100,6 +99,62 @@ class TRex(Instrument):
     guide_4a: Guide_gravity
     bender: Pol_bender
     guide_4b: Guide_gravity
+    arm_start_of_curve: Arm
+    guide_5: Guide_gravity
+    guide_6: Guide_gravity
+    guide_7: Guide_gravity
+    guide_8: Guide_gravity
+    guide_9: Guide_gravity
+    guide_10: Guide_gravity
+    guide_11: Guide_gravity
+    guide_12: Guide_gravity
+    guide_13a: Guide_gravity
+    arm_bwc1: Arm
+    guide_13b: Guide_gravity
+    guide_14a: Guide_gravity
+    guide_14b: Guide_gravity
+    guide_15a: Guide_gravity
+    arm_bwc2: Arm
+    guide_15b: Guide_gravity
+    arm_bm1: Arm
+    guide_16: Guide_gravity
+    guide_17: Guide_gravity
+    guide_18: Guide_gravity
+    guide_19: Guide_gravity
+    guide_20: Guide_gravity
+    guide_21: Guide_gravity
+    guide_22: Guide_gravity
+    guide_23: Guide_gravity
+    guide_24: Guide_gravity
+    guide_25: Guide_gravity
+    guide_26: Guide_gravity
+    guide_27: Guide_gravity
+    guide_28: Guide_gravity
+    guide_29: Guide_gravity
+    arm_end_of_curve: Arm
+    guide_30: Guide_gravity
+    guide_31: Guide_gravity
+    guide_32: Guide_gravity
+    arm_psc: Arm
+    guide_33: Guide_gravity
+    guide_34: Guide_gravity
+    guide_35: Guide_gravity
+    guide_36: Guide_gravity
+    guide_37: Guide_gravity
+    guide_38: Guide_gravity
+    guide_39: Guide_gravity
+    guide_40: Guide_gravity
+    guide_41: Guide_gravity
+    guide_42: Guide_gravity
+    guide_43: Guide_gravity
+    guide_44: Guide_gravity
+    guide_45: Guide_gravity
+    guide_47: Guide_gravity
+    guide_48b: Guide_gravity
+    guide_49: Guide_gravity
+    arm_mc: Arm
+    guide_50a: Guide_gravity
+    slit_mc: Slit
     sample_pos: Arm
     sample: Single_crystal | None
 
@@ -109,10 +164,10 @@ class TRex(Instrument):
         super().__init__(params)
         self.origin = Progress_bar(at=[0, 0, 0])
         self.source = source()
-        for name, component in guides_extraction().items():
-            setattr(self, name, component)
+        for guides in (guides_extraction, guides_curve, guides_straight):
+            for name, component in guides().items():
+                setattr(self, name, component)
 
-        self.sample_pos = Arm(at=[SAMPLE_X, 0, SAMPLE_Z], rotated=[0, SAMPLE_ROTATION, 0])
         self.sample = None
         if sample is not None:
             self.sample = replace(sample, relative=sample.relative or "sample_pos")

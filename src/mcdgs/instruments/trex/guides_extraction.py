@@ -68,14 +68,14 @@ def entrance_x(width: float, tilt: float) -> float:
     return width * math.cos(math.radians(tilt)) / 2 + nboa_fixed_wall_x
 
 
-def z_along_arm(z: float, arm_z: float, tilt: float) -> float:
+def z_along_arm(z_lab: float, arm_z_lab: float, tilt: float) -> float:
     """Compute the distance along an arm that places a guide at a lab position.
 
     Parameters
     ----------
-    z:
+    z_lab:
         z of the guide's entrance in lab frame, in m.
-    arm_z:
+    arm_z_lab:
         z of the arm in lab frame, in m.
     tilt:
         Tilt of the arm, from :func:`half_taper_angle`, in deg.
@@ -85,7 +85,16 @@ def z_along_arm(z: float, arm_z: float, tilt: float) -> float:
     :
         Distance in m from the arm, along its tilted z axis.
     """
-    return (z - arm_z) / math.cos(math.radians(tilt))
+    return (z_lab - arm_z_lab) / math.cos(math.radians(tilt))
+
+
+GUIDE_4A_IN_Z = 5.40065  # m, cell B24, also the entrance of the bender
+GUIDE_4A_IN_WIDTH = 0.063838  # m, cell E24
+GUIDE_4A_LENGTH = 0.481  # m, cell D24
+GUIDE_4_OUT_WIDTH = 0.060255817017560886  # m, cells G24 and G25
+GUIDE_4_TILT = half_taper_angle(
+    GUIDE_4A_IN_WIDTH, GUIDE_4_OUT_WIDTH, GUIDE_4A_LENGTH
+)  # -0.2134 deg, half of cells N25 and N26
 
 
 def guides_extraction() -> dict[str, Component]:
@@ -108,16 +117,9 @@ def guides_extraction() -> dict[str, Component]:
     )  # -0.2150 deg, half of cell N13
 
     # BBGOA constants
-    guide_4a_in_z = 5.40065  # m, cell B24, also the entrance of the bender
-    guide_4a_in_width = 0.063838  # m, cell E24
-    guide_4a_length = 0.481  # m, cell D24
     guide_4b_in_z = 5.45065  # m, cell B25
     guide_4b_in_width = 0.063465631706607162  # m, cell E25
     guide_4b_length = 0.431  # m, cell D25
-    guide_4_out_width = 0.060255817017560886  # m, cells G24 and G25
-    guide_4_taper_angle = half_taper_angle(
-        guide_4a_in_width, guide_4_out_width, guide_4a_length
-    )  # -0.2134 deg, half of cells N25 and N26
 
     # bender constants
     # 63.84mm x 46mm x 50mm (WxHxL), 0.15mm Si channels/ NiTi m=4 curve=7.2m
@@ -167,15 +169,15 @@ def guides_extraction() -> dict[str, Component]:
             relative="arm_NBOA",
         ),
         "arm_guide_4": Arm(
-            at=[entrance_x(guide_4a_in_width, guide_4_taper_angle), 0, guide_4a_in_z],
-            rotated=[0, guide_4_taper_angle, 0],
+            at=[entrance_x(GUIDE_4A_IN_WIDTH, GUIDE_4_TILT), 0, GUIDE_4A_IN_Z],
+            rotated=[0, GUIDE_4_TILT, 0],
         ),
         "guide_4a": Guide_gravity(  # row 24
-            w1=guide_4a_in_width,
+            w1=GUIDE_4A_IN_WIDTH,
             h1=0.044593536722227093,  # cell F24
-            w2=guide_4_out_width,
+            w2=GUIDE_4_OUT_WIDTH,
             h2=0.046152195301135549,  # cell H24
-            l=guide_4a_length,
+            l=GUIDE_4A_LENGTH,
             mleft=1.5,  # cell O24
             mright=1.5,  # cell P24
             mtop=3.5,  # cell Q24
@@ -207,14 +209,14 @@ def guides_extraction() -> dict[str, Component]:
         "guide_4b": Guide_gravity(  # row 25
             w1=guide_4b_in_width,
             h1=0.044759094882096839,  # cell F25
-            w2=guide_4_out_width,
+            w2=GUIDE_4_OUT_WIDTH,
             h2=0.046152195301135549,  # cell H25
             l=guide_4b_length,
             mleft=1.5,  # cell O25
             mright=1.5,  # cell P25
             mtop=3.5,  # cell Q25
             mbottom=3.5,  # cell R25
-            at=[0, 0, z_along_arm(guide_4b_in_z, guide_4a_in_z, guide_4_taper_angle)],
+            at=[0, 0, z_along_arm(guide_4b_in_z, GUIDE_4A_IN_Z, GUIDE_4_TILT)],
             relative="arm_guide_4",
             when="bender_in==1",
         ),

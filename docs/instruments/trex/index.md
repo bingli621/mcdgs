@@ -1,8 +1,8 @@
 # T-Rex
 
-T-Rex is modelled from the source up to guide 4. The rest of the instrument is not modelled yet:
-there are no choppers, no guides after guide 4 and no detector. `sample_pos` marks the current
-estimate of the sample position, 163.8 m along z.
+T-Rex is modelled from the source to the sample position, as a chain of guides. There are no
+choppers, polarizers, collimators or detector yet, though the chopper gaps are in place as arms.
+`sample_pos` is on the beam axis, 163.8 m along it from the origin.
 
 [Extraction results](extraction.md) shows what the model gives so far. The code is in
 [`mcdgs.instruments.trex`](../../reference/trex.md).
@@ -93,3 +93,60 @@ nominal rotation, −0.398 deg, is the angle `atan(length / radius)`.
 | Mirrors | R0 0.99, Qc 0.0219, alpha 3.02, m 4, W 0.003 | `trex_primary.txt` |
 
 All the mirrors have the same values for both spin states, so the bender is spin-independent.
+
+## Curved guides
+
+Guides 5 to 29 follow a horizontal curve of 12 km radius, from the entrance of guide 5 to the exit
+of guide 29. The curve is made of straight sections, each at the angle the arc has at the section's
+midpoint. `arm_start_of_curve`, at the entrance of guide 5, takes out the tilt of guide 4, since the
+fixed −x wall ends there.
+
+| Guides | From, m | Width, mm | Height in → out, mm | m left, right | m top, bottom |
+| ------ | ------- | --------- | ------------------- | ------------- | ------------- |
+| 5 | 5.916 | 60 | 46.261 → 53.982 | 1.5 | 3.5 |
+| 6 to 9 | 8.6915 | 60 | 54.015 → 76.525 | 1.5 | 3 |
+| 10 | 22.7007 | 60 | 76.538 → 78.024 | 2 | 2.5 |
+| 11 to 15b | 24.3017 | 60 | 78.035 → 84.965 | 1.5, 2.5 | 2.5 |
+| 16 to 25 | 42.00155 | 60 | 85 | 1.5, 2.5 | 2.5 |
+| 26 to 29 | 82.00155 | 60 | 85 | 1, 2.5 | 2.5 |
+
+Positions here and in the sheet are distances along the beam axis, not lab z. The two differ by
+2.8 mm at the sample position.
+
+## Straight guides
+
+The axis is straight after guide 29, at 0.4301 deg to the lab z axis. Guides 34 to 50a approximate
+the ellipses of the sheet with straight tapered sections.
+
+| Guides | From, m | Width in → out, mm | Height in → out, mm | m left, right | m top, bottom |
+| ------ | ------- | ------------------ | ------------------- | ------------- | ------------- |
+| 30 to 33 | 96.00255 | 60 | 85 | 1 | 2.5 |
+| 34 to 37 | 111.098 | 60.129 → 69.542 | 85 | 1 | 2.5 |
+| 38 to 41 | 124 | 69.542 → 66.734 | 84.998 → 78.364 | 1 | 2.5 |
+| 42 | 140 | 66.734 → 63.480 | 78.364 → 74.442 | 1 | 3 |
+| 43 to 45 | 144 | 63.480 → 45.385 | 74.442 → 55.335 | 1.5 | 3 |
+| 47 | 155.596 | 45.385 → 38.918 | 55.335 → 49.103 | 2 | 4 |
+| 48b, 49 | 158 | 38.918 → 22.433 | 49.103 → 34.987 | 2 | 4.5 |
+| 50a | 162.083 | 22.433 → 14.184 | 34.987 → 29.556 | 3.5 | 4.5 |
+
+Guide 48b is the plain guide in the polarizer slot: guides 48a and 48c are not modelled. The sheet
+has no guide 46. The slit `slit_mc`, 20.5 mm × 34.5 mm, is 19 mm after guide 50a. Its size is from
+`trex_primary.txt`.
+
+The arms `arm_bwc1`, `arm_bwc2`, `arm_bm1`, `arm_psc` and `arm_mc` mark the gaps for bandwidth
+choppers 1 and 2, beam monitor 1, the P-Chopper and the M-Chopper.
+
+### Differences from mctrex
+
+The sheet is the source of the numbers, so the model differs from mctrex in three places:
+
+- **End of the curve.** `arm_end_of_curve`, at the exit of guide 29, turns by half the length of
+  guide 29, so the axis leaves the curve on its tangent. The Python version of mctrex and
+  `trex_primary.txt` have no rotation there, although the changelog of `trex_primary.txt` describes
+  one. Without it the axis ends 0.0048 deg short of the bend of the curve, and 5.7 mm to the side of
+  the sample position.
+- **Guide 5.** The exit height is the sheet's 53.982 mm, not 53.98 mm.
+- **Guide 15a.** The entrance is the sheet's 37.94924 m, not 37.94925 m.
+
+Guide 4 has its own arm here, so `arm_start_of_curve` takes out the tilt of that arm. It replaces
+the `arm_after_bender` of mctrex.

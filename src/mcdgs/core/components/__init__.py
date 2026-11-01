@@ -11,7 +11,7 @@ from .base import Component
 from .crystal import Single_crystal
 from .misc import Arm, Progress_bar
 from .monitors import Monitor_nD
-from .optics import Guide_gravity, Pol_bender
+from .optics import Guide_gravity, Pol_bender, Slit
 from .source import ESS_butterfly
 
 __all__ = [
@@ -23,4 +23,5 @@ __all__ = [
     "Pol_bender",
     "Progress_bar",
     "Single_crystal",
+    "Slit",
 ]
