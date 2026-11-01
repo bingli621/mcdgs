@@ -16,7 +16,7 @@ from mcdgs.core.params import InstrParam, param
 
 from .guides.curve import guides_curve
 from .guides.extraction import BENDER_ROTATION, guides_extraction
-from .guides.straight import guides_straight
+from .guides.straight import guides_straight, sample_pos, slit_mc
 
 
 @dataclass(frozen=True)
@@ -167,6 +167,8 @@ class TRex(Instrument):
         for guides in (guides_extraction, guides_curve, guides_straight):
             for name, component in guides().items():
                 setattr(self, name, component)
+        self.slit_mc = slit_mc()
+        self.sample_pos = sample_pos()
 
         self.sample = None
         if sample is not None:

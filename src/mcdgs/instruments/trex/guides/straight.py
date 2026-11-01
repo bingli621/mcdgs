@@ -16,9 +16,11 @@ from mcdgs.core.components import Arm, Component, Slit
 from .curve import GUIDE_29_OUT_Z
 from .sections import chain, gap, guide
 
+ARM_MC_Z = 161.985  # m, cell B140
+
 
 def guides_straight() -> dict[str, Component]:
-    """Create the straight guides, the slit after them and the sample position.
+    """Create the straight guides.
 
     Returns
     -------
@@ -26,9 +28,6 @@ def guides_straight() -> dict[str, Component]:
         Components by name, in beam order.
     """
     guide_30_in_z = 96.00255  # m, cell B108
-    arm_mc_z = 161.985  # m, cell B140
-    slit_mc_z = 163.105  # m, cell AB145
-    sample_z = 163.8  # m, cell C148
 
     sections = {
         "guide_30": guide(  # row 108
@@ -269,7 +268,7 @@ def guides_straight() -> dict[str, Component]:
             mbottom=4.5,  # cell R139
         ),
         "arm_mc": gap(  # row 140, the M-Chopper
-            z=arm_mc_z,
+            z=ARM_MC_Z,
             length=0.095,  # cell D140
         ),
         "guide_50a": guide(  # row 142
@@ -285,13 +284,35 @@ def guides_straight() -> dict[str, Component]:
             mbottom=4.5,  # cell R142
         ),
     }
-    return {
-        **chain(sections),
-        "slit_mc": Slit(
-            xwidth=0.0205,  # FIXME, not in Table of Optics v3.2
-            yheight=0.0345,  # FIXME, not in Table of Optics v3.2
-            at=[0, 0, slit_mc_z - arm_mc_z],
-            relative="arm_mc",
-        ),
-        "sample_pos": Arm(at=[0, 0, sample_z - arm_mc_z], relative="arm_mc"),
-    }
+    return chain(sections)
+
+
+def slit_mc() -> Slit:
+    """Create the slit after the last guide.
+
+    Returns
+    -------
+    :
+        A new slit.
+    """
+    slit_mc_z = 163.105  # m, cell AB145
+
+    return Slit(
+        xwidth=0.0205,  # FIXME, not in Table of Optics v3.2
+        yheight=0.0345,  # FIXME, not in Table of Optics v3.2
+        at=[0, 0, slit_mc_z - ARM_MC_Z],
+        relative="arm_mc",
+    )
+
+
+def sample_pos() -> Arm:
+    """Create the arm at the sample position.
+
+    Returns
+    -------
+    :
+        A new arm.
+    """
+    sample_z = 163.8  # m, cell C148
+
+    return Arm(at=[0, 0, sample_z - ARM_MC_Z], relative="arm_mc")
