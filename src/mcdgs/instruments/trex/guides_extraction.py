@@ -1,6 +1,6 @@
 """The bispectral extraction guides of T-Rex.
 
-Dimensions are from the Table of Optics V3.2 (the .xlsx file in this folder), whose rows are
+Dimensions are from the Table of Optics V3.2 (the .xlsx file in ``reference/``), whose rows are
 named in the comments. The values are the sheet's, not rounded.
 
 The -x wall of the NBOA (Neutron Beam Optics Assembly) is fixed at -47 mm. All of the horizontal

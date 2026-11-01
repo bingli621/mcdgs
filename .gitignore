@@ -44,9 +44,12 @@ Thumbs.db
 .env
 .env.*
 
-# OFF files and Excel sheets 
+# OFF files and Excel sheets
 OFF_files*/
 *.xlsx
+
+# Reference material of the instruments
+src/mcdgs/instruments/trex/reference/
 
 # McStas files
 mcstas_input/
