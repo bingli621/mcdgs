@@ -2,25 +2,25 @@
 authors = ["Bing Li <bing.li@ess.eu>"]
 channels = ["conda-forge"]
 name = "mcdgs"
-platforms = ["osx-arm64", "linux-64"]
+platforms = [{ name = "macos-arm64", platform = "osx-arm64", macos = "14.0" }, "linux-64"]  # scipp 26 needs macOS 14
 version = "0.1.0"
 
 [tasks]
 
 [dependencies]
-mcstas = ">=3.9.1,<4"
-mcstasscript = ">=0.0.94,<0.0.95"
-scipp = ">=25.12.0,<26"
-pytest = ">=9.1.1,<10"
-scippneutron = ">=26.9.1,<27"
+mcstas = ">=3.10.1,<4"
+mcstasscript = ">=0.0.96,<0.0.97"
+scipp = ">=26.9.0,<27"
+pytest = ">=9.2.0,<10"
+scippneutron = ">=26.10.0,<27"
 matplotlib = ">=3.11.2,<4"
 pytest-cov = ">=7.1.0,<8"
-pyyaml = ">=6,<7"
+pyyaml = ">=6.0.3,<7"
 pre-commit = ">=4.7.0,<5"
 tabulate = ">=0.10.0,<0.11"
-numpy = ">=1.26"
-scipy = ">=1.11"
-h5py = ">=3.10"
+numpy = ">=2.5"
+scipy = ">=1.18"
+h5py = ">=3.16"
 ruff = ">=0.17.3,<0.18"
 
 [pypi-dependencies]

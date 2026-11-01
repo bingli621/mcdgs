@@ -8,23 +8,23 @@ version = "0.1.0"
 description = "Monte Carlo simulation of the Direct Geometry Spectrometer (DGS) at the European Spallation Source (ESS). From McStas to S(Q,E)."
 readme = "README.md"
 license = "BSD-3-Clause"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 authors = [{ name = "Bing Li", email = "bing.li@ess.eu" }]
 dependencies = [
-    "h5py>=3.10",
-    "matplotlib>=3.8",
-    "mcstasscript>=0.0.94,<0.0.95",
+    "h5py>=3.16",
+    "matplotlib>=3.11.2",
+    "mcstasscript>=0.0.96,<0.0.97",
     "mcstastox @ git+https://github.com/mads-bertelsen-agentic/McStasToX@af80792680397168f5fd185afa392116bd4cf848",
-    "numpy>=1.26",
-    "pyyaml>=6,<7",
-    "scipp>=25.12.0",
-    "scippneutron>=26.9.1",
-    "scipy>=1.11",
+    "numpy>=2.5",
+    "pyyaml>=6.0.3,<7",
+    "scipp>=26.9.0",
+    "scippneutron>=26.10.0",
+    "scipy>=1.18",
     "tabulate>=0.10.0,<0.11",
 ]
 
 [project.optional-dependencies]
-test = ["pytest>=9.1.1", "pytest-cov>=7.1.0"]
+test = ["pytest>=9.2.0", "pytest-cov>=7.1.0"]
 
 [tool.hatch.metadata]
 # mcstastox is not on PyPI; it is pinned to a git commit
