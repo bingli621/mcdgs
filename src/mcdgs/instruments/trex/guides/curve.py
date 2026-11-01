@@ -22,79 +22,13 @@ The gaps for the choppers and the beam monitor are arms in the chain, for what g
 placed relative to.
 """
 
-import math
-from dataclasses import dataclass
-from itertools import pairwise
-from typing import Any
-
-from mcdgs.core.components import Arm, Component, Guide_gravity
+from mcdgs.core.components import Arm, Component
 
 from .extraction import GUIDE_4_TILT, GUIDE_4A_IN_Z, z_along_arm
+from .sections import arc_angle, chain, gap, guide
 
 CURVE_RADIUS = 12000.0  # m, cell N32
 GUIDE_29_OUT_Z = 95.99955  # m, cell C106
-
-
-@dataclass(frozen=True)
-class Section:
-    """A guide or a gap of the sheet, with where it lies on the beam axis.
-
-    Parameters
-    ----------
-    z:
-        Start along the beam axis, in m.
-    length:
-        Length in m.
-    component:
-        The guide, or the arm at the start of the gap.
-    """
-
-    z: float
-    length: float
-    component: Arm | Guide_gravity
-
-    @property
-    def middle(self) -> float:
-        """Midpoint along the beam axis, in m."""
-        return self.z + self.length / 2
-
-
-def guide(z: float, l: float, **values: Any) -> Section:
-    """Create the section of a guide.
-
-    Parameters
-    ----------
-    z:
-        Start along the beam axis, in m.
-    l:
-        Length in m.
-    values:
-        The other keywords of :class:`.Guide_gravity`.
-
-    Returns
-    -------
-    :
-        A new section.
-    """
-    return Section(z, l, Guide_gravity(l=l, **values))
-
-
-def gap(z: float, length: float) -> Section:
-    """Create the section of a gap.
-
-    Parameters
-    ----------
-    z:
-        Start along the beam axis, in m.
-    length:
-        Length in m.
-
-    Returns
-    -------
-    :
-        A new section.
-    """
-    return Section(z, length, Arm())
 
 
 def turn(distance: float) -> float:
@@ -110,33 +44,7 @@ def turn(distance: float) -> float:
     :
         Rotation about +y, in deg.
     """
-    return math.degrees(distance / CURVE_RADIUS)
-
-
-def chain(sections: dict[str, Section], radius: float = math.inf) -> dict[str, Component]:
-    """Place each section relative to the one before it. The first keeps its own placement.
-
-    Parameters
-    ----------
-    sections:
-        Sections by name, in beam order.
-    radius:
-        Radius of curvature of the beam axis, in m. The default is a straight axis.
-
-    Returns
-    -------
-    :
-        Components by name, in beam order.
-    """
-    for (previous_name, previous), (_, section) in pairwise(sections.items()):
-        section.component.at = [0, 0, section.z - previous.z]
-        section.component.rotated = [
-            0,
-            math.degrees((section.middle - previous.middle) / radius),
-            0,
-        ]
-        section.component.relative = previous_name
-    return {name: section.component for name, section in sections.items()}
+    return arc_angle(distance, CURVE_RADIUS)
 
 
 def guides_curve() -> dict[str, Component]:

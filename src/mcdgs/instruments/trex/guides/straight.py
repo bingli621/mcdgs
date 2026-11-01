@@ -13,7 +13,8 @@ tapered sections.
 
 from mcdgs.core.components import Arm, Component, Slit
 
-from .curve import GUIDE_29_OUT_Z, chain, gap, guide
+from .curve import GUIDE_29_OUT_Z
+from .sections import chain, gap, guide
 
 
 def guides_straight() -> dict[str, Component]:
