@@ -186,8 +186,8 @@ def guides_extraction() -> dict[str, Component]:
             when="bender_in==0",
         ),
         "bender": Pol_bender(  # the rest from trex_primary.txt
-            xwidth=0.06384,  # not in the sheet: from trex_guide_anyshape.ipynb of mctrex
-            yheight=0.046,  # not in the sheet: from trex_guide_anyshape.ipynb of mctrex
+            xwidth=0.06384,  # not in the sheet: from trex_guide_anyshape.ipynb
+            yheight=0.046,  # not in the sheet: from trex_guide_anyshape.ipynb
             length=BENDER_LENGTH,
             radius=BENDER_RADIUS,
             G=0,  # as every Guide_gravity

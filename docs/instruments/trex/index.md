@@ -89,7 +89,7 @@ nominal rotation, −0.398 deg, is the angle `atan(length / radius)`.
 | --------- | ----- | ------ |
 | Length | 0.05 m | Table of Optics |
 | Radius of curvature | 7.2 m | `trex_primary.txt` |
-| Width × height | 63.84 mm × 46 mm | `trex_guide_anyshape.ipynb` of mctrex |
+| Width × height | 63.84 mm × 46 mm | `trex_guide_anyshape.ipynb` |
 | Channels | 426 | `trex_primary.txt` |
 | Mirrors | R0 0.99, Qc 0.0219, alpha 3.02, m 4, W 0.003 | `trex_primary.txt` |
 
@@ -100,7 +100,8 @@ All the mirrors have the same values for both spin states, so the bender is spin
 Guides 5 to 29 follow a horizontal curve of 12 km radius, from the entrance of guide 5 to the exit
 of guide 29. The curve is made of straight sections, each at the angle the arc has at the section's
 midpoint. `arm_start_of_curve`, at the entrance of guide 5, takes out the tilt of guide 4, since the
-fixed −x wall ends there.
+fixed −x wall ends there. `arm_end_of_curve`, at the exit of guide 29, turns by half the length of
+guide 29, so the axis leaves the curve on its tangent.
 
 | Guides | From, m | Width, mm | Height in → out, mm | m left, right | m top, bottom |
 | ------ | ------- | --------- | ------------------- | ------------- | ------------- |
@@ -137,18 +138,3 @@ has no guide 46. The slit `slit_mc`, 20.5 mm × 34.5 mm, is 19 mm after guide 50
 
 The arms `arm_bwc1`, `arm_bwc2`, `arm_bm1`, `arm_psc` and `arm_mc` mark the gaps for bandwidth
 choppers 1 and 2, beam monitor 1, the P-Chopper and the M-Chopper.
-
-### Differences from mctrex
-
-The sheet is the source of the numbers, so the model differs from mctrex in three places:
-
-- **End of the curve.** `arm_end_of_curve`, at the exit of guide 29, turns by half the length of
-  guide 29, so the axis leaves the curve on its tangent. The Python version of mctrex and
-  `trex_primary.txt` have no rotation there, although the changelog of `trex_primary.txt` describes
-  one. Without it the axis ends 0.0048 deg short of the bend of the curve, and 5.7 mm to the side of
-  the sample position.
-- **Guide 5.** The exit height is the sheet's 53.982 mm, not 53.98 mm.
-- **Guide 15a.** The entrance is the sheet's 37.94924 m, not 37.94925 m.
-
-Guide 4 has its own arm here, so `arm_start_of_curve` takes out the tilt of that arm. It replaces
-the `arm_after_bender` of mctrex.
