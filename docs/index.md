@@ -1,10 +1,14 @@
-# mcdgs
+# McDGS
 
-Monte Carlo simulation of the Direct Geometry Spectrometer (DGS) at the European Spallation
-Source (ESS). From McStas to S(Q,E).
-
-An instrument is described once, as a Python class holding its components and parameters.
-mcdgs builds the McStas instrument from that description, runs it and reads the output.
+McDGS is a Monte Carlo (MC) simulation of the Direct Geometry Spectrometer (DGS) at the European
+Spallation Source (ESS), from [McStas](https://www.mcstas.org) to S(Q,E). An instrument is
+described once, as a Python class holding its components and parameters. From that description,
+McDGS builds the McStas instrument and runs the simulation through
+[McStasScript](https://github.com/PaNOSC-ViNYL/McStasScript), then loads the detector data from
+the McStas NeXus files with [McStasToX](https://github.com/mads-bertelsen-agentic/McStasToX). The
+reduction will normalize the data by the incident monitor and the pixel solid angle and convert
+it to momentum and energy transfer, with algorithms based on [Scipp](https://scipp.github.io),
+[ScippNeutron](https://scipp.github.io/scippneutron) and [tof](https://scipp.github.io/tof).
 
 ```python
 from mcdgs.instruments.trex.model import TRex
