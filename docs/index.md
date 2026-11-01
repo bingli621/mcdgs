@@ -29,8 +29,8 @@ print(trex)  # every parameter and component, with its position in the lab frame
 
 ## Where to go next
 
-- [Install and first run](getting-started.md): set up the environment and run T-Rex's extraction
-  guides.
+- [Install and first run](getting-started.md): set up the environment and run T-Rex to the sample
+  position.
 - [Core concepts](concepts.md): how instruments, components and parameters fit together.
 - [T-Rex](instruments/trex/index.md) and its
   [extraction results](instruments/trex/extraction.md): the model and what it shows so far.

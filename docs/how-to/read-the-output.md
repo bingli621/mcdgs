@@ -20,7 +20,7 @@ with h5py.File(h5_file) as file:
     error = spectrum["errors"][()]
 ```
 
-Component groups are numbered in beam order, such as `0010_spectrum`, which is why this finds the
+Component groups are numbered in beam order, such as `0067_spectrum`, which is why this finds the
 group by the end of its name. McStas adds a suffix for the variable to the file name, `_L` for
 wavelength. To see what a monitor wrote, use `list(monitor["output"])`.
 
