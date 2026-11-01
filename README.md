@@ -1,9 +1,9 @@
-# mcdgs
+# McDGS
 
 [![CI](https://github.com/bingli621/mcdgs/actions/workflows/ci.yml/badge.svg)](https://github.com/bingli621/mcdgs/actions/workflows/ci.yml)
 
-Monte Carlo simulation of the Direct Geometry Spectrometer (DGS) at the European Spallation
-Source (ESS). From McStas to S(Q,E).
+Monte Carlo (MC) simulation of the Direct Geometry Spectrometer (DGS) at the European Spallation
+Source. From McStas to S(Q,E).
 
 **Documentation: <https://bingli621.github.io/mcdgs/>**, including the T-Rex model and its results.
 
