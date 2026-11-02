@@ -126,7 +126,7 @@ def guides_extraction() -> dict[str, Component]:
     bender_mirror = (0.99, 0.0219, 3.02, 4.0, 0.003)  # FIXME, not in Table of Optics v3.2
 
     return {
-        "arm_NBOA": Arm(
+        "arm_nboa": Arm(
             at=[entrance_x(guide_1_in_width, nboa_taper_angle), 0, guide_1_in_z],
             rotated=[0, nboa_taper_angle, 0],
         ),
@@ -140,7 +140,7 @@ def guides_extraction() -> dict[str, Component]:
             mright=1.5,  # cell P13
             mtop=4,  # cell Q13
             mbottom=4,  # cell R13
-            relative="arm_NBOA",
+            relative="arm_nboa",
         ),
         "guide_2": Guide_gravity(  # row 15
             w1=0.082447,  # cell E15
@@ -153,7 +153,7 @@ def guides_extraction() -> dict[str, Component]:
             mtop=4,  # cell Q15
             mbottom=4,  # cell R15
             at=[0, 0, z_along_arm(guide_2_in_z, guide_1_in_z, nboa_taper_angle)],
-            relative="arm_NBOA",
+            relative="arm_nboa",
         ),
         "guide_3": Guide_gravity(  # row 17
             w1=0.074939,  # cell E17
@@ -166,7 +166,7 @@ def guides_extraction() -> dict[str, Component]:
             mtop=4,  # cell Q17, the sheet has 4 to 3.5, marked "issue"
             mbottom=4,  # cell R17
             at=[0, 0, z_along_arm(guide_3_in_z, guide_1_in_z, nboa_taper_angle)],
-            relative="arm_NBOA",
+            relative="arm_nboa",
         ),
         "arm_guide_4": Arm(
             at=[entrance_x(GUIDE_4A_IN_WIDTH, GUIDE_4_TILT), 0, GUIDE_4A_IN_Z],

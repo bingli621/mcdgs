@@ -15,7 +15,7 @@ def test_the_components_are_in_beam_order():
     assert list(TRex().components) == [
         "origin",
         "source",
-        "arm_NBOA",
+        "arm_nboa",
         "guide_1",
         "guide_2",
         "guide_3",
@@ -98,9 +98,9 @@ def test_the_given_sample_is_not_changed():
 
 def test_the_components_are_those_of_the_table_of_optics():
     trex = TRex()
-    assert trex.arm_NBOA.at == pytest.approx([-0.002022816656807591, 0, 1.895927], abs=1e-12)
-    assert trex.arm_NBOA.rotated == pytest.approx([0, -0.21499811064881996, 0], abs=1e-12)
-    assert trex.arm_NBOA.relative is None
+    assert trex.arm_nboa.at == pytest.approx([-0.002022816656807591, 0, 1.895927], abs=1e-12)
+    assert trex.arm_nboa.rotated == pytest.approx([0, -0.21499811064881996, 0], abs=1e-12)
+    assert trex.arm_nboa.relative is None
     assert trex.guide_1 == Guide_gravity(
         w1=0.089955,
         h1=0.029992,
@@ -113,7 +113,7 @@ def test_the_components_are_those_of_the_table_of_optics():
         mbottom=4,
         at=[0, 0, 0],
         rotated=[0, 0, 0],
-        relative="arm_NBOA",
+        relative="arm_nboa",
     )
 
 
@@ -129,7 +129,7 @@ def test_the_guides_start_at_the_lab_z_of_the_sheet():
 
 def test_the_guides_hang_off_the_arm():
     trex = TRex()
-    assert trex.guide_2.relative == trex.guide_3.relative == "arm_NBOA"
+    assert trex.guide_2.relative == trex.guide_3.relative == "arm_nboa"
     assert trex.guide_2.at[:2] == trex.guide_3.at[:2] == [0, 0]
 
 
@@ -148,7 +148,7 @@ def test_the_guide_starts_on_the_bisector_of_the_fixed_wall():
 
 def test_the_tilt_is_half_the_taper_of_the_sheet():
     # cell N13 is atan(dw / L): half of it differs from atan(dw / L / 2) by about 3e-6 deg
-    assert TRex().arm_NBOA.rotated[1] == pytest.approx(-0.42999016682346453 / 2, abs=1e-5)
+    assert TRex().arm_nboa.rotated[1] == pytest.approx(-0.42999016682346453 / 2, abs=1e-5)
 
 
 def test_the_center_line_tilts_toward_minus_x():

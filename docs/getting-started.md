@@ -39,7 +39,7 @@ The last table gives the placement of each component, with `position` in the lab
 name                component      at                         rotated            relative  position
 origin              Progress_bar   [0, 0, 0]                  [0, 0, 0]          -         [0, 0, 0]
 source              ESS_butterfly  [0, 0, 0]                  [0, 0, 0]          -         [0, 0, 0]
-arm_NBOA            Arm            [-0.00202282, 0, 1.89593]  [0, -0.214998, 0]  -         [-0.00202282, 0, 1.89593]
+arm_nboa            Arm            [-0.00202282, 0, 1.89593]  [0, -0.214998, 0]  -         [-0.00202282, 0, 1.89593]
 ...
 sample_pos          Arm            [0, 0, 1.815]              [0, 0, 0]          arm_mc    [0.830079, 0, 163.797]
 ```

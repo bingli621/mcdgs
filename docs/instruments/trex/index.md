@@ -64,7 +64,7 @@ walls. The center-line is a straight line tilted by half the taper angle, not th
 
 | Section | Taper angle | Placed on |
 | ------- | ----------- | --------- |
-| Guides 1 to 3 | 0.4300 deg | `arm_NBOA`, tilted −0.2150 deg |
+| Guides 1 to 3 | 0.4300 deg | `arm_nboa`, tilted −0.2150 deg |
 | Guide 4 | 0.4267 deg | `arm_guide_4`, tilted −0.2134 deg |
 
 Guide 4 has its own arm because its taper differs and the width at the exit of guide 3 carries over

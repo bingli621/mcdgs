@@ -69,7 +69,7 @@ class TRex(Instrument):
 
     origin: Progress_bar
     source: ESS_butterfly
-    arm_NBOA: Arm
+    arm_nboa: Arm
     guide_1: Guide_gravity
     guide_2: Guide_gravity
     guide_3: Guide_gravity
