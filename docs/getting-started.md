@@ -96,7 +96,7 @@ with h5py.File(h5_file) as file:
 
 McStas's compiler warnings about static vectors come from the bender and are harmless. The
 spectrum peaks near 2.7 Å, the cold peak: the bender has removed most of the short wavelengths.
-T-Rex has no choppers yet, so nothing else selects a wavelength.
+The choppers of T-Rex are parked for now, so nothing else selects a wavelength.
 
 ## What the run left behind
 

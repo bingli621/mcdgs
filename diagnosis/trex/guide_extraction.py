@@ -13,7 +13,11 @@ from mcstasscript.interface.instr import McStas_instr
 from mcdgs.core.base import Instrument
 from mcdgs.core.components import Arm, ESS_butterfly, Guide_gravity, Pol_bender, Progress_bar
 from mcdgs.core.params import InstrParam, param
-from mcdgs.instruments.trex.guides.extraction import BENDER_ROTATION, guides_extraction
+from mcdgs.instruments.trex.guides.extraction import (
+    BENDER_ROTATION,
+    bender,
+    guides_extraction,
+)
 from mcdgs.instruments.trex.sources import source
 from mcdgs.mcstas.builder import build_mcstas, default_input_dir
 from mcdgs.mcstas.run_folders import default_output_dir, run_folder
@@ -71,7 +75,8 @@ class Extraction(Instrument):
         super().__init__(params)
         self.origin = Progress_bar(at=[0, 0, 0])
         self.source = source()
-        for name, component in guides_extraction().items():
+        to_guide_4a, to_guide_4b = guides_extraction()
+        for name, component in {**to_guide_4a, "bender": bender(), **to_guide_4b}.items():
             setattr(self, name, component)
 
     @property

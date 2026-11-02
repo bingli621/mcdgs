@@ -14,20 +14,21 @@ tapered sections.
 from mcdgs.core.components import Arm, Component, Slit
 
 from .curve import GUIDE_29_OUT_Z
-from .sections import chain, gap, guide
+from .sections import chain, gap, guide, split_after
 
 ARM_MC_Z = 161.985  # m, cell B140
 MC_GAP_LENGTH = 0.095  # m, cell D140
 PSC_GAP_LENGTH = 0.2  # m, cell D115
 
 
-def guides_straight() -> dict[str, Component]:
+def guides_straight() -> list[dict[str, Component]]:
     """Create the straight guides.
 
     Returns
     -------
     :
-        Components by name, in beam order.
+        Components by name, in beam order, in three pieces: up to ``arm_psc``, up to
+        ``arm_mc``, and the rest.
     """
     guide_30_in_z = 96.00255  # m, cell B108
 
@@ -286,7 +287,7 @@ def guides_straight() -> dict[str, Component]:
             mbottom=4.5,  # cell R142
         ),
     }
-    return chain(sections)
+    return split_after(chain(sections), "arm_psc", "arm_mc")
 
 
 def slit_mc() -> Slit:

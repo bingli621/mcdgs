@@ -24,6 +24,8 @@ import math
 
 from mcdgs.core.components import Arm, Component, Guide_gravity, Pol_bender
 
+from .sections import split_after
+
 BENDER_LENGTH = 0.05  # m, cell B25 minus cell B24
 BENDER_RADIUS = 7.2  # FIXME, not in Table of Optics v3.2, in m
 BENDER_ROTATION = -math.degrees(math.atan(BENDER_LENGTH / BENDER_RADIUS))  # −0.39788 deg
@@ -97,13 +99,14 @@ GUIDE_4_TILT = half_taper_angle(
 )  # -0.2134 deg, half of cells N25 and N26
 
 
-def guides_extraction() -> dict[str, Component]:
+def guides_extraction() -> list[dict[str, Component]]:
     """Create the extraction guides.
 
     Returns
     -------
     :
-        Components by name, in beam order.
+        Components by name, in beam order, in two pieces, for :func:`bender` to go between
+        them: up to ``guide_4a``, and the rest.
     """
     # NBOA constants
     guide_1_in_width = 0.089955  # m, cell E13
@@ -121,11 +124,7 @@ def guides_extraction() -> dict[str, Component]:
     guide_4b_in_width = 0.063465631706607162  # m, cell E25
     guide_4b_length = 0.431  # m, cell D25
 
-    # bender constants
-    # Si channels, NiTi coating. The mirror values are R0, Qc, alpha, m and W
-    bender_mirror = (0.99, 0.0219, 3.02, 4.0, 0.003)  # FIXME, not in Table of Optics v3.2
-
-    return {
+    components = {
         "arm_nboa": Arm(
             at=[entrance_x(guide_1_in_width, nboa_taper_angle), 0, guide_1_in_z],
             rotated=[0, nboa_taper_angle, 0],
@@ -185,28 +184,6 @@ def guides_extraction() -> dict[str, Component]:
             relative="arm_guide_4",
             when="bender_in==0",
         ),
-        # 63.84mm x 46mm x 50mm (WxHxL), 0.15mm Si channels/ NiTi m=4 curve=7.2m
-        "bender": Pol_bender(
-            xwidth=0.06384,  # FIXME, not in Table of Optics v3.2
-            yheight=0.046,  # FIXME, not in Table of Optics v3.2
-            length=BENDER_LENGTH,
-            radius=BENDER_RADIUS,
-            G=0,  # as every Guide_gravity
-            nslit=426,  # FIXME, not in Table of Optics v3.2
-            d=1e-6,  # FIXME, not in Table of Optics v3.2
-            drawOption=2,
-            rTopUpPar=list(bender_mirror),
-            rTopDownPar=list(bender_mirror),
-            rBotUpPar=list(bender_mirror),
-            rBotDownPar=list(bender_mirror),
-            rLeftUpPar=list(bender_mirror),
-            rLeftDownPar=list(bender_mirror),
-            rRightUpPar=list(bender_mirror),
-            rRightDownPar=list(bender_mirror),
-            rotated=[0, "b_rot", 0],
-            relative="arm_guide_4",
-            when="bender_in==1",
-        ),
         "guide_4b": Guide_gravity(  # row 25
             w1=guide_4b_in_width,
             h1=0.044759094882096839,  # cell F25
@@ -222,3 +199,38 @@ def guides_extraction() -> dict[str, Component]:
             when="bender_in==1",
         ),
     }
+    return split_after(components, "guide_4a")
+
+
+def bender() -> Pol_bender:
+    """Create the bender, 63.84 mm x 46 mm x 50 mm (WxHxL), with 0.15 mm Si channels.
+
+    Returns
+    -------
+    :
+        A new bender.
+    """
+    # Si channels, NiTi coating. The mirror values are R0, Qc, alpha, m and W
+    mirror = (0.99, 0.0219, 3.02, 4.0, 0.003)  # FIXME, not in Table of Optics v3.2
+
+    return Pol_bender(
+        xwidth=0.06384,  # FIXME, not in Table of Optics v3.2
+        yheight=0.046,  # FIXME, not in Table of Optics v3.2
+        length=BENDER_LENGTH,
+        radius=BENDER_RADIUS,
+        G=0,  # as every Guide_gravity
+        nslit=426,  # FIXME, not in Table of Optics v3.2
+        d=1e-6,  # FIXME, not in Table of Optics v3.2
+        drawOption=2,
+        rTopUpPar=list(mirror),
+        rTopDownPar=list(mirror),
+        rBotUpPar=list(mirror),
+        rBotDownPar=list(mirror),
+        rLeftUpPar=list(mirror),
+        rLeftDownPar=list(mirror),
+        rRightUpPar=list(mirror),
+        rRightDownPar=list(mirror),
+        rotated=[0, "b_rot", 0],
+        relative="arm_guide_4",
+        when="bender_in==1",
+    )

@@ -25,7 +25,7 @@ placed relative to.
 from mcdgs.core.components import Arm, Component
 
 from .extraction import GUIDE_4_TILT, GUIDE_4A_IN_Z, z_along_arm
-from .sections import arc_angle, chain, gap, guide
+from .sections import arc_angle, chain, gap, guide, split_after
 
 CURVE_RADIUS = 12000.0  # m, cell N32
 GUIDE_29_OUT_Z = 95.99955  # m, cell C106
@@ -49,13 +49,14 @@ def turn(distance: float) -> float:
     return arc_angle(distance, CURVE_RADIUS)
 
 
-def guides_curve() -> dict[str, Component]:
+def guides_curve() -> list[dict[str, Component]]:
     """Create the curved guides.
 
     Returns
     -------
     :
-        Components by name, in beam order.
+        Components by name, in beam order, in three pieces: up to ``arm_bwc1``, up to
+        ``arm_bwc2``, and the rest.
     """
     guide_5_in_z = 5.916  # m, cell B32
     guide_5_length = 2.7625  # m, cell D32
@@ -413,7 +414,7 @@ def guides_curve() -> dict[str, Component]:
             mbottom=2.5,  # cell R106
         ),
     }
-    return {
+    components = {
         "arm_start_of_curve": Arm(
             at=[0, 0, z_along_arm(guide_5_in_z, GUIDE_4A_IN_Z, GUIDE_4_TILT)],
             rotated=[0, -GUIDE_4_TILT, 0],
@@ -426,3 +427,4 @@ def guides_curve() -> dict[str, Component]:
             relative="guide_29",
         ),
     }
+    return split_after(components, "arm_bwc1", "arm_bwc2")

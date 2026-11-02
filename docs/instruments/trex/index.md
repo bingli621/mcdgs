@@ -1,8 +1,8 @@
 # T-Rex
 
-T-Rex is modeled from the source to the sample position, as a chain of guides. There are no
-choppers, polarizers, collimators or detector yet, though the chopper gaps are in place as arms
-and the [`NXdisk_chopper`](../../reference/components.md) component is ready for them.
+T-Rex is modeled from the source to the sample position, as a chain of guides with its
+[`NXdisk_chopper`](../../reference/components.md) choppers in the gaps. The choppers are parked
+for now, with a slit on the beam. There are no polarizers, collimators or detector yet.
 `sample_pos` is on the beam axis, 163.8 m along it from the origin.
 
 [Extraction results](extraction.md) shows what the model gives so far. The code is in
@@ -137,4 +137,5 @@ has no guide 46. The slit `slit_mc`, 20.5 mm × 34.5 mm, is 19 mm after guide 50
 `trex_primary.txt`.
 
 The arms `arm_bwc1`, `arm_bwc2`, `arm_bm1`, `arm_psc` and `arm_mc` mark the gaps for bandwidth
-choppers 1 and 2, beam monitor 1, the P-Chopper and the M-Chopper.
+choppers 1 and 2, beam monitor 1, the P-Chopper and the M-Chopper. The choppers `bw1`, `bw2`,
+`ps1`, `ps2`, `mc1` and `mc2` come right after the arm of their gap.

@@ -4,9 +4,10 @@ from itertools import pairwise
 import numpy as np
 import pytest
 
-from mcdgs.core.components import Guide_gravity
+from mcdgs.core.components import Arm, Guide_gravity, NXdisk_chopper
 from mcdgs.core.geometry import place_absolute
 from mcdgs.instruments.trex.guides.extraction import half_taper_angle
+from mcdgs.instruments.trex.guides.sections import split_after
 from mcdgs.instruments.trex.model import TRex
 from mcdgs.samples import aluminum
 
@@ -34,22 +35,28 @@ def test_the_components_are_in_beam_order():
         "guide_12",
         "guide_13a",
         "arm_bwc1",
+        "bw1",
         "guide_13b",
         "guide_14a",
         "guide_14b",
         "guide_15a",
         "arm_bwc2",
+        "bw2",
         "guide_15b",
         "arm_bm1",
         *[f"guide_{number}" for number in range(16, 30)],
         "arm_end_of_curve",
         *[f"guide_{number}" for number in range(30, 33)],
         "arm_psc",
+        "ps1",
+        "ps2",
         *[f"guide_{number}" for number in range(33, 46)],
         "guide_47",
         "guide_48b",
         "guide_49",
         "arm_mc",
+        "mc1",
+        "mc2",
         "guide_50a",
         "slit_mc",
         "sample_pos",
@@ -69,6 +76,33 @@ def test_the_sample_position_is_on_the_axis_after_the_m_chopper():
     assert trex.sample_pos.relative == "arm_mc"
     assert trex.sample_pos.at == pytest.approx([0, 0, 163.8 - 161.985], abs=1e-12)
     assert trex.sample_pos.rotated == [0, 0, 0]
+
+
+@pytest.mark.parametrize(
+    ("name", "arm", "z"),
+    [
+        ("bw1", "arm_bwc1", 0.015),
+        ("bw2", "arm_bwc2", 0.015),
+        ("ps1", "arm_psc", 0.05),
+        ("ps2", "arm_psc", 0.15),
+        ("mc1", "arm_mc", 0.0425),
+        ("mc2", "arm_mc", 0.0525),
+    ],
+)
+def test_each_chopper_is_in_the_gap_of_its_arm(name, arm, z):
+    chopper = getattr(TRex(), name)
+    assert chopper.relative == arm
+    assert chopper.at == pytest.approx([0, 0, z], abs=1e-12)
+
+
+def test_a_cut_keeps_every_component_in_order():
+    components = {name: Arm() for name in ("a", "b", "c", "d")}
+    pieces = split_after(components, "a", "c")
+    assert [list(piece) for piece in pieces] == [["a"], ["b", "c"], ["d"]]
+
+
+def test_two_instruments_do_not_share_their_choppers():
+    assert TRex().bw1 is not TRex().bw1
 
 
 def test_without_a_sample_there_is_none():
@@ -301,7 +335,7 @@ def test_the_guides_are_those_of_the_table_of_optics():
 
 def test_each_guide_follows_the_one_before_on_the_axis():
     trex = TRex()
-    components = list(trex.components)
+    components = [name for name, c in trex.components.items() if not isinstance(c, NXdisk_chopper)]
     start = components.index("guide_6")
     stop = components.index("slit_mc")
     for previous, name in pairwise(components[start - 1 : stop]):

@@ -113,3 +113,28 @@ def chain(sections: dict[str, Section], radius: float = math.inf) -> dict[str, C
         section.component.rotated = [0, arc_angle(section.middle - previous.middle, radius), 0]
         section.component.relative = previous_name
     return {name: section.component for name, section in sections.items()}
+
+
+def split_after(components: dict[str, Component], *names: str) -> list[dict[str, Component]]:
+    """Cut components into pieces, for others to go between them.
+
+    A chain is cut once it is placed, since each section is placed from the one before it.
+
+    Parameters
+    ----------
+    components:
+        Components by name, in beam order.
+    names:
+        The components that end a piece.
+
+    Returns
+    -------
+    :
+        The pieces in beam order, one more than ``names``.
+    """
+    pieces: list[dict[str, Component]] = [{}]
+    for name, component in components.items():
+        pieces[-1][name] = component
+        if name in names:
+            pieces.append({})
+    return pieces
