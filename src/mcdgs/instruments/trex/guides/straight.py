@@ -17,6 +17,8 @@ from .curve import GUIDE_29_OUT_Z
 from .sections import chain, gap, guide
 
 ARM_MC_Z = 161.985  # m, cell B140
+MC_GAP_LENGTH = 0.095  # m, cell D140
+PSC_GAP_LENGTH = 0.2  # m, cell D115
 
 
 def guides_straight() -> dict[str, Component]:
@@ -70,7 +72,7 @@ def guides_straight() -> dict[str, Component]:
         ),
         "arm_psc": gap(  # row 115, the P-Chopper
             z=107.9,  # cell B115
-            length=0.2,  # cell D115
+            length=PSC_GAP_LENGTH,
         ),
         "guide_33": guide(  # row 118
             z=108.1037,  # cell B118
@@ -269,7 +271,7 @@ def guides_straight() -> dict[str, Component]:
         ),
         "arm_mc": gap(  # row 140, the M-Chopper
             z=ARM_MC_Z,
-            length=0.095,  # cell D140
+            length=MC_GAP_LENGTH,
         ),
         "guide_50a": guide(  # row 142
             z=162.083,  # cell B142

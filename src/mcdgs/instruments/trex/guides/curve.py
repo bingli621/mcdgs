@@ -29,6 +29,8 @@ from .sections import arc_angle, chain, gap, guide
 
 CURVE_RADIUS = 12000.0  # m, cell N32
 GUIDE_29_OUT_Z = 95.99955  # m, cell C106
+BWC1_GAP_LENGTH = 0.03  # m, cell D65
+BWC2_GAP_LENGTH = 0.03  # m, cell D73
 
 
 def turn(distance: float) -> float:
@@ -172,7 +174,7 @@ def guides_curve() -> dict[str, Component]:
         ),
         "arm_bwc1": gap(  # row 65, bandwidth chopper 1
             z=31.94904,  # cell B65
-            length=0.03,  # cell D65
+            length=BWC1_GAP_LENGTH,
         ),
         "guide_13b": guide(  # row 66
             z=31.97904,  # cell B66
@@ -224,7 +226,7 @@ def guides_curve() -> dict[str, Component]:
         ),
         "arm_bwc2": gap(  # row 73, bandwidth chopper 2
             z=39.94004,  # cell B73
-            length=0.03,  # cell D73
+            length=BWC2_GAP_LENGTH,
         ),
         "guide_15b": guide(  # row 74
             z=39.97004,  # cell B74
