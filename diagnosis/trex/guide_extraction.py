@@ -14,11 +14,11 @@ from mcdgs.core.base import Instrument
 from mcdgs.core.components import Arm, ESS_butterfly, Guide_gravity, Pol_bender, Progress_bar
 from mcdgs.core.params import InstrParam, param
 from mcdgs.instruments.trex.guides.extraction import BENDER_ROTATION, guides_extraction
-from mcdgs.instruments.trex.model import source
+from mcdgs.instruments.trex.sources import source
 from mcdgs.mcstas.builder import build_mcstas, default_input_dir
 from mcdgs.mcstas.run_folders import default_output_dir, run_folder
 
-WORK_DIR = Path(__file__).resolve().parents[1]  # the repository, wherever the script runs from
+WORK_DIR = Path(__file__).resolve().parents[2]  # the repository, wherever the script runs from
 
 
 @dataclass(frozen=True)

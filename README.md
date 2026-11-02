@@ -25,7 +25,8 @@ src/mcdgs/
   io/            instruments to and from dicts and YAML files
   mcstas/        build the McStasScript instrument, run simulations, read NeXus output
   reduction/     data reduction
-scripts/         build, run and plot
+scripts/         build tooling of the documentation site
+diagnosis/       one-off simulations that diagnose the instrument models
 tests/
 docs/            the documentation site, built with Zensical
 mcstas_input/    generated McStas files, per instrument (git-ignored)
