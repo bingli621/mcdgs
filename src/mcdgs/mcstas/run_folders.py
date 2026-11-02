@@ -219,7 +219,7 @@ def clean_runs(output_dir: str | Path | None = None, keep: int = 5) -> list[Path
     output_dir:
         Output folder. If ``None``, :func:`default_output_dir` is used.
     keep:
-        Number of newest finished runs to keep. ``run_to_sample`` runs count towards it, so
+        Number of newest finished runs to keep. ``run_to_sample`` runs count toward it, so
         fewer other runs may be kept.
 
     Returns

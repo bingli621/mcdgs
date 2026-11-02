@@ -15,7 +15,7 @@ with h5py.File(h5_file) as file:
     components = file["entry1/instrument/components"]
     monitor = next(c for name, c in components.items() if name.endswith("_spectrum"))
     spectrum = monitor["output/spectrum_L"]
-    wavelengths = spectrum["Wavelength__Angs_"][()]  # bin centres, in Å
+    wavelengths = spectrum["Wavelength__Angs_"][()]  # bin centers, in Å
     intensity = spectrum["data"][()]
     error = spectrum["errors"][()]
 ```

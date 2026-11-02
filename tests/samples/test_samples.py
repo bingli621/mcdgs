@@ -8,7 +8,7 @@ from mcdgs.core.components import Single_crystal
 from mcdgs.core.components.crystal import CIF_DIR
 from mcdgs.samples import aluminum, la2ni7
 
-ALUMINIUM = {  # the parameters of aluminum()
+ALUMINUM = {  # the parameters of aluminum()
     "xwidth": 0.005, "yheight": 0.005, "zdepth": 0.005, "order": 1, "mosaic": 5.0,
     "reflections": "Al.lau", "lattice_params": [4.0495] * 3 + [90.0] * 3,
     "along_beam": [0, 0, 1], "in_plane": [1, 0, 0],
@@ -20,7 +20,7 @@ def test_la2ni7_orientation():
     a, b, c = (np.array(v) for v in (s.astar, s.bstar, s.cstar))
     # (001) along +z, the beam
     assert c[:2] == pytest.approx(0, abs=1e-9) and c[2] > 0
-    # (1.357, 1, 0) in the horizontal plane (y = 0), towards +x
+    # (1.357, 1, 0) in the horizontal plane (y = 0), toward +x
     q = 1.357 * a + b
     assert q[1] == pytest.approx(0, abs=1e-9) and q[0] > 0
     # right-handed lattice
@@ -65,10 +65,10 @@ def test_the_crystal_keeps_its_lattice_params():
 
 
 def test_the_reciprocal_vectors_follow_the_parameters_and_are_not_parameters():
-    crystal = Single_crystal(**ALUMINIUM)
+    crystal = Single_crystal(**ALUMINUM)
     assert crystal == aluminum()
     assert "astar" not in [f.name for f in fields(crystal)]  # derived, so never in a file
-    turned = Single_crystal(**{**ALUMINIUM, "along_beam": [1, 0, 0], "in_plane": [0, 1, 0]})
+    turned = Single_crystal(**{**ALUMINUM, "along_beam": [1, 0, 0], "in_plane": [0, 1, 0]})
     assert turned.astar == pytest.approx([0, 0, 2 * np.pi / 4.0495])  # a* now along the beam
 
 

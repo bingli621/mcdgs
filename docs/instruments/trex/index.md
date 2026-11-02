@@ -1,6 +1,6 @@
 # T-Rex
 
-T-Rex is modelled from the source to the sample position, as a chain of guides. There are no
+T-Rex is modeled from the source to the sample position, as a chain of guides. There are no
 choppers, polarizers, collimators or detector yet, though the chopper gaps are in place as arms
 and the [`NXdisk_chopper`](../../reference/components.md) component is ready for them.
 `sample_pos` is on the beam axis, 163.8 m along it from the origin.
@@ -60,7 +60,7 @@ narrowing is taken out of the +x wall, on the cold moderator side, so the view o
 stays constant while the cold-side acceptance is trimmed.
 
 `Guide_gravity` is symmetric about its own axis, so each guide sits on the bisector of its two
-walls. The centre-line is a straight line tilted by half the taper angle, not the nominal beam axis:
+walls. The center-line is a straight line tilted by half the taper angle, not the nominal beam axis:
 
 | Section | Taper angle | Placed on |
 | ------- | ----------- | --------- |
@@ -113,7 +113,7 @@ guide 29, so the axis leaves the curve on its tangent.
 | 26 to 29 | 82.00155 | 60 | 85 | 1, 2.5 | 2.5 |
 
 Positions here and in the sheet are distances along the beam axis, not lab z. The two differ by
-2.8 mm at the sample position. The tables here and below summarise the sheet: the model uses its
+2.8 mm at the sample position. The tables here and below summarize the sheet: the model uses its
 full values, in `guides/curve.py` and `guides/straight.py`, with each cell named in the comments.
 
 ## Straight guides
@@ -132,7 +132,7 @@ the ellipses of the sheet with straight tapered sections.
 | 48b, 49 | 158 | 38.918 → 22.433 | 49.103 → 34.987 | 2 | 4.5 |
 | 50a | 162.083 | 22.433 → 14.184 | 34.987 → 29.556 | 3.5 | 4.5 |
 
-Guide 48b is the plain guide in the polarizer slot: guides 48a and 48c are not modelled. The sheet
+Guide 48b is the plain guide in the polarizer slot: guides 48a and 48c are not modeled. The sheet
 has no guide 46. The slit `slit_mc`, 20.5 mm × 34.5 mm, is 19 mm after guide 50a. Its size is from
 `trex_primary.txt`.
 

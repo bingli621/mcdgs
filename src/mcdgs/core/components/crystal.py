@@ -23,7 +23,7 @@ class Single_crystal(Component):
 
     With all goniometer angles at zero, the crystal is oriented so that the reciprocal vector
     ``along_beam`` points along the beam (+z) and ``in_plane`` lies in the horizontal x-z plane,
-    towards +x (left of the beam). The reciprocal vectors McStas takes (``recip_cell`` 1,
+    toward +x (left of the beam). The reciprocal vectors McStas takes (``recip_cell`` 1,
     ``ax`` ... ``cz``) are computed from these. Ready-made crystals are in samples/
     (``aluminum``, ``la2ni7``).
 
@@ -40,7 +40,7 @@ class Single_crystal(Component):
     along_beam:
         hkl of the reciprocal vector along the beam.
     in_plane:
-        hkl of the reciprocal vector in the horizontal plane, towards +x.
+        hkl of the reciprocal vector in the horizontal plane, toward +x.
     reflections:
         A McStas reflection list (e.g. ``"Al.lau"``), or a CIF file relative to samples/.
     xwidth, yheight, zdepth:

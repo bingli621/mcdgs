@@ -5,7 +5,7 @@ named in the comments. The values are the sheet's, not rounded.
 
 The -x wall of the NBOA (Neutron Beam Optics Assembly) is fixed at -47 mm. All of the horizontal
 narrowing is taken out of the +x wall, the cold moderator side: the view of the thermal face is
-held constant while the cold-side acceptance is trimmed. The guide centre-line is therefore not
+held constant while the cold-side acceptance is trimmed. The guide center-line is therefore not
 the nominal beam axis, but a straight line tilted by half the taper angle.
 
 ``Guide_gravity`` is symmetric about its own axis, but two straight walls are reproduced exactly
@@ -50,7 +50,7 @@ def half_taper_angle(w1: float, w2: float, length: float) -> float:
 
 
 def entrance_x(width: float, tilt: float) -> float:
-    """Compute the x of a guide's entrance centre that puts its -x wall on the fixed wall.
+    """Compute the x of a guide's entrance center that puts its -x wall on the fixed wall.
 
     Parameters
     ----------
@@ -62,7 +62,7 @@ def entrance_x(width: float, tilt: float) -> float:
     Returns
     -------
     :
-        x of the entrance centre in lab frame, in m.
+        x of the entrance center in lab frame, in m.
     """
     nboa_fixed_wall_x = -0.047  # FIXME, not in Table of Optics v3.2, in m
     return width * math.cos(math.radians(tilt)) / 2 + nboa_fixed_wall_x

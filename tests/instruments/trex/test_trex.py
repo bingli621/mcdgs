@@ -151,7 +151,7 @@ def test_the_tilt_is_half_the_taper_of_the_sheet():
     assert TRex().arm_NBOA.rotated[1] == pytest.approx(-0.42999016682346453 / 2, abs=1e-5)
 
 
-def test_the_centre_line_tilts_towards_minus_x():
+def test_the_center_line_tilts_toward_minus_x():
     trex = TRex()
     instr_param_dict = {p.name: p.value for p in trex.instr_params}
     (position, rot) = place_absolute(trex.components, instr_param_dict)["guide_1"]

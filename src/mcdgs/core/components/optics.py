@@ -97,7 +97,7 @@ def _default_mirror() -> list[float]:
 
 @dataclass(kw_only=True, repr=False)  # repr: Component's
 class Pol_bender(Component):
-    """A curved multi-channel guide that can polarise, as McStas ``Pol_bender``.
+    """A curved multi-channel guide that can polarize, as McStas ``Pol_bender``.
 
     Name and instance keywords (``name``, ``at``, ...) are as in :class:`.Component`. The
     McStas parameters left out here (reflectivity files ``rTopUpData`` ... ``rRightDownData``;
@@ -108,7 +108,7 @@ class Pol_bender(Component):
     xwidth, yheight:
         Width and height at the entrance in m.
     length:
-        Length along the centre in m.
+        Length along the center in m.
     radius:
         Radius of curvature in m. Positive curves left, negative curves right.
     G:

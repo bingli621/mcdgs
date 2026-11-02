@@ -33,7 +33,7 @@ class NXdisk_chopper(Component):
         Where the beam crosses the disk from the zero mark, in the sense of ``slit_edges``, in
         deg. 0 puts the beam at the top of the disk, 180 hangs the disk above the beam.
     zero_angle:
-        Angle from the component's +y axis to the top-dead-centre pickup, in deg.
+        Angle from the component's +y axis to the top-dead-center pickup, in deg.
     jitter:
         Timing jitter applied to each ray, in s.
     abs_out:

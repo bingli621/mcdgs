@@ -242,7 +242,7 @@ def guides_straight() -> dict[str, Component]:
             mtop=4,  # cell Q133
             mbottom=4,  # cell R133
         ),
-        # guides 48a and 48c, the polarizers, are not modelled: 48b is the plain guide in their slot
+        # guides 48a and 48c, the polarizers, are not modeled: 48b is the plain guide in their slot
         "guide_48b": guide(  # row 136
             z=158,  # cell B136
             w1=0.038917728211423487,  # cell E136
