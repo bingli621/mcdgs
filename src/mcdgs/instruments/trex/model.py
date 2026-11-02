@@ -1,4 +1,4 @@
-"""The T-Rex instrument, its control parameters and its source."""
+"""The T-Rex instrument and its control parameters."""
 
 from dataclasses import dataclass, replace
 
@@ -17,6 +17,7 @@ from mcdgs.core.params import InstrParam, param
 from .guides.curve import guides_curve
 from .guides.extraction import BENDER_ROTATION, guides_extraction
 from .guides.straight import guides_straight, sample_pos, slit_mc
+from .sources import source
 
 
 @dataclass(frozen=True)
@@ -49,29 +50,6 @@ class Params:
 
 
 DEFAULT_PARAMS = Params()  # frozen, so one shared default is safe
-
-
-def source() -> ESS_butterfly:
-    """Create the source component for T-Rex.
-
-    Returns
-    -------
-    :
-        A new source.
-    """
-    return ESS_butterfly(
-        sector="W",
-        beamline=7,
-        yheight=0.03,
-        cold_frac=0.3,
-        dist=2,
-        focus_xw=0.095,
-        focus_yh=0.035,
-        Lmin=0.1,
-        Lmax=10.0,
-        n_pulses=1,
-        acc_power=2,
-    )
 
 
 class TRex(Instrument):
