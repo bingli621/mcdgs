@@ -11,20 +11,20 @@ license = "BSD-3-Clause"
 requires-python = ">=3.12"
 authors = [{ name = "Bing Li", email = "bing.li@ess.eu" }]
 dependencies = [
-    "h5py>=3.16",
-    "matplotlib>=3.11.2",
-    "mcstasscript>=0.0.96,<0.0.97",
+    "h5py",
+    "matplotlib",
+    "mcstasscript",
     "mcstastox @ git+https://github.com/mads-bertelsen-agentic/McStasToX@af80792680397168f5fd185afa392116bd4cf848",
-    "numpy>=2.5",
-    "pyyaml>=6.0.3,<7",
-    "scipp>=26.9.0",
-    "scippneutron>=26.10.0",
-    "scipy>=1.18",
+    "numpy",
+    "pyyaml",
+    "scipp>=26.9.0,<27",
+    "scippneutron>=26.10.0,<27",
+    "scipy",
     "tabulate>=0.10.0,<0.11",
 ]
 
 [project.optional-dependencies]
-test = ["pytest>=9.2.0", "pytest-cov>=7.1.0"]
+test = ["pytest>=9.2.0,<10", "pytest-cov>=7.1.0,<8"]
 
 [tool.pixi.workspace]
 channels = ["conda-forge"]
@@ -33,7 +33,7 @@ platforms = [{ name = "macos-arm64", platform = "osx-arm64", macos = "14.0" }, "
 # only what [project] does not list: pixi also installs [project.dependencies],
 # taking a package from conda-forge when McStas already brings it, else from PyPI
 [tool.pixi.dependencies]
-mcstas = ">=3.10.1,<4"
+mcstas = ">=3.10.2,<4"
 pre-commit = ">=4.7.0,<5"
 ruff = ">=0.17.3,<0.18"
 
