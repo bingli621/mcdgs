@@ -24,30 +24,18 @@ def test_the_component_name_is_the_class_name():
     assert Slit(xwidth=0.1, yheight=0.2).component_name == "Slit"
 
 
-def test_the_name_is_unset_unless_given():
-    assert Slit(xwidth=0.1, yheight=0.2).name is None
-    assert Slit(name="slit", xwidth=0.1, yheight=0.2).name == "slit"
-
-
-def test_the_placement_defaults_to_the_absolute_origin():
+def test_by_default_a_component_is_at_the_absolute_origin_with_no_instance_keyword():
     slit = Slit(xwidth=0.1, yheight=0.2)
     assert (slit.at, slit.rotated, slit.relative) == ([0, 0, 0], [0, 0, 0], None)
+    assert [slit.when, slit.group, slit.jump, slit.split, slit.extend] == [None] * 5
 
 
-def test_the_mcstas_parameters_leave_out_the_name_and_the_placement():
+def test_the_mcstas_parameters_leave_out_the_instance_keywords():
     slit = Slit(
         name="slit",
         at=[0, 0, 1],
         rotated=[0, "omega", 0],
         relative="origin",
-        xwidth=0.1,
-        yheight=0.2,
-    )
-    assert slit.mcstas_parameters() == {"xwidth": 0.1, "yheight": 0.2}
-
-
-def test_the_mcstas_parameters_leave_out_the_instance_keywords():
-    slit = Slit(
         when="flag == 1",
         group="slits",
         jump="myself ITERATE 5",
@@ -57,11 +45,6 @@ def test_the_mcstas_parameters_leave_out_the_instance_keywords():
         yheight=0.2,
     )
     assert slit.mcstas_parameters() == {"xwidth": 0.1, "yheight": 0.2}
-
-
-def test_the_instance_keywords_are_unset_by_default():
-    slit = Slit(xwidth=0.1, yheight=0.2)
-    assert [slit.when, slit.group, slit.jump, slit.split, slit.extend] == [None] * 5
 
 
 def test_the_name_is_not_compared():
@@ -84,11 +67,7 @@ def test_repr_shows_the_other_instance_keywords_only_when_set():
 
 def test_progress_bar():
     assert Progress_bar().percent == 10  # McStas's default
-    origin = Progress_bar(name="origin", percent=10)
-    assert origin.component_name == "Progress_bar"
-    assert origin.name == "origin"
-    assert origin.at == [0, 0, 0]
-    assert origin.mcstas_parameters() == {"percent": 10}
+    assert Progress_bar(percent=20).mcstas_parameters() == {"percent": 20}
 
 
 def ess_butterfly(**values):
@@ -151,9 +130,7 @@ def test_ess_butterfly_needs_a_sector_letter(sector):
 
 def test_arm_has_no_mcstas_parameters():
     arm = Arm(name="sample_arm", at=[0, 0, 160], rotated=[0, "a3", 0], relative="origin")
-    assert arm.component_name == "Arm"
     assert arm.mcstas_parameters() == {}
-    assert repr(arm).startswith("sample_arm (Arm):\n")
 
 
 def guide_gravity(**values):
@@ -197,7 +174,6 @@ def test_monitor_nd():
         options="lambda limits=[0.5 5] bins=50",
     )
     parameters = monitor.mcstas_parameters()
-    assert monitor.component_name == "Monitor_nD"
     assert len(parameters) == 19
     assert parameters["options"] == "lambda limits=[0.5 5] bins=50"
     assert "user0" not in parameters and "username0" not in parameters

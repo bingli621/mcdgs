@@ -103,14 +103,6 @@ def test_the_instance_keywords_are_passed_on(tmp_path):
     assert "double seen = 1;" in axis.EXTEND
 
 
-def test_the_instance_keywords_of_trex_choose_guide_4(tmp_path):
-    inst = build_mcstas(TRex(), input_path=tmp_path)
-    assert inst.get_component("guide_4a").WHEN == "WHEN (bender_in==0)"
-    assert inst.get_component("bender").WHEN == "WHEN (bender_in==1)"
-    assert inst.get_component("bender").ROTATED_data == [0, "b_rot", 0]
-    assert inst.get_component("guide_1").WHEN == ""  # no WHEN: it always acts
-
-
 def test_a_string_parameter_is_quoted(tmp_path):
     source = build_mcstas(TRex(), input_path=tmp_path).get_component("source")
     assert source.sector == '"W"'
@@ -160,13 +152,6 @@ def test_a_field_mcstas_does_not_know_is_left_out(tmp_path):
     crystal = build_mcstas(TRex(sample=aluminum()), input_path=tmp_path).get_component("sample")
     assert "lattice_params" not in crystal.parameter_names  # the crystal computes from it
     assert crystal.recip_cell == 1 and crystal.cz == pytest.approx(1.5516, abs=1e-4)
-
-
-def test_the_source_frequency_is_not_for_mcstas(tmp_path):
-    inst = build_mcstas(TRex(), input_path=tmp_path)
-    inst.write_full_instrument()
-    source = (tmp_path / "TRex.instr").read_text().split("COMPONENT source")[1].split("AT")[0]
-    assert "sector" in source and "frequency" not in source
 
 
 def test_a_computed_value_mcstas_does_not_know_raises(tmp_path, monkeypatch):

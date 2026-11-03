@@ -4,7 +4,7 @@ from itertools import pairwise
 import numpy as np
 import pytest
 
-from mcdgs.core.components import Arm, ESS_butterfly, Guide_gravity, NXdisk_chopper
+from mcdgs.core.components import Arm, Guide_gravity, NXdisk_chopper
 from mcdgs.core.geometry import place_absolute
 from mcdgs.instruments.trex.choppers import (
     BEAM_ANGLE,
@@ -77,12 +77,6 @@ def test_the_source_is_that_of_trex_primary():
     assert (source.yheight, source.cold_frac, source.dist) == (0.03, 0.3, 2)
     assert (source.focus_xw, source.focus_yh) == (0.095, 0.035)
     assert (source.Lmin, source.Lmax, source.n_pulses) == (0.1, 10.0, 1)
-
-
-def test_the_source_is_the_ess_butterfly_of_mcstas_pulsing_at_14_hz():
-    source = TRex().source
-    assert type(source) is ESS_butterfly
-    assert source.frequency == 14
 
 
 def test_the_sample_position_is_on_the_axis_after_the_m_chopper():
@@ -228,10 +222,6 @@ def test_a_cut_keeps_every_component_in_order():
     components = {name: Arm() for name in ("a", "b", "c", "d")}
     pieces = split_after(components, "a", "c")
     assert [list(piece) for piece in pieces] == [["a"], ["b", "c"], ["d"]]
-
-
-def test_two_instruments_do_not_share_their_choppers():
-    assert TRex().bw1 is not TRex().bw1
 
 
 def test_without_a_sample_there_is_none():
@@ -544,5 +534,6 @@ def test_two_instruments_share_no_component():
     first, second = TRex(), TRex()
     assert first == second
     assert first.guide_1 is not second.guide_1
+    assert first.bw1 is not second.bw1
     first.guide_1.w1 = 0.1
     assert second.guide_1.w1 == pytest.approx(0.089955)

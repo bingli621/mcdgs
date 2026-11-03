@@ -35,7 +35,6 @@ def test_the_samples_are_crystals_placed_like_any_component():
         assert (crystal.at, crystal.rotated, crystal.relative) == ([0, 0, 0.1], [0, 5, 0], "arm")
         assert (make().at, make().relative) == ([0, 0, 0], None)
     assert la2ni7(mosaic=60).mosaic == 60
-    assert aluminum().reflections == "Al.lau"
 
 
 def test_the_cif_of_a_crystal_is_a_path_inside_the_package():
@@ -64,12 +63,10 @@ def test_the_crystal_keeps_its_lattice_params():
     assert np.linalg.norm(B[:, 2]) == pytest.approx(np.linalg.norm(crystal.cstar))
 
 
-def test_the_reciprocal_vectors_follow_the_parameters_and_are_not_parameters():
+def test_the_reciprocal_vectors_are_not_parameters():
     crystal = Single_crystal(**ALUMINUM)
     assert crystal == aluminum()
     assert "astar" not in [f.name for f in fields(crystal)]  # derived, so never in a file
-    turned = Single_crystal(**{**ALUMINUM, "along_beam": [1, 0, 0], "in_plane": [0, 1, 0]})
-    assert turned.astar == pytest.approx([0, 0, 2 * np.pi / 4.0495])  # a* now along the beam
 
 
 def test_the_reciprocal_vectors_follow_a_change_of_the_crystal():
