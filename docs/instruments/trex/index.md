@@ -6,6 +6,7 @@ to the central wavelength `lambda0` (see [Chopper timing](#chopper-timing)). The
 polarizers, collimators or detector yet.
 `sample_pos` is on the beam axis, 163.8 m along it from the origin.
 
+[Overview](overview.md) shows the whole model as McStas draws it, and
 [Extraction results](extraction.md) shows what the model gives so far. The code is in
 [`mcdgs.instruments.trex`](../../reference/trex.md).
 
@@ -166,3 +167,10 @@ time. In `"FF"` the disk is phased to the wide slit instead: it has turned past 
 the angle from the center of the wide slit to the beam, 55° for the P-Chopper and 175° for the
 M-Chopper. These are the angles by which `trex_primary.txt` shifts the slit edges in its HF mode;
 the model keeps the disks as they are and changes the delay, which is the same.
+
+The slit edges of each disk reach McStas as an array of their own, declared in the `.instr` file
+as `<name>_slit_edges`. McStas 3.10.2 sizes a list written in place by its first use, so the
+2 edges of `bw1` would have been too few for the 8 of `ps1`.
+[`diagnosis/trex/overview.py`](https://github.com/bingli621/mcdgs/blob/main/diagnosis/trex/overview.py)
+writes the `.instr` file of T-Rex to `mcstas_input/TRex/` and prints it, along with the figures
+of the [Overview](overview.md).
