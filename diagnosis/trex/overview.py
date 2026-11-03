@@ -39,7 +39,7 @@ if __name__ == "__main__":
     mcstas_instr.show_instrument(backend="matplotlib_2d", projection="zx", width=1600, height=400)
     # show_instrument returns None and has no aspect option: set it on the axes it drew
     plt.gca().set_aspect("equal")
-    plt.gcf().savefig(TOP_VIEW, dpi=150)
+    plt.gcf().savefig(TOP_VIEW, dpi=400)  # 6400 px wide, to zoom in on in the documentation
     print(f"Saved {TOP_VIEW}")
     mcstas_instr.show_instrument(
         backend="matplotlib_2d", projection="xy", limits=[-0.5, 1.5, -1, 1], width=600, height=600

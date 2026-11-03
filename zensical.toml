@@ -89,6 +89,8 @@ pymdownx.inlinehilite = {}
 pymdownx.snippets.check_paths = true  # a missing file fails the build
 pymdownx.superfences = {}
 
+[project.plugins.glightbox]  # click an image to open it full size, and zoom in on it
+
 [project.plugins.mkdocstrings.handlers.python]
 paths = ["src"]
 inventories = ["https://docs.python.org/3/objects.inv"]
