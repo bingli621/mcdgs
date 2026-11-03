@@ -26,7 +26,7 @@ src/mcdgs/
   mcstas/        build the McStasScript instrument, run simulations, read NeXus output
   reduction/     data reduction
 scripts/         build tooling of the documentation site
-diagnosis/       one-off simulations that diagnose the instrument models
+notebooks/       Jupyter notebooks of one-off simulations that diagnose the instrument models
 tests/
 docs/            the documentation site, built with Zensical
 mcstas_input/    generated McStas files, per instrument (git-ignored)

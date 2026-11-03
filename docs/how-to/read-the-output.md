@@ -33,7 +33,7 @@ with h5py.File(scan_file) as file:
         entry = file[f"entry{n}"]
 ```
 
-[`diagnosis/trex/bender/bender_efficiency.py`](https://github.com/bingli621/mcdgs/blob/main/diagnosis/trex/bender/bender_efficiency.py)
+[`notebooks/trex/bender.ipynb`](https://github.com/bingli621/mcdgs/blob/main/notebooks/trex/bender.ipynb)
 is a complete example, from a scan to a figure.
 
 ## Detector pixels

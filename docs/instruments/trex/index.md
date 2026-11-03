@@ -1,8 +1,8 @@
 # T-Rex
 
 The geometry of the T-Rex model as McStas draws it, at the default
-[control parameters](details.md#control-parameters). Both figures have the same scale on their
-two axes, in m.
+[control parameters](details.md#control-parameters). The two flat figures have the same scale on
+their two axes, in m.
 
 ## Seen from above
 
@@ -38,6 +38,17 @@ The notches at the edge of the disks are the slits. The four of the P-Chopper ar
 two of 20° and two of 35°. See [Chopper timing](details.md#chopper-timing) for how the mode puts
 a narrow or a wide slit on the beam.
 
-[`diagnosis/trex/overview.py`](https://github.com/bingli621/mcdgs/blob/main/diagnosis/trex/overview.py)
-draws both figures with McStasScript's `show_instrument` (mcdisplay, `matplotlib_2d` backend) and
-saves them to this page's `figures/` folder, so running it again updates the page.
+## In 3D
+
+<iframe src="files/overview_3d.html" title="T-Rex in 3D" width="100%" height="660"
+        style="border: none"></iframe>
+
+Drag to rotate, scroll to zoom and right-drag to pan. The controls above and below the scene,
+"Take me to", "Colormode" and the component details, need a running Python kernel and do nothing
+on this page.
+
+[`notebooks/trex/overview.ipynb`](https://github.com/bingli621/mcdgs/blob/main/notebooks/trex/overview.ipynb)
+draws the three figures with McStasScript's `show_instrument` (mcdisplay): the two flat ones with
+the `matplotlib_2d` backend, saved to this page's `figures/` folder, and the 3D one with the
+`pythreejs` backend, saved as a web page to its `files/` folder. Running it again updates the
+page.

@@ -36,6 +36,8 @@ platforms = [{ name = "macos-arm64", platform = "osx-arm64", macos = "14.0" }, "
 mcstas = ">=3.10.2,<4"
 pre-commit = ">=4.7.0,<5"
 ruff = ">=0.17.3,<0.18"
+pythreejs = ">=2.4.2,<3"
+ipympl = ">=0.10.0,<0.11"
 
 [tool.pixi.pypi-dependencies]
 mcdgs = { path = ".", editable = true }
@@ -68,7 +70,7 @@ addopts = "--doctest-modules"  # the Examples in the docstrings are tests too
 line-length = 100
 
 [tool.ruff.lint]
-# numpydoc docstrings and type hints, for the package (not the tests, scripts and diagnosis)
+# numpydoc docstrings and type hints, for the package (not the tests, scripts and notebooks)
 extend-select = ["D", "ANN"]
 ignore = [
     "ANN401",  # Any: params is any params_class, values may be anything
@@ -85,4 +87,4 @@ convention = "numpy"
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["D", "ANN"]
 "scripts/**" = ["D", "ANN"]
-"diagnosis/**" = ["D", "ANN"]
+"notebooks/**" = ["D", "ANN"]
