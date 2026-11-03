@@ -83,7 +83,7 @@ class TRexWithMonitor(TRex):
 
 
 simulation = Simulation(TRexWithMonitor())
-h5_file = simulation.run(ncount=1e6, bender_in=1)
+h5_file = simulation.run(ncount=1e7, bender_in=1)
 print(h5_file)
 
 with h5py.File(h5_file) as file:
@@ -94,9 +94,10 @@ with h5py.File(h5_file) as file:
         print(f"{wavelength:.1f} Å  {intensity:.3g}")
 ```
 
-McStas's compiler warnings about static vectors come from the bender and are harmless. The
-spectrum peaks near 2.7 Å, the cold peak: the bender has removed most of the short wavelengths.
-The choppers of T-Rex are parked for now, so nothing else selects a wavelength.
+The choppers pass one band of wavelengths around `lambda0`, 2.0 Å by default, from about 1.3 to
+2.9 Å. It is highest near 2.3 Å, since the bender removes much of the short-wavelength side.
+Few neutrons get through the choppers. With 1e6 neutrons only about a hundred reach the monitor,
+and the spectrum has empty bins inside the band.
 
 ## What the run left behind
 

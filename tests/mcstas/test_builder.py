@@ -130,9 +130,25 @@ def test_an_expression_is_not_quoted(tmp_path):
     assert monitor.xwidth == "2.0*omega"
 
 
-def test_a_vector_parameter_is_a_c_initializer(tmp_path):
-    bender = build_mcstas(TRex(), input_path=tmp_path).get_component("bender")
-    assert bender.rTopUpPar == "{0.99,0.0219,3.02,4.0,0.003}"
+def _written_instr(instrument, tmp_path):
+    inst = build_mcstas(instrument, input_path=tmp_path)
+    inst.write_full_instrument()
+    return (tmp_path / f"{instrument.name}.instr").read_text()
+
+
+def test_a_vector_parameter_is_declared_and_passed_by_name(tmp_path):
+    text = _written_instr(TRex(), tmp_path)
+    assert "double bender_rTopUpPar[5] = {0.99,0.0219,3.02,4.0,0.003};" in text
+    assert "rTopUpPar = bender_rTopUpPar" in text
+
+
+def test_each_chopper_has_an_array_of_its_own_size(tmp_path):
+    # McStas 3.10.2 sizes a vector written in place by its first instance: bw1's 2 edges
+    text = _written_instr(TRex(), tmp_path)
+    for name, n_edges in [("bw1", 2), ("ps1", 8), ("mc1", 4)]:
+        assert f"double {name}_slit_edges[{n_edges}] = {{" in text
+        assert f"slit_edges = {name}_slit_edges, n_edges = {n_edges}" in text
+    assert "slit_edges = {" not in text
 
 
 def test_a_cif_file_reaches_mcstas_as_its_full_path(tmp_path):

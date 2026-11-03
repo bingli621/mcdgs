@@ -6,7 +6,10 @@ McStas positions are relative to earlier components. Each component is:
 - added as its ``component_name``, named after its attribute in the instrument, with its instance
   keywords (``at``, ``rotated``, ``relative``, ``when``, ...);
 - given its McStas parameters (``Component.mcstas_parameters``: its fields plus what it
-  computes), written as McStas expects them: see :func:`_formatted_value`.
+  computes), written as McStas expects them: see :func:`_formatted_value`. A list, the value
+  of a McStas ``vector``, is declared as an array named ``<component>_<parameter>`` in DECLARE
+  and passed by that name. McStas 3.10.2 sizes a vector written in place by its first instance,
+  so the edges of a second chopper with more slits would overflow.
 
 A field McStas does not know is left out, since the component only computes from it. A computed
 parameter McStas does not know raises.
@@ -80,8 +83,9 @@ def _formatted_value(value: Any, mcstas_type: str) -> Any:
     Returns
     -------
     :
-        A string in C quotes (``None`` as McStas's ``"NULL"``), a list as a C initializer in
-        braces, and anything else, such as a number or an expression, unchanged.
+        A string in C quotes (``None`` as McStas's ``"NULL"``), and anything else, such as a
+        number or an expression, unchanged. A list is declared instead: see
+        :func:`_formatted_parameters`.
 
     Examples
     --------
@@ -89,32 +93,34 @@ def _formatted_value(value: Any, mcstas_type: str) -> Any:
     '"W"'
     >>> _formatted_value(None, "string")
     '"NULL"'
-    >>> _formatted_value([0.99, 0.0219], "vector")
-    '{0.99,0.0219}'
     >>> _formatted_value("-chi", "double")
     '-chi'
     """
     if mcstas_type == "string":
         return f'"{"NULL" if value is None else value}"'
-    if isinstance(value, list):
-        return "{" + ",".join(str(v) for v in value) + "}"
     return value
 
 
 def _formatted_parameters(
-    mcstas_comp: Any, component: Component, params: dict[str, Any]
+    mcstas_instr: instr.McStas_instr,
+    mcstas_comp: Any,
+    component: Component,
+    params: dict[str, Any],
 ) -> dict[str, Any]:
     """Return the McStas parameters of a component that its McStasScript component takes.
 
     Each entry of ``params`` (from ``component.mcstas_parameters``) must be one of:
 
-    - a McStas parameter: kept, formatted by :func:`_formatted_value`;
+    - a McStas parameter: kept, formatted by :func:`_formatted_value`, or, if it is a list,
+      declared as the array ``<component>_<parameter>`` and passed by that name;
     - a field McStas does not take: left out, as the component only computes from it (e.g. the source's ``frequency``, the crystal's ``lattice_params``, put into its ``ax`` ... ``cz``).
 
     Anything else was computed under a name McStas does not take, likely a typo.
 
     Parameters
     ----------
+    mcstas_instr:
+        The McStasScript instrument, to declare the arrays in.
     mcstas_comp:
         The McStasScript component.
     component:
@@ -138,11 +144,17 @@ def _formatted_parameters(
         raise ValueError(
             f"{component.name} ({component.component_name}): no McStas parameter {unknown}"
         )
-    return {
-        name: _formatted_value(value, mcstas_comp.parameter_types[name])
-        for name, value in params.items()
-        if name in mcstas_names  # else a field the component computes from: not for McStas
-    }
+    values = {}
+    for name, value in params.items():
+        if name not in mcstas_names:  # a field the component computes from: not for McStas
+            continue
+        if isinstance(value, list):  # a vector: declared, not written in place
+            values[name] = mcstas_instr.add_declare_var(
+                "double", f"{component.name}_{name}", array=len(value), value=value
+            )
+        else:
+            values[name] = _formatted_value(value, mcstas_comp.parameter_types[name])
+    return values
 
 
 def build_mcstas(
@@ -185,5 +197,7 @@ def build_mcstas(
             EXTEND=component.extend,
         )
         params = component.mcstas_parameters()  # its fields, and what it computes
-        mcstas_comp.set_parameters(_formatted_parameters(mcstas_comp, component, params))
+        mcstas_comp.set_parameters(
+            _formatted_parameters(mcstas_instr, mcstas_comp, component, params)
+        )
     return mcstas_instr

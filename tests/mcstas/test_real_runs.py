@@ -1,4 +1,4 @@
-"""Real McStas runs of a small instrument: compiled and simulated, nothing faked."""
+"""Real McStas runs of a small instrument and of T-Rex: compiled and simulated, nothing faked."""
 
 import shutil
 from dataclasses import dataclass
@@ -10,6 +10,7 @@ import pytest
 from mcdgs.core.base import Instrument
 from mcdgs.core.components import Arm, ESS_butterfly, Monitor_nD, Progress_bar
 from mcdgs.core.params import InstrParam, param
+from mcdgs.instruments.trex.model import TRex
 from mcdgs.mcstas.nexus_io import read_pixels
 from mcdgs.mcstas.simulation import Simulation
 
@@ -86,3 +87,12 @@ def test_a_split_run_gives_the_intensity_and_geometry_of_a_direct_run(sim):
     points = read_pixels(h5_file.parent, "detector", "source", "sample_pos", [0, 0, 1])
     assert [params["width"] for params, _ in points] == [0.1, 0.05]
     assert points[1][1].sum().value < points[0][1].sum().value
+
+
+@pytest.mark.parametrize("mode", ["FF", "RR"])
+def test_trex_runs_through_with_its_choppers_turning(tmp_path, mode):
+    # compiling alone let through an abort at INITIALIZE: the slit edges of the choppers
+    trex = TRex()
+    trex.update_params(mode=mode)
+    h5_file = Simulation(trex, work_dir=tmp_path).run(ncount=1e3, seed=1, mpi=None)
+    assert h5_file.is_file()

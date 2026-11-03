@@ -149,11 +149,12 @@ class TRex(Instrument):
             self.params.mode,
             self.params.t0_offset,
         )
-        return [
+        bender_params = [
             InstrParam("bender_in", int(self.params.bender_in), "", "bender in = 1, out = 0"),
             InstrParam("b_rot", self.params.b_rot, "deg", "rotation of the cold neutron bender"),
-            InstrParam("omega", self.params.omega, "deg", "rotation of the goniometer about +Y"),
-        ] + [
+        ]
+
+        chopper_params = [
             p
             for name, timing in timings.items()
             for p in (
@@ -161,3 +162,8 @@ class TRex(Instrument):
                 InstrParam(f"delay_{name}", timing.delay, "s", f"delay of chopper {name}"),
             )
         ]
+        gonio_params = [
+            InstrParam("omega", self.params.omega, "deg", "rotation of the goniometer about +Y"),
+        ]
+
+        return bender_params + gonio_params + chopper_params
