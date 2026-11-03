@@ -1,8 +1,9 @@
 # T-Rex
 
 T-Rex is modeled from the source to the sample position, as a chain of guides with its
-[`NXdisk_chopper`](../../reference/components.md) choppers in the gaps. The choppers are parked
-for now, with a slit on the beam. There are no polarizers, collimators or detector yet.
+[`NXdisk_chopper`](../../reference/components.md) choppers in the gaps. The choppers are phased
+to the central wavelength `lambda0` (see [Chopper timing](#chopper-timing)). There are no
+polarizers, collimators or detector yet.
 `sample_pos` is on the beam axis, 163.8 m along it from the origin.
 
 [Extraction results](extraction.md) shows what the model gives so far. The code is in
@@ -16,10 +17,12 @@ for now, with a slit on the beam. There are no polarizers, collimators or detect
 | `b_rot` | −0.398 deg | Rotation of the bender about +y. |
 | `lambda0` | 2.0 Å | Central wavelength. |
 | `rrm` | 18 | Repetition rate multiplication factor. |
+| `mode` | `"FF"` | `"FF"` puts the wide slits of the P- and M-Chopper on the beam, for high flux; `"RR"` the narrow ones, for high resolution. |
+| `t0_offset` | 1.7 ms | Time from the start of the pulse at which the neutrons the choppers are phased to leave the moderator. |
 | `omega` | 0.0 deg | Goniometer rotation about +y. |
 
-Only `bender_in` and `b_rot` reach McStas. Nothing in the model uses `lambda0`, `rrm` or `omega`
-yet.
+`bender_in`, `b_rot` and `omega` reach McStas as they are. `lambda0`, `rrm`, `mode` and
+`t0_offset` reach it through the frequency and delay of each chopper.
 
 ## Source
 
@@ -139,3 +142,27 @@ has no guide 46. The slit `slit_mc`, 20.5 mm × 34.5 mm, is 19 mm after guide 50
 The arms `arm_bwc1`, `arm_bwc2`, `arm_bm1`, `arm_psc` and `arm_mc` mark the gaps for bandwidth
 choppers 1 and 2, beam monitor 1, the P-Chopper and the M-Chopper. The choppers `bw1`, `bw2`,
 `ps1`, `ps2`, `mc1` and `mc2` come right after the arm of their gap.
+
+## Chopper timing
+
+Each chopper takes its frequency and delay from the McStas instrument parameters `nu_<name>` and
+`delay_<name>`, computed from `lambda0`, `rrm`, `mode` and `t0_offset` as `trex_primary.txt` does:
+
+| Choppers | Frequency |
+| -------- | --------- |
+| `bw1`, `bw2` | 14 Hz, the source frequency |
+| `ps1`, `ps2` | 0.75 × `rrm` × 14 Hz, `ps2` counter-rotating |
+| `mc1`, `mc2` | `rrm` × 14 Hz |
+
+A chopper's delay is the time a neutron of wavelength `lambda0` takes to reach it, plus
+`t0_offset`. The flight path is the chopper's distance from the moderator along the
+beam axis: the position of its gap in the Table of Optics plus its place in the gap. The path
+through the bender is taken to be that through guide 4a.
+
+The disks of the P- and M-Chopper have two kinds of slit: narrow ones (20° and 2.5°) and wide ones
+(35° and 4.4°). The mode chooses which is on the beam when a neutron of wavelength `lambda0`
+arrives. In `"RR"` the narrow slit is centered on the beam then, so the delay is the arrival
+time. In `"FF"` the disk is phased to the wide slit instead: it has turned past its zero mark by
+the angle from the center of the wide slit to the beam, 55° for the P-Chopper and 175° for the
+M-Chopper. These are the angles by which `trex_primary.txt` shifts the slit edges in its HF mode;
+the model keeps the disks as they are and changes the delay, which is the same.

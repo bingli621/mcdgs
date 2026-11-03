@@ -75,6 +75,10 @@ ignore = [
     "D105",  # magic methods: a docstring only where they do something unusual
 ]
 
+[tool.ruff.lint.flake8-bugbear]
+# param returns a dataclasses.field, as safe a dataclass default (RUF009) as field itself
+extend-immutable-calls = ["mcdgs.core.params.param"]
+
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
 

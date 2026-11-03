@@ -2,7 +2,7 @@ import math
 
 import pytest
 
-from mcdgs.core.utils import evaluate, format_value
+from mcdgs.core.utils import evaluate, format_value, speed_from_wavelength
 
 PARAMS = {"omega": 30.0, "chi": 5.0, "x": 0.5}  # floats, as the params are
 
@@ -55,3 +55,7 @@ def test_an_expression_is_computed_as_mcstas_would(entry, value):
 def test_anything_else_raises(entry, match):
     with pytest.raises(ValueError, match=match):
         evaluate(entry, PARAMS)
+
+
+def test_a_neutron_of_1_angstrom_flies_at_3956_m_per_s():
+    assert speed_from_wavelength(1.0) == pytest.approx(3956.034, abs=1e-3)

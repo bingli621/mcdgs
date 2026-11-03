@@ -6,6 +6,14 @@ import pytest
 
 from mcdgs.core.components import Arm, Guide_gravity, NXdisk_chopper
 from mcdgs.core.geometry import place_absolute
+from mcdgs.instruments.trex.choppers import (
+    BEAM_ANGLE,
+    DISK_DISTANCE,
+    MODE_SLIT,
+    SLIT_EDGES,
+    chopper_timings,
+    slit_angle,
+)
 from mcdgs.instruments.trex.guides.extraction import half_taper_angle
 from mcdgs.instruments.trex.guides.sections import split_after
 from mcdgs.instruments.trex.model import TRex
@@ -71,6 +79,13 @@ def test_the_source_is_that_of_trex_primary():
     assert (source.Lmin, source.Lmax, source.n_pulses) == (0.1, 10.0, 1)
 
 
+def test_the_source_pulses_at_14_hz_and_is_the_ess_butterfly_of_mcstas():
+    source = TRex().source
+    assert source.frequency == 14
+    assert source.component_name == "ESS_butterfly"
+    assert "frequency" in source.mcstas_parameters()  # the builder leaves it out: see tests/mcstas
+
+
 def test_the_sample_position_is_on_the_axis_after_the_m_chopper():
     trex = TRex()
     assert trex.sample_pos.relative == "arm_mc"
@@ -93,6 +108,121 @@ def test_each_chopper_is_in_the_gap_of_its_arm(name, arm, z):
     chopper = getattr(TRex(), name)
     assert chopper.relative == arm
     assert chopper.at == pytest.approx([0, 0, z], abs=1e-12)
+
+
+@pytest.mark.parametrize(
+    ("name", "distance"),
+    [  # the positions in column AB of the sheet, two disks around each P and M position
+        ("bw1", 31.96404),  # row 65
+        ("bw2", 39.95504),  # row 73
+        ("ps1", 107.95),  # row 115
+        ("ps2", 108.05),
+        ("mc1", 162.0275),  # row 140
+        ("mc2", 162.0375),
+    ],
+)
+def test_each_chopper_is_at_its_distance_from_the_moderator(name, distance):
+    assert DISK_DISTANCE[name] == pytest.approx(distance, abs=1e-9)
+
+
+def test_the_choppers_turn_at_the_frequencies_of_trex_primary():
+    timings = chopper_timings(lambda0=2.4, rrm=4, source_frequency=14, mode="FF", t0_offset=0.0017)
+    assert {name: timing.nu for name, timing in timings.items()} == pytest.approx(
+        {"bw1": 14, "bw2": 14, "ps1": 42, "ps2": -42, "mc1": 56, "mc2": 56}
+    )
+
+
+def test_in_rr_each_zero_mark_passes_the_beam_when_the_central_wavelength_arrives():
+    timings = chopper_timings(lambda0=2.4, rrm=4, source_frequency=14, mode="RR", t0_offset=0.0017)
+    for name, timing in timings.items():
+        arrival = 0.0017 + DISK_DISTANCE[name] * 2.4 / 3956.034
+        assert timing.delay == pytest.approx(arrival, rel=1e-6)
+
+
+@pytest.mark.parametrize(
+    ("mode", "angles"),
+    [  # FF: the shifts of the slit edges in trex_primary.txt's HF mode
+        ("FF", {"bw1": 0, "bw2": 0, "ps1": 55, "ps2": 55, "mc1": 175, "mc2": 175}),
+        ("RR", {"bw1": 0, "bw2": 0, "ps1": 0, "ps2": 0, "mc1": 0, "mc2": 0}),
+    ],
+)
+def test_the_slit_angles_are_the_shifts_of_trex_primary(mode, angles):
+    assert {name: slit_angle(name, mode) for name in angles} == pytest.approx(angles)
+
+
+@pytest.mark.parametrize("mode", ["FF", "RR"])
+def test_the_slit_of_the_mode_is_centered_on_the_beam_when_the_central_wavelength_arrives(mode):
+    timings = chopper_timings(lambda0=2.4, rrm=4, source_frequency=14, mode=mode, t0_offset=0.0017)
+    for name, timing in timings.items():
+        arrival = 0.0017 + DISK_DISTANCE[name] * 2.4 / 3956.034
+        # as NXdisk_chopper: the disk angle on the beam is beam_angle minus the turn of the mark
+        mark = 360 * timing.nu * (arrival - timing.delay)
+        on_beam = BEAM_ANGLE[name] - mark
+        edges = SLIT_EDGES[name]
+        slit = MODE_SLIT[mode][name]
+        center = (edges[2 * slit] + edges[2 * slit + 1]) / 2
+        off_center = (on_beam - center + 180) % 360 - 180  # in [-180, 180): 359.9... is -0.0...
+        assert off_center == pytest.approx(0, abs=1e-3), name
+
+
+def test_the_mode_selects_the_wide_slit_for_flux_and_the_narrow_one_for_resolution():
+    for name in ("ps1", "ps2", "mc1", "mc2"):
+        edges = SLIT_EDGES[name]
+
+        def width(mode, edges=edges, name=name):
+            slit = MODE_SLIT[mode][name]
+            return edges[2 * slit + 1] - edges[2 * slit]
+
+        assert width("FF") > width("RR"), name
+
+
+def test_an_unknown_mode_raises():
+    with pytest.raises(ValueError, match="mode 'HF' is not 'FF' or 'RR'"):
+        chopper_timings(lambda0=2.4, rrm=4, source_frequency=14, mode="HF", t0_offset=0.0017)
+
+
+def test_each_chopper_takes_its_timing_from_the_instrument_parameters():
+    trex = TRex()
+    instr_param_dict = {p.name: p.value for p in trex.instr_params}
+    timings = chopper_timings(
+        trex.params.lambda0,
+        trex.params.rrm,
+        trex.source.frequency,
+        trex.params.mode,
+        trex.params.t0_offset,
+    )
+    for name, timing in timings.items():
+        chopper = getattr(trex, name)
+        assert (chopper.nu, chopper.delay) == (f"nu_{name}", f"delay_{name}")
+        assert (instr_param_dict[chopper.nu], instr_param_dict[chopper.delay]) == timing
+
+
+def test_the_timing_follows_the_control_parameters():
+    trex = TRex()
+    trex.update_params(lambda0=4.0, rrm=6)
+    instr_param_dict = {p.name: p.value for p in trex.instr_params}
+    assert instr_param_dict["nu_mc1"] == pytest.approx(84)
+    assert instr_param_dict["delay_bw1"] == chopper_timings(4.0, 6, 14, "FF", 0.0017)["bw1"].delay
+
+
+def test_the_t0_offset_delays_every_chopper_by_as_much():
+    trex = TRex()
+    before = {p.name: p.value for p in trex.instr_params}
+    trex.update_params(t0_offset=trex.params.t0_offset + 0.001)
+    after = {p.name: p.value for p in trex.instr_params}
+    for name in ("bw1", "bw2", "ps1", "ps2", "mc1", "mc2"):
+        assert after[f"delay_{name}"] - before[f"delay_{name}"] == pytest.approx(0.001)
+        assert after[f"nu_{name}"] == before[f"nu_{name}"]
+
+
+def test_the_default_mode_is_ff_and_rr_moves_only_the_p_and_m_choppers():
+    trex = TRex()
+    assert trex.params.mode == "FF"
+    ff = {p.name: p.value for p in trex.instr_params}
+    trex.update_params(mode="RR")
+    rr = {p.name: p.value for p in trex.instr_params}
+    changed = {name for name in ff if ff[name] != rr[name]}
+    assert changed == {"delay_ps1", "delay_ps2", "delay_mc1", "delay_mc2"}
 
 
 def test_a_cut_keeps_every_component_in_order():
@@ -252,11 +382,9 @@ def test_the_bender_is_rotated_by_its_full_deflection():
     trex = TRex()
     assert trex.bender.rotated == [0, "b_rot", 0]
     assert trex.params.b_rot == pytest.approx(-0.397881, abs=1e-6)
-    assert {p.name: p.value for p in trex.instr_params} == {
-        "bender_in": 0,
-        "b_rot": trex.params.b_rot,
-        "omega": 0.0,
-    }
+    instr_param_dict = {p.name: p.value for p in trex.instr_params}
+    assert instr_param_dict["bender_in"] == 0
+    assert instr_param_dict["b_rot"] == trex.params.b_rot
 
 
 def test_every_mirror_of_the_bender_is_the_same():

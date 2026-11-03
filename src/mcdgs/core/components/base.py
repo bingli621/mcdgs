@@ -10,8 +10,10 @@ from mcdgs.core.utils import format_value
 class Component:
     """Base class of a McStas component.
 
-    A subclass is named after the McStas component it stands for (``Slit``, ``DiskChopper``,
-    ...). Its fields are its McStas parameters, plus the instance keywords below.
+    A direct subclass is named after the McStas component it stands for (``Slit``,
+    ``DiskChopper``, ...). Its fields are its McStas parameters, plus the instance keywords below.
+    A subclass of one of those (an instrument's own source, say) stands for the same McStas
+    component, with fields of its own that McStas does not take.
 
     Parameters
     ----------
@@ -44,7 +46,7 @@ class Component:
     KEYWORDS:
         The fields that are McStas instance keywords, not McStas parameters.
     component_name:
-        McStas component, the class name.
+        McStas component, the name of the class that directly extends ``Component``.
 
     Notes
     -----
@@ -82,9 +84,11 @@ class Component:
     )
 
     name: str | None = field(default=None, compare=False)
+    # placement
     at: list[float | str] = field(default_factory=lambda: [0, 0, 0])
     rotated: list[float | str] = field(default_factory=lambda: [0, 0, 0])
     relative: str | None = None
+    # mcstas keywords
     when: str | None = None
     group: str | None = None
     jump: str | None = None
@@ -93,8 +97,9 @@ class Component:
 
     @property
     def component_name(self) -> str:
-        """McStas component, the class name."""
-        return type(self).__name__
+        """McStas component, the name of the class that directly extends ``Component``."""
+        mcstas_class = next((c for c in type(self).__mro__ if Component in c.__bases__), type(self))
+        return mcstas_class.__name__
 
     def mcstas_parameters(self) -> dict[str, Any]:
         """Return the McStas parameters of the component.

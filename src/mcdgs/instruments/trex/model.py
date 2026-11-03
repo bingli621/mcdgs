@@ -13,7 +13,7 @@ from mcdgs.core.components import (
 )
 from mcdgs.core.params import InstrParam, param
 
-from .choppers import choppers
+from .choppers import Mode, chopper_timings, choppers
 from .guides.bispectral import BENDER_ROTATION, arm_guide_4, bender, guide_4a, guide_4b
 from .guides.curve import guides_curve
 from .guides.extraction import guides_extraction
@@ -34,6 +34,12 @@ class Params:
         Central wavelength, in Å.
     rrm:
         Repetition rate multiplication factor.
+    mode:
+        ``"FF"`` puts the wide slits of the P- and M-Chopper on the beam, for high flux;
+        ``"RR"`` the narrow ones, for high resolution.
+    t0_offset:
+        Time from the start of the pulse at which the neutrons the choppers are phased to leave
+        the moderator, in s.
     omega:
         Goniometer rotation about +y, in deg.
     bender_in:
@@ -43,8 +49,14 @@ class Params:
 
     """
 
+    t0_offset: float = param(
+        0.0017, "s", "time added to choppers shifting to middle of the long pulse"
+    )
+
     lambda0: float = param(2.0, "Å", "central wavelength")
     rrm: int = param(18, "", "repetition rate multiplication factor")
+    mode: Mode = param("FF", "", "FF = high flux, RR = high resolution")
+
     omega: float = param(0.0, "deg", "goniometer rotation about +Y")
     bender_in: bool = param(False, "", "True = bender in, False = bender out")
     b_rot: float = param(BENDER_ROTATION, "deg", "rotation of the cold neutron bender")
@@ -125,11 +137,27 @@ class TRex(Instrument):
 
     @property
     def instr_params(self) -> list[InstrParam]:
-        """McStas instrument parameters: the choice of guide 4 and the rotation of the bender."""
+        """McStas instrument parameters.
+
+        The choice of guide 4, the rotation of the bender and of the goniometer, and the
+        frequency and delay of each chopper, computed from ``lambda0``, ``rrm``, ``mode`` and ``t0_offset``.
+        """
+        timings = chopper_timings(
+            self.params.lambda0,
+            self.params.rrm,
+            self.source.frequency,
+            self.params.mode,
+            self.params.t0_offset,
+        )
         return [
             InstrParam("bender_in", int(self.params.bender_in), "", "bender in = 1, out = 0"),
             InstrParam("b_rot", self.params.b_rot, "deg", "rotation of the cold neutron bender"),
             InstrParam("omega", self.params.omega, "deg", "rotation of the goniometer about +Y"),
-            # InstrParam("nu_bw1", self.params.nu_bw1, "Hz", "frequency of bandwidth chopper 1"),
-            # InstrParam("nu_bw2", self.params.nu_bw2, "Hz", "frequency of bandwidth chopper 2"),
+        ] + [
+            p
+            for name, timing in timings.items()
+            for p in (
+                InstrParam(f"nu_{name}", timing.nu, "Hz", f"rotation frequency of chopper {name}"),
+                InstrParam(f"delay_{name}", timing.delay, "s", f"delay of chopper {name}"),
+            )
         ]

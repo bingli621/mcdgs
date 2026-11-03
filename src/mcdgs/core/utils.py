@@ -4,6 +4,7 @@
 - :func:`evaluate` computes the number a component value stands for. A McStas expression of
   instrument parameters (``"-chi"``, ``"2.0*omega + 5"``) is parsed with ``ast`` and computed as
   McStas would. Only what McStas offers is allowed, and no code is run.
+- :func:`speed_from_wavelength` computes the speed of a neutron.
 """
 
 import ast
@@ -11,6 +12,8 @@ import math
 import operator
 from collections.abc import Callable, Mapping
 from typing import Any
+
+from scipy.constants import h, m_n
 
 # what an expression may use: McStas's constants and its C math functions
 CONSTANTS: dict[str, float] = {"PI": math.pi, "DEG2RAD": math.pi / 180, "RAD2DEG": 180 / math.pi}
@@ -134,3 +137,24 @@ def format_value(value: Any) -> str:
     if isinstance(value, float | int) and not isinstance(value, bool):
         return f"{value:.6g}"
     return str(value)
+
+
+def speed_from_wavelength(wavelength: float) -> float:
+    """Compute the speed of a neutron.
+
+    Parameters
+    ----------
+    wavelength:
+        Wavelength, in Å.
+
+    Returns
+    -------
+    :
+        Speed, in m/s.
+
+    Examples
+    --------
+    >>> round(speed_from_wavelength(1.0), 3)
+    3956.034
+    """
+    return h / (m_n * wavelength * 1e-10)

@@ -30,7 +30,9 @@ from .sections import arc_angle, chain, gap, guide, split_after
 
 CURVE_RADIUS = 12000.0  # m, cell N32
 GUIDE_29_OUT_Z = 95.99955  # m, cell C106
+ARM_BWC1_Z = 31.94904  # m, cell B65
 BWC1_GAP_LENGTH = 0.03  # m, cell D65
+ARM_BWC2_Z = 39.94004  # m, cell B73
 BWC2_GAP_LENGTH = 0.03  # m, cell D73
 
 
@@ -175,7 +177,7 @@ def guides_curve() -> list[dict[str, Component]]:
             mbottom=2.5,  # cell R64
         ),
         "arm_bwc1": gap(  # row 65, bandwidth chopper 1
-            z=31.94904,  # cell B65
+            z=ARM_BWC1_Z,
             length=BWC1_GAP_LENGTH,
         ),
         "guide_13b": guide(  # row 66
@@ -227,7 +229,7 @@ def guides_curve() -> list[dict[str, Component]]:
             mbottom=2.5,  # cell R72
         ),
         "arm_bwc2": gap(  # row 73, bandwidth chopper 2
-            z=39.94004,  # cell B73
+            z=ARM_BWC2_Z,
             length=BWC2_GAP_LENGTH,
         ),
         "guide_15b": guide(  # row 74

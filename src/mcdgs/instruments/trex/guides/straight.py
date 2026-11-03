@@ -18,6 +18,7 @@ from .sections import chain, gap, guide, split_after
 
 ARM_MC_Z = 161.985  # m, cell B140
 MC_GAP_LENGTH = 0.095  # m, cell D140
+ARM_PSC_Z = 107.9  # m, cell B115
 PSC_GAP_LENGTH = 0.2  # m, cell D115
 
 
@@ -72,7 +73,7 @@ def guides_straight() -> list[dict[str, Component]]:
             mbottom=2.5,  # cell R112
         ),
         "arm_psc": gap(  # row 115, the P-Chopper
-            z=107.9,  # cell B115
+            z=ARM_PSC_Z,
             length=PSC_GAP_LENGTH,
         ),
         "guide_33": guide(  # row 118

@@ -6,9 +6,10 @@ from pathlib import Path
 import pytest
 
 from mcdgs.core.base import Instrument
-from mcdgs.core.components import Arm, ESS_butterfly, Monitor_nD, Progress_bar
+from mcdgs.core.components import Arm, Monitor_nD, Progress_bar
 from mcdgs.core.params import InstrParam
 from mcdgs.instruments.trex.model import TRex
+from mcdgs.instruments.trex.sources import TRexSource
 from mcdgs.mcstas.builder import build_mcstas, default_input_dir
 from mcdgs.samples import aluminum, la2ni7
 
@@ -66,7 +67,8 @@ def test_the_instrument_parameters_follow_the_params(tmp_path):
     trex = TRex()
     trex.update_params(bender_in=True, omega=30.0)
     params = {p.name: p.value for p in build_mcstas(trex, input_path=tmp_path).parameters}
-    assert params == {"bender_in": 1, "b_rot": trex.params.b_rot, "omega": 30.0}
+    assert params == {p.name: p.value for p in trex.instr_params}
+    assert (params["bender_in"], params["omega"]) == (1, 30.0)
 
 
 def test_a_string_instrument_parameter_is_declared_as_a_string(tmp_path, monkeypatch):
@@ -145,6 +147,13 @@ def test_a_field_mcstas_does_not_know_is_left_out(tmp_path):
     assert crystal.recip_cell == 1 and crystal.cz == pytest.approx(1.5516, abs=1e-4)
 
 
+def test_the_source_frequency_is_not_for_mcstas(tmp_path):
+    inst = build_mcstas(TRex(), input_path=tmp_path)
+    inst.write_full_instrument()
+    source = (tmp_path / "TRex.instr").read_text().split("COMPONENT source")[1].split("AT")[0]
+    assert "sector" in source and "frequency" not in source
+
+
 def test_a_computed_value_mcstas_does_not_know_raises(tmp_path, monkeypatch):
     monkeypatch.setattr(Monitor_nD, "mcstas_parameters", lambda _: {"bogus": 1})
     with pytest.raises(
@@ -155,7 +164,7 @@ def test_a_computed_value_mcstas_does_not_know_raises(tmp_path, monkeypatch):
 
 def test_a_wrong_sector_stops_the_build(tmp_path):
     trex = TRex()
-    trex.source = ESS_butterfly(Lmin=0.1, Lmax=10, sector="Q")
+    trex.source = TRexSource(Lmin=0.1, Lmax=10, sector="Q")
     with pytest.raises(ValueError, match="source: sector 'Q'"):
         build_mcstas(trex, input_path=tmp_path)
 

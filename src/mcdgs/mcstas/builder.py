@@ -109,8 +109,7 @@ def _formatted_parameters(
     Each entry of ``params`` (from ``component.mcstas_parameters``) must be one of:
 
     - a McStas parameter: kept, formatted by :func:`_formatted_value`;
-    - a field McStas does not take: left out, as the component only computes from it (e.g. the
-      crystal's ``lattice_params``, put into its ``ax`` ... ``cz``).
+    - a field McStas does not take: left out, as the component only computes from it (e.g. the source's ``frequency``, the crystal's ``lattice_params``, put into its ``ax`` ... ``cz``).
 
     Anything else was computed under a name McStas does not take, likely a typo.
 

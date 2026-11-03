@@ -6,6 +6,8 @@ See [T-Rex](../instruments/trex/index.md) for the description of the instrument.
 
 ::: mcdgs.instruments.trex.sources
 
+::: mcdgs.instruments.trex.choppers
+
 ::: mcdgs.instruments.trex.guides.sections
 
 ::: mcdgs.instruments.trex.guides.extraction
