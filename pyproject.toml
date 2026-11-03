@@ -26,6 +26,33 @@ dependencies = [
 [project.optional-dependencies]
 test = ["pytest>=9.2.0", "pytest-cov>=7.1.0"]
 
+[tool.pixi.workspace]
+channels = ["conda-forge"]
+platforms = [{ name = "macos-arm64", platform = "osx-arm64", macos = "14.0" }, "linux-64"]  # scipp 26 needs macOS 14
+
+# only what [project] does not list: pixi also installs [project.dependencies],
+# taking a package from conda-forge when McStas already brings it, else from PyPI
+[tool.pixi.dependencies]
+mcstas = ">=3.10.1,<4"
+pre-commit = ">=4.7.0,<5"
+ruff = ">=0.17.3,<0.18"
+
+[tool.pixi.pypi-dependencies]
+mcdgs = { path = ".", editable = true }
+
+[tool.pixi.feature.docs.tasks]
+docs = "zensical serve"
+docs-build = "zensical build --clean --strict"
+
+[tool.pixi.feature.docs.dependencies]
+zensical = ">=0.0.73,<0.0.74"
+mkdocstrings-python = ">=2.0.10,<3"
+
+[tool.pixi.environments]
+default = ["test"]  # pytest and pytest-cov, from [project.optional-dependencies]
+# the API pages read the source without importing it, so the site needs no McStas
+docs = { features = ["docs"], no-default-feature = true }
+
 [tool.hatch.metadata]
 # mcstastox is not on PyPI; it is pinned to a git commit
 allow-direct-references = true
