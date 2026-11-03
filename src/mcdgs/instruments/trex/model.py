@@ -14,8 +14,9 @@ from mcdgs.core.components import (
 from mcdgs.core.params import InstrParam, param
 
 from .choppers import choppers
+from .guides.bispectral import BENDER_ROTATION, arm_guide_4, bender, guide_4a, guide_4b
 from .guides.curve import guides_curve
-from .guides.extraction import BENDER_ROTATION, bender, guides_extraction
+from .guides.extraction import guides_extraction
 from .guides.straight import guides_straight, sample_pos, slit_mc
 from .sources import source
 
@@ -79,20 +80,24 @@ class TRex(Instrument):
         super().__init__(params)
 
         disks = choppers()
-        to_guide_4a, to_guide_4b = guides_extraction()
         to_bwc1, to_bwc2, to_end_of_curve = guides_curve()
         to_psc, to_mc, to_slit = guides_straight()
 
         self.origin = Progress_bar(at=[0, 0, 0])
         self.source = source()
-        self.add_components(to_guide_4a)
-        self.bender = bender()
-        self.add_components(to_guide_4b)
+        self.add_components(guides_extraction())
+        # bispectral switch: guide 4a (thermal) or bender and guide 4b (cold)
+        self.arm_guide_4 = arm_guide_4()
+        self.guide_4a = guide_4a(when="bender_in==0")
+        self.bender = bender(when="bender_in==1")
+        self.guide_4b = guide_4b(when="bender_in==1")
+        # curved guides
         self.add_components(to_bwc1)
         self.bw1 = disks["bw1"]
         self.add_components(to_bwc2)
         self.bw2 = disks["bw2"]
         self.add_components(to_end_of_curve)
+        # straight guides
         self.add_components(to_psc)
         self.ps1 = disks["ps1"]
         self.ps2 = disks["ps2"]
@@ -101,8 +106,8 @@ class TRex(Instrument):
         self.mc2 = disks["mc2"]
         self.add_components(to_slit)
         self.slit_mc = slit_mc()
+        #  sample position
         self.sample_pos = sample_pos()
-
         self.sample = None
         if sample is not None:
             self.sample = replace(sample, relative=sample.relative or "sample_pos")

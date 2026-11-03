@@ -19,13 +19,16 @@ from mcstastox.LoadFile import Data
 from numpy.typing import NDArray
 
 from mcdgs.core.base import Instrument
-from mcdgs.core.components import Guide_gravity, Monitor_nD, Progress_bar
+from mcdgs.core.components import Monitor_nD, Progress_bar
 from mcdgs.core.params import InstrParam, param
-from mcdgs.instruments.trex.guides.extraction import (
+from mcdgs.instruments.trex.guides.bispectral import (
     BENDER_ROTATION,
+    arm_guide_4,
     bender,
-    guides_extraction,
+    guide_4a,
+    guide_4b,
 )
+from mcdgs.instruments.trex.guides.extraction import guides_extraction
 from mcdgs.instruments.trex.sources import source
 from mcdgs.mcstas.run_folders import default_output_dir
 from mcdgs.mcstas.simulation import Simulation
@@ -72,15 +75,16 @@ class BenderScan(Instrument):
     params_class = Params
     name = "trex_bender_scan"  # the McStas instrument name
 
-    guide_4b: Guide_gravity  # set by name below, from guides_extraction
-
     def __init__(self, params: Params = DEFAULT_PARAMS) -> None:
         super().__init__(params)
         self.origin = Progress_bar(at=[0, 0, 0])
         self.source = source()
-        to_guide_4a, to_guide_4b = guides_extraction()
-        for name, component in {**to_guide_4a, "bender": bender(), **to_guide_4b}.items():
+        for name, component in guides_extraction().items():
             setattr(self, name, component)
+        self.arm_guide_4 = arm_guide_4()
+        self.guide_4a = guide_4a(when="bender_in==0")
+        self.bender = bender(when="bender_in==1")
+        self.guide_4b = guide_4b(when="bender_in==1")
         self.monitor_after_4b = Monitor_nD(
             xwidth=0.1,  # wider than the guide: every neutron leaving it
             yheight=0.1,

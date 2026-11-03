@@ -1,34 +1,22 @@
-"""The bispectral extraction guides of T-Rex.
+"""The extraction guides 1 to 3 of T-Rex, in the NBOA (Neutron Beam Optics Assembly).
 
 Dimensions are from the Table of Optics V3.2 (the .xlsx file in ``reference/``), whose rows are
 named in the comments. The values are the sheet's, not rounded.
 
-The -x wall of the NBOA (Neutron Beam Optics Assembly) is fixed at -47 mm. All of the horizontal
-narrowing is taken out of the +x wall, the cold moderator side: the view of the thermal face is
-held constant while the cold-side acceptance is trimmed. The guide center-line is therefore not
-the nominal beam axis, but a straight line tilted by half the taper angle.
+The -x wall of the NBOA is fixed at -47 mm. All of the horizontal narrowing is taken out of the +x
+wall, the cold moderator side: the view of the thermal face is held constant while the cold-side
+acceptance is trimmed. The guide center-line is therefore not the nominal beam axis, but a
+straight line tilted by half the taper angle.
 
 ``Guide_gravity`` is symmetric about its own axis, but two straight walls are reproduced exactly
 by a symmetric guide placed on their bisector. Guides 1 to 3 taper at 0.4300 deg (cell N13), so
-one arm carries them all and the sections hang off it. Guide 4 tapers at 0.4267 deg (N25) and the
-sheet carries the exit width of guide 3 unchanged across the gap, so guide 4 has its own arm,
-which keeps the -x wall on the same line. Guides 4a and 4b lie on one axis and share that arm.
-
-Guides 4a (thermal) and 4b (cold, behind the bender) occupy the same slot and share the same exit
-plane: they are alternative optics, chosen by the instrument parameter ``bender_in``, not
-parallel beamlines. The bender's entrance is oriented toward the cold moderator and its exit
-tangent is parallel to the guide axis, so nothing downstream of it is rotated.
+one arm carries them all and the sections hang off it. Guide 4 follows on its own arm: see
+:mod:`.bispectral`.
 """
 
 import math
 
-from mcdgs.core.components import Arm, Component, Guide_gravity, Pol_bender
-
-from .sections import split_after
-
-BENDER_LENGTH = 0.05  # m, cell B25 minus cell B24
-BENDER_RADIUS = 7.2  # FIXME, not in Table of Optics v3.2, in m
-BENDER_ROTATION = -math.degrees(math.atan(BENDER_LENGTH / BENDER_RADIUS))  # −0.39788 deg
+from mcdgs.core.components import Arm, Component, Guide_gravity
 
 
 def half_taper_angle(w1: float, w2: float, length: float) -> float:
@@ -90,23 +78,13 @@ def z_along_arm(z_lab: float, arm_z_lab: float, tilt: float) -> float:
     return (z_lab - arm_z_lab) / math.cos(math.radians(tilt))
 
 
-GUIDE_4A_IN_Z = 5.40065  # m, cell B24, also the entrance of the bender
-GUIDE_4A_IN_WIDTH = 0.063838  # m, cell E24
-GUIDE_4A_LENGTH = 0.481  # m, cell D24
-GUIDE_4_OUT_WIDTH = 0.060255817017560886  # m, cells G24 and G25
-GUIDE_4_TILT = half_taper_angle(
-    GUIDE_4A_IN_WIDTH, GUIDE_4_OUT_WIDTH, GUIDE_4A_LENGTH
-)  # -0.2134 deg, half of cells N25 and N26
-
-
-def guides_extraction() -> list[dict[str, Component]]:
-    """Create the extraction guides.
+def guides_extraction() -> dict[str, Component]:
+    """Create the extraction guides 1 to 3. Guide 4 follows them: see :mod:`.bispectral`.
 
     Returns
     -------
     :
-        Components by name, in beam order, in two pieces, for :func:`bender` to go between
-        them: up to ``guide_4a``, and the rest.
+        Components by name, in beam order.
     """
     # NBOA constants
     guide_1_in_width = 0.089955  # m, cell E13
@@ -119,12 +97,7 @@ def guides_extraction() -> list[dict[str, Component]]:
         guide_1_in_width, guide_3_out_width, guide_3_out_z - guide_1_in_z
     )  # -0.2150 deg, half of cell N13
 
-    # BBGOA constants
-    guide_4b_in_z = 5.45065  # m, cell B25
-    guide_4b_in_width = 0.063465631706607162  # m, cell E25
-    guide_4b_length = 0.431  # m, cell D25
-
-    components = {
+    return {
         "arm_nboa": Arm(
             at=[entrance_x(guide_1_in_width, nboa_taper_angle), 0, guide_1_in_z],
             rotated=[0, nboa_taper_angle, 0],
@@ -167,70 +140,4 @@ def guides_extraction() -> list[dict[str, Component]]:
             at=[0, 0, z_along_arm(guide_3_in_z, guide_1_in_z, nboa_taper_angle)],
             relative="arm_nboa",
         ),
-        "arm_guide_4": Arm(
-            at=[entrance_x(GUIDE_4A_IN_WIDTH, GUIDE_4_TILT), 0, GUIDE_4A_IN_Z],
-            rotated=[0, GUIDE_4_TILT, 0],
-        ),
-        "guide_4a": Guide_gravity(  # row 24
-            w1=GUIDE_4A_IN_WIDTH,
-            h1=0.044593536722227093,  # cell F24
-            w2=GUIDE_4_OUT_WIDTH,
-            h2=0.046152195301135549,  # cell H24
-            l=GUIDE_4A_LENGTH,
-            mleft=1.5,  # cell O24
-            mright=1.5,  # cell P24
-            mtop=3.5,  # cell Q24
-            mbottom=3.5,  # cell R24
-            relative="arm_guide_4",
-            when="bender_in==0",
-        ),
-        "guide_4b": Guide_gravity(  # row 25
-            w1=guide_4b_in_width,
-            h1=0.044759094882096839,  # cell F25
-            w2=GUIDE_4_OUT_WIDTH,
-            h2=0.046152195301135549,  # cell H25
-            l=guide_4b_length,
-            mleft=1.5,  # cell O25
-            mright=1.5,  # cell P25
-            mtop=3.5,  # cell Q25
-            mbottom=3.5,  # cell R25
-            at=[0, 0, z_along_arm(guide_4b_in_z, GUIDE_4A_IN_Z, GUIDE_4_TILT)],
-            relative="arm_guide_4",
-            when="bender_in==1",
-        ),
     }
-    return split_after(components, "guide_4a")
-
-
-def bender() -> Pol_bender:
-    """Create the bender, 63.84 mm x 46 mm x 50 mm (WxHxL), with 0.15 mm Si channels.
-
-    Returns
-    -------
-    :
-        A new bender.
-    """
-    # Si channels, NiTi coating. The mirror values are R0, Qc, alpha, m and W
-    mirror = (0.99, 0.0219, 3.02, 4.0, 0.003)  # FIXME, not in Table of Optics v3.2
-
-    return Pol_bender(
-        xwidth=0.06384,  # FIXME, not in Table of Optics v3.2
-        yheight=0.046,  # FIXME, not in Table of Optics v3.2
-        length=BENDER_LENGTH,
-        radius=BENDER_RADIUS,
-        G=0,  # as every Guide_gravity
-        nslit=426,  # FIXME, not in Table of Optics v3.2
-        d=1e-6,  # FIXME, not in Table of Optics v3.2
-        drawOption=2,
-        rTopUpPar=list(mirror),
-        rTopDownPar=list(mirror),
-        rBotUpPar=list(mirror),
-        rBotDownPar=list(mirror),
-        rLeftUpPar=list(mirror),
-        rLeftDownPar=list(mirror),
-        rRightUpPar=list(mirror),
-        rRightDownPar=list(mirror),
-        rotated=[0, "b_rot", 0],
-        relative="arm_guide_4",
-        when="bender_in==1",
-    )

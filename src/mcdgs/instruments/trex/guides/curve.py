@@ -24,7 +24,8 @@ placed relative to.
 
 from mcdgs.core.components import Arm, Component
 
-from .extraction import GUIDE_4_TILT, GUIDE_4A_IN_Z, z_along_arm
+from .bispectral import GUIDE_4_TILT, GUIDE_4A_IN_Z
+from .extraction import z_along_arm
 from .sections import arc_angle, chain, gap, guide, split_after
 
 CURVE_RADIUS = 12000.0  # m, cell N32
