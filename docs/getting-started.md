@@ -111,4 +111,6 @@ Both folders are created where you ran the script, and in this repository git ig
 ## Next
 
 - [Core concepts](concepts.md) explains what the script above is made of.
-- [Run a simulation](how-to/run-a-simulation.md) covers scans and split runs.
+- [Run a McStas simulation](how-to/run-a-simulation.md) covers scans and split runs.
+- [Simulate the choppers with tof](how-to/simulate-the-choppers-with-tof.md) shows which
+  wavelengths reach the sample, and when, in under a second.

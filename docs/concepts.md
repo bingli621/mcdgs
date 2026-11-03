@@ -47,6 +47,11 @@ back to the lab frame.
 
 ## From instrument to result
 
+An instrument can be simulated with McStas or with tof. Neither changes the instrument, so the
+same object can go to both.
+
+### With McStas
+
 1. [`build_mcstas`](reference/mcstas.md) turns the instrument into a McStasScript instrument. It
    adds the instrument parameters, then the components in beam order.
 2. [`Simulation`](reference/mcstas.md) writes it to `mcstas_input/<instrument name>/`, where McStas
@@ -55,6 +60,15 @@ back to the lab frame.
 3. Each run writes a folder in `mcstas_output/` with a McStas NeXus file, `mccode.h5`.
 4. [`read_pixels`](reference/mcstas.md) or `h5py` reads that file. See
    [Read the output](how-to/read-the-output.md).
+
+### With tof
+
+1. [`build_tof`](reference/tof.md) turns the instrument into a tof model: the source, the choppers,
+   and a detector at every monitor and at each component named in `detectors`. It leaves out the
+   optics, and measures each distance in a straight line from the source.
+2. `model.run()` follows the neutrons in memory and writes no files.
+3. `result["sample_pos"]` holds the neutrons at that detector, with their wavelength and time of
+   arrival. See [Simulate the choppers with tof](how-to/simulate-the-choppers-with-tof.md).
 
 ## Layers
 
@@ -65,5 +79,6 @@ Dependencies point inwards, so an instrument never depends on how it is simulate
 | `core` | `Instrument`, the components, parameters and geometry. It imports nothing else from `mcdgs`. |
 | `instruments`, `samples` | The instruments and ready-made crystals, built on `core`. |
 | `mcstas` | An adapter that works with any instrument: builds it, runs it, reads the output. |
+| `tof` | An adapter that works with any instrument: builds its chopper cascade as a tof model. |
 | `io` | An adapter that saves any instrument to a YAML parameters file and loads it back. |
 | `reduction` | Reserved for data reduction. It holds no code yet. |

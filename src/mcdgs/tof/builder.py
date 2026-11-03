@@ -6,7 +6,7 @@ keeps only the components tof knows, by type:
 
 - the ``ESS_butterfly`` becomes the :class:`tof.Source`, which must be the only source;
 - each ``NXdisk_chopper`` becomes a :class:`tof.Chopper`, through scippneutron's
-  :class:`~scippneutron.chopper.DiskChopper` (:func:`disk_chopper`), as both follow NeXus;
+  :class:`DiskChopper` (:func:`disk_chopper`), as both follow NeXus;
 - each ``Monitor_nD``, and each component named in ``detectors`` (such as the ``Arm`` at the
   sample position), becomes a :class:`tof.Detector`, which records the neutrons reaching it.
 

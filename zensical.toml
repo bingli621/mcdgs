@@ -24,7 +24,8 @@ nav = [
     ] },
   ] },
   { "How-to guides" = [
-    { "Run a simulation" = "how-to/run-a-simulation.md" },
+    { "Run a McStas simulation" = "how-to/run-a-simulation.md" },
+    { "Simulate the choppers with tof" = "how-to/simulate-the-choppers-with-tof.md" },
     { "Read the output" = "how-to/read-the-output.md" },
     { "Add an instrument" = "how-to/add-an-instrument.md" },
   ] },
@@ -34,6 +35,7 @@ nav = [
     { "T-Rex" = "reference/trex.md" },
     { "Samples" = "reference/samples.md" },
     { "McStas" = "reference/mcstas.md" },
+    { "tof" = "reference/tof.md" },
     { "Parameters files" = "reference/io.md" },
   ] },
 ]

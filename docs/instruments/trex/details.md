@@ -167,6 +167,9 @@ the angle from the center of the wide slit to the beam, 55° for the P-Chopper a
 M-Chopper. The model keeps the disks as they are and changes the delay, which is the same as
 shifting the slit edges.
 
+The [time-distance diagram](index.md#chopper-timing-in-tof) shows the result: the bandwidth
+choppers pass one band of wavelengths, and the P- and M-Chopper cut it into sub-pulses.
+
 The slit edges of each disk reach McStas as an array of their own, declared in the `.instr` file
 as `<name>_slit_edges`. McStas 3.10.2 sizes a list written in place by its first use, so the
 2 edges of `bw1` would have been too few for the 8 of `ps1`. See the
