@@ -62,7 +62,7 @@ Dependencies point inwards, so an instrument never depends on how it is simulate
 
 | Package | Role |
 | ------- | ---- |
-| `core` | `Instrument`, the components, parameters and geometry. It imports nothing else from mcdgs. |
+| `core` | `Instrument`, the components, parameters and geometry. It imports nothing else from `mcdgs`. |
 | `instruments`, `samples` | The instruments and ready-made crystals, built on `core`. |
 | `mcstas` | An adapter that works with any instrument: builds it, runs it, reads the output. |
 | `io` | An adapter that saves any instrument to a YAML parameters file and loads it back. |

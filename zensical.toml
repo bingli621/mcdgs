@@ -1,5 +1,5 @@
 [project]
-site_name = "mcdgs"
+site_name = "McDGS"
 site_description = "Monte Carlo simulation of the Direct Geometry Spectrometer (DGS) at the European Spallation Source (ESS). From McStas to S(Q,E)."
 site_author = "Bing Li"
 site_url = "https://bingli621.github.io/mcdgs/"
@@ -10,18 +10,18 @@ copyright = "Copyright &copy; 2026 Bing Li"
 
 nav = [
   { "Home" = "index.md" },
+  { "Getting started" = [
+    { "Install and first run" = "getting-started.md" },
+    { "Core concepts" = "concepts.md" },
+  ] },
   { "Instruments" = [
     { "T-Rex" = [
       "instruments/trex/index.md",
       { "Technical details" = "instruments/trex/details.md" },
-      { "The .instr file" = "instruments/trex/instr-file.md" },
-      { "The parameters file" = "instruments/trex/params-file.md" },
+      { "McStas instrument file" = "instruments/trex/instr-file.md" },
+      { "Parameters file" = "instruments/trex/params-file.md" },
       { "Extraction results" = "instruments/trex/extraction.md" },
     ] },
-  ] },
-  { "Getting started" = [
-    { "Install and first run" = "getting-started.md" },
-    { "Core concepts" = "concepts.md" },
   ] },
   { "How-to guides" = [
     { "Run a simulation" = "how-to/run-a-simulation.md" },

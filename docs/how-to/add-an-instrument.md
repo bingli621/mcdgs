@@ -84,6 +84,10 @@ component, and list it in `__init__.py` there. Copy `Arm` or `Monitor_nD`:
 
 ## Finish
 
+- Import and export the class in `src/mcdgs/instruments/__init__.py`, so a
+  [parameters file](../reference/io.md) can name it.
+- Save its default as a reference parameters file, as T-Rex does with `PARAMS_FILE`, a
+  `params.yaml` next to its model.
 - Add tests in `tests/instruments/`, as in `tests/instruments/trex/test_trex.py`.
 - Add a page in `docs/instruments/` and a page in `docs/reference/`, and list them in the `nav` of
   `zensical.toml`.

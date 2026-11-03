@@ -1,4 +1,4 @@
-# The .instr file
+# McStas instrument file
 
 This is the McStas instrument file the model generates, at the default
 [control parameters](details.md#control-parameters). The chopper timings, `nu_<name>` and

@@ -28,9 +28,9 @@ the thermal peak is mostly gone and the cold peak stays.
 ![Intensity after guide 4 against the rotation of the bender, per wavelength band](figures/diagnose_bender.png)
 
 [`diagnosis/trex/bender/bender_efficiency.py`](https://github.com/bingli621/mcdgs/blob/main/diagnosis/trex/bender/bender_efficiency.py)
-scans `b_rot` from -0.8 to 0.1 deg with 1e7 neutrons per angle. Each curve is one band of
+scans `b_rot` from −0.8 to 0.1 deg with 1e7 neutrons per angle. Each curve is one band of
 wavelengths at the exit of guide 4, divided by the same band with the bender out, so the dashed line
-at 1 is the bender-out intensity. The dotted line is the nominal rotation, -0.398 deg. The legend
+at 1 is the bender-out intensity. The dotted line is the nominal rotation, −0.398 deg. The legend
 repeats blue: the lowest blue curve is 0.7 Å, the upper one 4.7 Å.
 
 Approximate transmission at the nominal rotation:

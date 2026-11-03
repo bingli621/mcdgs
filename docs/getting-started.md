@@ -4,7 +4,7 @@ This page takes you from a fresh clone to a simulated spectrum at T-Rex's sample
 
 ## Install
 
-mcdgs is not on PyPI. It runs from a clone of the repository, in an environment managed by
+McDGS is not on PyPI. It runs from a clone of the repository, in an environment managed by
 [pixi](https://pixi.sh), on Linux (x86-64) or macOS 14 or later (Apple silicon). The environment
 includes McStas itself.
 
@@ -96,8 +96,8 @@ with h5py.File(h5_file) as file:
 
 The choppers pass one band of wavelengths around `lambda0`, 2.0 Å by default, from about 1.3 to
 2.9 Å. It is highest near 2.3 Å, since the bender removes much of the short-wavelength side.
-Few neutrons get through the choppers. With 1e6 neutrons only about a hundred reach the monitor,
-and the spectrum has empty bins inside the band.
+Few neutrons get through the choppers, so the script runs 1e7: with 1e6 only about a hundred
+reach the monitor, and the spectrum has empty bins inside the band.
 
 ## What the run left behind
 

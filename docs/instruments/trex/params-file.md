@@ -1,4 +1,4 @@
-# The parameters file
+# Parameters file
 
 This is the default T-Rex saved as a parameters file, `save(TRex(), PARAMS_FILE)`, the
 reference of how a T-Rex file looks. `PARAMS_FILE` is `src/mcdgs/instruments/trex/params.yaml`,

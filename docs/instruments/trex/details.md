@@ -169,7 +169,5 @@ shifting the slit edges.
 
 The slit edges of each disk reach McStas as an array of their own, declared in the `.instr` file
 as `<name>_slit_edges`. McStas 3.10.2 sizes a list written in place by its first use, so the
-2 edges of `bw1` would have been too few for the 8 of `ps1`.
-[`diagnosis/trex/overview.py`](https://github.com/bingli621/mcdgs/blob/main/diagnosis/trex/overview.py)
-writes the [`.instr` file](instr-file.md) of T-Rex to `mcstas_input/TRex/` and prints it, along
-with the [figures](index.md).
+2 edges of `bw1` would have been too few for the 8 of `ps1`. See the
+[McStas instrument file](instr-file.md).
