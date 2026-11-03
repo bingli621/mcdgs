@@ -32,6 +32,7 @@ nav = [
     { "T-Rex" = "reference/trex.md" },
     { "Samples" = "reference/samples.md" },
     { "McStas" = "reference/mcstas.md" },
+    { "Parameters files" = "reference/io.md" },
   ] },
 ]
 

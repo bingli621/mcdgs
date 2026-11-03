@@ -65,4 +65,5 @@ Dependencies point inwards, so an instrument never depends on how it is simulate
 | `core` | `Instrument`, the components, parameters and geometry. It imports nothing else from mcdgs. |
 | `instruments`, `samples` | The instruments and ready-made crystals, built on `core`. |
 | `mcstas` | An adapter that works with any instrument: builds it, runs it, reads the output. |
-| `io`, `reduction` | Reserved for instrument files and data reduction. They hold no code yet. |
+| `io` | An adapter that saves any instrument to a YAML parameters file and loads it back. |
+| `reduction` | Reserved for data reduction. It holds no code yet. |
