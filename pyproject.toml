@@ -21,6 +21,7 @@ dependencies = [
     "scippneutron>=26.10.0,<27",
     "scipy",
     "tabulate>=0.10.0,<0.11",
+    "tof>=26.10.0,<27",
 ]
 
 [project.optional-dependencies]

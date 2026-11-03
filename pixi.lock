@@ -470,6 +470,7 @@ environments:
       - pypi: git+https://github.com/mads-bertelsen-agentic/McStasToX?rev=af80792680397168f5fd185afa392116bd4cf848#af80792680397168f5fd185afa392116bd4cf848
       - pypi: https://files.pythonhosted.org/packages/12/aa/fb2a0649fdeef5ab7072d221e8f4df164098792c813af6c87e2581cfa860/mpltoolbox-26.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/23/93/4e45e37f26c820216704b36b8e67cc55c490a7abd287a78a26a2c0e21386/lazy_loader-0.6-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/2a/2d/d4bf65e47cea8ff2c794a600c4fd1273a7902f268757c531e0ee9f18aa58/pooch-1.9.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/33/09/7b077ff0091a1bd9bb48bfb2555909049060f27bf20a522c4c6ca0a91586/scippneutron-26.10.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/40/9e/2b38731e0fc536806f16490e1a12d7f0dc2a1235aa8cc07bcc75416a7daa/pluggy-1.7.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/45/ff/5d4b964c3822da3d64916f633cba28962877e5b7dd3f7c0a6132235aa3cb/scipp-26.9.0-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
@@ -486,6 +487,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/99/55/db07de81b5c630da5cbf5c7df646580ca26dfaefa593667fc6f2fe016d2e/tabulate-0.10.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/99/91/8acff4f5e50511b911bbccb72b8628a49c68ce14148cd9f6431094859a90/annotated_types-0.8.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/9d/7a/d968e294073affff457b041c2be9868a40c1c71f4a35fcc1e45e5493067b/pytest_cov-7.1.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/c3/4d/5718fef482a9620a98417446922ea1f85967bd076531fe70a0233400f9fd/tof-26.10.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/de/15/545e2b6cf2e3be84bc1ed85613edd75b8aea69807a71c26f4ca6a9258e82/email_validator-2.3.0-py3-none-any.whl
       macos-arm64:
       - conda: https://conda.anaconda.org/conda-forge/noarch/_python_abi3_support-1.0-hd8ed1ab_3.conda
@@ -902,6 +904,7 @@ environments:
       - pypi: git+https://github.com/mads-bertelsen-agentic/McStasToX?rev=af80792680397168f5fd185afa392116bd4cf848#af80792680397168f5fd185afa392116bd4cf848
       - pypi: https://files.pythonhosted.org/packages/12/aa/fb2a0649fdeef5ab7072d221e8f4df164098792c813af6c87e2581cfa860/mpltoolbox-26.2.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/23/93/4e45e37f26c820216704b36b8e67cc55c490a7abd287a78a26a2c0e21386/lazy_loader-0.6-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/2a/2d/d4bf65e47cea8ff2c794a600c4fd1273a7902f268757c531e0ee9f18aa58/pooch-1.9.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/33/09/7b077ff0091a1bd9bb48bfb2555909049060f27bf20a522c4c6ca0a91586/scippneutron-26.10.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/40/9e/2b38731e0fc536806f16490e1a12d7f0dc2a1235aa8cc07bcc75416a7daa/pluggy-1.7.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/51/39/1f5d8c8877a0fa327db959c19341d4be61660de1ab6b7391f9eb805bcd67/pytest-9.2.0-py3-none-any.whl
@@ -915,6 +918,7 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/99/55/db07de81b5c630da5cbf5c7df646580ca26dfaefa593667fc6f2fe016d2e/tabulate-0.10.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/99/91/8acff4f5e50511b911bbccb72b8628a49c68ce14148cd9f6431094859a90/annotated_types-0.8.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/9d/7a/d968e294073affff457b041c2be9868a40c1c71f4a35fcc1e45e5493067b/pytest_cov-7.1.0-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/c3/4d/5718fef482a9620a98417446922ea1f85967bd076531fe70a0233400f9fd/tof-26.10.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/db/68/315701095f25687938ab79d263a6d939337456c2840fe69038fd38000338/pydantic_core-2.50.2-cp314-cp314-macosx_11_0_arm64.whl
       - pypi: https://files.pythonhosted.org/packages/dc/fe/849f7d6bcc8e32d59390ba55eb4c6b445edaac41b8739388cda42b5c1c81/scippneutron_algorithms-26.7.0-cp311-abi3-macosx_11_0_arm64.whl
       - pypi: https://files.pythonhosted.org/packages/de/15/545e2b6cf2e3be84bc1ed85613edd75b8aea69807a71c26f4ca6a9258e82/email_validator-2.3.0-py3-none-any.whl
@@ -12752,6 +12756,7 @@ packages:
   - scippneutron>=26.10.0,<27
   - scipy
   - tabulate>=0.10.0,<0.11
+  - tof>=26.10.0,<27
   - pytest>=9.2.0,<10 ; extra == 'test'
   - pytest-cov>=7.1.0,<8 ; extra == 'test'
   requires_python: '>=3.12'
@@ -12801,6 +12806,20 @@ packages:
   - pre-commit==4.3.0 ; extra == 'lint'
   - changelist==0.5 ; extra == 'dev'
   - spin==0.15 ; extra == 'dev'
+  requires_python: '>=3.9'
+- pypi: https://files.pythonhosted.org/packages/2a/2d/d4bf65e47cea8ff2c794a600c4fd1273a7902f268757c531e0ee9f18aa58/pooch-1.9.0-py3-none-any.whl
+  name: pooch
+  version: 1.9.0
+  sha256: f265597baa9f760d25ceb29d0beb8186c243d6607b0f60b83ecf14078dbc703b
+  requires_dist:
+  - platformdirs>=2.5.0
+  - packaging>=20.0
+  - requests>=2.19.0
+  - tqdm>=4.41.0,<5.0.0 ; extra == 'progress'
+  - paramiko>=2.7.0 ; extra == 'sftp'
+  - xxhash>=1.4.3 ; extra == 'xxhash'
+  - pytest-httpserver ; extra == 'test'
+  - pytest-localftpserver ; extra == 'test'
   requires_python: '>=3.9'
 - pypi: https://files.pythonhosted.org/packages/33/09/7b077ff0091a1bd9bb48bfb2555909049060f27bf20a522c4c6ca0a91586/scippneutron-26.10.0-py3-none-any.whl
   name: scippneutron
@@ -13051,6 +13070,20 @@ packages:
   - pytest-xdist ; extra == 'testing'
   - virtualenv ; extra == 'testing'
   requires_python: '>=3.9'
+- pypi: https://files.pythonhosted.org/packages/c3/4d/5718fef482a9620a98417446922ea1f85967bd076531fe70a0233400f9fd/tof-26.10.0-py3-none-any.whl
+  name: tof
+  version: 26.10.0
+  sha256: 925a6d4e34679fac92a8070b4fcea255693a8c33c4f7ab5436ecd4936e1bb31d
+  requires_dist:
+  - plopp>=23.10.0
+  - pooch>=1.5.0
+  - scipp>=25.8.0
+  - lazy-loader>=0.3
+  - scipy>=1.14.0
+  - h5py>=3.12.0
+  - pytest>=8.0 ; extra == 'test'
+  - scippneutron>=24.12.0 ; extra == 'test'
+  requires_python: '>=3.11'
 - pypi: https://files.pythonhosted.org/packages/db/68/315701095f25687938ab79d263a6d939337456c2840fe69038fd38000338/pydantic_core-2.50.2-cp314-cp314-macosx_11_0_arm64.whl
   name: pydantic-core
   version: 2.50.2
