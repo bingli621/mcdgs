@@ -7,6 +7,9 @@ for any :class:`.Instrument`.
   only hold what differs. Every file must name its ``instrument:``.
 - :func:`save` writes a complete file.
 
+Each instrument keeps its default saved as a reference of how a parameters file looks; for
+T-Rex, instruments/trex/params.yaml (``PARAMS_FILE``).
+
 Files are UTF-8 (a unit such as ``Å`` is written as it is), in the order of the dict, with the
 innermost lists and dicts on one line (``at: [0, 0, 1.0]``,
 ``lambda0: {value: 2.0, unit: Å, comment: central wavelength}``).

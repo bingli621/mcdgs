@@ -1,0 +1,1796 @@
+instrument: TRex
+name: TRex
+params:
+  t0_offset: {value: 0.0017, unit: s, comment: time added to choppers shifting to middle of the long pulse}
+  lambda0: {value: 2.0, unit: Å, comment: central wavelength}
+  rrm: {value: 18, unit: '', comment: repetition rate multiplication factor}
+  mode: {value: FF, unit: '', comment: 'FF = high flux, RR = high resolution'}
+  omega: {value: 0.0, unit: deg, comment: goniometer rotation about +Y}
+  bender_in: {value: false, unit: '', comment: 'True = bender in, False = bender out'}
+  b_rot: {value: -0.3978809618345933, unit: deg, comment: rotation of the cold neutron bender}
+instr_params:
+  bender_in: {value: 0, unit: '', comment: 'bender in = 1, out = 0'}
+  b_rot: {value: -0.3978809618345933, unit: deg, comment: rotation of the cold neutron bender}
+  omega: {value: 0.0, unit: deg, comment: rotation of the goniometer about +Y}
+  nu_bw1: {value: 14, unit: Hz, comment: rotation frequency of chopper bw1}
+  delay_bw1: {value: 0.017859638643427243, unit: s, comment: delay of chopper bw1}
+  nu_bw2: {value: 14, unit: Hz, comment: rotation frequency of chopper bw2}
+  delay_bw2: {value: 0.021899543248715785, unit: s, comment: delay of chopper bw2}
+  nu_ps1: {value: 189.0, unit: Hz, comment: rotation frequency of chopper ps1}
+  delay_ps1: {value: 0.05546651145396207, unit: s, comment: delay of chopper ps1}
+  nu_ps2: {value: -189.0, unit: Hz, comment: rotation frequency of chopper ps2}
+  delay_ps2: {value: 0.05713376319781174, unit: s, comment: delay of chopper ps2}
+  nu_mc1: {value: 252, unit: Hz, comment: rotation frequency of chopper mc1}
+  delay_mc1: {value: 0.08168509645589636, unit: s, comment: delay of chopper mc1}
+  nu_mc2: {value: 252, unit: Hz, comment: rotation frequency of chopper mc2}
+  delay_mc2: {value: 0.0816901520241673, unit: s, comment: delay of chopper mc2}
+origin:
+  component: Progress_bar
+  percent: 10
+  at: [0, 0, 0]
+  rotated: [0, 0, 0]
+  relative: null
+  position: [0.0, 0.0, 0.0]
+source:
+  component: ESS_butterfly
+  Lmin: 0.1
+  Lmax: 10.0
+  sector: W
+  beamline: 7
+  acc_power: 2
+  yheight: 0.03
+  cold_frac: 0.3
+  dist: 2
+  focus_xw: 0.095
+  focus_yh: 0.035
+  n_pulses: 1
+  c_performance: 1
+  t_performance: 1
+  target_index: 0
+  tmax_multiplier: 3
+  tfocus_dist: 0
+  tfocus_time: 0
+  tfocus_width: 0
+  at: [0, 0, 0]
+  rotated: [0, 0, 0]
+  relative: null
+  position: [0.0, 0.0, 0.0]
+arm_nboa:
+  component: Arm
+  at: [-0.002022816656807591, 0, 1.895927]
+  rotated: [0, -0.21499811064881996, 0]
+  relative: null
+  position: [-0.002022817, 0.0, 1.895927]
+guide_1:
+  component: Guide_gravity
+  w1: 0.089955
+  h1: 0.029992
+  w2: 0.082455
+  h2: 0.034937
+  l: 0.9994
+  mleft: 1.5
+  mright: 1.5
+  mtop: 4
+  mbottom: 4
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 0]
+  rotated: [0, 0, 0]
+  relative: arm_nboa
+  position: [-0.002022817, 0.0, 1.895927]
+guide_2:
+  component: Guide_gravity
+  w1: 0.082447
+  h1: 0.034941
+  w2: 0.074948
+  h2: 0.03916
+  l: 0.9992
+  mleft: 1.5
+  mright: 1.5
+  mtop: 4
+  mbottom: 4
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 1.0004070432038372]
+  rotated: [0, 0, 0]
+  relative: arm_nboa
+  position: [-0.00577676, 0.0, 2.896327]
+guide_3:
+  component: Guide_gravity
+  w1: 0.074939
+  h1: 0.039164
+  w2: 0.063838
+  h2: 0.044511
+  l: 1.4792
+  mleft: 1.5
+  mright: 1.5
+  mtop: 4
+  mbottom: 4
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 2.0008140864076744]
+  rotated: [0, 0, 0]
+  relative: arm_nboa
+  position: [-0.009530704, 0.0, 3.896727]
+arm_guide_4:
+  component: Arm
+  at: [-0.015081221289166724, 0, 5.40065]
+  rotated: [0, -0.2133503302705942, 0]
+  relative: null
+  position: [-0.015081221, 0.0, 5.40065]
+guide_4a:
+  component: Guide_gravity
+  when: bender_in==0
+  w1: 0.063838
+  h1: 0.044593536722227094
+  w2: 0.060255817017560886
+  h2: 0.04615219530113555
+  l: 0.481
+  mleft: 1.5
+  mright: 1.5
+  mtop: 3.5
+  mbottom: 3.5
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 0]
+  rotated: [0, 0, 0]
+  relative: arm_guide_4
+  position: [-0.015081221, 0.0, 5.40065]
+bender:
+  component: Pol_bender
+  when: bender_in==1
+  xwidth: 0.06384
+  yheight: 0.046
+  length: 0.05
+  radius: 7.2
+  G: 0
+  nslit: 426
+  d: 1.0e-06
+  endFlat: 0
+  rTopUpPar: [0.99, 0.0219, 3.02, 4.0, 0.003]
+  rTopDownPar: [0.99, 0.0219, 3.02, 4.0, 0.003]
+  rBotUpPar: [0.99, 0.0219, 3.02, 4.0, 0.003]
+  rBotDownPar: [0.99, 0.0219, 3.02, 4.0, 0.003]
+  rLeftUpPar: [0.99, 0.0219, 3.02, 4.0, 0.003]
+  rLeftDownPar: [0.99, 0.0219, 3.02, 4.0, 0.003]
+  rRightUpPar: [0.99, 0.0219, 3.02, 4.0, 0.003]
+  rRightDownPar: [0.99, 0.0219, 3.02, 4.0, 0.003]
+  drawOption: 2
+  at: [0, 0, 0]
+  rotated: [0, b_rot, 0]
+  relative: arm_guide_4
+  position: [-0.015081221, 0.0, 5.40065]
+guide_4b:
+  component: Guide_gravity
+  when: bender_in==1
+  w1: 0.06346563170660716
+  h1: 0.04475909488209684
+  w2: 0.060255817017560886
+  h2: 0.04615219530113555
+  l: 0.431
+  mleft: 1.5
+  mright: 1.5
+  mtop: 3.5
+  mbottom: 3.5
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 0.0500003466441639]
+  rotated: [0, 0, 0]
+  relative: arm_guide_4
+  position: [-0.015267405, 0.0, 5.45065]
+arm_start_of_curve:
+  component: Arm
+  at: [0, 0, 0.5153535728613906]
+  rotated: [0, 0.2133503302705942, 0]
+  relative: arm_guide_4
+  position: [-0.017000221, 0.0, 5.916]
+guide_5:
+  component: Guide_gravity
+  w1: 0.06
+  h1: 0.04626069518549517
+  w2: 0.06
+  h2: 0.05398233906362971
+  l: 2.7625
+  mleft: 1.5
+  mright: 1.5
+  mtop: 3.5
+  mbottom: 3.5
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 0]
+  rotated: [0, 0.0065949829543704135, 0]
+  relative: arm_start_of_curve
+  position: [-0.017000221, 0.0, 5.916]
+guide_6:
+  component: Guide_gravity
+  w1: 0.06
+  h1: 0.05401466907725186
+  w2: 0.06
+  h2: 0.06022831543498869
+  l: 2.7625
+  mleft: 1.5
+  mright: 1.5
+  mtop: 3
+  mbottom: 3
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 2.775499999999999]
+  rotated: [0, 0.013252036336546662, 0]
+  relative: guide_5
+  position: [-0.01668075, 0.0, 8.691499982]
+guide_7:
+  component: Guide_gravity
+  w1: 0.06
+  h1: 0.06025478837813951
+  w2: 0.06
+  h2: 0.06741557312361489
+  l: 4
+  mleft: 1.5
+  mright: 1.5
+  mtop: 3
+  mbottom: 3
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 2.775500000000001]
+  rotated: [0, 0.01620634996768998, 0]
+  relative: guide_6
+  position: [-0.015719328, 0.0, 11.466999815]
+guide_8:
+  component: Guide_gravity
+  w1: 0.06
+  h1: 0.06741871485580497
+  w2: 0.06
+  h2: 0.07297613327113818
+  l: 4
+  mleft: 1.5
+  mright: 1.5
+  mtop: 3
+  mbottom: 3
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 4.001999999999999]
+  rotated: [0, 0.019108142467612957, 0]
+  relative: guide_7
+  position: [-0.01320107, 0.0, 15.468999023]
+guide_9:
+  component: Guide_gravity
+  w1: 0.06
+  h1: 0.07297857662970997
+  w2: 0.06
+  h2: 0.0765252384
+  l: 3.2167
+  mleft: 1.5
+  mright: 1.5
+  mtop: 3
+  mbottom: 3
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 4.002000000000001]
+  rotated: [0, 0.017238151463754733, 0]
+  relative: guide_8
+  position: [-0.009348145, 0.0, 19.470997168]
+guide_10:
+  component: Guide_gravity
+  w1: 0.06
+  h1: 0.0765380906
+  w2: 0.06
+  h2: 0.07802397558369487
+  l: 1.588
+  mleft: 2
+  mright: 2
+  mtop: 2.5
+  mbottom: 2.5
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 3.229700000000001]
+  rotated: [0, 0.011532446753910283, 0]
+  relative: guide_9
+  position: [-0.005267057, 0.0, 22.70069459]
+guide_11:
+  component: Guide_gravity
+  w1: 0.06
+  h1: 0.07803546478022366
+  w2: 0.06
+  h2: 0.08084168216848232
+  l: 3.6349
+  mleft: 1.5
+  mright: 2.5
+  mtop: 2.5
+  mbottom: 2.5
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 1.600999999999999]
+  rotated: [0, 0.01253082571192574, 0]
+  relative: guide_10
+  position: [-0.002921766, 0.0, 24.301692872]
+guide_12:
+  component: Guide_gravity
+  w1: 0.06
+  h1: 0.08084801923386754
+  w2: 0.06
+  h2: 0.08206322608404419
+  l: 1.9998
+  mleft: 1.5
+  mright: 2.5
+  mtop: 2.5
+  mbottom: 2.5
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 3.6444399999999995]
+  rotated: [0, 0.013497405512311435, 0]
+  relative: guide_11
+  position: [0.003213995, 0.0, 27.946127707]
+guide_13a:
+  component: Guide_gravity
+  w1: 0.06
+  h1: 0.08206504795634235
+  w2: 0.06
+  h2: 0.08306090771746841
+  l: 1.9998
+  mleft: 1.5
+  mright: 2.5
+  mtop: 2.5
+  mbottom: 2.5
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 2.0031]
+  rotated: [0, 0.009564097995221265, 0]
+  relative: guide_12
+  position: [0.007058282, 0.0, 29.949224018]
+arm_bwc1:
+  component: Arm
+  at: [0, 0, 1.9998000000000005]
+  rotated: [0, 0.0048457905523189414, 0]
+  relative: guide_13a
+  position: [0.011230052, 0.0, 31.949019666]
+bw1:
+  component: NXdisk_chopper
+  slit_edges: [-30.7, 30.7]
+  radius: 0.35
+  yheight: 0.085
+  xwidth: 0.0
+  nu: nu_bw1
+  delay: delay_bw1
+  park_angle: 0
+  beam_angle: 0
+  zero_angle: 0
+  jitter: 0
+  abs_out: 0
+  verbose: 1
+  at: [0, 0, 0.015]
+  rotated: [0, 0, 0]
+  relative: arm_bwc1
+  position: [0.011262612, 0.0, 31.964019631]
+guide_13b:
+  component: Guide_gravity
+  w1: 0.06
+  h1: 0.08307422241811349
+  w2: 0.06
+  h2: 0.08385578838096026
+  l: 1.9998
+  mleft: 1.5
+  mright: 2.5
+  mtop: 2.5
+  mbottom: 2.5
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 0.030000000000001137]
+  rotated: [0, 0.0048457905523189414, 0]
+  relative: arm_bwc1
+  position: [0.011295172, 0.0, 31.979019596]
+guide_14a:
+  component: Guide_gravity
+  w1: 0.06
+  h1: 0.08385690712715284
+  w2: 0.06
+  h2: 0.08443292675871208
+  l: 1.9998
+  mleft: 1.5
+  mright: 2.5
+  mtop: 2.5
+  mbottom: 2.5
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 2.0031]
+  rotated: [0, 0.00956409799522125, 0]
+  relative: guide_13b
+  position: [0.01581265, 0.0, 33.982114502]
+guide_14b:
+  component: Guide_gravity
+  w1: 0.06
+  h1: 0.084433093
+  w2: 0.06
+  h2: 0.0848029607744434
+  l: 1.9633
+  mleft: 1.5
+  mright: 2.5
+  mtop: 2.5
+  mbottom: 2.5
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 2.0005000000000024]
+  rotated: [0, 0.009464546578317324, 0]
+  relative: guide_14a
+  position: [0.020658196, 0.0, 35.982608633]
+guide_15a:
+  component: Guide_gravity
+  w1: 0.06
+  h1: 0.08480342097284901
+  w2: 0.06
+  h2: 0.08498290035359349
+  l: 1.9908
+  mleft: 1.5
+  mright: 2.5
+  mtop: 2.5
+  mbottom: 2.5
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 1.9665999999999997]
+  rotated: [0, 0.009455474746561022, 0]
+  relative: guide_14b
+  position: [0.025746487, 0.0, 37.949202051]
+arm_bwc2:
+  component: Arm
+  at: [0, 0, 1.9908000000000001]
+  rotated: [0, 0.004824304635001552, 0]
+  relative: guide_15a
+  position: [0.031225932, 0.0, 39.93999451]
+bw2:
+  component: NXdisk_chopper
+  slit_edges: [-31.65, 31.65]
+  radius: 0.35
+  yheight: 0.085
+  xwidth: 0.0
+  nu: nu_bw2
+  delay: delay_bw2
+  park_angle: 0
+  beam_angle: 0
+  zero_angle: 0
+  jitter: 0
+  abs_out: 0
+  verbose: 1
+  at: [0, 0, 0.015]
+  rotated: [0, 0, 0]
+  relative: arm_bwc2
+  position: [0.031268481, 0.0, 39.95499445]
+guide_15b:
+  component: Guide_gravity
+  w1: 0.06
+  h1: 0.0849841094
+  w2: 0.06
+  h2: 0.0849646725
+  l: 2.0012
+  mleft: 1.5
+  mright: 2.5
+  mtop: 2.5
+  mbottom: 2.5
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 0.02999999999999403]
+  rotated: [0, 0.004849132806123829, 0]
+  relative: arm_bwc2
+  position: [0.031311029, 0.0, 39.969994389]
+arm_bm1:
+  component: Arm
+  at: [0, 0, 2.0078200000000024]
+  rotated: [0, 0.004856867736358142, 0]
+  relative: guide_15b
+  position: [0.037176305, 0.0, 41.977805822]
+guide_16:
+  component: Guide_gravity
+  w1: 0.06
+  h1: 0.085
+  w2: 0.06
+  h2: 0.085
+  l: 3.9967
+  mleft: 1.5
+  mright: 2.5
+  mtop: 2.5
+  mbottom: 2.5
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 0.023690000000001987]
+  rotated: [0, 0.009606783350958542, 0]
+  relative: arm_bm1
+  position: [0.037247517, 0.0, 42.001495715]
+guide_17:
+  component: Guide_gravity
+  w1: 0.06
+  h1: 0.085
+  w2: 0.06
+  h2: 0.085
+  l: 3.9967
+  mleft: 1.5
+  mright: 2.5
+  mtop: 2.5
+  mbottom: 2.5
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 4.0]
+  rotated: [0, 0.01909859317102744, 0]
+  relative: guide_16
+  position: [0.049942129, 0.0, 46.001475571]
+guide_18:
+  component: Guide_gravity
+  w1: 0.06
+  h1: 0.085
+  w2: 0.06
+  h2: 0.085
+  l: 3.9967
+  mleft: 1.5
+  mright: 2.5
+  mtop: 2.5
+  mbottom: 2.5
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 4.0]
+  rotated: [0, 0.01909859317102744, 0]
+  relative: guide_17
+  position: [0.063970067, 0.0, 50.001450973]
+guide_19:
+  component: Guide_gravity
+  w1: 0.06
+  h1: 0.085
+  w2: 0.06
+  h2: 0.085
+  l: 3.9967
+  mleft: 1.5
+  mright: 2.5
+  mtop: 2.5
+  mbottom: 2.5
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 4.0]
+  rotated: [0, 0.01909859317102744, 0]
+  relative: guide_18
+  position: [0.079331329, 0.0, 54.001421477]
+guide_20:
+  component: Guide_gravity
+  w1: 0.06
+  h1: 0.085
+  w2: 0.06
+  h2: 0.085
+  l: 3.9967
+  mleft: 1.5
+  mright: 2.5
+  mtop: 2.5
+  mbottom: 2.5
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 4.0]
+  rotated: [0, 0.01909859317102744, 0]
+  relative: guide_19
+  position: [0.096025914, 0.0, 58.001386638]
+guide_21:
+  component: Guide_gravity
+  w1: 0.06
+  h1: 0.085
+  w2: 0.06
+  h2: 0.085
+  l: 3.9967
+  mleft: 1.5
+  mright: 2.5
+  mtop: 2.5
+  mbottom: 2.5
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 4.0]
+  rotated: [0, 0.01909859317102744, 0]
+  relative: guide_20
+  position: [0.114053819, 0.0, 62.001346012]
+guide_22:
+  component: Guide_gravity
+  w1: 0.06
+  h1: 0.085
+  w2: 0.06
+  h2: 0.085
+  l: 3.9967
+  mleft: 1.5
+  mright: 2.5
+  mtop: 2.5
+  mbottom: 2.5
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 3.999999999999993]
+  rotated: [0, 0.019098593171027405, 0]
+  relative: guide_21
+  position: [0.133415044, 0.0, 66.001299155]
+guide_23:
+  component: Guide_gravity
+  w1: 0.06
+  h1: 0.085
+  w2: 0.06
+  h2: 0.085
+  l: 3.9967
+  mleft: 1.5
+  mright: 2.5
+  mtop: 2.5
+  mbottom: 2.5
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 4.0]
+  rotated: [0, 0.01909859317102744, 0]
+  relative: guide_22
+  position: [0.154109585, 0.0, 70.001245622]
+guide_24:
+  component: Guide_gravity
+  w1: 0.06
+  h1: 0.085
+  w2: 0.06
+  h2: 0.085
+  l: 3.9967
+  mleft: 1.5
+  mright: 2.5
+  mtop: 2.5
+  mbottom: 2.5
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 4.0]
+  rotated: [0, 0.01909859317102744, 0]
+  relative: guide_23
+  position: [0.17613744, 0.0, 74.001184968]
+guide_25:
+  component: Guide_gravity
+  w1: 0.06
+  h1: 0.085
+  w2: 0.06
+  h2: 0.085
+  l: 3.9967
+  mleft: 1.5
+  mright: 2.5
+  mtop: 2.5
+  mbottom: 2.5
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 4.0]
+  rotated: [0, 0.01909859317102744, 0]
+  relative: guide_24
+  position: [0.199498607, 0.0, 78.001116749]
+guide_26:
+  component: Guide_gravity
+  w1: 0.06
+  h1: 0.085
+  w2: 0.06
+  h2: 0.085
+  l: 3.9967
+  mleft: 1
+  mright: 2.5
+  mtop: 2.5
+  mbottom: 2.5
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 4.0]
+  rotated: [0, 0.01909859317102744, 0]
+  relative: guide_25
+  position: [0.224193084, 0.0, 82.001040521]
+guide_27:
+  component: Guide_gravity
+  w1: 0.06
+  h1: 0.085
+  w2: 0.06
+  h2: 0.085
+  l: 3.9967
+  mleft: 1
+  mright: 2.5
+  mtop: 2.5
+  mbottom: 2.5
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 4.0]
+  rotated: [0, 0.01909859317102744, 0]
+  relative: guide_26
+  position: [0.250220867, 0.0, 86.00095584]
+guide_28:
+  component: Guide_gravity
+  w1: 0.06
+  h1: 0.085
+  w2: 0.06
+  h2: 0.085
+  l: 3.9967
+  mleft: 1
+  mright: 2.5
+  mtop: 2.5
+  mbottom: 2.5
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 4.0]
+  rotated: [0, 0.01909859317102744, 0]
+  relative: guide_27
+  position: [0.277581953, 0.0, 90.00086226]
+guide_29:
+  component: Guide_gravity
+  w1: 0.06
+  h1: 0.085
+  w2: 0.06
+  h2: 0.085
+  l: 1.998
+  mleft: 1
+  mright: 2.5
+  mtop: 2.5
+  mbottom: 2.5
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 4.0]
+  rotated: [0, 0.01432704839966084, 0]
+  relative: guide_28
+  position: [0.306276341, 0.0, 94.000759338]
+arm_end_of_curve:
+  component: Arm
+  at: [0, 0, 1.998]
+  rotated: [0, 0.004769873644464104, 0]
+  relative: guide_29
+  position: [0.321108782, 0.0, 95.998704282]
+guide_30:
+  component: Guide_gravity
+  w1: 0.06
+  h1: 0.085
+  w2: 0.06
+  h2: 0.085
+  l: 3.997
+  mleft: 1
+  mright: 1
+  mtop: 2.5
+  mbottom: 2.5
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 0.0030000000000001137]
+  rotated: [0, 0, 0]
+  relative: arm_end_of_curve
+  position: [0.321131303, 0.0, 96.001704197]
+guide_31:
+  component: Guide_gravity
+  w1: 0.06
+  h1: 0.085
+  w2: 0.06
+  h2: 0.085
+  l: 3.997
+  mleft: 1
+  mright: 1
+  mtop: 2.5
+  mbottom: 2.5
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 4.0]
+  rotated: [0, 0.0, 0]
+  relative: guide_30
+  position: [0.351158871, 0.0, 100.001591489]
+guide_32:
+  component: Guide_gravity
+  w1: 0.06
+  h1: 0.085
+  w2: 0.06
+  h2: 0.085
+  l: 3.89375
+  mleft: 1
+  mright: 1
+  mtop: 2.5
+  mbottom: 2.5
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 4.0]
+  rotated: [0, 0.0, 0]
+  relative: guide_31
+  position: [0.381186439, 0.0, 104.00147878]
+arm_psc:
+  component: Arm
+  at: [0, 0, 3.8974500000000063]
+  rotated: [0, 0.0, 0]
+  relative: guide_32
+  position: [0.410444175, 0.0, 107.898818961]
+ps1:
+  component: NXdisk_chopper
+  slit_edges: [-10, 10, 107.5, 142.5, 170, 190, 287.5, 322.5]
+  radius: 0.35
+  yheight: 0.095
+  xwidth: 0.0
+  nu: nu_ps1
+  delay: delay_ps1
+  park_angle: 0
+  beam_angle: 180
+  zero_angle: 0
+  jitter: 0
+  abs_out: 0
+  verbose: 1
+  at: [0, 0, 0.05]
+  rotated: [0, 0, 0]
+  relative: arm_psc
+  position: [0.410819519, 0.0, 107.948817553]
+ps2:
+  component: NXdisk_chopper
+  slit_edges: [-10, 10, 107.5, 142.5, 170, 190, 287.5, 322.5]
+  radius: 0.35
+  yheight: 0.095
+  xwidth: 0.0
+  nu: nu_ps2
+  delay: delay_ps2
+  park_angle: 0
+  beam_angle: 180
+  zero_angle: 0
+  jitter: 0
+  abs_out: 0
+  verbose: 1
+  at: [0, 0, 0.15000000000000002]
+  rotated: [0, 0, 0]
+  relative: arm_psc
+  position: [0.411570209, 0.0, 108.048814735]
+guide_33:
+  component: Guide_gravity
+  w1: 0.06
+  h1: 0.085
+  w2: 0.06
+  h2: 0.085
+  l: 2.9943
+  mleft: 1
+  mright: 1
+  mtop: 2.5
+  mbottom: 2.5
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 0.20369999999999777]
+  rotated: [0, 0.0, 0]
+  relative: arm_psc
+  position: [0.411973329, 0.0, 108.102513222]
+guide_34:
+  component: Guide_gravity
+  w1: 0.06012944068706193
+  h1: 0.085
+  w2: 0.0643426131
+  h2: 0.085
+  l: 4
+  mleft: 1
+  mright: 1
+  mtop: 2.5
+  mbottom: 2.5
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 2.9942999999999955]
+  rotated: [0, 0.0, 0]
+  relative: guide_33
+  position: [0.434451215, 0.0, 111.096728851]
+guide_35:
+  component: Guide_gravity
+  w1: 0.0643426131
+  h1: 0.085
+  w2: 0.06732884751673562
+  h2: 0.085
+  l: 4
+  mleft: 1
+  mright: 1
+  mtop: 2.5
+  mbottom: 2.5
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 4.0]
+  rotated: [0, 0.0, 0]
+  relative: guide_34
+  position: [0.464478783, 0.0, 115.096616143]
+guide_36:
+  component: Guide_gravity
+  w1: 0.06732884751673562
+  h1: 0.085
+  w2: 0.0692470590224275
+  h2: 0.085
+  l: 4
+  mleft: 1
+  mright: 1
+  mtop: 2.5
+  mbottom: 2.5
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 4.0]
+  rotated: [0, 0.0, 0]
+  relative: guide_35
+  position: [0.494506351, 0.0, 119.096503434]
+guide_37:
+  component: Guide_gravity
+  w1: 0.0692470590224275
+  h1: 0.085
+  w2: 0.06954207801364358
+  h2: 0.085
+  l: 0.902
+  mleft: 1
+  mright: 1
+  mtop: 2.5
+  mbottom: 2.5
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 4.0]
+  rotated: [0, 0.0, 0]
+  relative: guide_36
+  position: [0.524533919, 0.0, 123.096390726]
+guide_38:
+  component: Guide_gravity
+  w1: 0.06954207801364358
+  h1: 0.084998466775413
+  w2: 0.07026572081948408
+  h2: 0.08456237035782511
+  l: 4
+  mleft: 1
+  mright: 1
+  mtop: 2.5
+  mbottom: 2.5
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 0.902000000000001]
+  rotated: [0, 0.0, 0]
+  relative: guide_37
+  position: [0.531305136, 0.0, 123.99836531]
+guide_39:
+  component: Guide_gravity
+  w1: 0.07026572081948408
+  h1: 0.08456237035782511
+  w2: 0.07005156712588596
+  h2: 0.08333971922887305
+  l: 4
+  mleft: 1
+  mright: 1
+  mtop: 2.5
+  mbottom: 2.5
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 4]
+  rotated: [0, 0.0, 0]
+  relative: guide_38
+  position: [0.561332704, 0.0, 127.998252601]
+guide_40:
+  component: Guide_gravity
+  w1: 0.07005156712588596
+  h1: 0.08333971922887305
+  w2: 0.0688908718
+  h2: 0.08129503254203932
+  l: 4
+  mleft: 1
+  mright: 1
+  mtop: 2.5
+  mbottom: 2.5
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 4]
+  rotated: [0, 0.0, 0]
+  relative: guide_39
+  position: [0.591360272, 0.0, 131.998139893]
+guide_41:
+  component: Guide_gravity
+  w1: 0.0688908718
+  h1: 0.08129503254203932
+  w2: 0.0667342641
+  h2: 0.07836399061511287
+  l: 4
+  mleft: 1
+  mright: 1
+  mtop: 2.5
+  mbottom: 2.5
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 4]
+  rotated: [0, 0.0, 0]
+  relative: guide_40
+  position: [0.62138784, 0.0, 135.998027185]
+guide_42:
+  component: Guide_gravity
+  w1: 0.0667342641
+  h1: 0.07836399061511287
+  w2: 0.0634803231
+  h2: 0.0744419702
+  l: 4
+  mleft: 1
+  mright: 1
+  mtop: 3
+  mbottom: 3
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 4]
+  rotated: [0, 0.0, 0]
+  relative: guide_41
+  position: [0.651415408, 0.0, 139.997914476]
+guide_43:
+  component: Guide_gravity
+  w1: 0.0634803231
+  h1: 0.0744419702
+  w2: 0.058947607768968735
+  h2: 0.0693610699607878
+  l: 4
+  mleft: 1.5
+  mright: 1.5
+  mtop: 3
+  mbottom: 3
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 4]
+  rotated: [0, 0.0, 0]
+  relative: guide_42
+  position: [0.681442976, 0.0, 143.997801768]
+guide_44:
+  component: Guide_gravity
+  w1: 0.058947607768968735
+  h1: 0.0693610699607878
+  w2: 0.05366525198351618
+  h2: 0.06373263766468093
+  l: 3.509
+  mleft: 1.5
+  mright: 1.5
+  mtop: 3
+  mbottom: 3
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 4]
+  rotated: [0, 0.0, 0]
+  relative: guide_43
+  position: [0.711470544, 0.0, 147.997689059]
+guide_45:
+  component: Guide_gravity
+  w1: 0.05366525198351618
+  h1: 0.06373263766468093
+  w2: 0.04538512207564012
+  h2: 0.055334681646321195
+  l: 4
+  mleft: 1.5
+  mright: 1.5
+  mtop: 3
+  mbottom: 3
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 3.5960000000000036]
+  rotated: [0, 0.0, 0]
+  relative: guide_44
+  position: [0.738465327, 0.0, 151.593587734]
+guide_47:
+  component: Guide_gravity
+  w1: 0.04538512207564012
+  h1: 0.055334681646321195
+  w2: 0.03891772821142349
+  h2: 0.049103212537757956
+  l: 2.399
+  mleft: 2
+  mright: 2
+  mtop: 4
+  mbottom: 4
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 4.0]
+  rotated: [0, 0.0, 0]
+  relative: guide_45
+  position: [0.768492895, 0.0, 155.593475026]
+guide_48b:
+  component: Guide_gravity
+  w1: 0.03891772821142349
+  h1: 0.049103212537757956
+  w2: 0.0356672857842568
+  h2: 0.04609172935463167
+  l: 1
+  mleft: 2
+  mright: 2
+  mtop: 4.5
+  mbottom: 4.5
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 2.4039999999999964]
+  rotated: [0, 0.0, 0]
+  relative: guide_47
+  position: [0.786539464, 0.0, 157.997407288]
+guide_49:
+  component: Guide_gravity
+  w1: 0.0356569655247204
+  h1: 0.04608231057651308
+  w2: 0.022433235171385017
+  h2: 0.03498695677621074
+  l: 2.982
+  mleft: 2
+  mright: 2
+  mtop: 4.5
+  mbottom: 4.5
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 1.002999999999986]
+  rotated: [0, 0.0, 0]
+  relative: guide_48b
+  position: [0.794068876, 0.0, 159.000379026]
+arm_mc:
+  component: Arm
+  at: [0, 0, 2.9820000000000277]
+  rotated: [0, 0.0, 0]
+  relative: guide_49
+  position: [0.816454428, 0.0, 161.982295002]
+mc1:
+  component: NXdisk_chopper
+  slit_edges: [178.75, 181.25, 362.8, 367.2]
+  radius: 0.35
+  yheight: 0.045
+  xwidth: 0.0
+  nu: nu_mc1
+  delay: delay_mc1
+  park_angle: 0
+  beam_angle: 180
+  zero_angle: 0
+  jitter: 0
+  abs_out: 0
+  verbose: 1
+  at: [0, 0, 0.0425]
+  rotated: [0, 0, 0]
+  relative: arm_mc
+  position: [0.816773471, 0.0, 162.024793805]
+mc2:
+  component: NXdisk_chopper
+  slit_edges: [-1.25, 1.25, 182.8, 187.2]
+  radius: 0.35
+  yheight: 0.045
+  xwidth: 0.0
+  nu: nu_mc2
+  delay: delay_mc2
+  park_angle: 0
+  beam_angle: 0
+  zero_angle: 0
+  jitter: 0
+  abs_out: 0
+  verbose: 1
+  at: [0, 0, 0.0525]
+  rotated: [0, 0, 0]
+  relative: arm_mc
+  position: [0.81684854, 0.0, 162.034793523]
+guide_50a:
+  component: Guide_gravity
+  w1: 0.022433235171385017
+  h1: 0.03498695677621074
+  w2: 0.014184368544301893
+  h2: 0.029555541228075157
+  l: 1.003
+  mleft: 3.5
+  mright: 3.5
+  mtop: 4.5
+  mbottom: 4.5
+  R0: 0.995
+  Qc: 0.0218
+  alpha: 4.38
+  m: 1.0
+  W: 0.003
+  G: 0
+  aleft: -1
+  aright: -1
+  atop: -1
+  abottom: -1
+  wavy: 0
+  wavy_z: 0
+  wavy_tb: 0
+  wavy_lr: 0
+  at: [0, 0, 0.09799999999998477]
+  rotated: [0, 0.0, 0]
+  relative: arm_mc
+  position: [0.817190104, 0.0, 162.080292241]
+slit_mc:
+  component: Slit
+  xwidth: 0.0205
+  yheight: 0.0345
+  at: [0, 0, 1.1199999999999761]
+  rotated: [0, 0, 0]
+  relative: arm_mc
+  position: [0.824862147, 0.0, 163.102263444]
+sample_pos:
+  component: Arm
+  at: [0, 0, 1.8149999999999977]
+  rotated: [0, 0, 0]
+  relative: arm_mc
+  position: [0.830079437, 0.0, 163.797243861]

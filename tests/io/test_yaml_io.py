@@ -1,3 +1,4 @@
+import math
 from dataclasses import dataclass
 
 import yaml
@@ -6,8 +7,28 @@ from mcdgs.core.base import INSTRUMENTS, Instrument
 from mcdgs.core.components import Progress_bar, Slit
 from mcdgs.core.params import InstrParam, param
 from mcdgs.instruments import TRex
-from mcdgs.io import load, read_yaml, save, write_yaml
+from mcdgs.instruments.trex import PARAMS_FILE
+from mcdgs.io import load, read_yaml, save, to_dict, write_yaml
 from mcdgs.samples import la2ni7
+
+
+def _close(a, b):
+    """`a` and `b` are the same nested dict, numbers but bools equal to 1e-12 relative: the math
+    library of another platform may round atan or sin in the last bit."""
+    if isinstance(a, dict):
+        return isinstance(b, dict) and list(a) == list(b) and all(_close(a[k], b[k]) for k in a)
+    if isinstance(a, list):
+        return isinstance(b, list) and len(a) == len(b) and all(map(_close, a, b))
+    numbers = (int, float)
+    if isinstance(a, numbers) and isinstance(b, numbers) and bool not in (type(a), type(b)):
+        return math.isclose(a, b, rel_tol=1e-12, abs_tol=1e-15)
+    return a == b and type(a) is type(b)
+
+
+def test_params_yaml_is_the_default_trex_saved():
+    # if this fails after a change to the model: save(TRex(), PARAMS_FILE) and review the diff
+    assert _close(read_yaml(PARAMS_FILE), to_dict(TRex()))
+    assert _close(to_dict(load(PARAMS_FILE)), to_dict(TRex()))
 
 
 def test_write_then_read_gives_the_same_dict(tmp_path):
