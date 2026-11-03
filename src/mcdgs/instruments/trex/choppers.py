@@ -2,12 +2,12 @@
 
 The disks take their frequency ``nu`` and their delay from the instrument parameters
 ``nu_<name>`` and ``delay_<name>``, which :func:`chopper_timings` computes from the central
-wavelength, the repetition rate multiplication and the mode, as ``trex_primary.txt`` does.
+wavelength, the repetition rate multiplication and the mode.
 
 The mode chooses the slit of the P- and M-Chopper disks that is on the beam: the wide one in
-``"FF"`` (high flux), the narrow one in ``"RR"`` (high resolution). ``trex_primary.txt`` shifts the
-slit edges for its high-flux mode; here the disks stay as they are and turn later, by the angle
-from the slit to the beam, which is the same. The narrow slits are centered on ``beam_angle``,
+``"FF"`` (high flux), the narrow one in ``"RR"`` (high resolution). Rather than shift the slit
+edges, the disks stay as they are and turn later, by the angle from the slit to the beam, which
+is the same. The narrow slits are centered on ``beam_angle``,
 so ``"RR"`` turns them by 0.
 
 The flight path to a disk is its distance from the moderator along the beam axis: the position

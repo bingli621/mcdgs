@@ -89,13 +89,13 @@ Guides 4a and 4b are alternative optics in the same slot, with the same exit pla
 moderator and its exit tangent is parallel to the guide axis, so nothing after it is rotated. The
 nominal rotation, −0.398 deg, is the angle `atan(length / radius)`.
 
-| Parameter | Value | Source |
-| --------- | ----- | ------ |
-| Length | 0.05 m | Table of Optics |
-| Radius of curvature | 7.2 m | `trex_primary.txt` |
-| Width × height | 63.84 mm × 46 mm | `trex_guide_anyshape.ipynb` |
-| Channels | 426 | `trex_primary.txt` |
-| Mirrors | R0 0.99, Qc 0.0219, alpha 3.02, m 4, W 0.003 | `trex_primary.txt` |
+| Parameter | Value |
+| --------- | ----- |
+| Length | 0.05 m |
+| Radius of curvature | 7.2 m |
+| Width × height | 63.84 mm × 46 mm |
+| Channels | 426 |
+| Mirrors | R0 0.99, Qc 0.0219, alpha 3.02, m 4, W 0.003 |
 
 All the mirrors have the same values for both spin states, so the bender is spin-independent.
 
@@ -137,8 +137,7 @@ the ellipses of the sheet with straight tapered sections.
 | 50a | 162.083 | 22.433 → 14.184 | 34.987 → 29.556 | 3.5 | 4.5 |
 
 Guide 48b is the plain guide in the polarizer slot: guides 48a and 48c are not modeled. The sheet
-has no guide 46. The slit `slit_mc`, 20.5 mm × 34.5 mm, is 19 mm after guide 50a. Its size is from
-`trex_primary.txt`.
+has no guide 46. The slit `slit_mc`, 20.5 mm × 34.5 mm, is 19 mm after guide 50a.
 
 The arms `arm_bwc1`, `arm_bwc2`, `arm_bm1`, `arm_psc` and `arm_mc` mark the gaps for bandwidth
 choppers 1 and 2, beam monitor 1, the P-Chopper and the M-Chopper. The choppers `bw1`, `bw2`,
@@ -147,7 +146,7 @@ choppers 1 and 2, beam monitor 1, the P-Chopper and the M-Chopper. The choppers 
 ## Chopper timing
 
 Each chopper takes its frequency and delay from the McStas instrument parameters `nu_<name>` and
-`delay_<name>`, computed from `lambda0`, `rrm`, `mode` and `t0_offset` as `trex_primary.txt` does:
+`delay_<name>`, computed from `lambda0`, `rrm`, `mode` and `t0_offset`:
 
 | Choppers | Frequency |
 | -------- | --------- |
@@ -165,8 +164,8 @@ The disks of the P- and M-Chopper have two kinds of slit: narrow ones (20° and 
 arrives. In `"RR"` the narrow slit is centered on the beam then, so the delay is the arrival
 time. In `"FF"` the disk is phased to the wide slit instead: it has turned past its zero mark by
 the angle from the center of the wide slit to the beam, 55° for the P-Chopper and 175° for the
-M-Chopper. These are the angles by which `trex_primary.txt` shifts the slit edges in its HF mode;
-the model keeps the disks as they are and changes the delay, which is the same.
+M-Chopper. The model keeps the disks as they are and changes the delay, which is the same as
+shifting the slit edges.
 
 The slit edges of each disk reach McStas as an array of their own, declared in the `.instr` file
 as `<name>_slit_edges`. McStas 3.10.2 sizes a list written in place by its first use, so the
