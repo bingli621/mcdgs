@@ -113,7 +113,8 @@ def _formatted_parameters(
 
     - a McStas parameter: kept, formatted by :func:`_formatted_value`, or, if it is a list,
       declared as the array ``<component>_<parameter>`` and passed by that name;
-    - a field McStas does not take: left out, as the component only computes from it (e.g. the source's ``frequency``, the crystal's ``lattice_params``, put into its ``ax`` ... ``cz``).
+    - a field McStas does not take: left out, as the component only computes from it (e.g. the
+      crystal's ``lattice_params``, put into its ``ax`` ... ``cz``).
 
     Anything else was computed under a name McStas does not take, likely a typo.
 

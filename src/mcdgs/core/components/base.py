@@ -10,10 +10,10 @@ from mcdgs.core.utils import format_value
 class Component:
     """Base class of a McStas component.
 
-    A direct subclass is named after the McStas component it stands for (``Slit``,
-    ``DiskChopper``, ...). Its fields are its McStas parameters, plus the instance keywords below.
-    A subclass of one of those (an instrument's own source, say) stands for the same McStas
-    component, with fields of its own that McStas does not take.
+    A subclass is named after the McStas component it stands for (``Slit``, ``NXdisk_chopper``,
+    ...). Its fields are its McStas parameters, plus the instance keywords below. It is not
+    subclassed further: a component class is one McStas component, so its name says what to
+    build. A value an instrument needs that McStas does not take belongs to the instrument.
 
     Parameters
     ----------
@@ -46,7 +46,7 @@ class Component:
     KEYWORDS:
         The fields that are McStas instance keywords, not McStas parameters.
     component_name:
-        McStas component, the name of the class that directly extends ``Component``.
+        McStas component, the name of the class.
 
     Notes
     -----
@@ -97,9 +97,8 @@ class Component:
 
     @property
     def component_name(self) -> str:
-        """McStas component, the name of the class that directly extends ``Component``."""
-        mcstas_class = next((c for c in type(self).__mro__ if Component in c.__bases__), type(self))
-        return mcstas_class.__name__
+        """McStas component, the name of the class."""
+        return type(self).__name__
 
     def mcstas_parameters(self) -> dict[str, Any]:
         """Return the McStas parameters of the component.

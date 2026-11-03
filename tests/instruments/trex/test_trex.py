@@ -4,7 +4,7 @@ from itertools import pairwise
 import numpy as np
 import pytest
 
-from mcdgs.core.components import Arm, Guide_gravity, NXdisk_chopper
+from mcdgs.core.components import Arm, ESS_butterfly, Guide_gravity, NXdisk_chopper
 from mcdgs.core.geometry import place_absolute
 from mcdgs.instruments.trex.choppers import (
     BEAM_ANGLE,
@@ -79,11 +79,10 @@ def test_the_source_is_that_of_trex_primary():
     assert (source.Lmin, source.Lmax, source.n_pulses) == (0.1, 10.0, 1)
 
 
-def test_the_source_pulses_at_14_hz_and_is_the_ess_butterfly_of_mcstas():
+def test_the_source_is_the_ess_butterfly_of_mcstas_pulsing_at_14_hz():
     source = TRex().source
+    assert type(source) is ESS_butterfly
     assert source.frequency == 14
-    assert source.component_name == "ESS_butterfly"
-    assert "frequency" in source.mcstas_parameters()  # the builder leaves it out: see tests/mcstas
 
 
 def test_the_sample_position_is_on_the_axis_after_the_m_chopper():

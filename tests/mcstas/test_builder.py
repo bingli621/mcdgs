@@ -6,10 +6,9 @@ from pathlib import Path
 import pytest
 
 from mcdgs.core.base import Instrument
-from mcdgs.core.components import Arm, Monitor_nD, Progress_bar
+from mcdgs.core.components import Arm, ESS_butterfly, Monitor_nD, Progress_bar
 from mcdgs.core.params import InstrParam
 from mcdgs.instruments.trex.model import TRex
-from mcdgs.instruments.trex.sources import TRexSource
 from mcdgs.mcstas.builder import build_mcstas, default_input_dir
 from mcdgs.samples import aluminum, la2ni7
 
@@ -180,7 +179,7 @@ def test_a_computed_value_mcstas_does_not_know_raises(tmp_path, monkeypatch):
 
 def test_a_wrong_sector_stops_the_build(tmp_path):
     trex = TRex()
-    trex.source = TRexSource(Lmin=0.1, Lmax=10, sector="Q")
+    trex.source = ESS_butterfly(Lmin=0.1, Lmax=10, sector="Q")
     with pytest.raises(ValueError, match="source: sector 'Q'"):
         build_mcstas(trex, input_path=tmp_path)
 

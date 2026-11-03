@@ -24,15 +24,6 @@ def test_the_component_name_is_the_class_name():
     assert Slit(xwidth=0.1, yheight=0.2).component_name == "Slit"
 
 
-@dataclass(kw_only=True, repr=False)
-class WideSlit(Slit):
-    margin: float = 0.01  # a value of the instrument's own, not McStas's
-
-
-def test_a_subclass_of_a_component_keeps_its_mcstas_component():
-    assert WideSlit(xwidth=0.1, yheight=0.2).component_name == "Slit"
-
-
 def test_the_name_is_unset_unless_given():
     assert Slit(xwidth=0.1, yheight=0.2).name is None
     assert Slit(name="slit", xwidth=0.1, yheight=0.2).name == "slit"

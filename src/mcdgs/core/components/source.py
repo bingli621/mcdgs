@@ -5,6 +5,8 @@ from typing import Any
 
 from .base import Component
 
+ESS_SOURCE_FREQUENCY = 14  # Hz, the pulse frequency McStas fixes, as in ess_source-lib.h
+
 
 @dataclass(kw_only=True, repr=False)  # repr: Component's
 class ESS_butterfly(Component):
@@ -87,6 +89,15 @@ class ESS_butterfly(Component):
     tfocus_dist: float = 0
     tfocus_time: float = 0
     tfocus_width: float = 0
+
+    @property
+    def frequency(self) -> float:
+        """Pulse frequency in Hz, for an instrument's choppers to be phased to.
+
+        McStas fixes it at 14 Hz (``ESS_SOURCE_FREQUENCY`` in ess_source-lib.h), so it is read
+        only, and no McStas parameter.
+        """
+        return ESS_SOURCE_FREQUENCY
 
     def mcstas_parameters(self) -> dict[str, Any]:
         """Return the McStas parameters, once ``sector`` is checked.
