@@ -1,6 +1,6 @@
 # T-Rex
 
-See [T-Rex](../instruments/trex/index.md) for the description of the instrument.
+See the [technical details of T-Rex](../instruments/trex/details.md) for the description of the instrument.
 
 ::: mcdgs.instruments.trex.model
 

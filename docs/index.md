@@ -24,15 +24,15 @@ print(trex)  # every parameter and component, with its position in the lab frame
 | [T-Rex](instruments/trex/index.md) | Modeled from the source to the sample position: the guides and the choppers. The polarizers, the collimators and the detector are not modeled yet. |
 | Simulation | Single runs, parameter scans and split runs at the sample position. |
 | Reading the output | Monitors and detector pixels from McStas NeXus files. |
-| Instrument files | Not written yet. |
+| [Parameters files](reference/io.md) | Save an instrument to a YAML file and load it back. A file need only hold what differs from the instrument the code makes. |
 | Reduction to S(Q,E) | Not written yet. |
 
 ## Where to go next
 
+- [T-Rex](instruments/trex/index.md) and its
+  [extraction results](instruments/trex/extraction.md): the model and what it shows so far.
 - [Install and first run](getting-started.md): set up the environment and run T-Rex to the sample
   position.
 - [Core concepts](concepts.md): how instruments, components and parameters fit together.
-- [T-Rex](instruments/trex/index.md) and its
-  [extraction results](instruments/trex/extraction.md): the model and what it shows so far.
 - [How-to guides](how-to/run-a-simulation.md): run a scan, read the output, add an instrument.
 - [Reference](reference/core.md): the Python API, generated from the source.

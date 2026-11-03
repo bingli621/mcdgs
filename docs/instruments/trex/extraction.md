@@ -1,6 +1,6 @@
 # Extraction results
 
-These figures come from the model of the [extraction guides](index.md#extraction-guides).
+These figures come from the model of the [extraction guides](details.md#extraction-guides).
 
 ## Beam along the guides
 
