@@ -255,6 +255,7 @@ def test_the_bender_is_rotated_by_its_full_deflection():
     assert {p.name: p.value for p in trex.instr_params} == {
         "bender_in": 0,
         "b_rot": trex.params.b_rot,
+        "omega": 0.0,
     }
 
 

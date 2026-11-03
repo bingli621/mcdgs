@@ -129,4 +129,7 @@ class TRex(Instrument):
         return [
             InstrParam("bender_in", int(self.params.bender_in), "", "bender in = 1, out = 0"),
             InstrParam("b_rot", self.params.b_rot, "deg", "rotation of the cold neutron bender"),
+            InstrParam("omega", self.params.omega, "deg", "rotation of the goniometer about +Y"),
+            # InstrParam("nu_bw1", self.params.nu_bw1, "Hz", "frequency of bandwidth chopper 1"),
+            # InstrParam("nu_bw2", self.params.nu_bw2, "Hz", "frequency of bandwidth chopper 2"),
         ]

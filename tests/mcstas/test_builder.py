@@ -64,9 +64,9 @@ def test_by_default_the_input_folder_is_per_instrument_in_the_current_folder(tmp
 
 def test_the_instrument_parameters_follow_the_params(tmp_path):
     trex = TRex()
-    trex.update_params(bender_in=True)
+    trex.update_params(bender_in=True, omega=30.0)
     params = {p.name: p.value for p in build_mcstas(trex, input_path=tmp_path).parameters}
-    assert params == {"bender_in": 1, "b_rot": trex.params.b_rot}
+    assert params == {"bender_in": 1, "b_rot": trex.params.b_rot, "omega": 30.0}
 
 
 def test_a_string_instrument_parameter_is_declared_as_a_string(tmp_path, monkeypatch):
