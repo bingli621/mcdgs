@@ -6,7 +6,7 @@ These figures come from the model of the [extraction guides](index.md#extraction
 
 Each row is one position in the beam: after the source, after guide 3 and at the exit of guide 4.
 The columns are the beam profile, wavelength against x, and the spectrum in n/s per bin.
-[`diagnosis/trex/guide_extraction.py`](https://github.com/bingli621/mcdgs/blob/main/diagnosis/trex/guide_extraction.py)
+[`diagnosis/trex/bender/guide_extraction.py`](https://github.com/bingli621/mcdgs/blob/main/diagnosis/trex/bender/guide_extraction.py)
 draws these views for the path set by `bender_in`; the figure is saved by hand.
 
 **Bender out**, through the thermal guide 4a:
@@ -27,7 +27,7 @@ the thermal peak is mostly gone and the cold peak stays.
 
 ![Intensity after guide 4 against the rotation of the bender, per wavelength band](figures/diagnose_bender.png)
 
-[`diagnosis/trex/bender_efficiency.py`](https://github.com/bingli621/mcdgs/blob/main/diagnosis/trex/bender_efficiency.py)
+[`diagnosis/trex/bender/bender_efficiency.py`](https://github.com/bingli621/mcdgs/blob/main/diagnosis/trex/bender/bender_efficiency.py)
 scans `b_rot` from -0.8 to 0.1 deg with 1e7 neutrons per angle. Each curve is one band of
 wavelengths at the exit of guide 4, divided by the same band with the bender out, so the dashed line
 at 1 is the bender-out intensity. The dotted line is the nominal rotation, -0.398 deg. The legend

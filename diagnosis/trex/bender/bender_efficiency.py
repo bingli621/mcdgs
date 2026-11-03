@@ -33,7 +33,7 @@ from mcdgs.instruments.trex.sources import source
 from mcdgs.mcstas.run_folders import default_output_dir
 from mcdgs.mcstas.simulation import Simulation
 
-WORK_DIR = Path(__file__).resolve().parents[2]  # the repository, wherever the script runs from
+WORK_DIR = Path(__file__).resolve().parents[3]  # the repository, wherever the script runs from
 FIGURE = WORK_DIR / "docs" / "instruments" / "trex" / "figures" / "diagnose_bender.png"
 SCAN_FILE = default_output_dir(WORK_DIR) / "bender_scan" / "mccode.h5"
 BENDER_OUT_FILE = default_output_dir(WORK_DIR) / "bender_out" / "mccode.h5"
