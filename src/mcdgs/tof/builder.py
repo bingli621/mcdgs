@@ -5,7 +5,8 @@ the detectors. It has no optics: guides, benders and slits transmit everything. 
 keeps only the components tof knows, by type:
 
 - the ``ESS_butterfly`` becomes the :class:`tof.Source`, which must be the only source;
-- each ``NXdisk_chopper`` becomes a :class:`tof.Chopper`;
+- each ``NXdisk_chopper`` becomes a :class:`tof.Chopper`, through scippneutron's
+  :class:`~scippneutron.chopper.DiskChopper` (:func:`disk_chopper`), as both follow NeXus;
 - each ``Monitor_nD``, and each component named in ``detectors`` (such as the ``Arm`` at the
   sample position), becomes a :class:`tof.Detector`, which records the neutrons reaching it.
 
@@ -23,6 +24,7 @@ from collections.abc import Callable, Collection, Mapping
 import numpy as np
 import scipp as sc
 import tof
+from scippneutron.chopper.disk_chopper import DiskChopper
 
 from mcdgs.core.base import Instrument
 from mcdgs.core.components import (
@@ -106,10 +108,71 @@ def _source(
     )
 
 
+def disk_chopper(
+    component: NXdisk_chopper, distance: float, params: Mapping[str, float]
+) -> DiskChopper:
+    """Return the scippneutron disk chopper of a McStas disk chopper.
+
+    Both follow NeXus ``NXdisk_chopper``. On the beam axis, McStas has the angle under the beam,
+    from the zero mark in the sense of ``slit_edges``, at
+    ``beam_angle - 360 * nu * (t - delay)``; scippneutron at
+    ``beam_position + phase - 360 * frequency * t``. So the slit edges, the signed frequency and
+    the beam angle carry over, and the phase is ``360 * nu * delay``, as
+    :meth:`DiskChopper.from_nexus` computes it from a delay.
+
+    Only the timing on the beam axis is kept. ``zero_angle`` only says where the spindle lies,
+    so it does not change it; the size of the openings (``radius``, ``yheight``, ``xwidth``),
+    ``jitter`` and ``abs_out`` have no part in tof.
+
+    Parameters
+    ----------
+    component:
+        The McStas disk chopper.
+    distance:
+        Its distance from the source, in m: the ``z`` of the axle.
+    params:
+        Instrument parameter values, for ``nu``, ``delay`` and ``beam_angle`` given as
+        expressions.
+
+    Returns
+    -------
+    :
+        The disk chopper.
+
+    Raises
+    ------
+    ValueError
+        If ``nu`` is 0. McStas parks the disk, which tof cannot: it takes a disk at rest as open.
+
+    Examples
+    --------
+    >>> chopper = NXdisk_chopper(name="c", slit_edges=[-10, 10], nu="f", delay=0.01)
+    >>> disk = disk_chopper(chopper, 20.0, {"f": 14})
+    >>> float(disk.frequency.value), float(disk.phase.value), disk.slit_end.values.tolist()
+    (14.0, 50.4, [10.0])
+    """
+    nu = float(evaluate(component.nu, params))
+    if nu == 0:
+        raise ValueError(f"{component.name}: a parked disk (nu = 0) cannot be modeled in tof")
+    delay = float(evaluate(component.delay, params))
+    edges = np.array(component.slit_edges, float)
+    return DiskChopper(
+        axle_position=sc.vector([0.0, 0.0, distance], unit="m"),
+        frequency=sc.scalar(nu, unit="Hz"),
+        beam_position=sc.scalar(float(evaluate(component.beam_angle, params)), unit="deg"),
+        phase=sc.scalar(360 * nu * delay, unit="deg"),
+        slit_begin=sc.array(dims=["slit"], values=edges[0::2], unit="deg"),
+        slit_end=sc.array(dims=["slit"], values=edges[1::2], unit="deg"),
+    )
+
+
 def _chopper(
     component: NXdisk_chopper, distance: float, params: Mapping[str, float]
 ) -> tof.Chopper:
-    """Return the tof chopper of a disk chopper.
+    """Return the tof chopper of a disk chopper, through :func:`disk_chopper`.
+
+    tof's own conversion, :meth:`tof.Chopper.from_diskchopper`, turns the signed frequency into
+    a direction and the phase into tof's sense.
 
     Parameters
     ----------
@@ -118,19 +181,17 @@ def _chopper(
     distance:
         Its distance from the source, in m.
     params:
-        Instrument parameter values, for ``nu``, ``delay`` and the angles given as expressions.
+        Instrument parameter values, for ``nu``, ``delay`` and ``beam_angle`` given as
+        expressions.
 
     Returns
     -------
     :
-        The tof chopper.
-
-    Raises
-    ------
-    NotImplementedError
-        Always, until the conversion of the phase from McStas to tof is written.
+        The tof chopper, named after the component.
     """
-    raise NotImplementedError(f"{component.name}: NXdisk_chopper is not yet converted to tof")
+    return tof.Chopper.from_diskchopper(
+        disk_chopper(component, distance, params), name=component.name
+    )
 
 
 def _detector(component: Component, distance: float, params: Mapping[str, float]) -> tof.Detector:

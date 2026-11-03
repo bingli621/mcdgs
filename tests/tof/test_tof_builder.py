@@ -14,10 +14,11 @@ from mcdgs.core.components import (
     Progress_bar,
 )
 from mcdgs.core.params import InstrParam
+from mcdgs.core.utils import evaluate, speed_from_wavelength
 from mcdgs.instruments.trex.choppers import DISK_DISTANCE
 from mcdgs.instruments.trex.model import TRex
 from mcdgs.samples import aluminum
-from mcdgs.tof.builder import build_tof
+from mcdgs.tof.builder import _numeric_params, build_tof
 
 
 @dataclass(frozen=True)
@@ -98,9 +99,84 @@ def test_a_component_without_a_conversion_raises():
         build_tof(beamline, neutrons=1000)
 
 
-def test_choppers_are_not_converted_yet():
-    with pytest.raises(NotImplementedError, match="bw1: NXdisk_chopper"):
-        build_tof(TRex(), neutrons=1000)
+def _mcstas_open(chopper, params, t):
+    """Whether the McStas disk lets a ray through on the beam axis at times `t` (s): the rule of
+    NXdisk_chopper.comp's TRACE, written out again here, the reference for tof."""
+    mark = 360 * evaluate(chopper.nu, params) * (t - evaluate(chopper.delay, params))
+    on_disc = np.mod(evaluate(chopper.beam_angle, params) - mark, 360)
+    edges = np.array(chopper.slit_edges, float)
+    through = np.zeros(np.shape(t), bool)
+    for opening, closing in zip(edges[0::2], edges[1::2], strict=True):
+        through |= np.mod(on_disc - np.mod(opening, 360), 360) < closing - opening
+    return through
+
+
+def _tof_open(chopper, t):
+    """Whether the tof chopper is open at times `t` (s)."""
+    opens, closes = chopper.open_close_times(time_limit=sc.scalar(t.max(), unit="s"), unit="s")
+    through = np.zeros(np.shape(t), bool)
+    for opening, closing in zip(opens.values, closes.values, strict=True):
+        through |= (t >= opening) & (t < closing)
+    return through
+
+
+def _trex(mode):
+    trex = TRex()
+    trex.update_params(mode=mode)
+    return trex
+
+
+def test_trex_choppers_are_placed_in_beam_order():
+    model = build_tof(TRex(), neutrons=1000, detectors=("sample_pos",), seed=1)
+    assert list(model.choppers) == list(DISK_DISTANCE)
+    for name, chopper in model.choppers.items():
+        assert chopper.distance.value == pytest.approx(DISK_DISTANCE[name], abs=1e-3), name
+    assert list(model.detectors) == ["sample_pos"]
+
+
+@pytest.mark.parametrize("mode", ["FF", "RR"])
+def test_tof_choppers_open_when_the_mcstas_disks_do(mode):
+    # every 0.5 us over two pulses: under 2 % of the shortest opening, the M-Chopper's 28 us
+    trex = _trex(mode)
+    params = _numeric_params(trex)
+    t = np.arange(0, 2 / 14, 0.5e-6)
+    for name, chopper in build_tof(trex, neutrons=1000, seed=1).choppers.items():
+        mcstas = _mcstas_open(trex.components[name], params, t)
+        assert mcstas.any(), name
+        np.testing.assert_array_equal(_tof_open(chopper, t), mcstas, err_msg=name)
+
+
+@pytest.mark.parametrize("mode", ["FF", "RR"])
+def test_the_neutron_the_choppers_are_phased_to_gets_through_every_disk(mode):
+    trex = _trex(mode)
+    speed = speed_from_wavelength(trex.params.lambda0)
+    for name, chopper in build_tof(trex, neutrons=1000, seed=1).choppers.items():
+        arrival = trex.params.t0_offset + chopper.distance.value / speed
+        assert _tof_open(chopper, np.array([arrival]))[0], name
+
+
+def test_neutrons_reach_the_sample_exactly_when_every_mcstas_disk_lets_them_through():
+    trex = TRex()
+    params = _numeric_params(trex)
+    model = build_tof(trex, neutrons=200_000, detectors=("sample_pos",), seed=1)
+    neutrons = model.run()["sample_pos"].data["pulse", 0]
+    birth = neutrons.coords["birth_time"].to(unit="s").values
+    speed = neutrons.coords["speed"].values
+    through = np.ones(birth.shape, bool)
+    for name, chopper in model.choppers.items():
+        through &= _mcstas_open(
+            trex.components[name], params, birth + chopper.distance.value / speed
+        )
+    reached = ~neutrons.masks["blocked_by_others"].values
+    assert reached.sum() > 100  # enough to mean something
+    np.testing.assert_array_equal(reached, through)
+
+
+def test_a_parked_disk_raises():
+    trex = TRex()
+    trex.bw1 = replace(trex.bw1, nu=0)
+    with pytest.raises(ValueError, match="bw1: a parked disk"):
+        build_tof(trex, neutrons=1000)
 
 
 def test_trex_disks_lie_within_1_mm_of_the_distances_the_choppers_are_phased_to():

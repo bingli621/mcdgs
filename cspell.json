@@ -19,6 +19,7 @@
     "bispectral",
     "cmap",
     "dataclass",
+    "diskchopper",
     "errorbar",
     "figsize",
     "fontsize",
