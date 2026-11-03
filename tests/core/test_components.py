@@ -3,6 +3,7 @@ from dataclasses import dataclass
 import pytest
 
 from mcdgs.core.components import (
+    COMPONENTS,
     Arm,
     Component,
     ESS_butterfly,
@@ -22,6 +23,13 @@ class Slit(Component):
 
 def test_the_component_name_is_the_class_name():
     assert Slit(xwidth=0.1, yheight=0.2).component_name == "Slit"
+
+
+def test_every_component_class_is_one_mcstas_component():
+    import mcdgs.instruments.trex.model  # noqa: F401  (defines its components: none subclassed)
+
+    assert all(c.__bases__ == (Component,) for c in COMPONENTS.values())
+    assert {c.__name__: c.__subclasses__() for c in COMPONENTS.values() if c.__subclasses__()} == {}
 
 
 def test_by_default_a_component_is_at_the_absolute_origin_with_no_instance_keyword():
