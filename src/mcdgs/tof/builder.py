@@ -47,7 +47,9 @@ SKIPPED: frozenset[type[Component]] = frozenset(
 
 # a converter takes the component, its distance from the source in m, and the instrument
 # parameter values; it returns the tof component
-Converter = Callable[[Component, float, Mapping[str, float]], tof.Component]
+# (component, distance, params) -> tof.Component; each converter takes only its own class
+# (looked up by type in CONVERTERS), so the component argument is left untyped here.
+Converter = Callable[..., tof.Component]
 
 
 def _numeric_params(instrument: Instrument) -> dict[str, float]:
@@ -264,8 +266,10 @@ def build_tof(
 
     params = _numeric_params(instrument)
     positions = {name: np.array(xyz) for name, xyz in instrument.positions().items()}
+    source = components[source_name]
+    assert isinstance(source, ESS_butterfly)  # sources holds only ESS_butterfly names
     model = tof.Model(
-        source=_source(components[source_name], params, neutrons, seed),
+        source=_source(source, params, neutrons, seed),
     )
     for name in after_source:
         component = components[name]

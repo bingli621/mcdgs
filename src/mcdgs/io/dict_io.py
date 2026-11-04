@@ -331,7 +331,7 @@ def _components_from_dict(data: dict[str, Any]) -> dict[str, Component]:
         kwargs = {
             key: value for key, value in section.items() if key not in ("component", "position")
         }
-        component_class = COMPONENTS.get(section.get("component"))
+        component_class = COMPONENTS.get(section.get("component", ""))
         if component_class is None:
             raise ValueError(
                 f"{name}: no such component {section.get('component')!r}"
