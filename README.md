@@ -13,7 +13,12 @@ Source. From McStas to S(Q,E).
 pixi run pytest --cov=mcdgs     # tests and coverage
 pixi run pre-commit install     # once: ruff format on every commit
 pixi run docs                   # preview the documentation site
+pixi run docs-mcstas            # remake the files of the site that need McStas, then commit them
 ```
+
+The site makes what needs only mcdgs and tof, such as the time-distance diagram, from the current
+code for every build. What needs McStas, such as the McStas drawings of T-Rex, is committed:
+`docs-mcstas` remakes it, and `docs-bender-scan` also runs the long scan of the bender again.
 
 ## Layout
 
@@ -37,7 +42,8 @@ mcstas_output/   simulation results, a folder per run (git-ignored)
 
 Dependencies point inwards: `core` imports nothing from the other layers; `instruments` and
 `samples` build on it; `io`, `mcstas`, `tof` and `reduction` are adapters that work with any
-instrument. `diagnostics` builds on `instruments` and `mcstas`, and nothing imports it.
+instrument. `diagnostics` builds on `instruments` and reads McStas and tof results, and nothing in
+`mcdgs` imports it.
 
 ## License
 

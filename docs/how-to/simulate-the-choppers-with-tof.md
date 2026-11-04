@@ -2,8 +2,8 @@
 
 [tof](https://scipp.github.io/tof) follows neutrons from the source through the choppers along a
 single flight path. It knows nothing of guides or benders, so a million neutrons through T-Rex
-take well under a second, with nothing to compile. It answers timing questions: which wavelengths reach the sample, when they
-arrive, and how the mode or `rrm` changes that. For intensities, divergence or anything the
+take well under a second, with nothing to compile. It answers timing questions: which wavelengths
+reach the sample, when they arrive, and how the mode or `rrm` changes that. For intensities, divergence or anything the
 optics do, use [McStas](run-a-simulation.md).
 
 The same instrument object feeds both. [`build_tof`](../reference/tof.md) turns it into a tof
@@ -68,6 +68,14 @@ print(reached.coords["toa"].to(unit="ms"))  # time of arrival
 
 The coordinates also hold the `birth_time` and the `speed` of each neutron. The neutrons arrive
 in sub-pulses, told apart by the gaps of about 4 ms between them.
+[`summarize`](../reference/diagnostics.md) gives all of this at once:
+
+```python
+from mcdgs.diagnostics.trex.choppers import summarize
+
+summary = summarize(result, "sample_pos")
+print(summary.neutrons, summary.sub_pulses, summary.first_arrival, summary.last_arrival)
+```
 
 ## Compare settings
 

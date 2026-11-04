@@ -82,3 +82,4 @@ Dependencies point inwards, so an instrument never depends on how it is simulate
 | `tof` | An adapter that works with any instrument: builds its chopper cascade as a tof model. |
 | `io` | An adapter that saves any instrument to a YAML parameters file and loads it back. |
 | `reduction` | Reserved for data reduction. It holds no code yet. |
+| `diagnostics` | Setups that study one part of an instrument, such as T-Rex up to guide 4, and what reads their McStas and tof results. One package per instrument, built on `instruments`; nothing else imports it. |

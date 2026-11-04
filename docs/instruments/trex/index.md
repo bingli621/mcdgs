@@ -1,7 +1,7 @@
 # T-Rex
 
-The T-Rex model at the default [control parameters](details.md#control-parameters): its geometry
-as McStas draws it, and the timing of its choppers as tof follows it. The two flat figures of the
+The T-Rex model at the default [control parameters](details.md#control-parameters): where each
+component is, its geometry as McStas draws it, and the timing of its choppers as tof follows it. The two flat figures of the
 geometry have the same scale on their two axes, in m.
 
 ## Instrument layout
@@ -30,7 +30,7 @@ The short ticks across the beam are the choppers: `bw1` near 32 m, `bw2` near 40
 near 108 m and the M-Chopper near 162 m.
 
 This figure and the next need McStas, so they are not made with the site:
-[`scripts/docs_trex_overview.py`](https://github.com/bingli621/mcdgs/blob/main/scripts/docs_trex_overview.py)
+[`scripts/docs_mcstas_overview.py`](https://github.com/bingli621/mcdgs/blob/main/scripts/docs_mcstas_overview.py)
 draws them with McStasScript's `show_instrument` (mcdisplay), and `pixi run docs-mcstas` runs it.
 They show the instrument as of that run.
 

@@ -44,6 +44,8 @@ arm_nboa            Arm            [-0.00202282, 0, 1.89593]  [0, -0.214998, 0] 
 sample_pos          Arm            [0, 0, 1.815]              [0, 0, 0]          arm_mc    [0.830079, 0, 163.797]
 ```
 
+The whole printout is on the [T-Rex](instruments/trex/index.md#instrument-layout) page.
+
 Each component is an attribute, and printing one shows all of its values:
 
 ```python

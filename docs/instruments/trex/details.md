@@ -6,9 +6,9 @@ to the central wavelength `lambda0` (see [Chopper timing](#chopper-timing)). The
 polarizers, collimators or detector yet.
 `sample_pos` is on the beam axis, 163.8 m along it from the origin.
 
-[T-Rex](index.md) shows the whole model as McStas draws it, and
-[Extraction results](extraction.md) shows what the model gives so far. The code is in
-[`mcdgs.instruments.trex`](../../reference/trex.md).
+[T-Rex](index.md) lists every component with its position and shows the whole model as McStas
+draws it, and [Extraction results](extraction.md) shows what the model gives so far. The code is
+in [`mcdgs.instruments.trex`](../../reference/trex.md).
 
 ## Control parameters
 

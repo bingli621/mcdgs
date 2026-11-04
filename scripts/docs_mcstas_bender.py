@@ -1,7 +1,8 @@
 """Make the figures of the T-Rex extraction page, from McStas runs of T-Rex up to guide 4.
 
-`pixi run docs-bender` runs this, and `pixi run docs-bender --simulate` runs the scan again
-too. Run it when the extraction guides or the bender change, and commit what it writes.
+`pixi run docs-mcstas` runs this and docs_mcstas_overview.py, and `pixi run docs-bender-scan`
+runs it with --simulate, which runs the scan again too. Run it when the extraction guides or the
+bender change, and commit what it writes.
 
 - docs/instruments/trex/figures/diag_after_4b_bender_out.png and ..._bender_in.png: the beam
   after the source, after guide 3 and at the exit of guide 4, for each path. McStasScript's
@@ -14,15 +15,11 @@ too. Run it when the extraction guides or the bender change, and commit what it 
 """
 
 import argparse
-from pathlib import Path
-
-import matplotlib
-
-matplotlib.use("Agg")  # no window: the figures only go to files
 
 import matplotlib.pyplot as plt
 import mcstasscript as ms
 import numpy as np
+from docs_common import REPO, SEED, TREX_DOCS
 
 from mcdgs.diagnostics.trex.bender import BenderScan, read_angles, read_spectra, transmission
 from mcdgs.diagnostics.trex.extraction import Extraction, ExtractionParams
@@ -31,12 +28,10 @@ from mcdgs.mcstas.builder import build_mcstas, default_input_dir
 from mcdgs.mcstas.run_folders import default_output_dir, run_folder
 from mcdgs.mcstas.simulation import Simulation
 
-REPO = Path(__file__).resolve().parents[1]
-FIGURES = REPO / "docs" / "instruments" / "trex" / "figures"
+FIGURES = TREX_DOCS / "figures"
 SCAN_FIGURE = FIGURES / "diagnose_bender.png"
 SCAN_FILE = default_output_dir(REPO) / "bender_scan" / "mccode.h5"
 BENDER_OUT_FILE = default_output_dir(REPO) / "bender_out" / "mccode.h5"
-SEED = 1
 
 
 def diagnose(bender_in: bool) -> None:

@@ -52,7 +52,7 @@ ipympl = ">=0.10.0,<0.11"
 
 [tool.pixi.feature.docs.tasks]
 # the figures and results that need only mcdgs and tof, made fresh for every build
-docs-generate = "python scripts/docs_generated.py"
+docs-generate = { cmd = "python scripts/docs_build.py", env = { MPLBACKEND = "Agg" } }
 docs = { cmd = "zensical serve", depends-on = ["docs-generate"] }
 docs-build = { cmd = "zensical build --clean --strict", depends-on = ["docs-generate"] }
 
@@ -62,9 +62,9 @@ mkdocstrings-python = ">=2.0.10,<3"
 
 [tool.pixi.feature.mcstas.tasks]
 # the figures and files of the docs that need McStas: run by hand when the instrument changes,
-# then commit. docs-bender --simulate runs the long scan of the bender again too.
-docs-mcstas = "python scripts/docs_trex_overview.py"
-docs-bender = "python scripts/docs_trex_bender.py"
+# then commit. docs-bender-scan also runs the long scan of the bender again.
+docs-mcstas = { cmd = "python scripts/docs_mcstas_overview.py && python scripts/docs_mcstas_bender.py", env = { MPLBACKEND = "Agg" } }
+docs-bender-scan = { cmd = "python scripts/docs_mcstas_bender.py --simulate", env = { MPLBACKEND = "Agg" } }
 
 [tool.pixi.environments]
 default = ["test", "mcstas"]  # test: pytest and pytest-cov, from [project.optional-dependencies]

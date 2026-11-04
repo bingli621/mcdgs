@@ -6,3 +6,5 @@ Setups that study one part of an instrument, and what reads their results. See
 ::: mcdgs.diagnostics.trex.extraction
 
 ::: mcdgs.diagnostics.trex.bender
+
+::: mcdgs.diagnostics.trex.choppers

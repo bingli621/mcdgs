@@ -1,1 +1,1 @@
-"""Diagnostics of T-Rex: the extraction guides and the bender."""
+"""Diagnostics of T-Rex: the extraction guides, the bender and the chopper cascade."""

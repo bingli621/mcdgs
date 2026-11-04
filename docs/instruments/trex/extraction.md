@@ -1,12 +1,14 @@
 # Extraction results
 
-These figures come from the model of the [extraction guides](details.md#extraction-guides).
+These figures come from the model of the [extraction guides](details.md#extraction-guides): T-Rex
+up to guide 4, as `Extraction` and `BenderScan` in
+[`mcdgs.diagnostics.trex`](../../reference/diagnostics.md).
 
 ## Beam along the guides
 
 Each row is one position in the beam: after the source, after guide 3 and at the exit of guide 4.
 The columns are the beam profile, wavelength against x, and the spectrum in n/s per bin.
-[`scripts/docs_trex_bender.py`](https://github.com/bingli621/mcdgs/blob/main/scripts/docs_trex_bender.py)
+[`scripts/docs_mcstas_bender.py`](https://github.com/bingli621/mcdgs/blob/main/scripts/docs_mcstas_bender.py)
 draws these views with McStasScript's diagnostics, 1e6 neutrons for each path.
 
 **Bender out**, through the thermal guide 4a:
@@ -45,6 +47,6 @@ Approximate transmission at the nominal rotation:
 The bands of about 3 Å and above peak broadly around the nominal rotation. The bands up to 1.5 Å
 keep rising up to the end of the scan at 0.1 deg, so their maximum lies outside it.
 
-These figures need McStas, so they are not made with the site. `pixi run docs-bender` runs the
-diagnostics again and replots the last scan from `mcstas_output/`;
-`pixi run docs-bender --simulate` runs the scan again too, which takes long.
+These figures need McStas, so they are not made with the site. `pixi run docs-mcstas` runs the
+diagnostics again and replots the last scan from `mcstas_output/`; `pixi run docs-bender-scan`
+runs the scan again too, which takes long.

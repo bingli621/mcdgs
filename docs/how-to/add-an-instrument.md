@@ -91,3 +91,8 @@ component, and list it in `__init__.py` there. Copy `Arm` or `Monitor_nD`:
 - Add tests in `tests/instruments/`, as in `tests/instruments/trex/test_trex.py`.
 - Add a page in `docs/instruments/` and a page in `docs/reference/`, and list them in the `nav` of
   `zensical.toml`.
+- Make the files of its pages with scripts, not by hand. What needs only mcdgs and tof goes in
+  `scripts/docs_build.py`, which runs for every build of the site. What needs McStas goes in a
+  `scripts/docs_mcstas_*.py` added to the `docs-mcstas` task, and its files are committed.
+- Put setups that study one part of it, and what reads their results, in
+  `src/mcdgs/diagnostics/<instrument>/`, as T-Rex does.

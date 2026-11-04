@@ -1,7 +1,7 @@
 """Make the files of the T-Rex page that need McStas, at the default control parameters.
 
-`pixi run docs-mcstas` runs this. Run it again when the instrument changes, and commit what it
-writes: the docs build has no McStas, so it shows these as they are.
+`pixi run docs-mcstas` runs this and docs_mcstas_bender.py. Run it when the instrument
+changes, and commit what it writes: the docs build has no McStas, so it shows these as they are.
 
 - docs/instruments/trex/files/TRex.instr: the McStas instrument file, also written with its
   build files to mcstas_input/TRex/ of the repository;
@@ -17,21 +17,16 @@ import shutil
 from pathlib import Path
 from unittest.mock import patch
 
-import matplotlib
-
-matplotlib.use("Agg")  # no window: the figures only go to files
-
 import matplotlib.pyplot as plt
+from docs_common import REPO, TREX_DOCS
 from mcstasscript.interface.instr import McStas_instr
 
 from mcdgs.instruments.trex.model import TRex
 from mcdgs.mcstas.builder import build_mcstas, default_input_dir
 
-REPO = Path(__file__).resolve().parents[1]
-DOCS = REPO / "docs" / "instruments" / "trex"
-DOCS_INSTR = DOCS / "files" / "TRex.instr"
-TOP_VIEW = DOCS / "figures" / "overview_top.png"
-BEAM_VIEW = DOCS / "figures" / "overview_along_beam.png"
+DOCS_INSTR = TREX_DOCS / "files" / "TRex.instr"
+TOP_VIEW = TREX_DOCS / "figures" / "overview_top.png"
+BEAM_VIEW = TREX_DOCS / "figures" / "overview_along_beam.png"
 
 
 def write_instr(mcstas_instr: McStas_instr) -> None:
