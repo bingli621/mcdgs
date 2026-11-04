@@ -4,7 +4,7 @@ The T-Rex model at the default [control parameters](details.md#control-parameter
 as McStas draws it, and the timing of its choppers as tof follows it. The two flat figures of the
 geometry have the same scale on their two axes, in m.
 
-## Printout
+## Instrument layout
 
 `print(trex)` lists the control parameters, the McStas instrument parameters they give, and every
 component in the order of the beam. For each component, `at` and `rotated` are its placement in
@@ -64,19 +64,3 @@ The bandwidth choppers pass 1.40 to 2.60 Å around `lambda0`, 2.0 Å. The P- and
 and 252 Hz, cut that band into 13 sub-pulses, which arrive at the sample from 60 to 109 ms after
 the start of the pulse. Of 1,000,000 neutrons from the source, 1857 get there. tof leaves out
 the guides and the bender: see [Simulate the choppers with tof](../../how-to/simulate-the-choppers-with-tof.md).
-
-## In 3D
-
-<iframe src="files/overview_3d.html" title="T-Rex in 3D" width="100%" height="660"
-        style="border: none"></iframe>
-
-Drag to rotate, scroll to zoom and right-drag to pan. The controls above and below the scene,
-"Take me to", "Colormode" and the component details, need a running Python kernel and do nothing
-on this page.
-
-[`notebooks/trex/overview.ipynb`](https://github.com/bingli621/mcdgs/blob/main/notebooks/trex/overview.ipynb)
-saves the printout to this page's `files/` folder and draws the figures. The geometry comes from McStasScript's `show_instrument` (mcdisplay): the two
-flat figures with the `matplotlib_2d` backend, saved to this page's `figures/` folder, and the 3D
-one with the `pythreejs` backend, saved as a web page to its `files/` folder. The time-distance
-diagram is tof's own plot of a run with 1,000,000 neutrons and seed 1, saved to `figures/`.
-Running the notebook again updates the page.
