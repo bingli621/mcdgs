@@ -4,6 +4,19 @@ The T-Rex model at the default [control parameters](details.md#control-parameter
 as McStas draws it, and the timing of its choppers as tof follows it. The two flat figures of the
 geometry have the same scale on their two axes, in m.
 
+## Printout
+
+`print(trex)` lists the control parameters, the McStas instrument parameters they give, and every
+component in the order of the beam. For each component, `at` and `rotated` are its placement in
+the `.instr` file, relative to the component named under `relative`, or to the origin where that
+is `-`. `position` is where it ends up in the lab frame. Lengths are in m and angles in deg.
+
+???+ abstract "print(trex)"
+
+    ```text
+    --8<-- "docs/instruments/trex/files/overview_print.txt"
+    ```
+
 ## Seen from above
 
 ![T-Rex seen from above, z along the beam and x across it](figures/overview_top.png)
@@ -14,9 +27,9 @@ beam. Over that length the beam axis moves about 0.83 m in x, too little to see 
 The short ticks across the beam are the choppers: `bw1` near 32 m, `bw2` near 40 m, the P-Chopper
 near 108 m and the M-Chopper near 162 m.
 
-## Along the beam
+## From detector to source
 
-![T-Rex seen along the beam, x across it and y up](figures/overview_along_beam.png)
+![T-Rex seen against the beam, x across it and y up](figures/overview_along_beam.png)
 
 x is across the beam and y up (projection `xy`), with every component drawn on top of each other
 and the view limited to x from −0.5 to 1.5 m and y from −1 to 1 m. The gray background is the
@@ -62,7 +75,7 @@ Drag to rotate, scroll to zoom and right-drag to pan. The controls above and bel
 on this page.
 
 [`notebooks/trex/overview.ipynb`](https://github.com/bingli621/mcdgs/blob/main/notebooks/trex/overview.ipynb)
-draws the figures. The geometry comes from McStasScript's `show_instrument` (mcdisplay): the two
+saves the printout to this page's `files/` folder and draws the figures. The geometry comes from McStasScript's `show_instrument` (mcdisplay): the two
 flat figures with the `matplotlib_2d` backend, saved to this page's `figures/` folder, and the 3D
 one with the `pythreejs` backend, saved as a web page to its `files/` folder. The time-distance
 diagram is tof's own plot of a run with 1,000,000 neutrons and seed 1, saved to `figures/`.
