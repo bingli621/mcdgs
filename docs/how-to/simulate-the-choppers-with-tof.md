@@ -24,17 +24,7 @@ print(result)
 The result says how many neutrons each chopper lets through and how many it stops:
 
 ```text
-Result:
-  Source: 1 pulses, 1000000 neutrons per pulse.
-  Choppers:
-    bw1: visible=372795, blocked=627205
-    bw2: visible=297411, blocked=75384
-    ps1: visible=90820, blocked=206591
-    ps2: visible=56798, blocked=34022
-    mc1: visible=1892, blocked=54906
-    mc2: visible=1857, blocked=35
-  Detectors:
-    sample_pos: visible=1857
+--8<-- "docs/instruments/trex/generated/tof_result.txt"
 ```
 
 `result.plot()` draws the time-distance diagram, as on the [T-Rex](../instruments/trex/index.md#chopper-timing-in-tof)
@@ -76,9 +66,8 @@ print(reached.coords["wavelength"].min(), reached.coords["wavelength"].max())
 print(reached.coords["toa"].to(unit="ms"))  # time of arrival
 ```
 
-At the default parameters the neutrons reaching the sample are from 1.40 to 2.60 Å, in 13
-sub-pulses arriving from 60 to 109 ms after the start of the pulse. The coordinates also hold the
-`birth_time` and the `speed` of each neutron.
+The coordinates also hold the `birth_time` and the `speed` of each neutron. The neutrons arrive
+in sub-pulses, told apart by the gaps of about 4 ms between them.
 
 ## Compare settings
 
@@ -91,6 +80,11 @@ for mode in ("FF", "RR"):
     print(mode, reading)
 ```
 
-With the same seed, both runs start from the same neutrons. The wavelength band and the 13
-sub-pulses stay the same, while the narrow slits of `"RR"` let through 607 neutrons where `"FF"`
-lets through 1857.
+With the same seed, both runs start from the same neutrons. At the default parameters, what
+reaches the sample is:
+
+--8<-- "docs/instruments/trex/generated/tof_modes.txt"
+
+The wavelength band and the sub-pulses stay much the same, while the narrow slits of `"RR"` let
+fewer neutrons through. The result above and this table are made from the current code for every
+build of this site.

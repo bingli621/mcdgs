@@ -14,8 +14,10 @@ is `-`. `position` is where it ends up in the lab frame. Lengths are in m and an
 ???+ abstract "print(trex)"
 
     ```text
-    --8<-- "docs/instruments/trex/files/overview_print.txt"
+    --8<-- "docs/instruments/trex/generated/trex_print.txt"
     ```
+
+The printout is made from the current code for every build of this site.
 
 ## Seen from above
 
@@ -26,6 +28,11 @@ of the source. The guides follow it in alternating colors up to `sample_pos`, 16
 beam. Over that length the beam axis moves about 0.83 m in x, too little to see at this scale.
 The short ticks across the beam are the choppers: `bw1` near 32 m, `bw2` near 40 m, the P-Chopper
 near 108 m and the M-Chopper near 162 m.
+
+This figure and the next need McStas, so they are not made with the site:
+[`notebooks/trex/overview.ipynb`](https://github.com/bingli621/mcdgs/blob/main/notebooks/trex/overview.ipynb)
+draws them with McStasScript's `show_instrument` (mcdisplay), and `pixi run docs-mcstas` runs it
+again. They show the instrument as of that run.
 
 ## From detector to source
 
@@ -53,14 +60,18 @@ a narrow or a wide slit on the beam.
 
 ## Chopper timing in tof
 
-![Time-distance diagram of T-Rex: the neutron paths from the source to the sample position, through the choppers](figures/overview_tof.png)
+![Time-distance diagram of T-Rex: the neutron paths from the source to the sample position, through the choppers](generated/tof_diagram.png)
 
 Time since the start of the pulse runs across, and distance from the source up, to the sample
 position at 163.8 m. Each colored line is a neutron that reaches the sample, colored by its
 wavelength; the gray ones are some of those the choppers stop. The black lines are the choppers,
 broken where they are open, from `bw1` and `bw2` at the bottom to the M-Chopper at the top.
 
-The bandwidth choppers pass 1.40 to 2.60 Å around `lambda0`, 2.0 Å. The P- and M-Chopper, at 189
-and 252 Hz, cut that band into 13 sub-pulses, which arrive at the sample from 60 to 109 ms after
-the start of the pulse. Of 1,000,000 neutrons from the source, 1857 get there. tof leaves out
-the guides and the bender: see [Simulate the choppers with tof](../../how-to/simulate-the-choppers-with-tof.md).
+The bandwidth choppers pass one band of wavelengths around `lambda0`, and the P- and M-Chopper cut
+it into sub-pulses. The figure is the default mode; the table gives both, from the same neutrons:
+
+--8<-- "docs/instruments/trex/generated/tof_modes.txt"
+
+Arrival times are from the start of the pulse. tof leaves out the guides and the bender: see
+[Simulate the choppers with tof](../../how-to/simulate-the-choppers-with-tof.md). The figure and
+the table are made from the current code, with seed 1, for every build of this site.

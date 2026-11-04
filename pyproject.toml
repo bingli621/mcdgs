@@ -34,30 +34,42 @@ platforms = [{ name = "macos-arm64", platform = "osx-arm64", macos = "14.0" }, "
 # only what [project] does not list: pixi also installs [project.dependencies],
 # taking a package from conda-forge when McStas already brings it, else from PyPI
 [tool.pixi.dependencies]
-mcstas = ">=3.10.2,<4"
+python = "3.14.*"  # the version McStas brings, pinned so that the docs, without McStas, match
 pre-commit = ">=4.7.0,<5"
 ruff = ">=0.17.3,<0.18"
 mypy = ">=2.4.1,<3"
 types-pyyaml = ">=6.0.12.20261103,<7"
 types-tabulate = ">=0.10.0.20261006,<0.11"
-pythreejs = ">=2.4.2,<3"
-ipympl = ">=0.10.0,<0.11"
 
 [tool.pixi.pypi-dependencies]
 mcdgs = { path = ".", editable = true }
 
+# McStas, and the 3D view, interactive plots and batch runs of the notebooks
+[tool.pixi.feature.mcstas.dependencies]
+mcstas = ">=3.10.2,<4"
+pythreejs = ">=2.4.2,<3"
+ipympl = ">=0.10.0,<0.11"
+nbconvert-core = ">=7.17.2,<8"  # for docs-mcstas, which runs the notebooks
+
 [tool.pixi.feature.docs.tasks]
-docs = "zensical serve"
-docs-build = "zensical build --clean --strict"
+# the figures and results that need only mcdgs and tof, made fresh for every build
+docs-generate = "python scripts/docs_generated.py"
+docs = { cmd = "zensical serve", depends-on = ["docs-generate"] }
+docs-build = { cmd = "zensical build --clean --strict", depends-on = ["docs-generate"] }
 
 [tool.pixi.feature.docs.dependencies]
 zensical = ">=0.0.73,<0.0.74"
 mkdocstrings-python = ">=2.0.10,<3"
 
+[tool.pixi.feature.mcstas.tasks]
+# the figures and files of the T-Rex page that need McStas: run by hand when the instrument
+# changes, then commit. The figures of bender.ipynb come from long scans and are saved by hand.
+docs-mcstas = "jupyter nbconvert --to notebook --execute --inplace notebooks/trex/overview.ipynb"
+
 [tool.pixi.environments]
-default = ["test"]  # pytest and pytest-cov, from [project.optional-dependencies]
-# the API pages read the source without importing it, so the site needs no McStas
-docs = { features = ["docs"], no-default-feature = true }
+default = ["test", "mcstas"]  # test: pytest and pytest-cov, from [project.optional-dependencies]
+# mcdgs and tof, to make the generated figures, but no McStas
+docs = ["docs"]
 
 [tool.hatch.metadata]
 # mcstastox is not on PyPI; it is pinned to a git commit
