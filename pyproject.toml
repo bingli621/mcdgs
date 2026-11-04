@@ -37,6 +37,7 @@ platforms = [{ name = "macos-arm64", platform = "osx-arm64", macos = "14.0" }, "
 mcstas = ">=3.10.2,<4"
 pre-commit = ">=4.7.0,<5"
 ruff = ">=0.17.3,<0.18"
+mypy = ">=1.18,<2"
 pythreejs = ">=2.4.2,<3"
 ipympl = ">=0.10.0,<0.11"
 
@@ -66,6 +67,10 @@ packages = ["src/mcdgs"]
 [tool.pytest.ini_options]
 testpaths = ["tests", "src"]
 addopts = "--doctest-modules"  # the Examples in the docstrings are tests too
+
+[tool.mypy]
+# scipp, tof, mcstasscript and friends ship no stubs; check our code, not theirs
+ignore_missing_imports = true
 
 [tool.ruff]
 line-length = 100

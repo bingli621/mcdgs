@@ -16,6 +16,10 @@ jobs:
           pixi-version: v0.82.0  # the version that wrote pixi.lock
           locked: true
           cache: true
+      # lint, formatting and types are enforced here, not only by local pre-commit
+      - run: pixi run ruff check
+      - run: pixi run ruff format --check
+      - run: pixi run mypy src/mcdgs
       - run: pixi run pytest -q --cov=mcdgs --cov-report=term-missing
       - name: Coverage in job summary
         run: pixi run coverage report --format=markdown >> "$GITHUB_STEP_SUMMARY"
