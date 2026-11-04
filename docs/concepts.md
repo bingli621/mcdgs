@@ -74,11 +74,11 @@ same object can go to both.
 ### With tof
 
 1. [`build_tof`](reference/tof.md) turns the instrument into a tof model: the source, the choppers,
-   and a detector at every monitor and at each component named in `detectors`. It leaves out the
-   optics, and measures each distance in a straight line from the source.
+   and a detector at every monitor. It leaves out the optics, and measures each distance in a
+   straight line from the source.
 2. `model.run()` follows the neutrons in memory and writes no files.
-3. `result["sample_pos"]` holds the neutrons at that detector, with their wavelength and time of
-   arrival. See [Simulate the choppers with tof](how-to/simulate-the-choppers-with-tof.md).
+3. `result["sample_monitor"]` holds the neutrons at the monitor at the sample position, with their
+   wavelength and time of arrival. See [Simulate the choppers with tof](how-to/simulate-the-choppers-with-tof.md).
 
 ## Layers
 

@@ -27,7 +27,7 @@ class _NoParams:
 
 
 class _Beamline(Instrument):
-    """A source, a bent guide, a monitor and a sample position: no choppers."""
+    """A source, a bent guide, two monitors and a sample position: no choppers."""
 
     params_class = _NoParams
     name = "beamline"
@@ -39,6 +39,7 @@ class _Beamline(Instrument):
         self.guide = Guide_gravity(w1=0.05, h1=0.05, l=10, at=[0, 0, 2], relative="source")
         self.axis = Arm(at=[0, 0, 12], rotated=[0, 10, 0], relative="source")
         self.monitor = Monitor_nD(xwidth=0.1, yheight=0.1, at=[0, 0, 3], relative="axis")
+        self.sample_monitor = Monitor_nD(xwidth=0.1, yheight=0.1, at=[0, 0, 4], relative="axis")
         self.sample_pos = Arm(at=[0, 0, 4], relative="axis")
 
     @property
@@ -57,17 +58,17 @@ def test_source_takes_the_band_and_pulses_of_the_moderator():
     assert wavelength.max().value <= 6.0
 
 
-def test_monitors_and_named_components_become_detectors_and_optics_are_skipped():
-    model = build_tof(_Beamline(), neutrons=1000, detectors=("sample_pos",), seed=1)
-    assert list(model.components) == ["monitor", "sample_pos"]
-    for name, after_arm in (("monitor", 3), ("sample_pos", 4)):
+def test_monitors_become_detectors_and_the_rest_is_left_out():
+    model = build_tof(_Beamline(), neutrons=1000, seed=1)
+    assert list(model.components) == ["monitor", "sample_monitor"]
+    for name, after_arm in (("monitor", 3), ("sample_monitor", 4)):
         # the arm, 12 m on, turns the beam by 10 deg: the straight line from the source
         x, z = after_arm * np.sin(np.radians(10)), 12 + after_arm * np.cos(np.radians(10))
         assert model.detectors[name].distance.value == pytest.approx(np.hypot(x, z)), name
 
 
 def test_the_model_runs():
-    result = build_tof(_Beamline(), neutrons=1000, detectors=("sample_pos",), seed=1).run()
+    result = build_tof(_Beamline(), neutrons=1000, seed=1).run()
     assert isinstance(result, tof.Result)
 
 
@@ -76,9 +77,10 @@ def test_the_same_seed_gives_the_same_source():
     assert sc.identical(first.source.data, second.source.data)
 
 
-def test_a_detector_must_be_a_component_after_the_source():
-    with pytest.raises(ValueError, match=r"no component \['origin', 'sample'\] after"):
-        build_tof(_Beamline(), detectors=("origin", "sample"))
+def test_an_instrument_without_monitors_gives_no_detectors():
+    beamline = _Beamline()
+    beamline.monitor = beamline.sample_monitor = None
+    assert not build_tof(beamline, neutrons=1000).detectors
 
 
 @pytest.mark.parametrize("n_sources", [0, 2])
@@ -92,11 +94,12 @@ def test_the_instrument_needs_one_source(n_sources):
         build_tof(beamline)
 
 
-def test_a_component_without_a_conversion_raises():
+def test_a_component_tof_does_not_understand_is_left_out():
     beamline = _Beamline()
     beamline.sample = replace(aluminum(), relative="sample_pos")
-    with pytest.raises(ValueError, match=r"sample \(Single_crystal\): no tof conversion"):
-        build_tof(beamline, neutrons=1000)
+    model = build_tof(beamline, neutrons=1000)
+    assert list(model.detectors) == ["monitor", "sample_monitor"]
+    assert not model.choppers
 
 
 def _mcstas_open(chopper, params, t):
@@ -127,11 +130,11 @@ def _trex(mode):
 
 
 def test_trex_choppers_are_placed_in_beam_order():
-    model = build_tof(TRex(), neutrons=1000, detectors=("sample_pos",), seed=1)
+    model = build_tof(TRex(), neutrons=1000, seed=1)
     assert list(model.choppers) == list(DISK_DISTANCE)
     for name, chopper in model.choppers.items():
         assert chopper.distance.value == pytest.approx(DISK_DISTANCE[name], abs=1e-3), name
-    assert list(model.detectors) == ["sample_pos"]
+    assert list(model.detectors) == ["sample_monitor"]
 
 
 @pytest.mark.parametrize("mode", ["FF", "RR"])
@@ -158,8 +161,8 @@ def test_the_neutron_the_choppers_are_phased_to_gets_through_every_disk(mode):
 def test_neutrons_reach_the_sample_exactly_when_every_mcstas_disk_lets_them_through():
     trex = TRex()
     params = _numeric_params(trex)
-    model = build_tof(trex, neutrons=200_000, detectors=("sample_pos",), seed=1)
-    neutrons = model.run()["sample_pos"].data["pulse", 0]
+    model = build_tof(trex, neutrons=200_000, seed=1)
+    neutrons = model.run()["sample_monitor"].data["pulse", 0]
     birth = neutrons.coords["birth_time"].to(unit="s").values
     speed = neutrons.coords["speed"].values
     through = np.ones(birth.shape, bool)

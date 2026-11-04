@@ -20,7 +20,7 @@ from mcdgs.tof.builder import build_tof
 
 OUT = TREX_DOCS / "generated"
 NEUTRONS = 1_000_000
-SAMPLE = "sample_pos"
+SAMPLE = "sample_monitor"
 
 
 def modes_table(by_mode: dict[str, ArrivalSummary]) -> str:
@@ -56,7 +56,7 @@ def main() -> None:
     (OUT / "trex_print.txt").write_text(f"{trex}\n")
 
     default_mode = trex.params.mode
-    result = build_tof(trex, neutrons=NEUTRONS, detectors=(SAMPLE,), seed=SEED).run()
+    result = build_tof(trex, neutrons=NEUTRONS, seed=SEED).run()
     (OUT / "tof_result.txt").write_text(f"{str(result).rstrip()}\n")
     diagram = result.plot(visible_rays=1000, blocked_rays=5000)
     diagram.fig.savefig(OUT / "tof_diagram.png", dpi=150)
@@ -66,7 +66,7 @@ def main() -> None:
     for mode in get_args(Mode):
         if mode != default_mode:
             trex.update_params(mode=mode)
-            other = build_tof(trex, neutrons=NEUTRONS, detectors=(SAMPLE,), seed=SEED).run()
+            other = build_tof(trex, neutrons=NEUTRONS, seed=SEED).run()
             by_mode[mode] = summarize(other, SAMPLE)
     (OUT / "tof_modes.txt").write_text(modes_table(by_mode))
     print(f"Written to {OUT}")

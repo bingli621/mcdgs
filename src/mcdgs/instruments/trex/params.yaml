@@ -1794,3 +1794,27 @@ sample_pos:
   rotated: [0, 0, 0]
   relative: arm_mc
   position: [0.830079437, 0.0, 163.797243861]
+sample_monitor:
+  component: Monitor_nD
+  xwidth: 0.1
+  yheight: 0.1
+  zdepth: 0
+  xmin: 0
+  xmax: 0
+  ymin: 0
+  ymax: 0
+  zmin: 0
+  zmax: 0
+  bins: 0
+  min: -1.0e+40
+  max: 1.0e+40
+  restore_neutron: 1
+  radius: 0
+  options: lambda limits=[0.5 5.3] bins=12
+  filename: sample_monitor
+  nowritefile: 0
+  nexus_bins: 0
+  at: [0, 0, 0]
+  rotated: [0, 0, 0]
+  relative: sample_pos
+  position: [0.830079437, 0.0, 163.797243861]

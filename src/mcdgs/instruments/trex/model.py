@@ -17,7 +17,7 @@ from .choppers import Mode, chopper_timings, choppers
 from .guides.bispectral import BENDER_ROTATION, arm_guide_4, bender, guide_4a, guide_4b
 from .guides.curve import guides_curve
 from .guides.extraction import guides_extraction
-from .guides.straight import guides_straight, sample_pos, slit_mc
+from .guides.straight import guides_straight, sample_monitor, sample_pos, slit_mc
 from .sources import source
 
 
@@ -120,6 +120,7 @@ class TRex(Instrument):
         self.slit_mc = slit_mc()
         #  sample position
         self.sample_pos = sample_pos()
+        self.sample_monitor = sample_monitor()
         self.sample = None
         if sample is not None:
             self.sample = replace(sample, relative=sample.relative or "sample_pos")

@@ -68,6 +68,7 @@ def test_the_components_are_in_beam_order():
         "guide_50a",
         "slit_mc",
         "sample_pos",
+        "sample_monitor",
     ]
 
 
@@ -232,7 +233,7 @@ def test_without_a_sample_there_is_none():
 
 def test_a_sample_goes_after_the_sample_position():
     trex = TRex(sample=aluminum())
-    assert list(trex.components)[-2:] == ["sample_pos", "sample"]
+    assert list(trex.components)[-3:] == ["sample_pos", "sample_monitor", "sample"]
     assert trex.sample.relative == "sample_pos"
     assert trex.positions()["sample"] == trex.positions()["sample_pos"]
 

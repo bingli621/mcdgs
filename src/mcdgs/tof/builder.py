@@ -2,16 +2,15 @@
 
 tof follows each neutron along a single flight path from the source, through the choppers, to
 the detectors. It has no optics: guides, benders and slits transmit everything. So the builder
-keeps only the components tof knows, by type:
+takes only the components tof understands, by type:
 
 - the ``ESS_butterfly`` becomes the :class:`tof.Source`, which must be the only source;
 - each ``NXdisk_chopper`` becomes a :class:`tof.Chopper`, through scippneutron's
   :class:`DiskChopper` (:func:`disk_chopper`), as both follow NeXus;
-- each ``Monitor_nD``, and each component named in ``detectors`` (such as the ``Arm`` at the
-  sample position), becomes a :class:`tof.Detector`, which records the neutrons reaching it.
+- each ``Monitor_nD`` becomes a :class:`tof.Detector`, which records the neutrons reaching it.
+  An instrument without one gives a model without detectors.
 
-The optics and the markers (``SKIPPED``) are left out. Any other component raises, so that a new
-component class is never ignored without a decision.
+Every other component, such as the optics, the markers or a sample, is left out.
 
 Distances: a component's distance is the straight line from the source to its position
 (:meth:`.Instrument.positions`). For T-Rex this is within 1 mm of the path along the curved
@@ -19,7 +18,7 @@ guide, under 1 % of the shortest chopper opening at 2 Å. The tof source is put 
 McStas has the moderator, rather than at tof's default for the ESS pulse.
 """
 
-from collections.abc import Callable, Collection, Mapping
+from collections.abc import Callable, Mapping
 
 import numpy as np
 import scipp as sc
@@ -27,23 +26,8 @@ import tof
 from scippneutron.chopper.disk_chopper import DiskChopper
 
 from mcdgs.core.base import Instrument
-from mcdgs.core.components import (
-    Arm,
-    Component,
-    ESS_butterfly,
-    Guide_gravity,
-    Monitor_nD,
-    NXdisk_chopper,
-    Pol_bender,
-    Progress_bar,
-    Slit,
-)
+from mcdgs.core.components import Component, ESS_butterfly, Monitor_nD, NXdisk_chopper
 from mcdgs.core.utils import evaluate
-
-# what tof leaves out: the optics, which it takes as transmitting everything, and the markers
-SKIPPED: frozenset[type[Component]] = frozenset(
-    {Arm, Guide_gravity, Pol_bender, Progress_bar, Slit}
-)
 
 # a converter takes the component, its distance from the source in m, and the instrument
 # parameter values; it returns the tof component
@@ -196,13 +180,13 @@ def _chopper(
     )
 
 
-def _detector(component: Component, distance: float, params: Mapping[str, float]) -> tof.Detector:
-    """Return a tof detector at the place of a component.
+def _detector(component: Monitor_nD, distance: float, params: Mapping[str, float]) -> tof.Detector:
+    """Return the tof detector of a monitor.
 
     Parameters
     ----------
     component:
-        The component recording the neutrons, such as a monitor or the sample position.
+        The monitor.
     distance:
         Its distance from the source, in m.
     params:
@@ -211,7 +195,7 @@ def _detector(component: Component, distance: float, params: Mapping[str, float]
     Returns
     -------
     :
-        The detector, named after the component.
+        The detector, named after the monitor.
     """
     return tof.Detector(distance=sc.scalar(distance, unit="m"), name=component.name)
 
@@ -226,7 +210,6 @@ def build_tof(
     instrument: Instrument,
     *,
     neutrons: int = 1_000_000,
-    detectors: Collection[str] = (),
     seed: int | None = None,
 ) -> tof.Model:
     """Build the tof model of an instrument.
@@ -237,23 +220,19 @@ def build_tof(
         The instrument to build, at its current parameters.
     neutrons:
         Number of neutrons per pulse.
-    detectors:
-        Names of components to record the neutrons at, in addition to every ``Monitor_nD``,
-        such as ``("sample_pos",)``. Each must be after the source.
     seed:
         Seed of the random numbers of the source. If ``None``, every build differs.
 
     Returns
     -------
     :
-        The tof model: the source, then the choppers and detectors in beam order.
+        The tof model: the source, then the choppers and the detectors (one per ``Monitor_nD``)
+        in beam order.
 
     Raises
     ------
     ValueError
-        If the instrument has no ``ESS_butterfly`` or more than one, if a name in ``detectors``
-        is not a component after the source, or if a component is neither converted nor
-        skipped.
+        If the instrument has no ``ESS_butterfly`` or more than one.
     """
     components = instrument.components
     sources = [name for name, c in components.items() if isinstance(c, ESS_butterfly)]
@@ -261,8 +240,6 @@ def build_tof(
         raise ValueError(f"{instrument.name}: tof needs one ESS_butterfly, found {sources}")
     source_name = sources[0]
     after_source = list(components)[list(components).index(source_name) + 1 :]
-    if unknown := sorted(set(detectors) - set(after_source)):
-        raise ValueError(f"{instrument.name}: no component {unknown} after the source")
 
     params = _numeric_params(instrument)
     positions = {name: np.array(xyz) for name, xyz in instrument.positions().items()}
@@ -273,14 +250,9 @@ def build_tof(
     )
     for name in after_source:
         component = components[name]
-        converter = _detector if name in detectors else CONVERTERS.get(type(component))
+        converter = CONVERTERS.get(type(component))
         if converter is None:
-            if type(component) in SKIPPED:
-                continue
-            raise ValueError(
-                f"{name} ({component.component_name}): no tof conversion; add one to "
-                "CONVERTERS or the class to SKIPPED"
-            )
+            continue  # not something tof understands
         distance = float(np.linalg.norm(positions[name] - positions[source_name]))
         model.add(converter(component, distance, params))
     return model

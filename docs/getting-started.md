@@ -55,43 +55,24 @@ print(trex.positions()["sample_pos"])  # [x, y, z] in m
 
 ## Run it
 
-`TRex` has no monitor yet, so a run would record nothing. This script adds a wavelength monitor at
-the sample position, then runs T-Rex with the bender in. Save it as `first_run.py` and run it with
-`pixi run python first_run.py`.
+`TRex` has a wavelength monitor, `sample_monitor`, at the sample position. This script runs
+T-Rex with the bender in and prints what that monitor records. Save it as `first_run.py` and run
+it with `pixi run python first_run.py`.
 
 ```python
 import h5py
 
-from mcdgs.core.components import Monitor_nD
 from mcdgs.instruments.trex.model import TRex
 from mcdgs.mcstas.simulation import Simulation
 
-
-class TRexWithMonitor(TRex):
-    """T-Rex with a wavelength monitor at the sample position."""
-
-    name = "trex_with_monitor"
-
-    def __init__(self, params=None):
-        super().__init__(params=params)
-        self.spectrum = Monitor_nD(
-            xwidth=0.1,
-            yheight=0.1,
-            restore_neutron=1,
-            options="lambda limits=[0.5 5.3] bins=12",
-            filename="spectrum",
-            relative="sample_pos",
-        )
-
-
-simulation = Simulation(TRexWithMonitor())
+simulation = Simulation(TRex())
 h5_file = simulation.run(ncount=1e7, bender_in=1)
 print(h5_file)
 
 with h5py.File(h5_file) as file:
     components = file["entry1/instrument/components"]
-    monitor = next(c for name, c in components.items() if name.endswith("_spectrum"))
-    spectrum = monitor["output/spectrum_L"]
+    monitor = next(c for name, c in components.items() if name.endswith("_sample_monitor"))
+    spectrum = monitor["output/sample_monitor_L"]
     for wavelength, intensity in zip(spectrum["Wavelength__Angs_"][()], spectrum["data"][()]):
         print(f"{wavelength:.1f} Å  {intensity:.3g}")
 ```
@@ -105,7 +86,7 @@ reach the monitor, and the spectrum has empty bins inside the band.
 
 | Folder | Contents |
 | ------ | -------- |
-| `mcstas_input/trex_with_monitor/` | The generated `.instr` and `.c` files and the compiled instrument. |
+| `mcstas_input/TRex/` | The generated `.instr` and `.c` files and the compiled instrument. |
 | `mcstas_output/<time>_run/` | The results of this run, in `mccode.h5`. |
 
 Both folders are created where you ran the script, and in this repository git ignores them.

@@ -17,8 +17,8 @@ def test_there_must_be_times_to_group():
 
 
 def test_trex_cuts_the_band_into_sub_pulses():
-    result = build_tof(TRex(), neutrons=100_000, detectors=("sample_pos",), seed=1).run()
-    summary = summarize(result, "sample_pos")
+    result = build_tof(TRex(), neutrons=100_000, seed=1).run()
+    summary = summarize(result, "sample_monitor")
     assert summary.neutrons > 0
     # the band the bandwidth choppers pass around lambda0 = 2 Å
     assert 1.3 < summary.wavelength_min < summary.wavelength_max < 2.7
@@ -28,6 +28,6 @@ def test_trex_cuts_the_band_into_sub_pulses():
 
 def test_a_detector_no_neutron_reaches_raises():
     # about 1 neutron in 540 gets through: none of these 10
-    result = build_tof(TRex(), neutrons=10, detectors=("sample_pos",), seed=1).run()
-    with pytest.raises(ValueError, match="sample_pos"):
-        summarize(result, "sample_pos")
+    result = build_tof(TRex(), neutrons=10, seed=1).run()
+    with pytest.raises(ValueError, match="sample_monitor"):
+        summarize(result, "sample_monitor")

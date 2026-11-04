@@ -11,7 +11,7 @@ Guides 34 to 50a approximate the horizontal and vertical ellipses of the sheet w
 tapered sections.
 """
 
-from mcdgs.core.components import Arm, Component, Slit
+from mcdgs.core.components import Arm, Component, Monitor_nD, Slit
 
 from .curve import GUIDE_29_OUT_Z
 from .sections import chain, gap, guide, split_after
@@ -320,3 +320,24 @@ def sample_pos() -> Arm:
     sample_z = 163.8  # m, cell C148
 
     return Arm(at=[0, 0, sample_z - ARM_MC_Z], relative="arm_mc")
+
+
+def sample_monitor() -> Monitor_nD:
+    """Create the wavelength monitor at the sample position.
+
+    It records the beam reaching the sample and leaves the neutrons unchanged. It is at
+    ``sample_pos``, before the sample.
+
+    Returns
+    -------
+    :
+        A new monitor.
+    """
+    return Monitor_nD(
+        xwidth=0.1,  # FIXME, not in Table of Optics v3.2: wider than the beam
+        yheight=0.1,  # FIXME, not in Table of Optics v3.2: wider than the beam
+        restore_neutron=1,
+        options="lambda limits=[0.5 5.3] bins=12",  # FIXME, not in Table of Optics v3.2
+        filename="sample_monitor",
+        relative="sample_pos",
+    )

@@ -84,6 +84,7 @@ def test_a_sample_a_file_adds_is_built_where_the_file_puts_it(tmp_path):
     (tmp_path / "sample.yaml").write_text(
         "instrument: TRex\n"
         "sample_pos: {}\n"
+        "sample_monitor: {}\n"
         "sample:\n"
         "  component: Single_crystal\n"
         "  reflections: Al.lau\n"
@@ -93,7 +94,7 @@ def test_a_sample_a_file_adds_is_built_where_the_file_puts_it(tmp_path):
         "  relative: sample_pos\n"
     )
     trex = load(tmp_path / "sample.yaml")
-    assert list(trex.components)[-2:] == ["sample_pos", "sample"]
+    assert list(trex.components)[-3:] == ["sample_pos", "sample_monitor", "sample"]
     assert trex.sample.relative == "sample_pos"
 
 

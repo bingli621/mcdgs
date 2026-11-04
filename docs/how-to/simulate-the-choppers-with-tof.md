@@ -16,7 +16,7 @@ from mcdgs.instruments.trex.model import TRex
 from mcdgs.tof.builder import build_tof
 
 trex = TRex()
-model = build_tof(trex, neutrons=1_000_000, detectors=("sample_pos",), seed=1)
+model = build_tof(trex, neutrons=1_000_000, seed=1)
 result = model.run()
 print(result)
 ```
@@ -32,15 +32,14 @@ page.
 
 ## What goes into the model
 
-`build_tof` keeps only what tof can model, by the type of the component:
+`build_tof` takes only what tof understands, by the type of the component:
 
 | Component | In tof |
 | --------- | ------ |
 | `ESS_butterfly` | The source: tof's standard ESS pulse from `Lmin` to `Lmax`, with `n_pulses` pulses at 14 Hz. It is the same for every beamline, so `sector`, `beamline`, `cold_frac` and the focusing are not used. |
 | `NXdisk_chopper` | A chopper, with the same slit edges, frequency, direction and phase as in McStas. |
-| `Monitor_nD`, and every component named in `detectors` | A detector, which records the neutrons reaching it. |
-| `Guide_gravity`, `Pol_bender`, `Slit`, `Arm`, `Progress_bar` | Left out: tof takes the optics as letting everything through. |
-| Anything else, such as `Single_crystal` | An error, so that a component is never left out without a decision. |
+| `Monitor_nD` | A detector, which records the neutrons reaching it. T-Rex has one, `sample_monitor`, at the sample position. With no monitor, the model has no detector. |
+| Anything else, such as `Guide_gravity`, `Slit` or `Single_crystal` | Left out: tof takes the optics as letting everything through. |
 
 A component's distance is the straight line from the source to its position. For T-Rex this is
 within 1 mm of the path along the curved guide: 0.3 µs of flight at 2 Å, about 1 % of the
@@ -60,7 +59,7 @@ carried over:
 Each detector holds every neutron of the source, with a mask for those stopped on the way:
 
 ```python
-neutrons = result["sample_pos"].data["pulse", 0]
+neutrons = result["sample_monitor"].data["pulse", 0]
 reached = neutrons[~neutrons.masks["blocked_by_others"]]
 print(reached.coords["wavelength"].min(), reached.coords["wavelength"].max())
 print(reached.coords["toa"].to(unit="ms"))  # time of arrival
@@ -73,7 +72,7 @@ in sub-pulses, told apart by the gaps of about 4 ms between them.
 ```python
 from mcdgs.diagnostics.trex.choppers import summarize
 
-summary = summarize(result, "sample_pos")
+summary = summarize(result, "sample_monitor")
 print(summary.neutrons, summary.sub_pulses, summary.first_arrival, summary.last_arrival)
 ```
 
@@ -84,7 +83,7 @@ Building a model is cheap, so change the control parameters and build again:
 ```python
 for mode in ("FF", "RR"):
     trex.update_params(mode=mode)
-    reading = build_tof(trex, detectors=("sample_pos",), seed=1).run()["sample_pos"]
+    reading = build_tof(trex, seed=1).run()["sample_monitor"]
     print(mode, reading)
 ```
 
