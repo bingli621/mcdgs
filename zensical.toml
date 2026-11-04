@@ -36,6 +36,7 @@ nav = [
     { "Samples" = "reference/samples.md" },
     { "McStas" = "reference/mcstas.md" },
     { "tof" = "reference/tof.md" },
+    { "Diagnostics" = "reference/diagnostics.md" },
     { "Parameters files" = "reference/io.md" },
   ] },
 ]

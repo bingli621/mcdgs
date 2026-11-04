@@ -26,6 +26,7 @@ src/mcdgs/
   mcstas/        build the McStasScript instrument, run simulations, read NeXus output
   tof/           build the chopper cascade of an instrument as a tof model
   reduction/     data reduction
+  diagnostics/   setups that study one part of an instrument, one package per instrument
 scripts/         build tooling of the documentation site
 notebooks/       Jupyter notebooks of one-off simulations that diagnose the instrument models
 tests/
@@ -36,7 +37,7 @@ mcstas_output/   simulation results, a folder per run (git-ignored)
 
 Dependencies point inwards: `core` imports nothing from the other layers; `instruments` and
 `samples` build on it; `io`, `mcstas`, `tof` and `reduction` are adapters that work with any
-instrument.
+instrument. `diagnostics` builds on `instruments` and `mcstas`, and nothing imports it.
 
 ## License
 
