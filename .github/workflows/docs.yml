@@ -18,9 +18,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       # v0.8 read pyproject.toml with a TOML 0.5 parser, which rejects its platforms list
-      - uses: prefix-dev/setup-pixi@v0.11.2
+      - uses: prefix-dev/setup-pixi@v0.11.3
         with:
-          pixi-version: v0.82.0  # the version that wrote pixi.lock
+          pixi-version: v0.84.0  # the version that wrote pixi.lock
           environments: docs
           locked: true
           cache: true
