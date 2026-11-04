@@ -30,9 +30,9 @@ The short ticks across the beam are the choppers: `bw1` near 32 m, `bw2` near 40
 near 108 m and the M-Chopper near 162 m.
 
 This figure and the next need McStas, so they are not made with the site:
-[`notebooks/trex/overview.ipynb`](https://github.com/bingli621/mcdgs/blob/main/notebooks/trex/overview.ipynb)
-draws them with McStasScript's `show_instrument` (mcdisplay), and `pixi run docs-mcstas` runs it
-again. They show the instrument as of that run.
+[`scripts/docs_trex_overview.py`](https://github.com/bingli621/mcdgs/blob/main/scripts/docs_trex_overview.py)
+draws them with McStasScript's `show_instrument` (mcdisplay), and `pixi run docs-mcstas` runs it.
+They show the instrument as of that run.
 
 ## From detector to source
 

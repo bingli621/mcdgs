@@ -27,7 +27,7 @@ src/mcdgs/
   tof/           build the chopper cascade of an instrument as a tof model
   reduction/     data reduction
   diagnostics/   setups that study one part of an instrument, one package per instrument
-scripts/         build tooling of the documentation site
+scripts/         build tooling of the documentation site, and the scripts that make its figures
 notebooks/       Jupyter notebooks of one-off simulations that diagnose the instrument models
 tests/
 docs/            the documentation site, built with Zensical

@@ -33,7 +33,9 @@ with h5py.File(scan_file) as file:
         entry = file[f"entry{n}"]
 ```
 
-[`notebooks/trex/bender.ipynb`](https://github.com/bingli621/mcdgs/blob/main/notebooks/trex/bender.ipynb)
+`read_spectra` in [`mcdgs.diagnostics.trex.bender`](../reference/diagnostics.md) reads a scan
+this way, and
+[`scripts/docs_trex_bender.py`](https://github.com/bingli621/mcdgs/blob/main/scripts/docs_trex_bender.py)
 is a complete example, from a scan to a figure.
 
 ## Detector pixels

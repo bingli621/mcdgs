@@ -6,8 +6,8 @@ These figures come from the model of the [extraction guides](details.md#extracti
 
 Each row is one position in the beam: after the source, after guide 3 and at the exit of guide 4.
 The columns are the beam profile, wavelength against x, and the spectrum in n/s per bin.
-[`notebooks/trex/bender.ipynb`](https://github.com/bingli621/mcdgs/blob/main/notebooks/trex/bender.ipynb)
-draws these views for the path set by `bender_in`; the figure is saved by hand.
+[`scripts/docs_trex_bender.py`](https://github.com/bingli621/mcdgs/blob/main/scripts/docs_trex_bender.py)
+draws these views with McStasScript's diagnostics, 1e6 neutrons for each path.
 
 **Bender out**, through the thermal guide 4a:
 
@@ -27,8 +27,7 @@ the thermal peak is mostly gone and the cold peak stays.
 
 ![Intensity after guide 4 against the rotation of the bender, per wavelength band](figures/diagnose_bender.png)
 
-[`notebooks/trex/bender.ipynb`](https://github.com/bingli621/mcdgs/blob/main/notebooks/trex/bender.ipynb)
-scans `b_rot` from −0.8 to 0.1 deg with 1e7 neutrons per angle. Each curve is one band of
+The same script scans `b_rot` from −0.8 to 0.1 deg with 1e7 neutrons per angle. Each curve is one band of
 wavelengths at the exit of guide 4, divided by the same band with the bender out, so the dashed line
 at 1 is the bender-out intensity. The dotted line is the nominal rotation, −0.398 deg. The legend
 repeats blue: the lowest blue curve is 0.7 Å, the upper one 4.7 Å.
@@ -46,5 +45,6 @@ Approximate transmission at the nominal rotation:
 The bands of about 3 Å and above peak broadly around the nominal rotation. The bands up to 1.5 Å
 keep rising up to the end of the scan at 0.1 deg, so their maximum lies outside it.
 
-The cell that calls `simulate()` is commented out, so by default the notebook replots the last scan
-from `mcstas_output/`. To run a new scan, uncomment it.
+These figures need McStas, so they are not made with the site. `pixi run docs-bender` runs the
+diagnostics again and replots the last scan from `mcstas_output/`;
+`pixi run docs-bender --simulate` runs the scan again too, which takes long.
