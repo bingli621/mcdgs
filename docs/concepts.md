@@ -26,17 +26,27 @@ Guide_gravity(..., relative="arm_guide_4", when="bender_in==0")
 A value can also be the name of a McStas instrument parameter, or an expression of them, as in
 McStas. The bender rotates with `rotated=[0, "b_rot", 0]`.
 
-## Three kinds of parameter
+## Four kinds of parameter
 
 | Kind | Where it lives | Changed by | Example |
 | ---- | -------------- | ---------- | ------- |
 | Design parameter | The fields of a component | Editing the instrument | `guide_1.w1` |
-| Control parameter | `instrument.params` | `instrument.update_params(...)` | `bender_in=True` |
-| McStas instrument parameter | `instrument.instr_params`, computed from the control parameters | A keyword of a run | `simulation.run(bender_in=1)` |
+| Control parameter | `instrument.params` | `instrument.update_params(...)` | `rrm=18`, `mode="FF"`, `bender_in=True` |
+| McStas instrument parameter | `instrument.instr_params`, computed from the control parameters | A keyword of a run | `nu_mc1`, `delay_mc1`, `bender_in` |
+| Simulation parameter | Neither the instrument nor its parameters | A keyword of a run or a build | `simulation.run(ncount=1e6)`, `build_tof(trex, neutrons=1_000_000)` |
 
-The instrument parameters are the ones McStas knows about. Their values in `instr_params` are the
-defaults of a run, and a keyword of a run overrides them for that run only, without changing the
-instrument.
+The control parameters are the settings of the instrument as it is operated, such as the
+repetition rate multiplication `rrm` and the chopper mode `mode` of T-Rex.
+
+The McStas instrument parameters are the ones McStas knows about, and the instrument computes them
+from its control parameters. For T-Rex, the frequency `nu_<chopper>` and delay `delay_<chopper>`
+of each chopper follow from `lambda0`, `rrm`, `mode` and `t0_offset`. Their values in
+`instr_params` are the defaults of a run, and a keyword of a run overrides them for that run only,
+without changing the instrument, as in `simulation.run(bender_in=1)`.
+
+The simulation parameters say how to simulate, not what: the number of neutrons, `ncount` of a
+McStas run or `neutrons` of a tof source, a random seed, or the number of MPI processes. They
+belong to one run, or one tof model, and are never stored with the instrument.
 
 ## Coordinates
 
