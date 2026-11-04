@@ -18,7 +18,7 @@ guide, under 1 % of the shortest chopper opening at 2 Å. The tof source is put 
 McStas has the moderator, rather than at tof's default for the ESS pulse.
 """
 
-from collections.abc import Callable, Mapping
+from collections.abc import Mapping
 
 import numpy as np
 import scipp as sc
@@ -26,72 +26,8 @@ import tof
 from scippneutron.chopper.disk_chopper import DiskChopper
 
 from mcdgs.core.base import Instrument
-from mcdgs.core.components import Component, ESS_butterfly, Monitor_nD, NXdisk_chopper
+from mcdgs.core.components import ESS_butterfly, Monitor_nD, NXdisk_chopper
 from mcdgs.core.utils import evaluate
-
-# a converter takes the component, its distance from the source in m, and the instrument
-# parameter values; it returns the tof component
-# (component, distance, params) -> tof.Component; each converter takes only its own class
-# (looked up by type in CONVERTERS), so the component argument is left untyped here.
-Converter = Callable[..., tof.Component]
-
-
-def _numeric_params(instrument: Instrument) -> dict[str, float]:
-    """Return the instrument parameters that are numbers, by name.
-
-    Only numbers can stand in a component's values; a string parameter cannot.
-
-    Parameters
-    ----------
-    instrument:
-        The instrument.
-
-    Returns
-    -------
-    :
-        Value by McStas name.
-    """
-    return {p.name: p.value for p in instrument.instr_params if isinstance(p.value, int | float)}
-
-
-def _source(
-    component: ESS_butterfly,
-    params: Mapping[str, float],
-    neutrons: int,
-    seed: int | None,
-) -> tof.Source:
-    """Return the tof source of the ESS butterfly moderator.
-
-    tof samples its standard ESS pulse, the same for every beamline: ``sector``, ``beamline``,
-    ``cold_frac``, ``yheight``, the focusing and the performance factors are not used.
-
-    Parameters
-    ----------
-    component:
-        The moderator.
-    params:
-        Instrument parameter values, for ``Lmin`` and ``Lmax`` given as expressions.
-    neutrons:
-        Number of neutrons per pulse.
-    seed:
-        Seed of the random numbers. If ``None``, every run differs.
-
-    Returns
-    -------
-    :
-        The source at 0 m, from ``Lmin`` to ``Lmax``, with ``n_pulses`` pulses (at least 1) at
-        the moderator's frequency.
-    """
-    return tof.Source(
-        facility="ess",
-        neutrons=neutrons,
-        pulses=max(component.n_pulses, 1),  # McStas takes 0 as 1
-        frequency=sc.scalar(float(component.frequency), unit="Hz"),
-        wmin=sc.scalar(float(evaluate(component.Lmin, params)), unit="angstrom"),
-        wmax=sc.scalar(float(evaluate(component.Lmax, params)), unit="angstrom"),
-        seed=seed,
-        distance=sc.scalar(0.0, unit="m"),
-    )
 
 
 def disk_chopper(
@@ -152,6 +88,64 @@ def disk_chopper(
     )
 
 
+def _numeric_params(instrument: Instrument) -> dict[str, float]:
+    """Return the instrument parameters that are numbers, by name.
+
+    Only numbers can stand in a component's values; a string parameter cannot.
+
+    Parameters
+    ----------
+    instrument:
+        The instrument.
+
+    Returns
+    -------
+    :
+        Value by McStas name.
+    """
+    return {p.name: p.value for p in instrument.instr_params if isinstance(p.value, int | float)}
+
+
+def _source(
+    component: ESS_butterfly,
+    params: Mapping[str, float],
+    neutrons: int,
+    seed: int | None,
+) -> tof.Source:
+    """Return the tof source of the ESS butterfly moderator.
+
+    tof samples its standard ESS pulse, the same for every beamline: ``sector``, ``beamline``,
+    ``cold_frac``, ``yheight``, the focusing and the performance factors are not used.
+
+    Parameters
+    ----------
+    component:
+        The moderator.
+    params:
+        Instrument parameter values, for ``Lmin`` and ``Lmax`` given as expressions.
+    neutrons:
+        Number of neutrons per pulse.
+    seed:
+        Seed of the random numbers. If ``None``, every run differs.
+
+    Returns
+    -------
+    :
+        The source at 0 m, from ``Lmin`` to ``Lmax``, with ``n_pulses`` pulses (at least 1) at
+        the moderator's frequency.
+    """
+    return tof.Source(
+        facility="ess",
+        neutrons=neutrons,
+        pulses=max(component.n_pulses, 1),  # McStas takes 0 as 1
+        frequency=sc.scalar(float(component.frequency), unit="Hz"),
+        wmin=sc.scalar(float(evaluate(component.Lmin, params)), unit="angstrom"),
+        wmax=sc.scalar(float(evaluate(component.Lmax, params)), unit="angstrom"),
+        seed=seed,
+        distance=sc.scalar(0.0, unit="m"),
+    )
+
+
 def _chopper(
     component: NXdisk_chopper, distance: float, params: Mapping[str, float]
 ) -> tof.Chopper:
@@ -180,7 +174,7 @@ def _chopper(
     )
 
 
-def _detector(component: Monitor_nD, distance: float, params: Mapping[str, float]) -> tof.Detector:
+def _detector(component: Monitor_nD, distance: float) -> tof.Detector:
     """Return the tof detector of a monitor.
 
     Parameters
@@ -189,8 +183,6 @@ def _detector(component: Monitor_nD, distance: float, params: Mapping[str, float
         The monitor.
     distance:
         Its distance from the source, in m.
-    params:
-        Instrument parameter values (not used: a detector is only a distance).
 
     Returns
     -------
@@ -198,12 +190,6 @@ def _detector(component: Monitor_nD, distance: float, params: Mapping[str, float
         The detector, named after the monitor.
     """
     return tof.Detector(distance=sc.scalar(distance, unit="m"), name=component.name)
-
-
-CONVERTERS: dict[type[Component], Converter] = {
-    NXdisk_chopper: _chopper,
-    Monitor_nD: _detector,
-}
 
 
 def build_tof(
@@ -235,24 +221,24 @@ def build_tof(
         If the instrument has no ``ESS_butterfly`` or more than one.
     """
     components = instrument.components
-    sources = [name for name, c in components.items() if isinstance(c, ESS_butterfly)]
+    sources = {name: c for name, c in components.items() if isinstance(c, ESS_butterfly)}
     if len(sources) != 1:
-        raise ValueError(f"{instrument.name}: tof needs one ESS_butterfly, found {sources}")
-    source_name = sources[0]
+        raise ValueError(f"{instrument.name}: tof needs one ESS_butterfly, found {list(sources)}")
+    ((source_name, source),) = sources.items()
     after_source = list(components)[list(components).index(source_name) + 1 :]
 
     params = _numeric_params(instrument)
     positions = {name: np.array(xyz) for name, xyz in instrument.positions().items()}
-    source = components[source_name]
-    assert isinstance(source, ESS_butterfly)  # sources holds only ESS_butterfly names
     model = tof.Model(
         source=_source(source, params, neutrons, seed),
     )
     for name in after_source:
-        component = components[name]
-        converter = CONVERTERS.get(type(component))
-        if converter is None:
-            continue  # not something tof understands
         distance = float(np.linalg.norm(positions[name] - positions[source_name]))
-        model.add(converter(component, distance, params))
+        match components[name]:
+            case NXdisk_chopper() as chopper:
+                model.add(_chopper(chopper, distance, params))
+            case Monitor_nD() as monitor:
+                model.add(_detector(monitor, distance))
+            case _:
+                pass  # not something tof understands
     return model
