@@ -32,6 +32,7 @@ def test_the_components_are_in_beam_order():
         "guide_4a",
         "bender",
         "guide_4b",
+        "beam_monitor",
         "arm_start_of_curve",
         "guide_5",
         "guide_6",
@@ -78,6 +79,11 @@ def test_the_source_is_that_of_trex_primary():
     assert (source.yheight, source.cold_frac, source.dist) == (0.03, 0.3, 2)
     assert (source.focus_xw, source.focus_yh) == (0.095, 0.035)
     assert (source.Lmin, source.Lmax, source.n_pulses) == (0.1, 10.0, 1)
+
+
+def test_the_beam_monitor_is_in_the_middle_of_its_gap():
+    position = TRex().positions()["beam_monitor"]
+    assert position[2] == pytest.approx(5.892 + 0.02 / 2, abs=1e-9)  # cells B29 and D29
 
 
 def test_the_sample_position_is_on_the_axis_after_the_m_chopper():

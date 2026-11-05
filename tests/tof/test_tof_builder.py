@@ -134,7 +134,7 @@ def test_trex_choppers_are_placed_in_beam_order():
     assert list(model.choppers) == list(DISK_DISTANCE)
     for name, chopper in model.choppers.items():
         assert chopper.distance.value == pytest.approx(DISK_DISTANCE[name], abs=1e-3), name
-    assert list(model.detectors) == ["sample_monitor"]
+    assert list(model.detectors) == ["beam_monitor", "sample_monitor"]
 
 
 @pytest.mark.parametrize("mode", ["FF", "RR"])

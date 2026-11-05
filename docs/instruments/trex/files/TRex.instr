@@ -15,7 +15,7 @@
 * 
 * %Identification
 * Written by: Python McStas Instrument Generator
-* Date: 16:52:57 on November 04, 2026
+* Date: 11:28:09 on November 05, 2026
 * Origin: ESS DMSC
 * %INSTRUMENT_SITE: Generated_instruments
 * 
@@ -209,6 +209,20 @@ COMPONENT guide_4b = Guide_gravity(
  wavy_lr = 0)
 WHEN (bender_in==1)
 AT (0, 0, 0.0500003466441639) RELATIVE arm_guide_4
+ROTATED (0, 0, 0) RELATIVE arm_guide_4
+
+COMPONENT beam_monitor = Monitor_nD(
+ xwidth = 0.06, yheight = 0.04626069518549517,
+ zdepth = 0, xmin = 0,
+ xmax = 0, ymin = 0,
+ ymax = 0, zmin = 0,
+ zmax = 0, bins = 0,
+ min = -1e+40, max = 1e+40,
+ restore_neutron = 1, radius = 0,
+ options = "lambda limits=[0 5.3] bins=96 time limits=[0 0.015] bins=300", filename = "beam_monitor",
+ geometry = "NULL", nowritefile = 0,
+ nexus_bins = 0)
+AT (0, 0, 0.5013534758010247) RELATIVE arm_guide_4
 ROTATED (0, 0, 0) RELATIVE arm_guide_4
 
 COMPONENT arm_start_of_curve = Arm()

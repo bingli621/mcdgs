@@ -238,6 +238,30 @@ guide_4b:
   rotated: [0, 0, 0]
   relative: arm_guide_4
   position: [-0.015267405, 0.0, 5.45065]
+beam_monitor:
+  component: Monitor_nD
+  xwidth: 0.06
+  yheight: 0.04626069518549517
+  zdepth: 0
+  xmin: 0
+  xmax: 0
+  ymin: 0
+  ymax: 0
+  zmin: 0
+  zmax: 0
+  bins: 0
+  min: -1.0e+40
+  max: 1.0e+40
+  restore_neutron: 1
+  radius: 0
+  options: lambda limits=[0 5.3] bins=96 time limits=[0 0.015] bins=300
+  filename: beam_monitor
+  nowritefile: 0
+  nexus_bins: 0
+  at: [0, 0, 0.5013534758010247]
+  rotated: [0, 0, 0]
+  relative: arm_guide_4
+  position: [-0.01694809, 0.0, 5.902]
 arm_start_of_curve:
   component: Arm
   at: [0, 0, 0.5153535728613906]
