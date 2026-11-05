@@ -55,6 +55,29 @@ wavelength there, which `read_tof_monitor` counts on the bins of the McStas moni
 Both runs take the same `seed`. See [Run a McStas simulation](../../how-to/run-a-simulation.md)
 and [Simulate the choppers with tof](../../how-to/simulate-the-choppers-with-tof.md) for each.
 
+### Where the tof source sits
+
+The two models place their source differently:
+
+| | Source at | Monitor at | Flight to the monitor |
+| --- | --- | --- | --- |
+| McStas | 0 m, the moderator | 1.895927 m | 1.895927 m |
+| tof | 0.05 m | 1.895927 m | 1.845927 m |
+
+McStas emits each neutron at the moderator, with its time of emission. tof's pulse of beam port
+W7, `ess-trex`, was not sampled there. It was sampled 5 cm away, so its times are those of the
+neutrons when they pass 0.05 m, and they already include the flight over the first 5 cm. The
+builder therefore keeps the tof source at 0.05 m, and the monitor at its distance from the
+moderator, 1.895927 m. Both models then have the neutrons reach the monitor at the same time.
+
+With the source at 0 m, tof would add the flight over those 5 cm a second time. That is
+25 µs at 2 Å and 126 µs at 10 Å, half a bin to two and a half bins of 0.05 ms in the figure
+below.
+
+Every other distance in tof is the straight line from the moderator to the component. For
+T-Rex that is within 1 mm of the path along the curved guide. Up to guide 1 the path is straight,
+so here they are the same.
+
 ## Counts and intensity
 
 Each simulated neutron stands for part of the real flux, its weight. The intensity of a bin is its
