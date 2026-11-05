@@ -18,6 +18,8 @@ the guide axis, so nothing downstream of it is rotated.
 
 import math
 
+import numpy as np
+
 from mcdgs.core.components import Arm, Guide_gravity, Monitor_nD, Pol_bender
 
 from .extraction import entrance_x, half_taper_angle, z_along_arm
@@ -36,6 +38,8 @@ GUIDE_4_TILT = half_taper_angle(
 
 BEAM_MONITOR_GAP_Z = 5.892  # m, cell B29
 BEAM_MONITOR_GAP_LENGTH = 0.02  # m, cell D29
+BEAM_MONITOR_TIME_EDGES = np.linspace(0.0, 0.015, 301)  # s: the whole pulse up to 5.3 Å
+BEAM_MONITOR_WAVELENGTH_EDGES = np.linspace(0.0, 5.3, 97)  # Å
 
 
 def arm_guide_4() -> Arm:
@@ -154,10 +158,11 @@ def guide_4b(when: str | None = None) -> Guide_gravity:
 
 
 def beam_monitor() -> Monitor_nD:
-    """Create the wavelength and time monitor in the middle of the bunker gap of row 29.
+    """Create the time and wavelength monitor in the middle of the bunker gap of row 29.
 
-    It records the intensity leaving guide 4 as a function of wavelength and, separately, of
-    time, and leaves the neutrons unchanged. Its 15 ms take in the whole pulse up to 5.3 Å.
+    It records the intensity leaving guide 4 as one 2D map of time against wavelength, on
+    :data:`BEAM_MONITOR_TIME_EDGES` and :data:`BEAM_MONITOR_WAVELENGTH_EDGES`, and leaves the
+    neutrons unchanged. Its 15 ms take in the whole pulse up to 5.3 Å.
 
     Returns
     -------
@@ -165,13 +170,15 @@ def beam_monitor() -> Monitor_nD:
         A new monitor.
     """
     monitor_z = BEAM_MONITOR_GAP_Z + BEAM_MONITOR_GAP_LENGTH / 2
+    times, wavelengths = BEAM_MONITOR_TIME_EDGES, BEAM_MONITOR_WAVELENGTH_EDGES
 
     return Monitor_nD(
         xwidth=0.06,  # FIXME cell E32, the entrance of guide 5
         yheight=0.046260695185495173,  # FIXME cell F32, the entrance of guide 5
         restore_neutron=1,
-        options=(  # lambda in Å, time in s
-            "lambda limits=[0 5.3] bins=96 time limits=[0 0.015] bins=300"
+        options=(  # time in s, lambda in Å: one 2D map
+            f"time limits=[{times[0]} {times[-1]}] bins={len(times) - 1} "
+            f"lambda limits=[{wavelengths[0]} {wavelengths[-1]}] bins={len(wavelengths) - 1}"
         ),
         filename="beam_monitor",
         at=[0, 0, z_along_arm(monitor_z, GUIDE_4A_IN_Z, GUIDE_4_TILT)],

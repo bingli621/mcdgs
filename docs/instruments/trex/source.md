@@ -37,7 +37,7 @@ creates its components in beam order, with their positions.
 ## Running both models
 
 The same `TRexSource` object runs in McStas and in tof. McStas writes the instrument file, runs it
-and saves the monitor in its run folder, which McStasScript reads back as n/s per bin:
+and saves the monitor in its run folder, which McStasScript loads back:
 
 <!-- fmt:off -->
 ```python
@@ -47,7 +47,9 @@ and saves the monitor in its run folder, which McStasScript reads back as n/s pe
 
 tof builds its model from the same components: the `ESS_butterfly` becomes tof's pulse of beam
 port W7 and the `Monitor_nD` a detector named `source_monitor`. It gives each neutron's time and
-wavelength there, which `read_tof_monitor` counts on the bins of the McStas monitor:
+wavelength there. `read_comparison`, in
+[`mcdgs.diagnostics.compare`](../../reference/diagnostics.md), reads the map of McStas in n/s per
+bin and counts the tof neutrons on the same bins:
 
 <!-- fmt:off -->
 ```python
@@ -136,7 +138,8 @@ source. Further down, keep that same scale rather than computing a new one at ea
 scaled again to the total of McStas there, tof would agree with it by construction, and a
 difference in what the guides and choppers let through would not show. Keep it with the same
 number of tof neutrons; with another number, keep `scale × neutrons`, as the scale goes as
-1/neutrons.
+1/neutrons. `read_comparison` takes it as `scale`; left out, it scales to the McStas total at
+that monitor.
 
 ## Error bars
 

@@ -1,0 +1,64 @@
+import matplotlib.pyplot as plt
+import numpy as np
+import pytest
+import scipp as sc
+import tof
+from mcstasscript.data.data import McStasData, McStasMetaData
+
+from mcdgs.diagnostics.compare import plot_comparison, read_comparison
+from mcdgs.diagnostics.trex.source import TRexSource
+from mcdgs.tof.builder import build_tof
+from mcdgs.tof.reader import read_tof_monitor
+
+BINS = {
+    "toa": sc.linspace("toa", 0.0, 15.0, 31, unit="ms"),
+    "wavelength": sc.linspace("wavelength", 0.0, 10.0, 21, unit="Å"),
+}
+NEUTRONS = 10_000
+
+
+@pytest.fixture(scope="module")
+def tof_result() -> tof.Result:
+    return build_tof(TRexSource(), neutrons=NEUTRONS, seed=1).run()
+
+
+def _mcstas_map(shape: tuple[int, int]) -> list[McStasData]:
+    """A McStas monitor named source_monitor, as McStasScript has it: (wavelength, time)."""
+    metadata = McStasMetaData()
+    metadata.component_name = "source_monitor"
+    data = McStasData(metadata)
+    data.Intensity = np.arange(np.prod(shape), dtype=float).reshape(shape)
+    data.Error = np.ones(shape)
+    return [data]
+
+
+def test_tof_is_scaled_to_the_total_of_mcstas(tof_result):
+    comparison = read_comparison(
+        "source_monitor", _mcstas_map((20, 30)), tof_result, BINS, 1e6, NEUTRONS
+    )
+    assert comparison.mcstas_intensity.shape == (30, 20)  # time, wavelength
+    assert comparison.tof_intensity.sum() == pytest.approx(comparison.mcstas_intensity.sum())
+
+
+def test_a_given_scale_is_kept(tof_result):
+    comparison = read_comparison(
+        "source_monitor", _mcstas_map((20, 30)), tof_result, BINS, 1e6, NEUTRONS, scale=2.0
+    )
+    counts = read_tof_monitor(tof_result["source_monitor"], BINS)
+    np.testing.assert_allclose(comparison.tof_intensity, 2 * counts)
+    np.testing.assert_allclose(comparison.tof_error, 2 * np.sqrt(counts))  # Poisson
+
+
+def test_a_map_on_other_bins_is_refused(tof_result):
+    with pytest.raises(ValueError, match="source_monitor"):
+        read_comparison("source_monitor", _mcstas_map((30, 20)), tof_result, BINS, 1e6, NEUTRONS)
+
+
+def test_the_figure_has_the_two_maps_the_spectrum_and_the_profile(tof_result):
+    comparison = read_comparison(
+        "source_monitor", _mcstas_map((20, 30)), tof_result, BINS, 1e6, NEUTRONS
+    )
+    fig = plot_comparison(comparison, "A title")
+    assert fig.get_suptitle() == "A title"
+    assert len(fig.axes) == 5  # four plots and the color bar
+    plt.close(fig)

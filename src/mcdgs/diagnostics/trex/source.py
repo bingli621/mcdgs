@@ -24,13 +24,12 @@ of the relative error, and a tenth of the error in n/s, as the weight is a hundr
 error bars shrink with more neutrons, in both models, while the intensity stays.
 
 :func:`main` runs both models, reads the intensity of each on the bins of the monitor, scales
-tof to McStas, and :func:`plot_comparison` draws them side by side. Run the module to do all
+tof to McStas, and :func:`.plot_comparison` draws them side by side. Run the module to do all
 of it::
 
     pixi run python -m mcdgs.diagnostics.trex.source
 """
 
-from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -38,16 +37,15 @@ import matplotlib.pyplot as plt
 import mcstasscript as ms
 import numpy as np
 import scipp as sc
-from matplotlib.figure import Figure
 from numpy.typing import NDArray
 
 from mcdgs.core.base import Instrument
 from mcdgs.core.components import ESS_butterfly, Monitor_nD
 from mcdgs.core.params import InstrParam
+from mcdgs.diagnostics.compare import plot_comparison, read_comparison
 from mcdgs.instruments.trex.sources import source
 from mcdgs.mcstas.simulation import Simulation
 from mcdgs.tof.builder import build_tof
-from mcdgs.tof.reader import read_tof_monitor
 
 # --8<-- [start:trex_source]
 TIME_EDGES = np.linspace(0.0, 0.015, 301)  # s: the whole pulse and the flight up to 10 Å
@@ -101,117 +99,6 @@ class TRexSource(Instrument):
         # --8<-- [end:trex_source]
 
 
-def plot_comparison(
-    mcstas_intensity: NDArray,
-    mcstas_error: NDArray,
-    tof_intensity: NDArray,
-    tof_error: NDArray,
-    bins: Mapping[str, sc.Variable],
-    ncounts: float,
-    neutrons: int,
-    scale: float,
-) -> Figure:
-    """Draw both models at the entrance of guide 1, in n/s.
-
-    The top row has the time and wavelength map of each, on one color scale; the bottom row
-    the wavelength spectrum and the time profile of both, summed over the other axis, with
-    their error bars.
-
-    Parameters
-    ----------
-    mcstas_intensity:
-        The intensity of McStas per bin, in n/s, with the shape (time bins, wavelength bins).
-    mcstas_error:
-        Its error per bin, with the same shape. The bins are independent, so summed over an
-        axis their errors add in quadrature.
-    tof_intensity:
-        The intensity of tof per bin, in n/s, with the same shape: its counts scaled to the
-        total of McStas.
-    tof_error:
-        Its error per bin, with the same shape: the Poisson error of the counts, √N, scaled
-        by the same factor. Summed over an axis, they add in quadrature too.
-    bins:
-        The bin edges, ``"toa"`` and ``"wavelength"``, evenly spaced, in units of time and of
-        length.
-    ncounts:
-        Number of McStas neutrons, for the legend.
-    neutrons:
-        Number of tof neutrons, for the legend.
-    scale:
-        The factor that scales tof's counts to n/s, for the legend.
-
-    Returns
-    -------
-    :
-        The figure.
-    """
-    times = bins["toa"].to(unit="ms").values
-    wavelengths = bins["wavelength"].to(unit="Å").values
-    time_bin, wavelength_bin = times[1] - times[0], wavelengths[1] - wavelengths[0]
-    vmax = max(mcstas_intensity.max(), tof_intensity.max())  # one color scale for both maps
-
-    fig, ((mcstas_ax, tof_ax), (spectrum_ax, profile_ax)) = plt.subplots(
-        2, 2, figsize=(12, 9), layout="constrained"
-    )
-    fig.suptitle("T-Rex Flux at entrance of guide 1")
-
-    # the time and wavelength maps
-    mcstas_ax.pcolormesh(times, wavelengths, mcstas_intensity.T, cmap="turbo", vmin=0, vmax=vmax)
-    mesh = tof_ax.pcolormesh(times, wavelengths, tof_intensity.T, cmap="turbo", vmin=0, vmax=vmax)
-    mcstas_ax.set(title="McStas", xlabel="Time [ms]", ylabel="Wavelength [Å]")
-    tof_ax.set(title="tof", xlabel="Time [ms]", ylabel="Wavelength [Å]")
-    fig.colorbar(
-        mesh,
-        ax=[mcstas_ax, tof_ax],
-        label=f"Intensity [n/s per {time_bin:.2g} ms and {wavelength_bin:.2g} Å]",
-    )
-
-    time_centers = sc.midpoints(bins["toa"]).to(unit="ms").values
-    wavelength_centers = sc.midpoints(bins["wavelength"]).to(unit="Å").values
-    errorbar_style = {"fmt": ".", "markersize": 3, "elinewidth": 0.8}
-    mcstas_label = f"McStas, ncount = {int(ncounts):,}"
-    tof_label = f"tof, {neutrons:,} neutrons × {scale:.3g} n/s each"
-
-    # the wavelength spectrum, summed over time
-    spectrum_ax.errorbar(
-        wavelength_centers,
-        mcstas_intensity.sum(axis=0),
-        yerr=np.sqrt((mcstas_error**2).sum(axis=0)),
-        label=mcstas_label,
-        **errorbar_style,
-    )
-    spectrum_ax.errorbar(
-        wavelength_centers,
-        tof_intensity.sum(axis=0),
-        yerr=np.sqrt((tof_error**2).sum(axis=0)),
-        label=tof_label,
-        **errorbar_style,
-    )
-    spectrum_ax.set(
-        xlabel="Wavelength [Å]", ylabel=f"Intensity [n/s per {wavelength_bin:.2g} Å]", ylim=0
-    )
-    spectrum_ax.legend()
-
-    # the time profile, summed over wavelength
-    profile_ax.errorbar(
-        time_centers,
-        mcstas_intensity.sum(axis=1),
-        yerr=np.sqrt((mcstas_error**2).sum(axis=1)),
-        label=mcstas_label,
-        **errorbar_style,
-    )
-    profile_ax.errorbar(
-        time_centers,
-        tof_intensity.sum(axis=1),
-        yerr=np.sqrt((tof_error**2).sum(axis=1)),
-        label=tof_label,
-        **errorbar_style,
-    )
-    profile_ax.set(xlabel="Time [ms]", ylabel=f"Intensity [n/s per {time_bin:.2g} ms]", ylim=0)
-    profile_ax.legend()
-    return fig
-
-
 def _mean(intensity: NDArray, centers: NDArray, axis: int) -> float:
     """Return the mean of a bin center, weighted by the intensity summed over the other axis."""
     return float(np.average(centers, weights=intensity.sum(axis=1 - axis)))
@@ -244,45 +131,40 @@ def main(
     instrument = TRexSource()
 
     # --8<-- [start:run_mcstas]
-    # run McStas and read its monitor, in n/s per bin
+    # run McStas and load its monitors, in n/s per bin
     folder = Simulation(instrument).run("trex_source", ncount=ncount, seed=seed).parent
-    monitor = ms.name_search("source_monitor", ms.load_data(str(folder)))
-    # McStasScript has the map as (wavelength, time), the y axis first
-    mcstas_intensity = np.asarray(monitor.Intensity, dtype=float).T
-    mcstas_error = np.asarray(monitor.Error, dtype=float).T
+    mcstas_data = ms.load_data(str(folder))
     # --8<-- [end:run_mcstas]
 
     # --8<-- [start:run_tof]
-    # run tof and read its monitor, in counts per bin
-    result = build_tof(instrument, neutrons=neutrons, seed=seed).run()
-    bins = {  # the bins of the McStas monitor, in the order of its map: time, wavelength
+    # run tof, then read the monitor of both on the bins of the McStas map: time, wavelength
+    tof_result = build_tof(instrument, neutrons=neutrons, seed=seed).run()
+    bins = {
         "toa": sc.array(dims=["toa"], values=TIME_EDGES, unit="s"),
         "wavelength": sc.array(dims=["wavelength"], values=WAVELENGTH_EDGES, unit="Å"),
     }
-    tof_counts = read_tof_monitor(result["source_monitor"], bins)
+    # tof's counts are scaled to the total of McStas, in n/s
+    comparison = read_comparison("source_monitor", mcstas_data, tof_result, bins, ncount, neutrons)
     # --8<-- [end:run_tof]
 
-    # print the mean time and wavelength of each model
+    # print the mean time and wavelength of each model, and the total tof is scaled to
     time_centers = sc.midpoints(bins["toa"]).to(unit="ms").values
     wavelength_centers = sc.midpoints(bins["wavelength"]).values  # Å
-    for label, intensity in (("McStas", mcstas_intensity), ("tof", tof_counts)):
+    for label, intensity in (
+        ("McStas", comparison.mcstas_intensity),
+        ("tof", comparison.tof_intensity),
+    ):
         print(
             f"{label:>6}: mean time {_mean(intensity, time_centers, 0):.3f} ms, "
             f"mean wavelength {_mean(intensity, wavelength_centers, 1):.3f} Å"
         )
-
-    # scale tof to the total of McStas, in n/s, and print that total
-    scale = mcstas_intensity.sum() / tof_counts.sum()
-    tof_intensity = tof_counts * scale
-    tof_error = np.sqrt(tof_counts) * scale  # Poisson, scaled as the counts
     print(
-        f"McStas total {mcstas_intensity.sum():.4g} n/s, which tof's {tof_counts.sum():.0f} are scaled to"
+        f"McStas total {comparison.mcstas_intensity.sum():.4g} n/s, "
+        f"{comparison.scale:.4g} n/s per tof neutron"
     )
 
     figure = folder / "trex_source.png"
-    fig = plot_comparison(
-        mcstas_intensity, mcstas_error, tof_intensity, tof_error, bins, ncount, neutrons, scale
-    )
+    fig = plot_comparison(comparison, "T-Rex flux at the entrance of guide 1")
     fig.savefig(figure, dpi=150)
     plt.close(fig)
     print(f"Saved {figure}")
