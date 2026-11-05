@@ -106,6 +106,38 @@ intensity is the physics, and should not.
 
 The comparison is thus of shapes, not of absolute flux: by construction both have the same total.
 
+### What the scale depends on
+
+The two totals behave differently with the number of neutrons. The McStas total is the flux Φ
+through the opening of the monitor, in n/s, and does not depend on `ncount`. The tof total is the
+number of tof neutrons that land in the bins: the `neutrons` drawn, times the fraction f of tof's
+pulse that falls inside the window of the monitor. So
+
+```text
+scale ≈ Φ / (neutrons × f)
+```
+
+The scale is thus not a constant: with twice the tof neutrons it is half as large. What stays the
+same is `scale × neutrons ≈ Φ / f`, the n/s of the whole tof pulse. That depends on:
+
+- **The source model.** The power, 2 MW, the beam port, W7, the band, 0.1 to 10 Å, and how
+  `ESS_butterfly` focuses its rays: Φ is proportional to the power, for example.
+- **The acceptance of the monitor.** Its opening and its distance from the source set which of
+  the rays of McStas pass, so which part of the flux Φ is. tof has no apertures: only its choppers
+  remove neutrons, so here every tof neutron reaches the monitor, whatever its size. Move or resize the monitor and Φ, so the scale,
+  changes.
+- **The window of the bins.** The edges, 0 to 15 ms and 0 to 10 Å, set both which part of Φ is
+  counted and f. If tof's pulse reaches beyond 10 Å, f is below 1. At the defaults of `main`,
+  8.24e11 n/s and 8.24e5 n/s per tof neutron make 1,000,000 neutrons in the bins: here f is 1.
+- **The statistics.** Both totals are noisy, so the scale has a relative error of about
+  √(1/(neutrons × f) + (σ/Φ)²), with σ the error of the McStas total. That is 0.1 % at a million
+  tof neutrons, but 1 % at the 10,000 of a quick run, and it is not in the error bars of tof.
+
+Since tof has no flux, the scale is set where both models see the same beam, here at the
+source. Further down, keep that same scale rather than computing a new one at each monitor:
+scaled again to the total of McStas there, tof would agree with it by construction, and a
+difference in what the guides and choppers let through would not show.
+
 ## Error bars
 
 A bin of N neutrons has the Poisson error √N, a relative error of 1/√N. In n/s it is √N times the
