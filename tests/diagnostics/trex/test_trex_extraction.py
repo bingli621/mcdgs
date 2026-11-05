@@ -2,15 +2,15 @@ from mcdgs.diagnostics.trex.extraction import Extraction, ExtractionParams
 from mcdgs.instruments.trex.guides.bispectral import BENDER_ROTATION
 from mcdgs.instruments.trex.model import TRex
 
-UP_TO_GUIDE_4 = [
+UP_TO_THE_BEAM_MONITOR = [
     "origin", "source", "arm_nboa", "guide_1", "guide_2", "guide_3",
-    "arm_guide_4", "guide_4a", "bender", "guide_4b",
+    "arm_guide_4", "guide_4a", "bender", "guide_4b", "beam_monitor",
 ]  # fmt: skip
 
 
-def test_the_extraction_is_trex_up_to_guide_4():
+def test_the_extraction_is_trex_up_to_the_beam_monitor():
     extraction = Extraction()
-    assert list(extraction.components) == UP_TO_GUIDE_4
+    assert list(extraction.components) == UP_TO_THE_BEAM_MONITOR
     trex = TRex()
     for name, component in extraction.components.items():
         assert component == trex.components[name], name

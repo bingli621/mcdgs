@@ -35,6 +35,10 @@ class BenderScan(Extraction):
 
     def __init__(self, params: ExtractionParams = DEFAULT_PARAMS) -> None:
         super().__init__(params)
+        # the exit of guide 4b is upstream of the beam monitor: set it again after this monitor,
+        # to keep the components in beam order
+        beam_monitor = self.beam_monitor
+        del self.beam_monitor
         self.monitor_after_4b = Monitor_nD(
             xwidth=0.1,  # wider than the guide: every neutron leaving it
             yheight=0.1,
@@ -47,6 +51,7 @@ class BenderScan(Extraction):
             at=[0, 0, self.guide_4b.l + 1e-3],  # as the Diag monitors
             relative="guide_4b",
         )
+        self.beam_monitor = beam_monitor
 
 
 def transmission(

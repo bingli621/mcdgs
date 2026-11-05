@@ -15,7 +15,9 @@ from mcdgs.mcstas.builder import build_mcstas
 
 def test_the_bender_scan_adds_a_wavelength_monitor_after_guide_4b():
     scan = BenderScan()
-    assert list(scan.components) == [*Extraction().components, "monitor_after_4b"]
+    *up_to_guide_4, last = Extraction().components
+    assert last == "beam_monitor"
+    assert list(scan.components) == [*up_to_guide_4, "monitor_after_4b", "beam_monitor"]
     monitor = scan.monitor_after_4b
     assert isinstance(monitor, Monitor_nD)
     assert monitor.relative == "guide_4b"
@@ -25,7 +27,7 @@ def test_the_bender_scan_adds_a_wavelength_monitor_after_guide_4b():
 
 def test_the_bender_scan_builds_in_mcstas(tmp_path):
     inst = build_mcstas(BenderScan(), input_path=tmp_path)
-    assert [c.name for c in inst.component_list][-1] == "monitor_after_4b"
+    assert [c.name for c in inst.component_list][-2:] == ["monitor_after_4b", "beam_monitor"]
 
 
 def test_the_transmission_divides_each_band_by_the_reference():
