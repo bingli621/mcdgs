@@ -27,6 +27,11 @@ from .guides.extraction import guides_extraction
 from .guides.straight import guides_straight, sample_monitor, sample_pos, slit_mc
 from .sources import source
 
+# the axes of the beam monitor's map, start, stop and number of bins: 15 ms take in the whole
+# pulse up to 5.3 Å
+BEAM_MONITOR_TIME_LIMITS = (0.0, 0.015, 300)  # s
+BEAM_MONITOR_LAMBDA_LIMITS = (0.0, 5.3, 96)  # Å
+
 
 @dataclass(frozen=True)
 class Params:
@@ -110,7 +115,7 @@ class TRex(Instrument):
         self.guide_4a = guide_4a(when="bender_in==0")
         self.bender = bender(when="bender_in==1")
         self.guide_4b = guide_4b(when="bender_in==1")
-        self.beam_monitor = beam_monitor()
+        self.beam_monitor = beam_monitor(BEAM_MONITOR_TIME_LIMITS, BEAM_MONITOR_LAMBDA_LIMITS)
         # curved guides
         self.add_components(to_bwc1)
         self.bw1 = disks["bw1"]

@@ -2,9 +2,23 @@
 
 :class:`Extraction` is the section from the source to the beam monitor after guide 4, at 5.9 m,
 with the same components as :class:`.TRex`.
+
+:func:`main` compares McStas and tof at the beam monitor, with the bender out and in. tof has
+no guides: every neutron of its pulse reaches the monitor. tof is scaled to the total of McStas
+at the monitor, on each path, so both have the same total and only their shapes in time and
+wavelength differ. The McStas runs also draw McStasScript's diagnostics of each path: the beam
+after the source, after guide 3 and at the exit of guide 4b. Run the module for both::
+
+    pixi run python -m mcdgs.diagnostics.trex.extraction
 """
 
 from dataclasses import dataclass
+from pathlib import Path
+
+import matplotlib.pyplot as plt
+import mcstasscript as ms
+import scipp as sc
+from matplotlib.figure import Figure
 
 from mcdgs.core.base import Instrument
 from mcdgs.core.components import (
@@ -16,6 +30,7 @@ from mcdgs.core.components import (
     Progress_bar,
 )
 from mcdgs.core.params import InstrParam, param
+from mcdgs.diagnostics.compare import plot_comparison, read_comparison
 from mcdgs.instruments.trex.guides.bispectral import (
     BENDER_ROTATION,
     arm_guide_4,
@@ -25,7 +40,11 @@ from mcdgs.instruments.trex.guides.bispectral import (
     guide_4b,
 )
 from mcdgs.instruments.trex.guides.extraction import guides_extraction
+from mcdgs.instruments.trex.model import BEAM_MONITOR_LAMBDA_LIMITS, BEAM_MONITOR_TIME_LIMITS
 from mcdgs.instruments.trex.sources import source
+from mcdgs.mcstas.builder import build_mcstas, default_input_dir
+from mcdgs.mcstas.run_folders import default_output_dir, run_folder
+from mcdgs.tof.builder import build_tof
 
 
 @dataclass(frozen=True)
@@ -84,7 +103,7 @@ class Extraction(Instrument):
         self.guide_4a = guide_4a(when="bender_in==0")
         self.bender = bender(when="bender_in==1")
         self.guide_4b = guide_4b(when="bender_in==1")
-        self.beam_monitor = beam_monitor()
+        self.beam_monitor = beam_monitor(BEAM_MONITOR_TIME_LIMITS, BEAM_MONITOR_LAMBDA_LIMITS)
 
     @property
     def instr_params(self) -> list[InstrParam]:
@@ -93,3 +112,86 @@ class Extraction(Instrument):
             InstrParam("bender_in", int(self.params.bender_in), "", "bender in = 1, out = 0"),
             InstrParam("b_rot", self.params.b_rot, "deg", "rotation of the cold neutron bender"),
         ]
+
+
+def _save(fig: Figure, path: Path, dpi: int) -> Path:
+    """Save a figure, close it and return its path."""
+    fig.savefig(path, dpi=dpi)
+    plt.close(fig)
+    print(f"Saved {path}")
+    return path
+
+
+def main(
+    ncount: float = 1e7,
+    neutrons: int = 1_000_000,
+    seed: int = 1,
+) -> list[Path]:
+    """Compare McStas and tof at the beam monitor, bender out and in, and save the figures.
+
+    McStas runs once per path, with McStasScript's diagnostics, and tof once: tof has no bender,
+    so the same run serves both, scaled to the total of McStas on each path. Both figures of a
+    path, the diagnostics and the comparison,
+    ``trex_extraction_bender_out_diagnose.png`` and ``trex_extraction_bender_out.png``, or
+    ``..._in``, go to the folder of its McStas run.
+
+    Parameters
+    ----------
+    ncount:
+        Number of McStas neutrons, in each run.
+    neutrons:
+        Number of tof neutrons, in each run.
+    seed:
+        Seed of the random numbers of both models.
+
+    Returns
+    -------
+    :
+        The paths of the figures, bender out then in: the diagnostics, then the comparison.
+    """
+    extraction = Extraction()
+    tof_result = build_tof(extraction, neutrons=neutrons, seed=seed).run()
+    t_start, t_stop, t_bins = BEAM_MONITOR_TIME_LIMITS
+    l_start, l_stop, l_bins = BEAM_MONITOR_LAMBDA_LIMITS
+    bins = {  # the bin edges of the beam monitor's map, in its order: time, wavelength
+        "toa": sc.linspace("toa", t_start, t_stop, t_bins + 1, unit="s"),
+        "wavelength": sc.linspace("wavelength", l_start, l_stop, l_bins + 1, unit="Å"),
+    }
+
+    # McStasScript's diagnostics, the same for both paths: the beam after the source, guide 3
+    # and guide 4b, its profile, wavelength against x, and its spectrum
+    diag = ms.Diagnostics(build_mcstas(extraction, input_path=default_input_dir(extraction)))
+    for component in ("source", "guide_3", "guide_4b"):
+        # rays="all": a limited list stops early, which leaves the intensities too low
+        diag.add_point(after=component, rays="all")  # pyright: ignore[reportArgumentType]
+    diag.add_view("x", "y", bins=100)
+    diag.add_view("x", "l", bins=100)
+    diag.add_view("l")
+
+    figures = []
+    for bender_in, path in ((False, "bender out, guide 4a"), (True, "bender in, guide 4b")):
+        run_name = f"trex_extraction_bender_{'in' if bender_in else 'out'}"
+        folder = run_folder(default_output_dir(), run_name, "diagnose")
+        diag.set_parameters(bender_in=int(bender_in))
+        diag.settings(
+            ncount=ncount, suppress_output=True, mpi="auto", seed=seed, output_path=str(folder)
+        )
+        diag.run()  # a whole McStas run: its folder also holds the beam monitor
+        diag.plot()  # draws on a new figure, which it does not return
+        figures.append(_save(plt.gcf(), folder / f"{run_name}_diagnose.png", dpi=100))
+
+        # tof's counts are scaled to the total of McStas at the beam monitor, in n/s
+        comparison = read_comparison(
+            "beam_monitor", ms.load_data(str(folder)), tof_result, bins, ncount, neutrons
+        )
+        print(
+            f"{path}: McStas total {comparison.mcstas_intensity.sum():.4g} n/s, "
+            f"{comparison.scale:.4g} n/s per tof neutron"
+        )
+        fig = plot_comparison(comparison, f"T-Rex flux at the beam monitor after guide 4, {path}")
+        figures.append(_save(fig, folder / f"{run_name}.png", dpi=150))
+    return figures
+
+
+if __name__ == "__main__":
+    main(ncount=5e6, neutrons=50_000)
