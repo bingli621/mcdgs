@@ -20,6 +20,7 @@ nav = [
       { "Technical details" = "instruments/trex/details.md" },
       { "McStas instrument file" = "instruments/trex/instr-file.md" },
       { "Parameters file" = "instruments/trex/params-file.md" },
+      { "Source" ="instruments/trex/source.md" },
       { "Extraction results" = "instruments/trex/extraction.md" },
     ] },
   ] },
@@ -93,6 +94,7 @@ pymdownx.details = {}
 pymdownx.highlight.anchor_linenums = true
 pymdownx.inlinehilite = {}
 pymdownx.snippets.check_paths = true  # a missing file fails the build
+pymdownx.snippets.dedent_subsections = true  # a section from inside a function starts at column 0
 pymdownx.superfences = {}
 
 [project.plugins.glightbox]  # click an image to open it full size, and zoom in on it

@@ -32,6 +32,7 @@ of it::
 
 from collections.abc import Mapping
 from dataclasses import dataclass
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import mcstasscript as ms
@@ -49,6 +50,7 @@ from mcdgs.mcstas.simulation import Simulation
 from mcdgs.tof.builder import build_tof
 from mcdgs.tof.reader import read_tof_monitor
 
+# --8<-- [start:trex_source]
 TIME_EDGES = np.linspace(0.0, 0.015, 301)  # s: the whole pulse and the flight up to 10 Å
 WAVELENGTH_EDGES = np.linspace(0.0, 10.0, 201)  # Å: the band of the source, 0.1 to 10 Å
 
@@ -111,6 +113,7 @@ class TRexSource(Instrument):
     def instr_params(self) -> list[InstrParam]:
         """McStas instrument parameters: there are none."""
         return []
+# --8<-- [end:trex_source]
 
 
 def plot_comparison(
@@ -233,7 +236,7 @@ def main(
     ncount: float = 1e7,
     neutrons: int = 1_000_000,
     seed: int = 1,
-) -> None:
+) -> Path:
     """Run both models of :class:`TRexSource`, print their means and save the figure.
 
     The figure, ``trex_source.png``, goes to the folder of the McStas run, next to its
@@ -247,16 +250,24 @@ def main(
         Number of tof neutrons.
     seed:
         Seed of the random numbers of both models.
+
+    Returns
+    -------
+    :
+        The path of the figure.
     """
     instrument = TRexSource()
 
+    # --8<-- [start:run_mcstas]
     # run McStas and read its monitor, in n/s per bin
     folder = Simulation(instrument).run("trex_source", ncount=ncount, seed=seed).parent
     monitor = ms.name_search("source_monitor", ms.load_data(str(folder)))
     # McStasScript has the map as (wavelength, time), the y axis first
     mcstas_intensity = np.asarray(monitor.Intensity, dtype=float).T
     mcstas_error = np.asarray(monitor.Error, dtype=float).T
+    # --8<-- [end:run_mcstas]
 
+    # --8<-- [start:run_tof]
     # run tof and read its monitor, in counts per bin
     result = build_tof(instrument, neutrons=neutrons, seed=seed).run()
     bins = {  # the bins of the McStas monitor, in the order of its map: time, wavelength
@@ -264,6 +275,7 @@ def main(
         "wavelength": sc.array(dims=["wavelength"], values=WAVELENGTH_EDGES, unit="Å"),
     }
     tof_counts = read_tof_monitor(result["source_monitor"], bins)
+    # --8<-- [end:run_tof]
 
     # print the mean time and wavelength of each model
     time_centers = sc.midpoints(bins["toa"]).to(unit="ms").values
@@ -289,6 +301,7 @@ def main(
     fig.savefig(figure, dpi=150)
     plt.close(fig)
     print(f"Saved {figure}")
+    return figure
 
 
 if __name__ == "__main__":

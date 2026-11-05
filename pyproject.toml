@@ -63,7 +63,7 @@ mkdocstrings-python = ">=2.0.10,<3"
 [tool.pixi.feature.mcstas.tasks]
 # the figures and files of the docs that need McStas: run by hand when the instrument changes,
 # then commit. docs-bender-scan also runs the long scan of the bender again.
-docs-mcstas = { cmd = "python scripts/docs_mcstas_overview.py && python scripts/docs_mcstas_bender.py", env = { MPLBACKEND = "Agg" } }
+docs-mcstas = { cmd = "python scripts/docs_mcstas_overview.py && python scripts/docs_mcstas_bender.py && python scripts/docs_mcstas_source.py", env = { MPLBACKEND = "Agg" } }
 docs-bender-scan = { cmd = "python scripts/docs_mcstas_bender.py --simulate", env = { MPLBACKEND = "Agg" } }
 
 [tool.pixi.environments]
