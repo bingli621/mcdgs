@@ -1,6 +1,5 @@
 # pixi environments
-.pixi/*
-!.pixi/config.toml
+.pixi/
 *.egg-info/
 
 # Python
@@ -31,7 +30,6 @@ htmlcov/
 # VS Code
 .vscode/*
 !.vscode/settings.json
-!.vscode/extensions.json
 
 # Jupyter
 .ipynb_checkpoints/

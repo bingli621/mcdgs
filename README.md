@@ -35,7 +35,7 @@ src/mcdgs/
   diagnostics/   setups that study one part of an instrument, one package per instrument; each
                  module with a main makes the files of one page of the documentation
 scripts/         build tooling of the documentation site
-notebooks/       Jupyter notebooks of one-off simulations that diagnose the instrument models
+notebooks/       Jupyter notebooks to look at an instrument interactively, such as in 3D
 tests/
 docs/            the documentation site, built with Zensical
 mcstas_input/    generated McStas files, per instrument (git-ignored)
