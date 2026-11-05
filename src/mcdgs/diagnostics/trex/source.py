@@ -113,7 +113,7 @@ class TRexSource(Instrument):
     def instr_params(self) -> list[InstrParam]:
         """McStas instrument parameters: there are none."""
         return []
-# --8<-- [end:trex_source]
+        # --8<-- [end:trex_source]
 
 
 def plot_comparison(

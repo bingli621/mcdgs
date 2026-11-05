@@ -31,26 +31,32 @@ uses them yet: they set no McStas parameter and no component.
 It is defined like any instrument of mcdgs: a parameters class, then an `Instrument` subclass that
 creates its components in beam order, with their positions.
 
+<!-- fmt:off -->
 ```python
 --8<-- "src/mcdgs/diagnostics/trex/source.py:trex_source"
 ```
+<!-- fmt:on -->
 
 ## Running both models
 
 The same `TRexSource` object runs in McStas and in tof. McStas writes the instrument file, runs it
 and saves the monitor in its run folder, which McStasScript reads back as n/s per bin:
 
+<!-- fmt:off -->
 ```python
 --8<-- "src/mcdgs/diagnostics/trex/source.py:run_mcstas"
 ```
+<!-- fmt:on -->
 
 tof builds its model from the same components: the `ESS_butterfly` becomes tof's pulse of beam
 port W7 and the `Monitor_nD` a detector named `source_monitor`. It gives each neutron's time and
 wavelength there, which `read_tof_monitor` counts on the bins of the McStas monitor:
 
+<!-- fmt:off -->
 ```python
 --8<-- "src/mcdgs/diagnostics/trex/source.py:run_tof"
 ```
+<!-- fmt:on -->
 
 Both runs take the same `seed`. See [Run a McStas simulation](../../how-to/run-a-simulation.md)
 and [Simulate the choppers with tof](../../how-to/simulate-the-choppers-with-tof.md) for each.
