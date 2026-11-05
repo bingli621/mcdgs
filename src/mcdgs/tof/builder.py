@@ -12,10 +12,15 @@ takes only the components tof understands, by type:
 
 Every other component, such as the optics, the markers or a sample, is left out.
 
+The source: tof has a pulse of the ESS moderator for each instrument, sampled at its beam port.
+The builder takes the one of the moderator's beam port, named by its ``sector`` and
+``beamline`` (``"W7"``); a beam port it does not know gets tof's standard ESS pulse, ``"ess"``.
+
 Distances: a component's distance is the straight line from the source to its position
 (:meth:`.Instrument.positions`). For T-Rex this is within 1 mm of the path along the curved
-guide, under 1 % of the shortest chopper opening at 2 Å. The tof source is put at 0 m, where
-McStas has the moderator, rather than at tof's default for the ESS pulse.
+guide, under 1 % of the shortest chopper opening at 2 Å. McStas has the moderator at 0 m, and
+the tof source stays where tof sampled its pulse, 5 cm from it: its times are those of the
+neutrons there, so putting it at 0 m would add the flight over those 5 cm twice.
 """
 
 from collections.abc import Mapping
@@ -114,8 +119,10 @@ def _source(
 ) -> tof.Source:
     """Return the tof source of the ESS butterfly moderator.
 
-    tof samples its standard ESS pulse, the same for every beamline: ``sector``, ``beamline``,
-    ``cold_frac``, ``yheight``, the focusing and the performance factors are not used.
+    tof samples the pulse of the moderator's beam port, ``sector`` and ``beamline`` such as
+    ``"W7"``, if mcdgs knows it, else its standard ESS pulse, at the distance tof sampled it
+    at. ``cold_frac``, ``yheight``, the focusing and the performance factors are
+    not used.
 
     Parameters
     ----------
@@ -131,18 +138,18 @@ def _source(
     Returns
     -------
     :
-        The source at 0 m, from ``Lmin`` to ``Lmax``, with ``n_pulses`` pulses (at least 1) at
-        the moderator's frequency.
+        The source, from ``Lmin`` to ``Lmax``, with ``n_pulses`` pulses (at least 1) at the
+        moderator's frequency.
     """
+    tof_sources = {"W7": "ess-trex", "W3": "ess-cspec"}  # tof's pulse by beam port
     return tof.Source(
-        facility="ess",
+        facility=tof_sources.get(f"{component.sector}{component.beamline}", "ess"),
         neutrons=neutrons,
         pulses=max(component.n_pulses, 1),  # McStas takes 0 as 1
         frequency=sc.scalar(float(component.frequency), unit="Hz"),
         wmin=sc.scalar(float(evaluate(component.Lmin, params)), unit="angstrom"),
         wmax=sc.scalar(float(evaluate(component.Lmax, params)), unit="angstrom"),
         seed=seed,
-        distance=sc.scalar(0.0, unit="m"),
     )
 
 

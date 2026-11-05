@@ -36,14 +36,15 @@ page.
 
 | Component | In tof |
 | --------- | ------ |
-| `ESS_butterfly` | The source: tof's standard ESS pulse from `Lmin` to `Lmax`, with `n_pulses` pulses at 14 Hz. It is the same for every beamline, so `sector`, `beamline`, `cold_frac` and the focusing are not used. |
+| `ESS_butterfly` | The source: tof's pulse for the beam port that `sector` and `beamline` name, from `Lmin` to `Lmax`, with `n_pulses` pulses at 14 Hz. W7 gets the T-Rex pulse and W3 the C-SPEC one; a beam port mcdgs does not know yet gets tof's standard ESS pulse. `cold_frac` and the focusing are not used. |
 | `NXdisk_chopper` | A chopper, with the same slit edges, frequency, direction and phase as in McStas. |
 | `Monitor_nD` | A detector, which records the neutrons reaching it. T-Rex has one, `sample_monitor`, at the sample position. With no monitor, the model has no detector. |
 | Anything else, such as `Guide_gravity`, `Slit` or `Single_crystal` | Left out: tof takes the optics as letting everything through. |
 
-A component's distance is the straight line from the source to its position. For T-Rex this is
-within 1 mm of the path along the curved guide: 0.3 µs of flight at 2 Å, about 1 % of the
-shortest chopper opening.
+A component's distance is the straight line from the moderator to its position. For T-Rex this
+is within 1 mm of the path along the curved guide: 0.3 µs of flight at 2 Å, about 1 % of the
+shortest chopper opening. The tof source itself is 5 cm from the moderator, where tof sampled
+its pulse, so that its neutrons do not fly those 5 cm twice.
 
 The choppers open and close exactly as in McStas. The tests check this every 0.5 µs over two
 pulses, for every T-Rex disk in both modes, and check that a neutron reaches the sample in tof

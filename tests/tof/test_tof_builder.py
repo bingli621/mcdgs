@@ -52,10 +52,27 @@ def test_source_takes_the_band_and_pulses_of_the_moderator():
     source = model.source
     assert source.pulses == 2
     assert source.neutrons == 1000
-    assert sc.identical(source.distance, sc.scalar(0.0, unit="m"))
     wavelength = source.data.coords["wavelength"]
     assert wavelength.min().value >= 1.0  # Lmin from the instrument parameter
     assert wavelength.max().value <= 6.0
+
+
+def test_source_stays_where_tof_sampled_its_pulse():
+    source = build_tof(_Beamline(), neutrons=1000, seed=1).source
+    assert sc.identical(source.distance, sc.scalar(0.05, unit="m"))  # 5 cm from the moderator
+
+
+@pytest.mark.parametrize(
+    ("sector", "beamline", "facility"), [("W", 7, "ess-trex"), ("N", 1, "ess")]
+)
+def test_source_is_the_pulse_of_the_beam_port(sector, beamline, facility):
+    instrument = _Beamline()
+    instrument.source = replace(instrument.source, sector=sector, beamline=beamline)
+    assert build_tof(instrument, neutrons=1000, seed=1).source.facility == facility
+
+
+def test_trex_gets_its_own_pulse():
+    assert build_tof(TRex(), neutrons=1000, seed=1).source.facility == "ess-trex"
 
 
 def test_monitors_become_detectors_and_the_rest_is_left_out():
@@ -165,11 +182,11 @@ def test_neutrons_reach_the_sample_exactly_when_every_mcstas_disk_lets_them_thro
     neutrons = model.run()["sample_monitor"].data["pulse", 0]
     birth = neutrons.coords["birth_time"].to(unit="s").values
     speed = neutrons.coords["speed"].values
+    start = model.source.distance.value  # the neutrons start where tof sampled the pulse
     through = np.ones(birth.shape, bool)
     for name, chopper in model.choppers.items():
-        through &= _mcstas_open(
-            trex.components[name], params, birth + chopper.distance.value / speed
-        )
+        flight = (chopper.distance.value - start) / speed
+        through &= _mcstas_open(trex.components[name], params, birth + flight)
     reached = ~neutrons.masks["blocked_by_others"].values
     assert reached.sum() > 100  # enough to mean something
     np.testing.assert_array_equal(reached, through)
