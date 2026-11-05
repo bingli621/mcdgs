@@ -38,8 +38,9 @@ print(trex)  # every parameter and component, with its position in the lab frame
 - [Install and first run](getting-started.md): set up the environment and run T-Rex to the sample
   position.
 - [Core concepts](concepts.md): how instruments, components and parameters fit together.
-- [T-Rex](instruments/trex/details.md) and its
-  [extraction results](instruments/trex/extraction.md): the model and what it shows so far.
+- [T-Rex](instruments/trex/details.md) and its results so far: the
+  [source](instruments/trex/source.md), the [extraction guides](instruments/trex/extraction.md)
+  and the [bender scan](instruments/trex/bender-scan.md).
 - [How-to guides](how-to/run-a-simulation.md): run a McStas scan, simulate the choppers with tof,
   read the output, add an instrument.
 - [Reference](reference/core.md): the Python API, generated from the source.

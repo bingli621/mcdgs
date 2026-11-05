@@ -21,7 +21,8 @@ nav = [
       { "McStas instrument file" = "instruments/trex/instr-file.md" },
       { "Parameters file" = "instruments/trex/params-file.md" },
       { "Source" ="instruments/trex/source.md" },
-      { "Extraction results" = "instruments/trex/extraction.md" },
+      { "Extraction guides" = "instruments/trex/extraction.md" },
+      { "Bender scan" = "instruments/trex/bender-scan.md" },
     ] },
   ] },
   { "How-to guides" = [

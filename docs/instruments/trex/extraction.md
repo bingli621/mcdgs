@@ -1,52 +1,80 @@
-# Extraction results
+# Extraction guides
 
-These figures come from the model of the [extraction guides](details.md#extraction-guides): T-Rex
-up to guide 4, as `Extraction` and `BenderScan` in
-[`mcdgs.diagnostics.trex`](../../reference/diagnostics.md).
+`Extraction`, in
+[`mcdgs.diagnostics.trex.extraction`](https://github.com/bingli621/mcdgs/blob/main/src/mcdgs/diagnostics/trex/extraction.py),
+is T-Rex up to the beam monitor after guide 4: the source, the
+[extraction guides](details.md#extraction-guides) 1 to 3, and guide 4 with its
+[two paths](details.md#two-paths-through-guide-4), the thermal guide 4a with the bender out and
+the bender and the cold guide 4b with it in. It has the same components as `TRex`, with the same
+values.
+
+`main` runs McStas once per path and tof once, and makes two figures of each path: McStasScript's
+diagnostics along the guides, and McStas and tof side by side at the beam monitor. The figures are
+`main` at its defaults: 1e6 McStas neutrons per path, 1e6 tof neutrons and seed 1.
 
 ## Beam along the guides
 
-Each row is one position in the beam: after the source, after guide 3 and at the exit of guide 4.
-The columns are the beam profile, wavelength against x, and the spectrum in n/s per bin.
-[`scripts/docs_mcstas_bender.py`](https://github.com/bingli621/mcdgs/blob/main/scripts/docs_mcstas_bender.py)
-draws these views with McStasScript's diagnostics, 1e6 neutrons for each path.
+Each row is one position in the beam: after the source, after guide 3 and at the exit of guide 4b.
+The columns are the beam profile, wavelength against x, and the spectrum in n/s per bin. x is
+across the beam in the frame of the component, so after guide 3 it spans the exit of guide 3,
+±31.9 mm, and after guide 4b that of guide 4, ±30.1 mm.
 
 **Bender out**, through the thermal guide 4a:
 
-![Beam after the source, guide 3 and guide 4 with the bender out](figures/diag_after_4b_bender_out.png)
+![Beam after the source, guide 3 and guide 4 with the bender out](figures/trex_extraction_bender_out_diagnose.png)
 
-**Bender in**, through the cold guide 4b:
+**Bender in**, through the bender and the cold guide 4b:
 
-![Beam after the source, guide 3 and guide 4 with the bender in](figures/diag_after_4b_bender_in.png)
+![Beam after the source, guide 3 and guide 4 with the bender in](figures/trex_extraction_bender_in_diagnose.png)
 
-The top rows are the same in both figures. After the source the two moderators are side by
+The top two rows are the same in both figures. After the source the two moderators are side by
 side: the thermal one at x < 0 with its peak near 1.2 Å, the cold one at x > 0 with its peak near
 2.6 Å. After guide 3 the two are mixed across the width of the guide, and the spectrum still has
 both peaks. The bottom rows differ: without the bender both peaks reach the exit, while with it
 the thermal peak is mostly gone and the cold peak stays.
 
-## Rotation of the bender
+The maps have 100 × 100 bins, so at 1e6 neutrons each bin holds only a few rays and the maps are
+grainy. The spectra, on one axis, are smooth.
 
-![Intensity after guide 4 against the rotation of the bender, per wavelength band](figures/diagnose_bender.png)
+## McStas and tof at the beam monitor
 
-The same script scans `b_rot` from −0.8 to 0.1 deg with 1e7 neutrons per angle. Each curve is one band of
-wavelengths at the exit of guide 4, divided by the same band with the bender out, so the dashed line
-at 1 is the bender-out intensity. The dotted line is the nominal rotation, −0.398 deg. The legend
-repeats blue: the lowest blue curve is 0.7 Å, the upper one 4.7 Å.
+The beam monitor is in the gap after guide 4, at 5.902 m, 0.06 m wide and 0.0463 m high. It
+records one map of time, 0 to 15 ms in 300 bins, against wavelength, 0 to 5.3 Å in 96 bins. Both
+models see the same monitor; see [Source](source.md) for how the two are read and compared.
 
-Approximate transmission at the nominal rotation:
+tof has no guides and no bender: every neutron of its pulse reaches the monitor, at the time of
+its straight flight from the source. Its counts are scaled to the McStas total at the monitor, on
+each path, so both have the same total and the figure compares their shapes. What differs is
+what guides 1 to 4 do to the beam.
 
-| Wavelength | Transmission |
-| ---------- | ------------ |
-| 2.7 Å and above | 0.92 to 1.0 |
-| 2.3 Å | 0.8 |
-| 1.9 Å | 0.58 |
-| 1.5 Å | 0.3 |
-| 0.7 and 1.1 Å | 0.13 |
+**Bender out**, 1.30e11 n/s at the monitor, 1.38e5 n/s per tof neutron:
 
-The bands of about 3 Å and above peak broadly around the nominal rotation. The bands up to 1.5 Å
-keep rising up to the end of the scan at 0.1 deg, so their maximum lies outside it.
+![McStas and tof at the beam monitor with the bender out](figures/trex_extraction_bender_out.png)
 
-These figures need McStas, so they are not made with the site. `pixi run docs-mcstas` runs the
-diagnostics again and replots the last scan from `mcstas_output/`; `pixi run docs-bender-scan`
-runs the scan again too, which takes long.
+**Bender in**, 8.76e10 n/s at the monitor, 9.36e4 n/s per tof neutron:
+
+![McStas and tof at the beam monitor with the bender in](figures/trex_extraction_bender_in.png)
+
+With the bender out, McStas keeps both peaks of the source but has fewer short wavelengths and
+more long ones than tof: the guides pass a long wavelength at a larger angle, so more of it
+reaches the monitor. Below 0.3 Å McStas has a fraction of tof's peak. With the bender in, McStas
+has almost nothing below about 1.5 Å and peaks near 2.5 Å, and its time profile peaks about
+1.5 ms later than tof's, since the beam is made of longer, slower wavelengths.
+
+## Making the figures
+
+The figures need McStas, so they are not made with the site: `pixi run docs-mcstas` makes them
+again, with the other figures of T-Rex that need McStas. To make them yourself, run:
+
+```bash
+pixi run python -m mcdgs.diagnostics.trex.extraction
+```
+
+Each path's two figures go to its McStas run folder, `mcstas_output/trex_extraction_bender_out/`
+and `..._in/`. That folder also holds McStasScript's event lists of the three diagnostics
+positions, about 190 MB for each path at 1e6 neutrons. Call `main` with other numbers for finer
+figures:
+
+```bash
+pixi run python -c "from mcdgs.diagnostics.trex.extraction import main; main(ncount=1e7)"
+```

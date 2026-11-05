@@ -127,11 +127,11 @@ same is `scale × neutrons ≈ Φ / f`, the n/s of the whole tof pulse. That dep
   resize the monitor and Φ, so the scale, changes.
 - **The window of the bins.** The edges, 0 to 15 ms and 0 to 10 Å, set both which part of Φ is
   counted and f. If tof's pulse reaches beyond 10 Å, f is below 1. At the defaults of `main`,
-  8.24e11 n/s and 8.24e5 n/s per tof neutron make 1.00e6 neutrons in the bins, as many as were
+  8.25e11 n/s and 8.25e5 n/s per tof neutron make 1.00e6 neutrons in the bins, as many as were
   drawn: here f is 1, to three figures.
 - **The statistics.** Both totals are noisy, so the scale has a relative error of about
   √(1/(neutrons × f) + (σ/Φ)²), with σ the error of the McStas total. That is 0.1 % at a million
-  tof neutrons, but 1 % at the 10,000 of a quick run, and it is not in the error bars of tof.
+  tof neutrons, but 1 % at 10,000, and it is not in the error bars of tof.
 
 Since tof has no flux, the scale is set where both models see the same beam, here at the
 source. Further down, keep that same scale rather than computing a new one at each monitor:
@@ -156,7 +156,8 @@ errors add in quadrature.
 
 `main` runs both models with the same seed, reads each monitor on the same bins, prints the mean
 time and wavelength of each and the McStas total, scales tof to McStas, and saves
-`trex_source.png` next to the `mccode.h5` of the McStas run. The figure has two rows:
+`trex_source.png` next to the `mccode.h5` of the McStas run, or to the folder given with `--out`.
+The figure has two rows:
 
 - **Top:** the time and wavelength map of McStas and of tof, side by side on one color scale, in
   n/s per 0.05 ms and 0.05 Å.
@@ -166,13 +167,13 @@ time and wavelength of each and the McStas total, scales tof to McStas, and save
 
 ![McStas and tof at the entrance of guide 1: time and wavelength maps, the wavelength spectrum and the time profile](figures/trex_source.png)
 
-This is `main` at its defaults: 1e7 McStas neutrons, 1,000,000 tof neutrons and seed 1. The total
-at the entrance of guide 1 is 8.24e11 n/s, so each tof neutron stands for 8.24e5 n/s. Both models
+This is `main` at its defaults: 1e6 McStas neutrons, 1e6 tof neutrons and seed 1. The total at
+the entrance of guide 1 is 8.25e11 n/s, so each tof neutron stands for 8.25e5 n/s. Both models
 have the same means, 2.84 ms and 2.40 Å.
 
 The two models agree within their error bars almost everywhere. The spectrum has the thermal
 peak near 1.1 Å, the cold one near 2.6 Å, and a third peak at the shortest wavelengths, below
-0.3 Å. Only there do they differ: in the first bins McStas is about 10 % higher than tof. In time,
+0.3 Å. Only there do they differ: in the first bins McStas is about 15 % higher than tof. In time,
 both rise over the 2.86 ms of the pulse and peak near 2.8 ms; the long wavelengths arrive later,
 up to about 8 ms at 10 Å.
 
@@ -185,8 +186,7 @@ To make it yourself, run:
 pixi run python -m mcdgs.diagnostics.trex.source
 ```
 
-This uses 1e6 McStas and 10,000 tof neutrons, enough for a quick look. `main` defaults to 1e7
-and 1,000,000; call it with other numbers for a finer figure:
+Call `main` with other numbers for a finer figure:
 
 ```bash
 pixi run python -c "from mcdgs.diagnostics.trex.source import main; main(ncount=1e8, neutrons=10_000_000)"
@@ -207,7 +207,7 @@ is the total through the opening:
 
 | Quantity | How | At the entrance of guide 1 |
 | -------- | --- | -------------------------- |
-| Total rate | sum of all bins | 8.24e11 n/s |
+| Total rate | sum of all bins | 8.25e11 n/s |
 | Per pulse | total / 14 Hz | 5.9e10 n per pulse |
 | Per area | total / (8.9955 cm × 2.9992 cm) | 3.1e10 n/s/cm² |
 

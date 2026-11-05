@@ -16,9 +16,10 @@ pixi run docs                   # preview the documentation site
 pixi run docs-mcstas            # remake the files of the site that need McStas, then commit them
 ```
 
-The site makes what needs only mcdgs and tof, such as the time-distance diagram, from the current
-code for every build. What needs McStas, such as the McStas drawings of T-Rex, is committed:
-`docs-mcstas` remakes it, and `docs-bender-scan` also runs the long scan of the bender again.
+The site makes what needs only mcdgs and tof, such as the table of the chopper modes, from the
+current code for every build. What needs McStas, such as the McStas drawings of T-Rex and the
+figures of its diagnostics, is committed: `docs-mcstas` runs every diagnostics module that needs
+McStas and writes their files to `docs/instruments/trex/figures/`.
 
 ## Layout
 
@@ -31,8 +32,9 @@ src/mcdgs/
   mcstas/        build the McStasScript instrument, run simulations, read NeXus output
   tof/           build the chopper cascade of an instrument as a tof model
   reduction/     data reduction
-  diagnostics/   setups that study one part of an instrument, one package per instrument
-scripts/         build tooling of the documentation site, and the scripts that make its figures
+  diagnostics/   setups that study one part of an instrument, one package per instrument; each
+                 module with a main makes the files of one page of the documentation
+scripts/         build tooling of the documentation site
 notebooks/       Jupyter notebooks of one-off simulations that diagnose the instrument models
 tests/
 docs/            the documentation site, built with Zensical

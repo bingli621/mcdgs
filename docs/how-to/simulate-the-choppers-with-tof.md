@@ -27,8 +27,8 @@ The result says how many neutrons each chopper lets through and how many it stop
 --8<-- "docs/instruments/trex/generated/tof_result.txt"
 ```
 
-`result.plot()` draws the time-distance diagram, as on the [T-Rex](../instruments/trex/index.md#chopper-timing-in-tof)
-page.
+`result.plot()` draws the time-distance diagram of the run: the path of each neutron, time across
+and distance up, with the choppers where they stop it.
 
 ## What goes into the model
 

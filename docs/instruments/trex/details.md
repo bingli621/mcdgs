@@ -6,8 +6,9 @@ to the central wavelength `lambda0` (see [Chopper timing](#chopper-timing)). The
 polarizers, collimators or detector yet.
 `sample_pos` is on the beam axis, 163.8 m along it from the origin.
 
-[T-Rex](index.md) lists every component with its position and shows the whole model as McStas
-draws it, and [Extraction results](extraction.md) shows what the model gives so far. The code is
+[T-Rex](index.md) shows the whole model as McStas draws it, and [Source](source.md),
+[Extraction guides](extraction.md) and [Bender scan](bender-scan.md) show what the model gives so
+far. [Instrument layout](#instrument-layout) lists every component with its position. The code is
 in [`mcdgs.instruments.trex`](../../reference/trex.md).
 
 ## Control parameters
@@ -24,6 +25,22 @@ in [`mcdgs.instruments.trex`](../../reference/trex.md).
 
 `bender_in`, `b_rot` and `omega` reach McStas as they are. `lambda0`, `rrm`, `mode` and
 `t0_offset` reach it through the frequency and delay of each chopper.
+
+## Instrument layout
+
+`print(trex)` lists the control parameters, the McStas instrument parameters they give, and every
+component in the order of the beam. For each component, `at` and `rotated` are its placement in
+the `.instr` file, relative to the component named under `relative`, or to the origin where that
+is `-`. `position` is where it ends up in the lab frame. Lengths are in m and angles in deg.
+
+???+ abstract "print(trex)"
+
+    ```text
+    --8<-- "docs/instruments/trex/generated/trex_print.txt"
+    ```
+
+The printout is made from the current code for every build of this site, by
+[`mcdgs.diagnostics.trex.choppers`](../../reference/diagnostics.md).
 
 ## Source
 
@@ -167,8 +184,9 @@ the angle from the center of the wide slit to the beam, 55° for the P-Chopper a
 M-Chopper. The model keeps the disks as they are and changes the delay, which is the same as
 shifting the slit edges.
 
-The [time-distance diagram](index.md#chopper-timing-in-tof) shows the result: the bandwidth
-choppers pass one band of wavelengths, and the P- and M-Chopper cut it into sub-pulses.
+[Simulate the choppers with tof](../../how-to/simulate-the-choppers-with-tof.md#compare-settings)
+shows the result: the bandwidth choppers pass one band of wavelengths, and the P- and M-Chopper
+cut it into sub-pulses.
 
 The slit edges of each disk reach McStas as an array of their own, declared in the `.instr` file
 as `<name>_slit_edges`. McStas 3.10.2 sizes a list written in place by its first use, so the

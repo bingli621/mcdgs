@@ -26,9 +26,8 @@ h5_file = simulation.run(ncount=1e6, seed=1, bender_in=1)
 ## A scan
 
 `scan` runs once per value of an instrument parameter and merges the results into one file, with
-one entry per value. This is the bender scan on the
-[extraction results](../instruments/trex/extraction.md) page, with fewer neutrons and at the sample
-position:
+one entry per value. This is the [bender scan](../instruments/trex/bender-scan.md), with fewer
+neutrons and at the sample position:
 
 ```python
 h5_file = simulation.scan(
