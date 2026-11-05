@@ -30,14 +30,15 @@ to x ≈ 0.83 m at the sample.
 
 The chopper disks are 0.7 m across, each to one side of the beam. The two disks of `bw1` and
 `bw2`, and of `ps1` and `ps2`, sit on the same side and overlap. `mc1` and `mc2` sit on
-opposite sides:
+opposite sides. mcdisplay colors the components in turn, in the order of the instrument, so
+the colors change whenever a component is added: tell the disks apart by where they are.
 
 | Disk | Choppers | Position | Side of the beam |
 | ---- | -------- | -------- | ---------------- |
-| Orange, left | `bw1`, `bw2` | x ≈ 0.01 to 0.03 m | Below |
-| Red, middle | `ps1`, `ps2` | x ≈ 0.41 m | Above |
-| Dark gray, right | `mc1` | x ≈ 0.82 m | Above |
-| Light gray, right | `mc2` | x ≈ 0.82 m | Below |
+| Left | `bw1`, `bw2` | x ≈ 0.01 to 0.03 m | Below |
+| Middle | `ps1`, `ps2` | x ≈ 0.41 m | Above |
+| Right, upper | `mc1` | x ≈ 0.82 m | Above |
+| Right, lower | `mc2` | x ≈ 0.82 m | Below |
 
 The notches at the edge of the disks are the slits. The four of the P-Chopper are the clearest:
 two of 20° and two of 35°. See [Chopper timing](details.md#chopper-timing) for how the mode puts
