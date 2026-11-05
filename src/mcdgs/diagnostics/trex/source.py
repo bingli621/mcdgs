@@ -6,8 +6,8 @@ Nothing stands between the two, so McStas and tof should see the same pulse ther
 models of the ESS moderator differ.
 
 :func:`read_mcstas` and :func:`read_tof` give each model's intensity on the bins of the monitor,
-:func:`normalized` puts both on a total of 1, and :func:`plot_comparison` draws them side by
-side. Run the module to do all of it::
+:func:`scaled_to_mcstas` puts tof in the n/s of McStas, with the same total, and
+:func:`plot_comparison` draws them side by side. Run the module to do all of it::
 
     pixi run python -m mcdgs.diagnostics.trex.source
 """
@@ -137,37 +137,42 @@ def read_tof(result: tof.Result) -> NDArray:
     return counts
 
 
-def normalized(intensity: NDArray) -> NDArray:
-    """Scale an intensity to a total of 1, so that the two models compare in shape only.
+def scaled_to_mcstas(tof_counts: NDArray, mcstas: NDArray) -> NDArray:
+    """Scale the counts of tof to the total intensity of McStas, in n/s.
 
-    McStas gives n/s and tof a count of neutrons, so only their shapes compare.
+    tof's pulse is a distribution, with no flux: each neutron is 1 count, and the total is
+    the number of neutrons drawn. McStas gives the flux of the moderator, in n/s. One factor
+    puts tof in n/s with the same total, so the level is McStas's and the shape each model's.
 
     Parameters
     ----------
-    intensity:
-        The intensity per bin.
+    tof_counts:
+        The neutrons of tof per bin, from :func:`read_tof`.
+    mcstas:
+        The intensity of McStas per bin, in n/s, from :func:`read_mcstas`.
 
     Returns
     -------
     :
-        The intensity divided by its total.
+        The counts of tof times the total of McStas over their own total, in n/s per bin.
 
     Examples
     --------
-    >>> normalized(np.array([1.0, 3.0])).tolist()
-    [0.25, 0.75]
+    >>> scaled_to_mcstas(np.array([1.0, 3.0]), np.array([10.0, 30.0])).tolist()
+    [10.0, 30.0]
     """
-    total = intensity.sum()
+    total = tof_counts.sum()
     if total <= 0:
-        raise ValueError("no intensity reaches the monitor")
-    return intensity / total
+        raise ValueError("no tof neutron reaches the monitor")
+    return tof_counts * (mcstas.sum() / total)
 
 
 def plot_comparison(mcstas: NDArray, tof_counts: NDArray) -> Figure:
-    """Draw both models at the entrance of guide 1, each scaled to a total of 1.
+    """Draw both models at the entrance of guide 1, in n/s, tof scaled to McStas.
 
     The top row has the time and wavelength map of each, on one color scale; the bottom row
-    the wavelength spectrum and the time profile of both, summed over the other axis.
+    the wavelength spectrum and the time profile of both, summed over the other axis. tof is
+    scaled by :func:`scaled_to_mcstas`, so both have the total of McStas.
 
     Parameters
     ----------
@@ -181,9 +186,11 @@ def plot_comparison(mcstas: NDArray, tof_counts: NDArray) -> Figure:
     :
         The figure.
     """
-    maps = {"McStas": normalized(mcstas), "tof": normalized(tof_counts)}
+    maps = {"McStas": mcstas, "tof": scaled_to_mcstas(tof_counts, mcstas)}
     times_ms = TIME_EDGES * 1e3
     vmax = max(m.max() for m in maps.values())
+    time_bin = times_ms[1] - times_ms[0]  # ms
+    wavelength_bin = WAVELENGTH_EDGES[1] - WAVELENGTH_EDGES[0]  # Å
 
     fig, axes = plt.subplots(2, 2, figsize=(12, 9), layout="constrained")
     for ax, (label, intensity) in zip(axes[0], maps.items()):
@@ -193,16 +200,20 @@ def plot_comparison(mcstas: NDArray, tof_counts: NDArray) -> Figure:
         ax.set_title(f"{label} at the entrance of guide 1")
         ax.set_xlabel("Time [ms]")
         ax.set_ylabel("Wavelength [Å]")
-    fig.colorbar(mesh, ax=axes[0], label="Fraction of the intensity per bin")
+    fig.colorbar(
+        mesh,
+        ax=axes[0],
+        label=f"Intensity [n/s per {time_bin:.2g} ms and {wavelength_bin:.2g} Å]",
+    )
 
     spectrum_ax, profile_ax = axes[1]
     for label, intensity in maps.items():
         spectrum_ax.stairs(intensity.sum(axis=0), WAVELENGTH_EDGES, label=label)
         profile_ax.stairs(intensity.sum(axis=1), times_ms, label=label)
     spectrum_ax.set_xlabel("Wavelength [Å]")
-    spectrum_ax.set_ylabel("Fraction of the intensity per bin")
+    spectrum_ax.set_ylabel(f"Intensity [n/s per {wavelength_bin:.2g} Å]")
     profile_ax.set_xlabel("Time [ms]")
-    profile_ax.set_ylabel("Fraction of the intensity per bin")
+    profile_ax.set_ylabel(f"Intensity [n/s per {time_bin:.2g} ms]")
     for ax in (spectrum_ax, profile_ax):
         ax.set_ylim(bottom=0)
         ax.legend()
@@ -245,6 +256,8 @@ def main(
             f"{label:>6}: mean time {_mean(intensity, time_centers, 0):.3f} ms, "
             f"mean wavelength {_mean(intensity, wavelength_centers, 1):.3f} Å"
         )
+
+    print(f"McStas total {mcstas.sum():.4g} n/s, which tof's {tof_counts.sum():.0f} are scaled to")
 
     figure = h5_file.parent / "trex_source.png"
     fig = plot_comparison(mcstas, tof_counts)
