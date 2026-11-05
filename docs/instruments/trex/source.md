@@ -25,10 +25,7 @@ The monitor records one 2D map of time against wavelength:
 15 ms holds the whole pulse and the flight to guide 1 up to 10 Å. The monitor has
 `restore_neutron=1`, so it does not change the beam.
 
-`TRexSource` has the control parameters `lambda0` and `rrm`, with the defaults of `TRex`. Nothing
-uses them yet: they set no McStas parameter and no component.
-
-It is defined like any instrument of mcdgs: a parameters class, then an `Instrument` subclass that
+`TRexSource` has no control parameters and no McStas parameters. It is defined like any instrument of mcdgs: a parameters class, then an `Instrument` subclass that
 creates its components in beam order, with their positions.
 
 <!-- fmt:off -->

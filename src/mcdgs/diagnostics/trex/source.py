@@ -43,8 +43,7 @@ from numpy.typing import NDArray
 
 from mcdgs.core.base import Instrument
 from mcdgs.core.components import ESS_butterfly, Monitor_nD
-from mcdgs.core.params import InstrParam, param
-from mcdgs.instruments.trex.model import DEFAULT_PARAMS as TREX_DEFAULTS
+from mcdgs.core.params import InstrParam
 from mcdgs.instruments.trex.sources import source
 from mcdgs.mcstas.simulation import Simulation
 from mcdgs.tof.builder import build_tof
@@ -57,21 +56,7 @@ WAVELENGTH_EDGES = np.linspace(0.0, 10.0, 201)  # Å: the band of the source, 0.
 
 @dataclass(frozen=True)
 class TRexSourceParams:
-    """Control parameters of :class:`TRexSource`, with the defaults of :class:`.TRex`.
-
-    Frozen: change them with ``TRexSource.update_params``. Each field's unit and comment are in
-    its metadata. Nothing uses them yet: they set no McStas parameter and no component.
-
-    Parameters
-    ----------
-    lambda0:
-        Central wavelength, in Å.
-    rrm:
-        Repetition rate multiplication factor.
-    """
-
-    lambda0: float = param(TREX_DEFAULTS.lambda0, "Å", "central wavelength")
-    rrm: int = param(TREX_DEFAULTS.rrm, "", "repetition rate multiplication factor")
+    """Control parameters of :class:`TRexSource`: there are none."""
 
 
 class TRexSource(Instrument):
