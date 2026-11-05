@@ -16,7 +16,7 @@ near 108 m and the M-Chopper near 162 m.
 
 This figure and the next need McStas, so they are not made with the site:
 [`mcdgs.diagnostics.trex.overview`](../../reference/diagnostics.md) draws them with McStasScript's
-`show_instrument` (mcdisplay), and `pixi run docs-mcstas` runs it. They show the instrument as of
+`show_instrument` (mcdisplay), and `pixi run docs-diagnostics` runs it. They show the instrument as of
 that run.
 
 ## From detector to source

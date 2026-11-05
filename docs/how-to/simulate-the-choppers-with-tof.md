@@ -24,7 +24,7 @@ print(result)
 The result says how many neutrons each chopper lets through and how many it stops:
 
 ```text
---8<-- "docs/instruments/trex/generated/tof_result.txt"
+--8<-- "docs/instruments/trex/figures/tof_result.txt"
 ```
 
 `result.plot()` draws the time-distance diagram of the run: the path of each neutron, time across
@@ -91,8 +91,8 @@ for mode in ("FF", "RR"):
 With the same seed, both runs start from the same neutrons. At the default parameters, what
 reaches the sample is:
 
---8<-- "docs/instruments/trex/generated/tof_modes.txt"
+--8<-- "docs/instruments/trex/figures/tof_modes.txt"
 
 The wavelength band and the sub-pulses stay much the same, while the narrow slits of `"RR"` let
-fewer neutrons through. The result above and this table are made from the current code for every
-build of this site.
+fewer neutrons through. `pixi run docs-diagnostics` makes the result above and this
+table.

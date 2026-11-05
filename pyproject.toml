@@ -51,23 +51,22 @@ pythreejs = ">=2.4.2,<3"
 ipympl = ">=0.10.0,<0.11"
 
 [tool.pixi.feature.docs.tasks]
-# the files that need only mcdgs and tof, made fresh for every build into a folder git ignores
-docs-generate = { cmd = "python -m mcdgs.diagnostics.trex.choppers --out docs/instruments/trex/generated", env = { MPLBACKEND = "Agg" } }
-docs = { cmd = "zensical serve", depends-on = ["docs-generate"] }
-docs-build = { cmd = "zensical build --clean --strict", depends-on = ["docs-generate"] }
+# the site only renders the pages: the files they include are committed, made by docs-diagnostics
+docs = "zensical serve"
+docs-build = "zensical build --clean --strict"
 
 [tool.pixi.feature.docs.dependencies]
 zensical = ">=0.0.73,<0.0.74"
 mkdocstrings-python = ">=2.0.10,<3"
 
 [tool.pixi.feature.mcstas.tasks]
-# the files of the docs that need McStas, from every diagnostics module that runs it: run by
-# hand when the instrument changes, then commit docs/instruments/trex/figures/
-docs-mcstas = { cmd = "python -m mcdgs.diagnostics.trex.overview --out docs/instruments/trex/figures && python -m mcdgs.diagnostics.trex.source --out docs/instruments/trex/figures && python -m mcdgs.diagnostics.trex.extraction --out docs/instruments/trex/figures && python -m mcdgs.diagnostics.trex.bender_scan --out docs/instruments/trex/figures", env = { MPLBACKEND = "Agg" } }
+# the files of the docs, from every diagnostics module: run by hand when the instrument changes,
+# then commit docs/instruments/trex/figures/
+docs-diagnostics = { cmd = "python -m mcdgs.diagnostics.trex.choppers --out docs/instruments/trex/figures && python -m mcdgs.diagnostics.trex.overview --out docs/instruments/trex/figures && python -m mcdgs.diagnostics.trex.source --out docs/instruments/trex/figures && python -m mcdgs.diagnostics.trex.extraction --out docs/instruments/trex/figures && python -m mcdgs.diagnostics.trex.bender_scan --out docs/instruments/trex/figures", env = { MPLBACKEND = "Agg" } }
 
 [tool.pixi.environments]
 default = ["test", "mcstas"]  # test: pytest and pytest-cov, from [project.optional-dependencies]
-# mcdgs and tof, to make the generated figures, but no McStas
+# mcdgs, for the reference pages, but no McStas
 docs = ["docs"]
 
 [tool.hatch.metadata]

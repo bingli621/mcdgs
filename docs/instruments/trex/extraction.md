@@ -63,8 +63,8 @@ has almost nothing below about 1.5 Å and peaks near 2.5 Å, and its time profil
 
 ## Making the figures
 
-The figures need McStas, so they are not made with the site: `pixi run docs-mcstas` makes them
-again, with the other figures of T-Rex that need McStas. To make them yourself, run:
+The figures need McStas, so they are not made with the site: `pixi run docs-diagnostics` makes
+them again, with the other files of the T-Rex pages. To make them yourself, run:
 
 ```bash
 pixi run python -m mcdgs.diagnostics.trex.extraction

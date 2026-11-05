@@ -177,8 +177,8 @@ peak near 1.1 Å, the cold one near 2.6 Å, and a third peak at the shortest wav
 both rise over the 2.86 ms of the pulse and peak near 2.8 ms; the long wavelengths arrive later,
 up to about 8 ms at 10 Å.
 
-The figure needs McStas, so it is not made with the site: `pixi run docs-mcstas` makes it again,
-with the other figures of T-Rex that need McStas.
+The figure needs McStas, so it is not made with the site: `pixi run docs-diagnostics` makes it
+again, with the other files of the T-Rex pages.
 
 To make it yourself, run:
 

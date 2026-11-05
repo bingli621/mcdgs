@@ -1,0 +1,12 @@
+Result:
+  Source: 1 pulses, 1000000 neutrons per pulse.
+  Detectors:
+    beam_monitor: visible=1000000
+    sample_monitor: visible=1925
+  Choppers:
+    bw1: visible=371685, blocked=628315
+    bw2: visible=295602, blocked=76083
+    ps1: visible=90305, blocked=205297
+    ps2: visible=56812, blocked=33493
+    mc1: visible=1952, blocked=54860
+    mc2: visible=1925, blocked=27

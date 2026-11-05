@@ -56,8 +56,8 @@ def test_the_modes_table_has_a_line_per_mode():
 
 
 def test_main_writes_the_three_files_of_the_docs(tmp_path):
-    paths = main(out=tmp_path / "generated", neutrons=20_000)
+    paths = main(out=tmp_path / "figures", neutrons=20_000)
     assert [p.name for p in paths] == ["trex_print.txt", "tof_result.txt", "tof_modes.txt"]
-    assert all(p.parent == tmp_path / "generated" for p in paths)
+    assert all(p.parent == tmp_path / "figures" for p in paths)
     assert "sample_monitor" in paths[0].read_text()  # print(trex) lists every component
     assert len(paths[2].read_text().splitlines()) == 4

@@ -94,6 +94,5 @@ component, and list it in `__init__.py` there. Copy `Arm` or `Monitor_nD`:
 - Put setups that study one part of it, and what reads their results, in
   `src/mcdgs/diagnostics/<instrument>/`, as T-Rex does, one module per page of results.
 - Make the files of its pages with those modules, not by hand. Give each a `main` that writes its
-  files to the folder of `--out` ([`mcdgs.diagnostics.cli`](../reference/diagnostics.md)). What
-  needs only mcdgs and tof runs in the `docs-generate` task, for every build of the site. What
-  needs McStas runs in the `docs-mcstas` task, and its files are committed.
+  files to the folder of `--out` ([`mcdgs.diagnostics.cli`](../reference/diagnostics.md)), and
+  run it in the `docs-diagnostics` task. Its files are committed: the site does not make them.

@@ -1,0 +1,110 @@
+TRex 'TRex'
+
+Params:
+param      value      unit    comment
+---------  ---------  ------  -----------------------------------------------------------
+t0_offset  0.0017     s       time added to choppers shifting to middle of the long pulse
+lambda0    2          Å       central wavelength
+rrm        18                 repetition rate multiplication factor
+mode       FF                 FF = high flux, RR = high resolution
+omega      0          deg     goniometer rotation about +Y
+bender_in  False              True = bender in, False = bender out
+b_rot      -0.397881  deg     rotation of the cold neutron bender
+
+Instrument parameters (McStas):
+name       value      unit    comment
+---------  ---------  ------  -----------------------------------
+bender_in  0                  bender in = 1, out = 0
+b_rot      -0.397881  deg     rotation of the cold neutron bender
+omega      0          deg     rotation of the goniometer about +Y
+nu_bw1     14         Hz      rotation frequency of chopper bw1
+delay_bw1  0.0178596  s       delay of chopper bw1
+nu_bw2     14         Hz      rotation frequency of chopper bw2
+delay_bw2  0.0218995  s       delay of chopper bw2
+nu_ps1     189        Hz      rotation frequency of chopper ps1
+delay_ps1  0.0554665  s       delay of chopper ps1
+nu_ps2     -189       Hz      rotation frequency of chopper ps2
+delay_ps2  0.0571338  s       delay of chopper ps2
+nu_mc1     252        Hz      rotation frequency of chopper mc1
+delay_mc1  0.0816851  s       delay of chopper mc1
+nu_mc2     252        Hz      rotation frequency of chopper mc2
+delay_mc2  0.0816902  s       delay of chopper mc2
+
+Components, in the order of the beam (m, deg):
+name                component       at                         rotated             relative            position
+------------------  --------------  -------------------------  ------------------  ------------------  -------------------------
+origin              Progress_bar    [0, 0, 0]                  [0, 0, 0]           -                   [0, 0, 0]
+source              ESS_butterfly   [0, 0, 0]                  [0, 0, 0]           -                   [0, 0, 0]
+arm_nboa            Arm             [-0.00202282, 0, 1.89593]  [0, -0.214998, 0]   -                   [-0.00202282, 0, 1.89593]
+guide_1             Guide_gravity   [0, 0, 0]                  [0, 0, 0]           arm_nboa            [-0.00202282, 0, 1.89593]
+guide_2             Guide_gravity   [0, 0, 1.00041]            [0, 0, 0]           arm_nboa            [-0.00577676, 0, 2.89633]
+guide_3             Guide_gravity   [0, 0, 2.00081]            [0, 0, 0]           arm_nboa            [-0.0095307, 0, 3.89673]
+arm_guide_4         Arm             [-0.0150812, 0, 5.40065]   [0, -0.21335, 0]    -                   [-0.0150812, 0, 5.40065]
+guide_4a            Guide_gravity   [0, 0, 0]                  [0, 0, 0]           arm_guide_4         [-0.0150812, 0, 5.40065]
+bender              Pol_bender      [0, 0, 0]                  [0, b_rot, 0]       arm_guide_4         [-0.0150812, 0, 5.40065]
+guide_4b            Guide_gravity   [0, 0, 0.0500003]          [0, 0, 0]           arm_guide_4         [-0.0152674, 0, 5.45065]
+beam_monitor        Monitor_nD      [0, 0, 0.501353]           [0, 0, 0]           arm_guide_4         [-0.0169481, 0, 5.902]
+arm_start_of_curve  Arm             [0, 0, 0.515354]           [0, 0.21335, 0]     arm_guide_4         [-0.0170002, 0, 5.916]
+guide_5             Guide_gravity   [0, 0, 0]                  [0, 0.00659498, 0]  arm_start_of_curve  [-0.0170002, 0, 5.916]
+guide_6             Guide_gravity   [0, 0, 2.7755]             [0, 0.013252, 0]    guide_5             [-0.0166808, 0, 8.6915]
+guide_7             Guide_gravity   [0, 0, 2.7755]             [0, 0.0162063, 0]   guide_6             [-0.0157193, 0, 11.467]
+guide_8             Guide_gravity   [0, 0, 4.002]              [0, 0.0191081, 0]   guide_7             [-0.0132011, 0, 15.469]
+guide_9             Guide_gravity   [0, 0, 4.002]              [0, 0.0172382, 0]   guide_8             [-0.00934815, 0, 19.471]
+guide_10            Guide_gravity   [0, 0, 3.2297]             [0, 0.0115324, 0]   guide_9             [-0.00526706, 0, 22.7007]
+guide_11            Guide_gravity   [0, 0, 1.601]              [0, 0.0125308, 0]   guide_10            [-0.00292177, 0, 24.3017]
+guide_12            Guide_gravity   [0, 0, 3.64444]            [0, 0.0134974, 0]   guide_11            [0.00321399, 0, 27.9461]
+guide_13a           Guide_gravity   [0, 0, 2.0031]             [0, 0.0095641, 0]   guide_12            [0.00705828, 0, 29.9492]
+arm_bwc1            Arm             [0, 0, 1.9998]             [0, 0.00484579, 0]  guide_13a           [0.0112301, 0, 31.949]
+bw1                 NXdisk_chopper  [0, 0, 0.015]              [0, 0, 0]           arm_bwc1            [0.0112626, 0, 31.964]
+guide_13b           Guide_gravity   [0, 0, 0.03]               [0, 0.00484579, 0]  arm_bwc1            [0.0112952, 0, 31.979]
+guide_14a           Guide_gravity   [0, 0, 2.0031]             [0, 0.0095641, 0]   guide_13b           [0.0158127, 0, 33.9821]
+guide_14b           Guide_gravity   [0, 0, 2.0005]             [0, 0.00946455, 0]  guide_14a           [0.0206582, 0, 35.9826]
+guide_15a           Guide_gravity   [0, 0, 1.9666]             [0, 0.00945547, 0]  guide_14b           [0.0257465, 0, 37.9492]
+arm_bwc2            Arm             [0, 0, 1.9908]             [0, 0.0048243, 0]   guide_15a           [0.0312259, 0, 39.94]
+bw2                 NXdisk_chopper  [0, 0, 0.015]              [0, 0, 0]           arm_bwc2            [0.0312685, 0, 39.955]
+guide_15b           Guide_gravity   [0, 0, 0.03]               [0, 0.00484913, 0]  arm_bwc2            [0.031311, 0, 39.97]
+arm_bm1             Arm             [0, 0, 2.00782]            [0, 0.00485687, 0]  guide_15b           [0.0371763, 0, 41.9778]
+guide_16            Guide_gravity   [0, 0, 0.02369]            [0, 0.00960678, 0]  arm_bm1             [0.0372475, 0, 42.0015]
+guide_17            Guide_gravity   [0, 0, 4]                  [0, 0.0190986, 0]   guide_16            [0.0499421, 0, 46.0015]
+guide_18            Guide_gravity   [0, 0, 4]                  [0, 0.0190986, 0]   guide_17            [0.0639701, 0, 50.0015]
+guide_19            Guide_gravity   [0, 0, 4]                  [0, 0.0190986, 0]   guide_18            [0.0793313, 0, 54.0014]
+guide_20            Guide_gravity   [0, 0, 4]                  [0, 0.0190986, 0]   guide_19            [0.0960259, 0, 58.0014]
+guide_21            Guide_gravity   [0, 0, 4]                  [0, 0.0190986, 0]   guide_20            [0.114054, 0, 62.0013]
+guide_22            Guide_gravity   [0, 0, 4]                  [0, 0.0190986, 0]   guide_21            [0.133415, 0, 66.0013]
+guide_23            Guide_gravity   [0, 0, 4]                  [0, 0.0190986, 0]   guide_22            [0.15411, 0, 70.0012]
+guide_24            Guide_gravity   [0, 0, 4]                  [0, 0.0190986, 0]   guide_23            [0.176137, 0, 74.0012]
+guide_25            Guide_gravity   [0, 0, 4]                  [0, 0.0190986, 0]   guide_24            [0.199499, 0, 78.0011]
+guide_26            Guide_gravity   [0, 0, 4]                  [0, 0.0190986, 0]   guide_25            [0.224193, 0, 82.001]
+guide_27            Guide_gravity   [0, 0, 4]                  [0, 0.0190986, 0]   guide_26            [0.250221, 0, 86.001]
+guide_28            Guide_gravity   [0, 0, 4]                  [0, 0.0190986, 0]   guide_27            [0.277582, 0, 90.0009]
+guide_29            Guide_gravity   [0, 0, 4]                  [0, 0.014327, 0]    guide_28            [0.306276, 0, 94.0008]
+arm_end_of_curve    Arm             [0, 0, 1.998]              [0, 0.00476987, 0]  guide_29            [0.321109, 0, 95.9987]
+guide_30            Guide_gravity   [0, 0, 0.003]              [0, 0, 0]           arm_end_of_curve    [0.321131, 0, 96.0017]
+guide_31            Guide_gravity   [0, 0, 4]                  [0, 0, 0]           guide_30            [0.351159, 0, 100.002]
+guide_32            Guide_gravity   [0, 0, 4]                  [0, 0, 0]           guide_31            [0.381186, 0, 104.001]
+arm_psc             Arm             [0, 0, 3.89745]            [0, 0, 0]           guide_32            [0.410444, 0, 107.899]
+ps1                 NXdisk_chopper  [0, 0, 0.05]               [0, 0, 0]           arm_psc             [0.41082, 0, 107.949]
+ps2                 NXdisk_chopper  [0, 0, 0.15]               [0, 0, 0]           arm_psc             [0.41157, 0, 108.049]
+guide_33            Guide_gravity   [0, 0, 0.2037]             [0, 0, 0]           arm_psc             [0.411973, 0, 108.103]
+guide_34            Guide_gravity   [0, 0, 2.9943]             [0, 0, 0]           guide_33            [0.434451, 0, 111.097]
+guide_35            Guide_gravity   [0, 0, 4]                  [0, 0, 0]           guide_34            [0.464479, 0, 115.097]
+guide_36            Guide_gravity   [0, 0, 4]                  [0, 0, 0]           guide_35            [0.494506, 0, 119.097]
+guide_37            Guide_gravity   [0, 0, 4]                  [0, 0, 0]           guide_36            [0.524534, 0, 123.096]
+guide_38            Guide_gravity   [0, 0, 0.902]              [0, 0, 0]           guide_37            [0.531305, 0, 123.998]
+guide_39            Guide_gravity   [0, 0, 4]                  [0, 0, 0]           guide_38            [0.561333, 0, 127.998]
+guide_40            Guide_gravity   [0, 0, 4]                  [0, 0, 0]           guide_39            [0.59136, 0, 131.998]
+guide_41            Guide_gravity   [0, 0, 4]                  [0, 0, 0]           guide_40            [0.621388, 0, 135.998]
+guide_42            Guide_gravity   [0, 0, 4]                  [0, 0, 0]           guide_41            [0.651415, 0, 139.998]
+guide_43            Guide_gravity   [0, 0, 4]                  [0, 0, 0]           guide_42            [0.681443, 0, 143.998]
+guide_44            Guide_gravity   [0, 0, 4]                  [0, 0, 0]           guide_43            [0.711471, 0, 147.998]
+guide_45            Guide_gravity   [0, 0, 3.596]              [0, 0, 0]           guide_44            [0.738465, 0, 151.594]
+guide_47            Guide_gravity   [0, 0, 4]                  [0, 0, 0]           guide_45            [0.768493, 0, 155.593]
+guide_48b           Guide_gravity   [0, 0, 2.404]              [0, 0, 0]           guide_47            [0.786539, 0, 157.997]
+guide_49            Guide_gravity   [0, 0, 1.003]              [0, 0, 0]           guide_48b           [0.794069, 0, 159]
+arm_mc              Arm             [0, 0, 2.982]              [0, 0, 0]           guide_49            [0.816454, 0, 161.982]
+mc1                 NXdisk_chopper  [0, 0, 0.0425]             [0, 0, 0]           arm_mc              [0.816773, 0, 162.025]
+mc2                 NXdisk_chopper  [0, 0, 0.0525]             [0, 0, 0]           arm_mc              [0.816849, 0, 162.035]
+guide_50a           Guide_gravity   [0, 0, 0.098]              [0, 0, 0]           arm_mc              [0.81719, 0, 162.08]
+slit_mc             Slit            [0, 0, 1.12]               [0, 0, 0]           arm_mc              [0.824862, 0, 163.102]
+sample_pos          Arm             [0, 0, 1.815]              [0, 0, 0]           arm_mc              [0.830079, 0, 163.797]
+sample_monitor      Monitor_nD      [0, 0, 0]                  [0, 0, 0]           sample_pos          [0.830079, 0, 163.797]

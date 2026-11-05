@@ -13,13 +13,13 @@ Source. From McStas to S(Q,E).
 pixi run pytest --cov=mcdgs     # tests and coverage
 pixi run pre-commit install     # once: ruff format on every commit
 pixi run docs                   # preview the documentation site
-pixi run docs-mcstas            # remake the files of the site that need McStas, then commit them
+pixi run docs-diagnostics       # remake the files of the site, then commit them
 ```
 
-The site makes what needs only mcdgs and tof, such as the table of the chopper modes, from the
-current code for every build. What needs McStas, such as the McStas drawings of T-Rex and the
-figures of its diagnostics, is committed: `docs-mcstas` runs every diagnostics module that needs
-McStas and writes their files to `docs/instruments/trex/figures/`.
+The files the site includes, such as the table of the chopper modes, the McStas drawings of
+T-Rex and the figures of its diagnostics, are committed: the site does not make them.
+`docs-diagnostics` runs every diagnostics module and writes their files to
+`docs/instruments/trex/figures/`.
 
 ## Layout
 

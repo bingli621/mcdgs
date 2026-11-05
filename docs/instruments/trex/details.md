@@ -36,11 +36,11 @@ is `-`. `position` is where it ends up in the lab frame. Lengths are in m and an
 ???+ abstract "print(trex)"
 
     ```text
-    --8<-- "docs/instruments/trex/generated/trex_print.txt"
+    --8<-- "docs/instruments/trex/figures/trex_print.txt"
     ```
 
-The printout is made from the current code for every build of this site, by
-[`mcdgs.diagnostics.trex.choppers`](../../reference/diagnostics.md).
+[`mcdgs.diagnostics.trex.choppers`](../../reference/diagnostics.md) makes the printout, and
+`pixi run docs-diagnostics` runs it.
 
 ## Source
 

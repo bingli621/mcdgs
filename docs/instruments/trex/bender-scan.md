@@ -41,8 +41,8 @@ near 0.1 at every angle.
 
 ## Making the figure
 
-The figure needs McStas, so it is not made with the site: `pixi run docs-mcstas` makes it again,
-with the other figures of T-Rex that need McStas. To make it yourself, run:
+The figure needs McStas, so it is not made with the site: `pixi run docs-diagnostics` makes it
+again, with the other files of the T-Rex pages. To make it yourself, run:
 
 ```bash
 pixi run python -m mcdgs.diagnostics.trex.bender_scan

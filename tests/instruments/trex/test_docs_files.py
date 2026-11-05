@@ -1,6 +1,6 @@
-"""The files of the documentation that need McStas are committed: check they match the code.
+"""The files of the documentation are committed: check they match the code.
 
-If one fails, run `pixi run docs-mcstas` and commit what it changes.
+If one fails, run `pixi run docs-diagnostics` and commit what it changes.
 """
 
 from pathlib import Path
@@ -21,4 +21,4 @@ def test_the_instr_file_of_the_docs_matches_the_default_model(tmp_path):
     build_mcstas(trex, input_path=tmp_path).write_full_instrument()
     fresh = (tmp_path / f"{trex.name}.instr").read_text()
     committed = (DOCS_INSTR / f"{trex.name}.instr").read_text()
-    assert _without_date(fresh) == _without_date(committed), "run `pixi run docs-mcstas`"
+    assert _without_date(fresh) == _without_date(committed), "run `pixi run docs-diagnostics`"

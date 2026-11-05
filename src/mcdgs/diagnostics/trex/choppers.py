@@ -9,7 +9,7 @@ sub-pulses. :func:`count_groups` tells them apart by the gaps between arrival ti
 the tof run at the default control parameters, and the table of the modes. Run the module for
 them::
 
-    pixi run python -m mcdgs.diagnostics.trex.choppers --out docs/instruments/trex/generated
+    pixi run python -m mcdgs.diagnostics.trex.choppers --out docs/instruments/trex/figures
 """
 
 from dataclasses import dataclass
