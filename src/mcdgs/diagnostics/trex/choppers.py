@@ -3,14 +3,27 @@
 The P- and M-Chopper cut the band of the bandwidth choppers, so the neutrons arrive in
 sub-pulses. :func:`count_groups` tells them apart by the gaps between arrival times, and
 :func:`summarize` gives how many neutrons reach a detector, which wavelengths and when, as an
-:class:`ArrivalSummary`.
+:class:`ArrivalSummary`. :func:`modes_table` puts the summary of each mode in a Markdown table.
+
+:func:`main` writes the files of the documentation that need only mcdgs and tof: ``print(trex)``,
+the tof run at the default control parameters, and the table of the modes. Run the module for
+them::
+
+    pixi run python -m mcdgs.diagnostics.trex.choppers --out docs/instruments/trex/generated
 """
 
 from dataclasses import dataclass
+from pathlib import Path
+from typing import get_args
 
 import numpy as np
 import tof
 from numpy.typing import ArrayLike
+
+from mcdgs.diagnostics.cli import output_folder, parse_out
+from mcdgs.instruments.trex.choppers import Mode
+from mcdgs.instruments.trex.model import TRex
+from mcdgs.tof.builder import build_tof
 
 
 @dataclass(frozen=True)
@@ -96,3 +109,79 @@ def summarize(result: tof.Result, detector: str, gap: float = 1.0) -> ArrivalSum
         first_arrival=float(arrivals.min()),
         last_arrival=float(arrivals.max()),
     )
+
+
+def modes_table(by_mode: dict[str, ArrivalSummary], neutrons: int) -> str:
+    """Return a Markdown table of what reaches the sample in each mode.
+
+    Parameters
+    ----------
+    by_mode:
+        The summary of each mode, by mode.
+    neutrons:
+        Number of tof neutrons of each run, for the header.
+
+    Returns
+    -------
+    :
+        The table, with a line per mode.
+    """
+    header = (
+        f"Mode | Neutrons at the sample, of {neutrons:,} | Wavelengths, Å | Sub-pulses "
+        "| Arrival, ms"
+    )
+    lines = [f"| {header} |", "| ---- | ---- | ---- | ---- | ---- |"]
+    for mode, s in by_mode.items():
+        lines.append(
+            f'| `"{mode}"` | {s.neutrons} | {s.wavelength_min:.2f} to {s.wavelength_max:.2f} '
+            f"| {s.sub_pulses} | {s.first_arrival:.0f} to {s.last_arrival:.0f} |"
+        )
+    return "\n".join(lines) + "\n"
+
+
+def main(out: Path | None = None, neutrons: int = 1_000_000, seed: int = 1) -> list[Path]:
+    """Write ``print(trex)``, the tof run and the table of the modes, at the default parameters.
+
+    - ``trex_print.txt``: ``print(trex)``, the parameters and the position of every component;
+    - ``tof_result.txt``: ``print()`` of the tof run at the default control parameters;
+    - ``tof_modes.txt``: what reaches the sample in each mode, from :func:`modes_table`.
+
+    Parameters
+    ----------
+    out:
+        Folder to write to. If ``None``, the current folder.
+    neutrons:
+        Number of tof neutrons, in each run.
+    seed:
+        Seed of the random numbers.
+
+    Returns
+    -------
+    :
+        The paths of the files.
+    """
+    folder = output_folder(out, Path.cwd())
+    trex = TRex()
+    trex_print = folder / "trex_print.txt"
+    trex_print.write_text(f"{trex}\n")
+
+    default_mode = trex.params.mode
+    result = build_tof(trex, neutrons=neutrons, seed=seed).run()
+    tof_result = folder / "tof_result.txt"
+    tof_result.write_text(f"{str(result).rstrip()}\n")
+
+    # the other modes from the same neutrons, after the default one
+    by_mode = {default_mode: summarize(result, "sample_monitor")}
+    for mode in get_args(Mode):
+        if mode != default_mode:
+            trex.update_params(mode=mode)
+            other = build_tof(trex, neutrons=neutrons, seed=seed).run()
+            by_mode[mode] = summarize(other, "sample_monitor")
+    tof_modes = folder / "tof_modes.txt"
+    tof_modes.write_text(modes_table(by_mode, neutrons))
+    print(f"Written to {folder}")
+    return [trex_print, tof_result, tof_modes]
+
+
+if __name__ == "__main__":
+    main(out=parse_out(__doc__))

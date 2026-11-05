@@ -42,6 +42,7 @@ from numpy.typing import NDArray
 from mcdgs.core.base import Instrument
 from mcdgs.core.components import ESS_butterfly, Monitor_nD
 from mcdgs.core.params import InstrParam
+from mcdgs.diagnostics.cli import output_folder, parse_out
 from mcdgs.diagnostics.compare import plot_comparison, read_comparison
 from mcdgs.instruments.trex.sources import source
 from mcdgs.mcstas.simulation import Simulation
@@ -105,17 +106,18 @@ def _mean(intensity: NDArray, centers: NDArray, axis: int) -> float:
 
 
 def main(
-    ncount: float = 1e7,
+    out: Path | None = None,
+    ncount: float = 1e6,
     neutrons: int = 1_000_000,
     seed: int = 1,
 ) -> Path:
     """Run both models of :class:`TRexSource`, print their means and save the figure.
 
-    The figure, ``trex_source.png``, goes to the folder of the McStas run, next to its
-    ``mccode.h5``.
-
     Parameters
     ----------
+    out:
+        Folder of the figure, ``trex_source.png``. If ``None``, the folder of the McStas run,
+        next to its ``mccode.h5``.
     ncount:
         Number of McStas neutrons.
     neutrons:
@@ -163,7 +165,7 @@ def main(
         f"{comparison.scale:.4g} n/s per tof neutron"
     )
 
-    figure = folder / "trex_source.png"
+    figure = output_folder(out, folder) / "trex_source.png"
     fig = plot_comparison(comparison, "T-Rex flux at the entrance of guide 1")
     fig.savefig(figure, dpi=150)
     plt.close(fig)
@@ -172,4 +174,4 @@ def main(
 
 
 if __name__ == "__main__":
-    main(ncount=1e6, neutrons=10_000)
+    main(out=parse_out(__doc__))

@@ -30,6 +30,7 @@ from mcdgs.core.components import (
     Progress_bar,
 )
 from mcdgs.core.params import InstrParam, param
+from mcdgs.diagnostics.cli import output_folder, parse_out
 from mcdgs.diagnostics.compare import plot_comparison, read_comparison
 from mcdgs.instruments.trex.guides.bispectral import (
     BENDER_ROTATION,
@@ -123,7 +124,8 @@ def _save(fig: Figure, path: Path, dpi: int) -> Path:
 
 
 def main(
-    ncount: float = 1e7,
+    out: Path | None = None,
+    ncount: float = 1e6,
     neutrons: int = 1_000_000,
     seed: int = 1,
 ) -> list[Path]:
@@ -133,10 +135,12 @@ def main(
     so the same run serves both, scaled to the total of McStas on each path. Both figures of a
     path, the diagnostics and the comparison,
     ``trex_extraction_bender_out_diagnose.png`` and ``trex_extraction_bender_out.png``, or
-    ``..._in``, go to the folder of its McStas run.
+    ``..._in``, go to ``out``.
 
     Parameters
     ----------
+    out:
+        Folder of the figures. If ``None``, the folder of the McStas run of each path.
     ncount:
         Number of McStas neutrons, in each run.
     neutrons:
@@ -178,7 +182,8 @@ def main(
         )
         diag.run()  # a whole McStas run: its folder also holds the beam monitor
         diag.plot()  # draws on a new figure, which it does not return
-        figures.append(_save(plt.gcf(), folder / f"{run_name}_diagnose.png", dpi=100))
+        figure_folder = output_folder(out, folder)
+        figures.append(_save(plt.gcf(), figure_folder / f"{run_name}_diagnose.png", dpi=100))
 
         # tof's counts are scaled to the total of McStas at the beam monitor, in n/s
         comparison = read_comparison(
@@ -189,9 +194,9 @@ def main(
             f"{comparison.scale:.4g} n/s per tof neutron"
         )
         fig = plot_comparison(comparison, f"T-Rex flux at the beam monitor after guide 4, {path}")
-        figures.append(_save(fig, folder / f"{run_name}.png", dpi=150))
+        figures.append(_save(fig, figure_folder / f"{run_name}.png", dpi=150))
     return figures
 
 
 if __name__ == "__main__":
-    main(ncount=5e6, neutrons=50_000)
+    main(out=parse_out(__doc__))

@@ -19,6 +19,7 @@ from matplotlib.figure import Figure
 from mcstastox.LoadFile import Data
 from numpy.typing import NDArray
 
+from mcdgs.diagnostics.cli import output_folder, parse_out
 from mcdgs.diagnostics.trex.extraction import Extraction
 from mcdgs.instruments.trex.guides.bispectral import BENDER_ROTATION
 from mcdgs.mcstas.simulation import Simulation
@@ -124,7 +125,7 @@ def read_spectra(h5_file: Path) -> tuple[NDArray, NDArray, NDArray]:
 
 def run_bender_scan(
     angles: NDArray | None = None,
-    ncount: float = 1e7,
+    ncount: float = 1e6,
     seed: int = 1,
     work_dir: str | Path | None = None,
 ) -> tuple[Path, Path]:
@@ -204,13 +205,14 @@ def plot_bender_scan(scan_file: Path, bender_out_file: Path) -> Figure:
     return fig
 
 
-def main(ncount: float = 1e7, seed: int = 1) -> Path:
+def main(out: Path | None = None, ncount: float = 1e6, seed: int = 1) -> Path:
     """Run the scan of the bender and save its figure.
-
-    The figure, ``bender_scan.png``, goes to the folder of the scan, next to its ``mccode.h5``.
 
     Parameters
     ----------
+    out:
+        Folder of the figure, ``bender_scan.png``. If ``None``, the folder of the scan, next to
+        its ``mccode.h5``.
     ncount:
         Number of McStas neutrons, per angle and in the run without the bender.
     seed:
@@ -222,7 +224,7 @@ def main(ncount: float = 1e7, seed: int = 1) -> Path:
         The path of the figure.
     """
     scan_file, bender_out_file = run_bender_scan(ncount=ncount, seed=seed)
-    figure = scan_file.parent / "bender_scan.png"
+    figure = output_folder(out, scan_file.parent) / "bender_scan.png"
     fig = plot_bender_scan(scan_file, bender_out_file)
     fig.savefig(figure, dpi=150)
     plt.close(fig)
@@ -231,4 +233,4 @@ def main(ncount: float = 1e7, seed: int = 1) -> Path:
 
 
 if __name__ == "__main__":
-    main(ncount=1e6)
+    main(out=parse_out(__doc__))
