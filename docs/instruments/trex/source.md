@@ -156,3 +156,74 @@ and 1,000,000; call it with other numbers for a finer figure:
 ```bash
 pixi run python -c "from mcdgs.diagnostics.trex.source import main; main(ncount=1e8, neutrons=10_000_000)"
 ```
+
+## Estimating the count rate of a monitor
+
+The intensity on this monitor is also what a real beam monitor at that place would see, so the same
+map tells you which monitor can stand there. What decides it is the rate the monitor counts,
+above all at the peak of each pulse, not the average flux.
+
+### Per bin, per second, per pulse
+
+A value of the map is in n/s per bin: the neutrons per second that pass the opening of the
+monitor, with a time of arrival in that 0.05 ms and a wavelength in that 0.05 Å. The time is the
+time within each pulse; the second is the average over the 14 Hz pulses. Summed over all bins, it
+is the total through the opening:
+
+| Quantity | How | At the entrance of guide 1 |
+| -------- | --- | -------------------------- |
+| Total rate | sum of all bins | 8.24e11 n/s |
+| Per pulse | total / 14 Hz | 5.9e10 n per pulse |
+| Per area | total / (8.9955 cm × 2.9992 cm) | 3.1e10 n/s/cm² |
+
+These change with the bins only if the window does: half as wide bins halve each value, not the
+sum. Divide a bin by its widths, 0.05 ms and 0.05 Å, for a density in n/s/ms/Å that does not
+depend on the bins.
+
+### The peak rate
+
+Each pulse reaches the monitor within a few ms of the 71.4 ms between pulses, so while it passes
+the rate is far above the average. From the time profile, the sum of the map over wavelength, the
+instantaneous rate in a time bin is
+
+```text
+instantaneous rate (n/s) = time profile (n/s per bin) / 14 Hz / 0.05 ms
+```
+
+Its maximum is the peak rate. At the entrance of guide 1 most of the 5.9e10 neutrons of a pulse
+arrive within about 3 ms, so the peak is of the order of 5.9e10 / 3 ms ≈ 2e13 n/s, some 25 times
+the average.
+
+### What the monitor counts
+
+A beam monitor must leave the beam almost unchanged, so it detects only a small fraction ε of the
+neutrons, typically 1e-5 to 1e-3. For ³He, ¹⁰B and most gas monitors ε grows about as the
+wavelength, so a cold beam counts more than its flux alone suggests. With ε(λ) from the data sheet,
+on the centers of the wavelength bins:
+
+```python
+time_profile = (mcstas_intensity * efficiency).sum(axis=1)  # counts/s per time bin
+average_rate = time_profile.sum()                          # counts/s
+peak_rate = time_profile.max() / 14 / 0.05e-3              # counts/s, during the pulse
+```
+
+`mcstas_intensity` is the map of `main`, of shape (time bins, wavelength bins), and `efficiency`
+is ε at the wavelength centers.
+
+### Choosing
+
+Compare the peak rate with what the monitor can count. A counting monitor with a dead time τ
+loses a fraction of about peak rate × τ of its counts; keep it below 0.1, or the monitor no longer
+counts in proportion to the beam. If it is too large, take a lower ε, a smaller opening, or a
+faster monitor. Leave a factor of 2 to 10 for a higher source power and for the model.
+
+For example, with ε = 1e-4 at 1.8 Å, growing as λ: at the mean wavelength of 2.4 Å ε is 1.3e-4,
+so the monitor counts about 1e8 counts/s on average and 3e9 counts/s at the peak. With a dead
+time of 100 ns that is a loss of order 300: no counting monitor of that ε works at the entrance of
+guide 1, which is close to the moderator and inside the monolith. Monitors stand further
+downstream, after the choppers, where the beam is weaker and shorter in wavelength band. Put
+the `Monitor_nD` there, with the opening of the real monitor, and repeat.
+
+McStas leaves out the fast neutrons and the γ rays from the source, which a monitor near the
+source also sees. They do not change the rate of slow neutrons, but they decide which kinds of
+monitor can stand there.
