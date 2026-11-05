@@ -124,11 +124,12 @@ same is `scale × neutrons ≈ Φ / f`, the n/s of the whole tof pulse. That dep
   `ESS_butterfly` focuses its rays: Φ is proportional to the power, for example.
 - **The acceptance of the monitor.** Its opening and its distance from the source set which of
   the rays of McStas pass, so which part of the flux Φ is. tof has no apertures: only its choppers
-  remove neutrons, so here every tof neutron reaches the monitor, whatever its size. Move or resize the monitor and Φ, so the scale,
-  changes.
+  remove neutrons, so here every tof neutron reaches the monitor, whatever its size. Move or
+  resize the monitor and Φ, so the scale, changes.
 - **The window of the bins.** The edges, 0 to 15 ms and 0 to 10 Å, set both which part of Φ is
   counted and f. If tof's pulse reaches beyond 10 Å, f is below 1. At the defaults of `main`,
-  8.24e11 n/s and 8.24e5 n/s per tof neutron make 1,000,000 neutrons in the bins: here f is 1.
+  8.24e11 n/s and 8.24e5 n/s per tof neutron make 1.00e6 neutrons in the bins, as many as were
+  drawn: here f is 1, to three figures.
 - **The statistics.** Both totals are noisy, so the scale has a relative error of about
   √(1/(neutrons × f) + (σ/Φ)²), with σ the error of the McStas total. That is 0.1 % at a million
   tof neutrons, but 1 % at the 10,000 of a quick run, and it is not in the error bars of tof.
@@ -136,7 +137,9 @@ same is `scale × neutrons ≈ Φ / f`, the n/s of the whole tof pulse. That dep
 Since tof has no flux, the scale is set where both models see the same beam, here at the
 source. Further down, keep that same scale rather than computing a new one at each monitor:
 scaled again to the total of McStas there, tof would agree with it by construction, and a
-difference in what the guides and choppers let through would not show.
+difference in what the guides and choppers let through would not show. Keep it with the same
+number of tof neutrons; with another number, keep `scale × neutrons`, as the scale goes as
+1/neutrons.
 
 ## Error bars
 
@@ -208,9 +211,9 @@ is the total through the opening:
 | Per pulse | total / 14 Hz | 5.9e10 n per pulse |
 | Per area | total / (8.9955 cm × 2.9992 cm) | 3.1e10 n/s/cm² |
 
-These change with the bins only if the window does: half as wide bins halve each value, not the
-sum. Divide a bin by its widths, 0.05 ms and 0.05 Å, for a density in n/s/ms/Å that does not
-depend on the bins.
+Halving the widths of the bins halves each value of the map, but leaves these sums unchanged;
+only a change of the window changes them. Divide a bin by its widths, 0.05 ms and 0.05 Å, for a
+density in n/s/ms/Å that does not depend on the bins.
 
 ### The peak rate
 
@@ -222,9 +225,10 @@ instantaneous rate in a time bin is
 instantaneous rate (n/s) = time profile (n/s per bin) / 14 Hz / 0.05 ms
 ```
 
-Its maximum is the peak rate. At the entrance of guide 1 most of the 5.9e10 neutrons of a pulse
-arrive within about 3 ms, so the peak is of the order of 5.9e10 / 3 ms ≈ 2e13 n/s, some 25 times
-the average.
+Its maximum is the peak rate. At the entrance of guide 1, in the map of `main` at its defaults,
+it is 1.9e13 n/s at 2.9 ms, some 23 times the average. That is what the length of the pulse
+suggests: most of the 5.9e10 neutrons of a pulse arrive within about 3 ms, and
+5.9e10 / 3 ms ≈ 2e13 n/s.
 
 ### What the monitor counts
 
@@ -235,8 +239,8 @@ on the centers of the wavelength bins:
 
 ```python
 time_profile = (mcstas_intensity * efficiency).sum(axis=1)  # counts/s per time bin
-average_rate = time_profile.sum()                          # counts/s
-peak_rate = time_profile.max() / 14 / 0.05e-3              # counts/s, during the pulse
+average_rate = time_profile.sum()  # counts/s
+peak_rate = time_profile.max() / 14 / 0.05e-3  # counts/s, during the pulse
 ```
 
 `mcstas_intensity` is the map of `main`, of shape (time bins, wavelength bins), and `efficiency`
@@ -244,17 +248,20 @@ is ε at the wavelength centers.
 
 ### Choosing
 
-Compare the peak rate with what the monitor can count. A counting monitor with a dead time τ
-loses a fraction of about peak rate × τ of its counts; keep it below 0.1, or the monitor no longer
-counts in proportion to the beam. If it is too large, take a lower ε, a smaller opening, or a
-faster monitor. Leave a factor of 2 to 10 for a higher source power and for the model.
+Compare the peak rate with what the monitor can count. While peak rate × τ is small, a counting
+monitor with a dead time τ loses a fraction of about peak rate × τ of its counts; keep it below
+0.1, or the monitor no longer counts in proportion to the beam. Near 1 and above, it saturates:
+it cannot count much faster than 1/τ, whatever the beam. If peak rate × τ is too large, take a
+lower ε, a smaller opening, or a faster monitor. Leave a factor of 2 to 10 for a higher source
+power and for the model.
 
 For example, with ε = 1e-4 at 1.8 Å, growing as λ: at the mean wavelength of 2.4 Å ε is 1.3e-4,
-so the monitor counts about 1e8 counts/s on average and 3e9 counts/s at the peak. With a dead
-time of 100 ns that is a loss of order 300: no counting monitor of that ε works at the entrance of
-guide 1, which is close to the moderator and inside the monolith. Monitors stand further
-downstream, after the choppers, where the beam is weaker and shorter in wavelength band. Put
-the `Monitor_nD` there, with the opening of the real monitor, and repeat.
+so the monitor counts about 1.1e8 counts/s on average and, from the map, 2.4e9 counts/s at the
+peak. With a dead time of 100 ns, peak rate × τ is about 240, far above 0.1: the monitor is
+saturated, at most 1e7 counts/s. No counting monitor of that ε works at the entrance of guide 1,
+which is close to the moderator and inside the monolith. Monitors stand further downstream, after
+the choppers, where the beam is weaker and shorter in wavelength band. Put the `Monitor_nD`
+there, with the opening of the real monitor, and repeat.
 
 McStas leaves out the fast neutrons and the γ rays from the source, which a monitor near the
 source also sees. They do not change the rate of slow neutrons, but they decide which kinds of
