@@ -146,7 +146,7 @@ def _save(fig: Figure, path: Path, dpi: int) -> Path:
 
 def main(
     out: Path | None = None,
-    ncount: float = 1e6,
+    ncount: float = 1e7,
     neutrons: int = 1_000_000,
     seed: int = 1,
     transmission: float = 0.2,
