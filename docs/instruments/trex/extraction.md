@@ -10,9 +10,26 @@ values, but for the band: its source keeps the widest band, 0.1 to 10 Å, and it
 that band too, while those of `TRex` follow `lambda0`. It also has the `source_monitor` of
 [Source](source.md), at the entrance of guide 1.
 
-`main` runs McStas twice per path and tof once, and makes three figures of each path:
-McStasScript's diagnostics along the guides, McStasScript's diagram of the intensity before each
-component, and McStas and tof side by side at the beam monitor. The figures are `main` at its
+![Extraction seen from above, z along the beam from the source to the entrance of guide 5, x across it](figures/trex_extraction_top.png)
+
+The view is from above, as McStas draws it: z along the beam, from the source to the entrance of
+guide 5 at 5.916 m, and x across it, ±0.15 m. The two axes have different scales, so the
+guides look much wider than they are. On the left are the moderator and the ESS emblem that
+`ESS_butterfly` draws in place of the target wheel, with the instrument axis dashed. The yellow
+line at 1.896 m is the focusing rectangle of the source, and the short yellow and orange lines
+at 1.896 m and 5.401 m are the arms that guides 1 and 4 are placed on. Guides 1, 2 and 3, in blue, magenta and cyan, run from 1.896 m to
+5.375 m; they taper towards the fixed wall at x = -0.047 m, and the taper of the extraction
+turns them by -0.215°. Guide 4 starts at 5.401 m: the short bender, dark gray, and then guide 4b
+in red, on top of guide 4a, which takes the same place, as only one of the two paths is used in a
+run. The beam monitor is the thin line at 5.902 m. The thin gray lines across the beam at about
+1.9 m and 5.4 m are `ESS_butterfly`'s circles of 2 m, inside which no optics is allowed, and of
+5.5 m, the target monolith, around the center of the moderator. The gray lines along the beam,
+0.206 m and then 0.276 m apart, are the beam port plug, and the dashed lines the next beam
+ports.
+
+`main` draws this view, runs McStas twice per path and tof once, and makes three figures of each
+path: McStasScript's diagnostics along the guides, McStasScript's diagram of the intensity before
+each component, and McStas and tof side by side at the beam monitor. The figures are `main` at its
 defaults: 1e7 McStas neutrons per run, 1e6 tof neutrons and seed 1.
 
 ## Beam along the guides

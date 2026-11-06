@@ -21,6 +21,7 @@ from unittest.mock import patch
 import matplotlib.pyplot as plt
 import mcstasscript as ms
 from matplotlib.figure import Figure
+from mcstasscript.interface.instr import McStas_instr
 
 from mcdgs.core.base import Instrument
 from mcdgs.core.components import (
@@ -72,6 +73,10 @@ class ExtractionParams:
 # n/s: the range of the intensity axis of McStasScript's diagram, from the source to the beam
 # monitor on both paths, about 1e11 to 1e12 n/s at the defaults
 DIAGRAM_INTENSITY_LIMITS = (5e10, 1.5e12)
+
+# m: the view from above, z along the beam from the source to the entrance of guide 5 (cell
+# B32), just after the beam monitor, then x across it, wide enough for the moderator
+TOP_VIEW_LIMITS = (0.0, 5.916, -0.15, 0.15)
 
 DEFAULT_PARAMS = ExtractionParams()  # frozen, so one shared default is safe
 
@@ -136,6 +141,36 @@ def _zoom_intensity(diagram: Figure, limits: tuple[float, float]) -> None:
     rays_ax.set_xlim(limits[0] * rays_per_intensity, limits[1] * rays_per_intensity)
 
 
+def draw_top_view(mcstas_instr: McStas_instr, path: Path) -> Path:
+    """Draw the instrument from above with McStasScript's ``show_instrument``, and save it.
+
+    The view is mcdisplay's ``zx`` projection, z along the beam and x across it, within
+    ``TOP_VIEW_LIMITS``. show_instrument returns None and ends in ``plt.show()``, which is held
+    back, so the figure it would show is saved instead.
+
+    Parameters
+    ----------
+    mcstas_instr:
+        The McStasScript instrument.
+    path:
+        The file of the figure.
+
+    Returns
+    -------
+    :
+        ``path``.
+    """
+    with patch.object(plt, "show"):
+        mcstas_instr.show_instrument(
+            backend="matplotlib_2d",
+            projection="zx",
+            limits=list(TOP_VIEW_LIMITS),
+            width=1600,  # pixels at 100 dpi: 16 x 4 in
+            height=400,
+        )
+    return _save(plt.gcf(), path, dpi=150)
+
+
 def _save(fig: Figure, path: Path, dpi: int) -> Path:
     """Save a figure, close it and return its path."""
     fig.savefig(path, dpi=dpi)
@@ -159,12 +194,13 @@ def main(
     ``transmission`` on top of it. The three figures of a path, the diagnostics, the diagram and
     the comparison, ``trex_extraction_bender_out_diagnose.png``,
     ``trex_extraction_bender_out_intensity.png`` and ``trex_extraction_bender_out.png``, or
-    ``..._in``, go to ``out``.
+    ``..._in``, go to ``out``, and so does the view from above, ``trex_extraction_top.png``.
 
     Parameters
     ----------
     out:
-        Folder of the figures. If ``None``, the folder of the McStas run of each path.
+        Folder of the figures. If ``None``, the folder of the McStas run of each path, and the
+        folder of the instrument file for the view from above.
     ncount:
         Number of McStas neutrons, in each run.
     neutrons:
@@ -179,8 +215,8 @@ def main(
     Returns
     -------
     :
-        The paths of the figures, bender out then in: the diagnostics, the diagram, then the
-        comparison.
+        The paths of the figures: the view from above, then bender out and in, the diagnostics,
+        the diagram and the comparison of each.
     """
     extraction = Extraction()
 
@@ -192,7 +228,8 @@ def main(
 
     # McStasScript's diagnostics, the same for both paths: the beam after the source, guide 3
     # and guide 4b, its profile, wavelength against x, and its spectrum
-    mcstas_instr = build_mcstas(extraction, input_path=default_input_dir(extraction))
+    input_dir = default_input_dir(extraction)
+    mcstas_instr = build_mcstas(extraction, input_path=input_dir)
     diag = ms.Diagnostics(mcstas_instr)  # works on a copy: mcstas_instr is left as it is
     for component in ("source", "guide_3", "guide_4b"):
         # rays="all": a limited list stops early, which leaves the intensities too low
@@ -201,7 +238,10 @@ def main(
     diag.add_view("x", "l", bins=100)
     diag.add_view("l")
 
-    figures = []
+    # the geometry, the same for both paths: mcdisplay draws every component, whatever its WHEN
+    figures = [
+        draw_top_view(mcstas_instr, output_folder(out, input_dir) / "trex_extraction_top.png")
+    ]
     for bender_in, path in ((False, "bender out, guide 4a"), (True, "bender in, guide 4b")):
         run_name = f"trex_extraction_bender_{'in' if bender_in else 'out'}"
         folder = run_folder(default_output_dir(), run_name, "diagnose")
