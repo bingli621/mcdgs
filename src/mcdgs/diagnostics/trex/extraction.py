@@ -1,7 +1,8 @@
 """T-Rex up to guide 4, the thermal and the cold path, to study the extraction guides.
 
 :class:`Extraction` is the section from the source to the beam monitor after guide 4, at 5.9 m,
-with the same components as :class:`.TRex`.
+with the same components as :class:`.TRex`, but for the band: its source and its beam monitor
+keep the widest band, 0.1 to 10 Å, where those of :class:`.TRex` follow ``lambda0``.
 
 :func:`main` compares McStas and tof at the beam monitor, with the bender out and in. tof has
 no guides: every neutron of its pulse reaches the monitor. tof is scaled to the total of McStas

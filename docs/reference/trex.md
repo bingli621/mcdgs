@@ -8,6 +8,8 @@ See the [technical details of T-Rex](../instruments/trex/details.md) for the des
 
 ::: mcdgs.instruments.trex.choppers
 
+::: mcdgs.instruments.trex.monitors
+
 ::: mcdgs.instruments.trex.guides.sections
 
 ::: mcdgs.instruments.trex.guides.extraction

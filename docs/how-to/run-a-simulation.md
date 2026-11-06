@@ -1,15 +1,16 @@
 # Run a McStas simulation
 
 A [`Simulation`](../reference/mcstas.md) holds an instrument and the folder its runs write to. The
-examples use `TRexWithMonitor`, from [Install and first run](../getting-started.md). For the
-timing of the choppers alone, [tof](simulate-the-choppers-with-tof.md) is much faster.
+examples use `TRex`, as in [Install and first run](../getting-started.md). For the timing of the
+choppers alone, [tof](simulate-the-choppers-with-tof.md) is much faster.
 
 ```python
 import numpy as np
 
+from mcdgs.instruments.trex.model import TRex
 from mcdgs.mcstas.simulation import Simulation
 
-simulation = Simulation(TRexWithMonitor())
+simulation = Simulation(TRex())
 ```
 
 ## One run

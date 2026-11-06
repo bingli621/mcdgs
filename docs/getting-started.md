@@ -79,8 +79,8 @@ with h5py.File(h5_file) as file:
 
 The choppers pass one band of wavelengths around `lambda0`, 2.0 Å by default, from about 1.3 to
 2.9 Å. It is highest near 2.3 Å, since the bender removes much of the short-wavelength side.
-Few neutrons get through the choppers, so the script runs 1e7: with 1e6 only about a hundred
-reach the monitor, and the spectrum has empty bins inside the band.
+Few neutrons get through the choppers, so the script runs 1e7, of which about 300 reach the
+monitor: with 1e6 only a few dozen do, and the spectrum can have empty bins inside the band.
 
 ## What the run left behind
 

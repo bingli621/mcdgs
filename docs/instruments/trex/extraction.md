@@ -6,7 +6,8 @@ is T-Rex up to the beam monitor after guide 4: the source, the
 [extraction guides](details.md#extraction-guides) 1 to 3, and guide 4 with its
 [two paths](details.md#two-paths-through-guide-4), the thermal guide 4a with the bender out and
 the bender and the cold guide 4b with it in. It has the same components as `TRex`, with the same
-values.
+values, but for the band: its source keeps the widest band, 0.1 to 10 Å, and its beam monitor
+that band too, while those of `TRex` follow `lambda0`.
 
 `main` runs McStas once per path and tof once, and makes two figures of each path: McStasScript's
 diagnostics along the guides, and McStas and tof side by side at the beam monitor. The figures are
@@ -39,19 +40,21 @@ grainy. The spectra, on one axis, are smooth.
 ## McStas and tof at the beam monitor
 
 The beam monitor is in the gap after guide 4, at 5.902 m, 0.06 m wide and 0.0463 m high. It
-records one map of time, 0 to 15 ms in 300 bins, against wavelength, 0 to 5.3 Å in 96 bins. Both
-models see the same monitor; see [Source](source.md) for how the two are read and compared.
+records one map of time, 0.15 to 18.4 ms in 100 bins of 0.18 ms, against wavelength, 0.1 to 10 Å
+in 100 bins of 0.099 Å. The time runs from the fastest neutron of the band, 0.1 Å, leaving at the
+start of the pulse, to the slowest, 10 Å, leaving 3.5 ms later. Both models see the same monitor;
+see [Source](source.md) for how the two are read and compared.
 
 tof has no guides and no bender: every neutron of its pulse reaches the monitor, at the time of
 its straight flight from the source. Its counts are scaled to the McStas total at the monitor, on
 each path, so both have the same total and the figure compares their shapes. What differs is
 what guides 1 to 4 do to the beam.
 
-**Bender out**, 1.30e11 n/s at the monitor, 1.38e5 n/s per tof neutron:
+**Bender out**, 1.48e11 n/s at the monitor, 1.48e5 n/s per tof neutron:
 
 ![McStas and tof at the beam monitor with the bender out](figures/trex_extraction_bender_out.png)
 
-**Bender in**, 8.76e10 n/s at the monitor, 9.36e4 n/s per tof neutron:
+**Bender in**, 1.04e11 n/s at the monitor, 1.04e5 n/s per tof neutron:
 
 ![McStas and tof at the beam monitor with the bender in](figures/trex_extraction_bender_in.png)
 

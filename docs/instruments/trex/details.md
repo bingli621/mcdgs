@@ -53,8 +53,20 @@ is `-`. `position` is where it ends up in the lab frame. Lengths are in m and an
 | Moderator height | 0.03 m |
 | Fraction of events from the cold moderator | 0.3 |
 | Focusing rectangle | 0.095 m × 0.035 m |
-| Wavelength band | 0.1 to 10 Å |
+| Wavelength band | `lambda0` ± 0.905 Å, within 0.1 to 10 Å: 1.095 to 2.905 Å at the default |
 | Pulses | 1 |
+
+The source simulates only the wavelengths that can reach the sample position in one frame: those
+arriving there within one source period, 1/14 Hz, plus the length of the pulse, 3.5 ms, from
+t = L λ / 3956 with L = 163.8 m and λ in Å. 3956 m·Å/s is h/m_n, Planck's constant over the
+neutron mass, so a neutron of 1 Å flies at 3956 m/s. The band is then
+
+Δλ = 3956 m·Å/s × (1/14 Hz + 3.5 ms) / 163.8 m = 1.810 Å,
+
+centered on `lambda0` and cut to 0.1 to 10 Å, the widest band of `ESS_butterfly`. The 3.5 ms is
+longer than the 2.857 ms of the ESS pulse in McStas, to keep its tail. A new `lambda0`, through
+`update_params`, creates the source again with its band. The beam monitor keeps the band of the
+`lambda0` T-Rex was created with.
 
 ## Extraction guides
 
@@ -159,6 +171,20 @@ has no guide 46. The slit `slit_mc`, 20.5 mm × 34.5 mm, is 19 mm after guide 50
 The arms `arm_bwc1`, `arm_bwc2`, `arm_bm1`, `arm_psc` and `arm_mc` mark the gaps for bandwidth
 choppers 1 and 2, beam monitor 1, the P-Chopper and the M-Chopper. The choppers `bw1`, `bw2`,
 `ps1`, `ps2`, `mc1` and `mc2` come right after the arm of their gap.
+
+## Monitors
+
+Both monitors leave the neutrons unchanged. They are in
+[`mcdgs.instruments.trex.monitors`](../../reference/trex.md).
+
+| Monitor | Where | Size | What it records |
+| ------- | ----- | ---- | --------------- |
+| `beam_monitor` | In the middle of the bunker gap of row 29, after guide 4, 5.902 m along the beam, on the arm of guide 4 | 0.06 m × 0.0463 m | Time against wavelength, 100 × 100 bins |
+| `sample_monitor` | At `sample_pos` | 0.1 m × 0.1 m | Wavelength, 0.5 to 5.3 Å in 12 bins |
+
+The wavelength axis of `beam_monitor` is the band of the source. Its time axis runs from the
+fastest neutron of that band, leaving at the start of the pulse, to the slowest, leaving 3.5 ms
+later: 1.63 to 7.83 ms at the default `lambda0`.
 
 ## Chopper timing
 

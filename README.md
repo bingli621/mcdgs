@@ -11,6 +11,8 @@ Source. From McStas to S(Q,E).
 
 ```bash
 pixi run pytest --cov=mcdgs     # tests and coverage
+pixi run ruff check             # lint; CI also runs ruff format --check
+pixi run mypy src/mcdgs         # types
 pixi run pre-commit install     # once: ruff format on every commit
 pixi run docs                   # preview the documentation site
 pixi run docs-diagnostics       # remake the files of the site, then commit them
@@ -26,7 +28,8 @@ T-Rex and the figures of its diagnostics, are committed: the site does not make 
 ```
 src/mcdgs/
   core/          entities shared by any instrument: Instrument, components, params, geometry
-  instruments/   the instruments, one package each
+  instruments/   the instruments, one package each: T-Rex so far, its source, guides,
+                 choppers and monitors
   samples/       ready-made samples
   io/            instruments to and from dicts and YAML files
   mcstas/        build the McStasScript instrument, run simulations, read NeXus output

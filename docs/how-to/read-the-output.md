@@ -5,24 +5,24 @@ Every run writes a McStas NeXus (HDF5) file, `mccode.h5`. A scan has one entry p
 
 ## A monitor
 
-Monitors are read with `h5py`. This reads the `Monitor_nD` with `filename="spectrum"` from
-[Install and first run](../getting-started.md):
+Monitors are read with `h5py`. This reads `sample_monitor`, the `Monitor_nD` of T-Rex with
+`filename="sample_monitor"`, as in [Install and first run](../getting-started.md):
 
 ```python
 import h5py
 
 with h5py.File(h5_file) as file:
     components = file["entry1/instrument/components"]
-    monitor = next(c for name, c in components.items() if name.endswith("_spectrum"))
-    spectrum = monitor["output/spectrum_L"]
+    monitor = next(c for name, c in components.items() if name.endswith("_sample_monitor"))
+    spectrum = monitor["output/sample_monitor_L"]
     wavelengths = spectrum["Wavelength__Angs_"][()]  # bin centers, in Å
     intensity = spectrum["data"][()]
     error = spectrum["errors"][()]
 ```
 
-Component groups are numbered in beam order, such as `0067_spectrum`, which is why this finds the
-group by the end of its name. McStas adds a suffix for the variable to the file name, `_L` for
-wavelength. To see what a monitor wrote, use `list(monitor["output"])`.
+Component groups are numbered in beam order, such as `0074_sample_monitor`, which is why this
+finds the group by the end of its name. McStas adds a suffix for the variable to the file name,
+`_L` for wavelength. To see what a monitor wrote, use `list(monitor["output"])`.
 
 To read every entry of a scan, count through the entries, since sorted by name `entry10` comes
 before `entry2`:

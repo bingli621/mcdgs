@@ -12,7 +12,7 @@ It is the smallest T-Rex: two components and no McStas instrument parameters.
 
 | Component | What it is |
 | --------- | ---------- |
-| `source` | The T-Rex source, `ESS_butterfly` on beam port W7, from 0.1 to 10 Å, one pulse at 2 MW, the same component as in `TRex`. |
+| `source` | The T-Rex source, `ESS_butterfly` on beam port W7, one pulse at 2 MW, as in `TRex` but with the widest band, 0.1 to 10 Å, in place of the band around `lambda0`. |
 | `source_monitor` | A `Monitor_nD` at the entrance of guide 1, 1.895927 m from the source on its axis, unrotated, with the opening of guide 1: 0.089955 m wide and 0.029992 m high. |
 
 The monitor records one 2D map of time against wavelength:
