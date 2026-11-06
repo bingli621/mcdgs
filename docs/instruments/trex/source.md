@@ -1,7 +1,7 @@
 # Source
 
 `TRexSource`, in
-[`mcdgs.diagnostics.trex.source`](https://github.com/bingli621/mcdgs/blob/main/src/mcdgs/diagnostics/trex/source.py),
+[`mcdgs.diagnostics.trex_01_source`](https://github.com/bingli621/mcdgs/blob/main/src/mcdgs/diagnostics/trex_01_source.py),
 compares McStas and [tof](../../how-to/simulate-the-choppers-with-tof.md) at the entrance of
 guide 1, the first optics of T-Rex. Nothing stands between the source and that point, so the two
 should see the same pulse there: what differs is only how each models the ESS moderator.
@@ -32,7 +32,7 @@ creates its components in beam order, with their positions.
 
 <!-- fmt:off -->
 ```python
---8<-- "src/mcdgs/diagnostics/trex/source.py:trex_source"
+--8<-- "src/mcdgs/diagnostics/trex_01_source.py:trex_source"
 ```
 <!-- fmt:on -->
 
@@ -43,7 +43,7 @@ and saves the monitor in its run folder, which McStasScript loads back:
 
 <!-- fmt:off -->
 ```python
---8<-- "src/mcdgs/diagnostics/trex/source.py:run_mcstas"
+--8<-- "src/mcdgs/diagnostics/trex_01_source.py:run_mcstas"
 ```
 <!-- fmt:on -->
 
@@ -55,7 +55,7 @@ bin and counts the tof neutrons on the same bins:
 
 <!-- fmt:off -->
 ```python
---8<-- "src/mcdgs/diagnostics/trex/source.py:run_tof"
+--8<-- "src/mcdgs/diagnostics/trex_01_source.py:run_tof"
 ```
 <!-- fmt:on -->
 
@@ -185,13 +185,13 @@ again, with the other files of the T-Rex pages.
 To make it yourself, run:
 
 ```bash
-pixi run python -m mcdgs.diagnostics.trex.source
+pixi run python -m mcdgs.diagnostics.trex_01_source
 ```
 
 Call `main` with other numbers for a finer figure:
 
 ```bash
-pixi run python -c "from mcdgs.diagnostics.trex.source import main; main(ncount=1e8, neutrons=10_000_000)"
+pixi run python -c "from mcdgs.diagnostics.trex_01_source import main; main(ncount=1e8, neutrons=10_000_000)"
 ```
 
 ## Estimating the count rate of a monitor

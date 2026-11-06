@@ -1,7 +1,7 @@
 from dataclasses import replace
 
-from mcdgs.diagnostics.trex.extraction import Extraction, ExtractionParams
-from mcdgs.diagnostics.trex.source import TRexSource
+from mcdgs.diagnostics.trex_01_source import TRexSource
+from mcdgs.diagnostics.trex_02_extraction import Extraction, ExtractionParams
 from mcdgs.instruments.trex.guides.bispectral import BENDER_ROTATION
 from mcdgs.instruments.trex.model import TRex
 

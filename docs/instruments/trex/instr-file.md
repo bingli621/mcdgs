@@ -3,7 +3,7 @@
 This is the McStas instrument file the model generates, at the default
 [control parameters](details.md#control-parameters). The chopper timings, `nu_<name>` and
 `delay_<name>`, are the defaults of its instrument parameters.
-[`mcdgs.diagnostics.trex.overview`](../../reference/diagnostics.md) writes it to
+[`mcdgs.diagnostics.trex_00_overview`](../../reference/diagnostics.md) writes it to
 `mcstas_input/TRex/` and copies it here; `pixi run docs-diagnostics` runs it. The tests
 check that this copy matches the current code. [Download it](figures/TRex.instr), or expand it here:
 

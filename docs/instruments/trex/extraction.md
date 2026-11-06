@@ -1,7 +1,7 @@
 # Extraction guides
 
 `Extraction`, in
-[`mcdgs.diagnostics.trex.extraction`](https://github.com/bingli621/mcdgs/blob/main/src/mcdgs/diagnostics/trex/extraction.py),
+[`mcdgs.diagnostics.trex_02_extraction`](https://github.com/bingli621/mcdgs/blob/main/src/mcdgs/diagnostics/trex_02_extraction.py),
 is T-Rex up to the beam monitor after guide 4: the source, the
 [extraction guides](details.md#extraction-guides) 1 to 3, and guide 4 with its
 [two paths](details.md#two-paths-through-guide-4), the thermal guide 4a with the bender out and
@@ -132,7 +132,7 @@ The figures need McStas, so they are not made with the site: `pixi run docs-diag
 them again, with the other files of the T-Rex pages. To make them yourself, run:
 
 ```bash
-pixi run python -m mcdgs.diagnostics.trex.extraction
+pixi run python -m mcdgs.diagnostics.trex_02_extraction
 ```
 
 Each path's three figures go to the folder of its run with the diagnostics,
@@ -143,5 +143,5 @@ and `..._in_intensity/`. All four McStas runs take about 2 minutes on 8 cores. C
 other numbers for finer or faster figures:
 
 ```bash
-pixi run python -c "from mcdgs.diagnostics.trex.extraction import main; main(ncount=1e6)"
+pixi run python -c "from mcdgs.diagnostics.trex_02_extraction import main; main(ncount=1e6)"
 ```

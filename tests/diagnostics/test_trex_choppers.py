@@ -1,6 +1,6 @@
 import pytest
 
-from mcdgs.diagnostics.trex.choppers import (
+from mcdgs.diagnostics.trex_05_choppers import (
     ArrivalSummary,
     count_groups,
     main,

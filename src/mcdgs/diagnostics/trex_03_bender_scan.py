@@ -7,7 +7,7 @@ wavelength map, summed over time, in bands of :data:`BAND_WIDTH` centered on its
 with the bender out, from :func:`transmission`. :func:`read_angles` and :func:`read_spectra`
 read the files of the scan. :func:`main` does both; run the module for it::
 
-    pixi run python -m mcdgs.diagnostics.trex.bender_scan
+    pixi run python -m mcdgs.diagnostics.trex_03_bender_scan
 """
 
 from pathlib import Path
@@ -22,7 +22,7 @@ from mcstastox.LoadFile import Data
 from numpy.typing import NDArray
 
 from mcdgs.diagnostics.cli import output_folder, parse_out
-from mcdgs.diagnostics.trex.extraction import Extraction
+from mcdgs.diagnostics.trex_02_extraction import Extraction
 from mcdgs.instruments.trex.guides.bispectral import BENDER_ROTATION
 from mcdgs.mcstas.simulation import Simulation
 

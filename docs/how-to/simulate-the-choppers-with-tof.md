@@ -71,7 +71,7 @@ in sub-pulses, told apart by the gaps of about 4 ms between them.
 [`summarize`](../reference/diagnostics.md) gives all of this at once:
 
 ```python
-from mcdgs.diagnostics.trex.choppers import summarize
+from mcdgs.diagnostics.trex_05_choppers import summarize
 
 summary = summarize(result, "sample_monitor")
 print(summary.neutrons, summary.sub_pulses, summary.first_arrival, summary.last_arrival)

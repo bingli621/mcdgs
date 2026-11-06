@@ -1,6 +1,6 @@
 # Bender scan
 
-[`mcdgs.diagnostics.trex.bender_scan`](https://github.com/bingli621/mcdgs/blob/main/src/mcdgs/diagnostics/trex/bender_scan.py)
+[`mcdgs.diagnostics.trex_03_bender_scan`](https://github.com/bingli621/mcdgs/blob/main/src/mcdgs/diagnostics/trex_03_bender_scan.py)
 scans the rotation of the [bender](details.md#bender), `b_rot`, and shows how it passes each band
 of wavelengths. It runs the [`Extraction`](extraction.md) and reads its beam monitor, after
 guide 4.
@@ -48,7 +48,7 @@ The figure needs McStas, so it is not made with the site: `pixi run docs-diagnos
 again, with the other files of the T-Rex pages. To make it yourself, run:
 
 ```bash
-pixi run python -m mcdgs.diagnostics.trex.bender_scan
+pixi run python -m mcdgs.diagnostics.trex_03_bender_scan
 ```
 
 This is `main` at its defaults: 1e6 McStas neutrons per angle, and seed 1. The scan goes to

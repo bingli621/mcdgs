@@ -9,7 +9,7 @@ parameters, and draws it with McStasScript's ``show_instrument``, which runs mcd
 
 Both views have the same scale on their two axes. Run the module for them::
 
-    pixi run python -m mcdgs.diagnostics.trex.overview
+    pixi run python -m mcdgs.diagnostics.trex_00_overview
 """
 
 import shutil

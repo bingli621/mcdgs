@@ -39,7 +39,7 @@ is `-`. `position` is where it ends up in the lab frame. Lengths are in m and an
     --8<-- "docs/instruments/trex/figures/trex_print.txt"
     ```
 
-[`mcdgs.diagnostics.trex.choppers`](../../reference/diagnostics.md) makes the printout, and
+[`mcdgs.diagnostics.trex_05_choppers`](../../reference/diagnostics.md) makes the printout, and
 `pixi run docs-diagnostics` runs it.
 
 ## Source

@@ -11,7 +11,7 @@ at the source monitor, where both see the same beam, and by ``transmission`` on 
 the beam monitor shows what the guides let through in McStas against that factor. The McStas runs also draw McStasScript's diagnostics of each path: the beam
 after the source, after guide 3 and at the exit of guide 4b. Run the module for both::
 
-    pixi run python -m mcdgs.diagnostics.trex.extraction
+    pixi run python -m mcdgs.diagnostics.trex_02_extraction
 """
 
 from dataclasses import dataclass

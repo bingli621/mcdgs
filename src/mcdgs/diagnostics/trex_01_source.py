@@ -27,7 +27,7 @@ error bars shrink with more neutrons, in both models, while the intensity stays.
 tof to McStas, and :func:`.plot_comparison` draws them side by side. Run the module to do all
 of it::
 
-    pixi run python -m mcdgs.diagnostics.trex.source
+    pixi run python -m mcdgs.diagnostics.trex_01_source
 """
 
 from dataclasses import dataclass

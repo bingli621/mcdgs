@@ -10,12 +10,12 @@ documentation. See [Source](../instruments/trex/source.md),
 
 ::: mcdgs.diagnostics.cli
 
-::: mcdgs.diagnostics.trex.overview
+::: mcdgs.diagnostics.trex_00_overview
 
-::: mcdgs.diagnostics.trex.source
+::: mcdgs.diagnostics.trex_01_source
 
-::: mcdgs.diagnostics.trex.extraction
+::: mcdgs.diagnostics.trex_02_extraction
 
-::: mcdgs.diagnostics.trex.bender_scan
+::: mcdgs.diagnostics.trex_03_bender_scan
 
-::: mcdgs.diagnostics.trex.choppers
+::: mcdgs.diagnostics.trex_05_choppers
