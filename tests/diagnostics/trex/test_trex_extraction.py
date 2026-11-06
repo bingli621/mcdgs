@@ -1,3 +1,5 @@
+from dataclasses import replace
+
 from mcdgs.diagnostics.trex.extraction import Extraction, ExtractionParams
 from mcdgs.instruments.trex.guides.bispectral import BENDER_ROTATION
 from mcdgs.instruments.trex.model import TRex
@@ -13,7 +15,13 @@ def test_the_extraction_is_trex_up_to_the_beam_monitor():
     assert list(extraction.components) == UP_TO_THE_BEAM_MONITOR
     trex = TRex()
     for name, component in extraction.components.items():
-        assert component == trex.components[name], name
+        if name not in ("source", "beam_monitor"):
+            assert component == trex.components[name], name
+    # the extraction keeps the widest band, which only the source and the beam monitor hold
+    assert extraction.source == replace(trex.source, Lmin=0.1, Lmax=10.0)
+    assert extraction.beam_monitor == replace(
+        trex.beam_monitor, options=extraction.beam_monitor.options
+    )
 
 
 def test_the_instrument_parameters_follow_the_control_parameters():

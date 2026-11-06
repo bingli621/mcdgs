@@ -73,12 +73,27 @@ def test_the_components_are_in_beam_order():
     ]
 
 
+# half the band: (h / m_n) (1 / 14 Hz + 3.5 ms) / 163.8 m, over 2
+HALF_BAND = 0.5 * 3956.034006 * (1 / 14 + 3.5e-3) / 163.8  # Å
+
+
 def test_the_source_is_that_of_trex_primary():
     source = TRex().source
     assert (source.sector, source.beamline, source.acc_power) == ("W", 7, 2)
     assert (source.yheight, source.cold_frac, source.dist) == (0.03, 0.3, 2)
     assert (source.focus_xw, source.focus_yh) == (0.095, 0.035)
-    assert (source.Lmin, source.Lmax, source.n_pulses) == (0.1, 10.0, 1)
+    assert source.n_pulses == 1
+
+
+def test_the_band_of_the_source_is_centered_on_lambda0():
+    source = TRex().source
+    assert (source.Lmin, source.Lmax) == pytest.approx((2.0 - HALF_BAND, 2.0 + HALF_BAND))
+
+
+def test_a_new_lambda0_moves_the_band_of_the_source():
+    trex = TRex()
+    trex.update_params(lambda0=4.0)
+    assert (trex.source.Lmin, trex.source.Lmax) == pytest.approx((4.0 - HALF_BAND, 4.0 + HALF_BAND))
 
 
 def test_the_beam_monitor_is_in_the_middle_of_its_gap():

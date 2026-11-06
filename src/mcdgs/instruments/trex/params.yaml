@@ -33,8 +33,8 @@ origin:
   position: [0.0, 0.0, 0.0]
 source:
   component: ESS_butterfly
-  Lmin: 0.1
-  Lmax: 10.0
+  Lmin: 1.09517711660141
+  Lmax: 2.90482288339859
   sector: W
   beamline: 7
   acc_power: 2
@@ -254,7 +254,7 @@ beam_monitor:
   max: 1.0e+40
   restore_neutron: 1
   radius: 0
-  options: time limits=[0.0 0.02] bins=400 lambda limits=[0.1 10.0] bins=180
+  options: time limits=[0.0016338927653763871 0.007833700021612214] bins=100 lambda limits=[1.09517711660141 2.90482288339859] bins=100
   filename: beam_monitor
   nowritefile: 0
   nexus_bins: 0

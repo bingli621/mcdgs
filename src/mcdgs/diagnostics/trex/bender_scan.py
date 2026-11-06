@@ -1,7 +1,7 @@
 """How the bender passes each band of wavelengths, from a scan of its rotation.
 
 The scan runs the :class:`.Extraction` and reads its beam monitor, after guide 4: its time and
-wavelength map, summed over time, in bands of :data:`BAND_BINS` wavelength bins.
+wavelength map, summed over time, in bands of :data:`BAND_WIDTH` centered on its multiples.
 :func:`run_bender_scan` scans ``b_rot`` with the bender in, and runs once with it out;
 :func:`plot_bender_scan` draws the intensity per band of the scan over that of the same band
 with the bender out, from :func:`transmission`. :func:`read_angles` and :func:`read_spectra`
@@ -15,6 +15,8 @@ from pathlib import Path
 import h5py
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.cm import ScalarMappable
+from matplotlib.colors import Normalize
 from matplotlib.figure import Figure
 from mcstastox.LoadFile import Data
 from numpy.typing import NDArray
@@ -24,7 +26,7 @@ from mcdgs.diagnostics.trex.extraction import Extraction
 from mcdgs.instruments.trex.guides.bispectral import BENDER_ROTATION
 from mcdgs.mcstas.simulation import Simulation
 
-BAND_BINS = 8  # wavelength bins of the beam monitor per band: 12 bands of 0.442 Å, 0 to 5.3 Å
+BAND_WIDTH = 0.5  # Å: the bands are centered on its multiples, 0.5, 1.0, 1.5 Å, ...
 
 
 def transmission(
@@ -83,8 +85,10 @@ def read_spectra(h5_file: Path) -> tuple[NDArray, NDArray, NDArray]:
     """Read the intensity per wavelength band at the beam monitor of every scan point.
 
     The map of the beam monitor is summed over time, then over each band of
-    :data:`BAND_BINS` wavelength bins. The bins are independent, so their errors add in
-    quadrature.
+    :data:`BAND_WIDTH`, centered on a multiple of it. A wavelength bin goes to the band whose
+    center is nearest to its own, so a band's edges are those of its bins, within half a bin of
+    the band's. Only the bands the axis of the monitor covers whole are kept. The bins are
+    independent, so their errors add in quadrature.
 
     Parameters
     ----------
@@ -100,7 +104,7 @@ def read_spectra(h5_file: Path) -> tuple[NDArray, NDArray, NDArray]:
     Raises
     ------
     ValueError
-        If the wavelength bins of the beam monitor are not a whole number of bands.
+        If the axis of the beam monitor covers no band whole.
     """
     wavelengths, intensities, variances = np.empty(0), [], []
     with h5py.File(h5_file) as file:
@@ -113,14 +117,24 @@ def read_spectra(h5_file: Path) -> tuple[NDArray, NDArray, NDArray]:
             variances.append((time_map["errors"][()] ** 2).sum(axis=0))
             wavelengths = time_map["Wavelength__Angs_"][()]  # the bin centers
 
-    if len(wavelengths) % BAND_BINS:
+    half_bin = (wavelengths[1] - wavelengths[0]) / 2
+    start, stop = wavelengths[0] - half_bin, wavelengths[-1] + half_bin  # the axis, in Å
+    band_of_bin = np.rint(wavelengths / BAND_WIDTH).astype(int)  # the nearest center, in widths
+    tolerance = 1e-9  # Å: an edge of the axis on that of a band covers it
+    whole = [
+        int(band)
+        for band in np.unique(band_of_bin)
+        if (band - 0.5) * BAND_WIDTH >= start - tolerance
+        and (band + 0.5) * BAND_WIDTH <= stop + tolerance
+    ]
+    if not whole:
         raise ValueError(
-            f"{len(wavelengths)} wavelength bins are not a whole number of bands of {BAND_BINS}"
+            f"the wavelength axis, {start:.4g} to {stop:.4g} Å, covers no band of {BAND_WIDTH} Å"
         )
-    bands = (-1, BAND_BINS)  # the last axis, in bands of BAND_BINS bins
-    intensity = np.array(intensities).reshape(len(intensities), *bands).sum(axis=-1)
-    error = np.sqrt(np.array(variances).reshape(len(variances), *bands).sum(axis=-1))
-    return wavelengths.reshape(bands).mean(axis=-1), intensity, error
+    intensity_bins, variance_bins = np.array(intensities), np.array(variances)
+    intensity = np.stack([intensity_bins[:, band_of_bin == b].sum(axis=1) for b in whole], 1)
+    variance = np.stack([variance_bins[:, band_of_bin == b].sum(axis=1) for b in whole], 1)
+    return np.array(whole) * BAND_WIDTH, intensity, np.sqrt(variance)
 
 
 def run_bender_scan(
@@ -167,7 +181,7 @@ def plot_bender_scan(scan_file: Path, bender_out_file: Path) -> Figure:
     """Draw the scan of :func:`run_bender_scan`.
 
     Each curve is one wavelength band, divided by the same band without the bender, so the
-    bender-out intensity is 1.
+    bender-out intensity is 1. Its color is the center of the band, on the colorbar.
 
     Parameters
     ----------
@@ -187,21 +201,23 @@ def plot_bender_scan(scan_file: Path, bender_out_file: Path) -> Figure:
     reference, reference_error = bender_out[0], bender_out_error[0]
 
     ratio, ratio_error = transmission(intensity, error, reference, reference_error)
-    half_width = (centers[1] - centers[0]) / 2
 
-    fig, ax = plt.subplots()
+    # one color per band, by its center, from the edge of the first band to that of the last
+    norm = Normalize(centers[0] - BAND_WIDTH / 2, centers[-1] + BAND_WIDTH / 2)
+    colors = ScalarMappable(norm=norm, cmap="turbo")
+    fig, ax = plt.subplots(figsize=(7, 4.8), layout="constrained")
     for band, center in enumerate(centers):
-        label = f"{center:.4g}±{half_width:.4g} Å"
-        ax.errorbar(angles, ratio[:, band], ratio_error[:, band], color=f"C{band}", label=label)
+        ax.errorbar(angles, ratio[:, band], ratio_error[:, band], color=colors.to_rgba(center))
     ax.axhline(1, color="black", linestyle="--", label="bender out")
     ax.axvline(
         BENDER_ROTATION, color="black", linestyle=":", label=f"b_rot = {BENDER_ROTATION:.3f} deg"
     )
     ax.set_ylim(bottom=0)
-    ax.set_xlim(right=0.8)
     ax.set_xlabel("b_rot [deg]")
     ax.set_ylabel("Intensity at the beam monitor / bender out")
-    ax.legend()
+    ax.legend(loc="lower right")
+    colorbar = fig.colorbar(colors, ax=ax, ticks=centers[1::2])
+    colorbar.set_label(f"Center of the band of {BAND_WIDTH} Å [Å]")
     return fig
 
 
