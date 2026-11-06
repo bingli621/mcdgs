@@ -107,8 +107,8 @@ class ESS_butterfly(Component):
     def pulse_length(self) -> float:
         """Pulse length in s, for an instrument's choppers to be phased to.
 
-        McStas fixes it at 3.5 ms (``ESS_SOURCE_LENGTH`` in ess_source-lib.h), so it is read
-        only, and no McStas parameter.
+        3.5 ms, ``ESS_SOURCE_LENGTH``. It is read only, and no McStas parameter: McStas's own
+        pulse, ``ESS_SOURCE_DURATION`` in ess_source-lib.h, is 2.857 ms.
         """
         return ESS_SOURCE_LENGTH
 
