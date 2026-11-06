@@ -7,11 +7,13 @@ is T-Rex up to the beam monitor after guide 4: the source, the
 [two paths](details.md#two-paths-through-guide-4), the thermal guide 4a with the bender out and
 the bender and the cold guide 4b with it in. It has the same components as `TRex`, with the same
 values, but for the band: its source keeps the widest band, 0.1 to 10 Å, and its beam monitor
-that band too, while those of `TRex` follow `lambda0`.
+that band too, while those of `TRex` follow `lambda0`. It also has the `source_monitor` of
+[Source](source.md), at the entrance of guide 1.
 
-`main` runs McStas once per path and tof once, and makes two figures of each path: McStasScript's
-diagnostics along the guides, and McStas and tof side by side at the beam monitor. The figures are
-`main` at its defaults: 1e6 McStas neutrons per path, 1e6 tof neutrons and seed 1.
+`main` runs McStas twice per path and tof once, and makes three figures of each path:
+McStasScript's diagnostics along the guides, McStasScript's diagram of the intensity before each
+component, and McStas and tof side by side at the beam monitor. The figures are `main` at its
+defaults: 1e6 McStas neutrons per run, 1e6 tof neutrons and seed 1.
 
 ## Beam along the guides
 
@@ -37,6 +39,43 @@ the thermal peak is mostly gone and the cold peak stays.
 The maps have 100 × 100 bins, so at 1e6 neutrons each bin holds only a few rays and the maps are
 grainy. The spectra, on one axis, are smooth.
 
+## Intensity along the guides
+
+McStasScript's diagram lists the components in beam order, with arrows from each to the one it is
+placed relative to. Next to it, the black line is the intensity just before each component, in
+n/s, and the dashed green line the number of rays, both on a log scale zoomed to 5e10 to
+1.5e12 n/s. Each step of the line is what one component loses. It is a McStas run of its own,
+which adds a monitor before every component; those monitors are 100 m wide, so they count every
+ray, inside an opening or not.
+
+**Bender out**:
+
+![The components and the intensity before each, with the bender out](figures/trex_extraction_bender_out_intensity.png)
+
+**Bender in**:
+
+![The components and the intensity before each, with the bender in](figures/trex_extraction_bender_in_intensity.png)
+
+| Lost in | Bender out | Bender in | Intensity after it |
+| ------- | ---------- | --------- | ------------------ |
+| guide 1 | 51 % | 51 % | 4.58e11 n/s |
+| guide 2 | 36 % | 36 % | 2.92e11 n/s |
+| guide 3 | 41 % | 41 % | 1.73e11 n/s |
+| guide 4a | 14 % | | 1.49e11 n/s |
+| bender | | 36 % | 1.12e11 n/s |
+| guide 4b | | 6 % | 1.05e11 n/s |
+
+The beam leaves the source at 9.38e11 n/s, all it sends towards guide 1, and passes the source
+monitor unchanged. Guides 1 to 3 take most of it: after guide 3, 18 % is left, on both paths.
+With the bender out, guide 4a takes 14 % more, and 1.49e11 n/s reaches the beam monitor, 16 % of
+the beam before guide 1. With the bender in, the components of the other path are skipped, so their
+rows are empty or flat. The bender takes 36 % and guide 4b 6 %, and 1.05e11 n/s reaches the beam
+monitor, 11 %.
+
+The 51 % of guide 1 includes the beam that misses its opening. The source monitor, which has that
+opening, sees 8.25e11 n/s, so about 12 % of the 9.38e11 never enters guide 1. From the opening of
+guide 1, 18 % reaches the beam monitor with the bender out and 13 % with it in.
+
 ## McStas and tof at the beam monitor
 
 The beam monitor is in the gap after guide 4, at 5.902 m, 0.06 m wide and 0.0463 m high. It
@@ -47,22 +86,25 @@ see [Source](source.md) for how the two are read and compared. With 1e6 neutrons
 that many bins, the McStas map and spectra are grainy.
 
 tof has no guides and no bender: every neutron of its pulse reaches the monitor, at the time of
-its straight flight from the source. Its counts are scaled to the McStas total at the monitor, on
-each path, so both have the same total and the figure compares their shapes. What differs is
-what guides 1 to 4 do to the beam.
+its straight flight from the source. Its counts are scaled where both models see the same beam,
+at the source monitor, to the McStas total there: 8.25e5 n/s per tof neutron. At the beam monitor
+they are scaled again by a `transmission` of 0.2, the argument of `main`, for what the guides
+would let through. That is close to the 18 % and 13 % of McStas above, so where McStas is above
+tof the guides pass more than 0.2 of the beam, and where it is below, less.
 
-**Bender out**, 1.48e11 n/s at the monitor, 1.48e5 n/s per tof neutron:
+**Bender out**, 1.48e11 n/s at the monitor:
 
 ![McStas and tof at the beam monitor with the bender out](figures/trex_extraction_bender_out.png)
 
-**Bender in**, 1.04e11 n/s at the monitor, 1.04e5 n/s per tof neutron:
+**Bender in**, 1.04e11 n/s at the monitor:
 
 ![McStas and tof at the beam monitor with the bender in](figures/trex_extraction_bender_in.png)
 
-With the bender out, McStas keeps both peaks of the source but has fewer short wavelengths and
-more long ones than tof: the guides pass a long wavelength at a larger angle, so more of it
-reaches the monitor. Below 0.3 Å McStas has a fraction of tof's peak. With the bender in, McStas
-has almost nothing below about 1.5 Å and peaks near 2.5 Å, and its time profile peaks about
+At the cold peak, 2.6 Å, McStas and tof agree on both paths: the guides pass about 0.2 of it.
+Above about 4 Å McStas is above tof, since the guides pass a long wavelength at a larger angle,
+so more of it reaches the monitor. With the bender out, McStas is below tof at the thermal peak,
+1.1 Å, where the guides pass about 12 %, and below 0.3 Å it has a fraction of tof's peak. With
+the bender in, McStas has almost nothing below about 1.5 Å, and its time profile peaks about
 1.5 ms later than tof's, since the beam is made of longer, slower wavelengths.
 
 ## Making the figures
@@ -74,9 +116,11 @@ them again, with the other files of the T-Rex pages. To make them yourself, run:
 pixi run python -m mcdgs.diagnostics.trex.extraction
 ```
 
-Each path's two figures go to its McStas run folder, `mcstas_output/trex_extraction_bender_out/`
-and `..._in/`. That folder also holds McStasScript's event lists of the three diagnostics
-positions, about 190 MB for each path at 1e6 neutrons. Call `main` with other numbers for finer
+Each path's three figures go to the folder of its run with the diagnostics,
+`mcstas_output/trex_extraction_bender_out/` and `..._in/`. That folder also holds McStasScript's
+event lists of the three diagnostics positions, about 190 MB for each path at 1e6 neutrons. The
+run of the diagram has a folder of its own, `mcstas_output/trex_extraction_bender_out_intensity/`
+and `..._in_intensity/`. Call `main` with other numbers for finer
 figures:
 
 ```bash

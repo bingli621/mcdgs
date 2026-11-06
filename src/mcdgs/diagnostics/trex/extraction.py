@@ -16,6 +16,7 @@ after the source, after guide 3 and at the exit of guide 4b. Run the module for 
 
 from dataclasses import dataclass
 from pathlib import Path
+from unittest.mock import patch
 
 import matplotlib.pyplot as plt
 import mcstasscript as ms
@@ -68,6 +69,10 @@ class ExtractionParams:
     b_rot: float = param(BENDER_ROTATION, "deg", "rotation of the cold neutron bender")
 
 
+# n/s: the range of the intensity axis of McStasScript's diagram, from the source to the beam
+# monitor on both paths, about 1e11 to 1e12 n/s at the defaults
+DIAGRAM_INTENSITY_LIMITS = (5e10, 1.5e12)
+
 DEFAULT_PARAMS = ExtractionParams()  # frozen, so one shared default is safe
 
 
@@ -118,6 +123,19 @@ class Extraction(Instrument):
         ]
 
 
+def _zoom_intensity(diagram: Figure, limits: tuple[float, float]) -> None:
+    """Zoom the intensity axis of McStasScript's diagram, and its ray count with it.
+
+    ``show_diagram`` takes no range for the intensity: its ``limits`` are those of a
+    ``variable``. The ray count keeps its ratio to the intensity, so both share their ticks.
+    """
+    intensity_ax = next(ax for ax in diagram.axes if ax.get_xlabel() == "Intensity [n/s]")
+    rays_ax = next(ax for ax in diagram.axes if ax.get_xlabel() == "Ray count")
+    rays_per_intensity = rays_ax.get_xlim()[1] / intensity_ax.get_xlim()[1]
+    intensity_ax.set_xlim(limits)
+    rays_ax.set_xlim(limits[0] * rays_per_intensity, limits[1] * rays_per_intensity)
+
+
 def _save(fig: Figure, path: Path, dpi: int) -> Path:
     """Save a figure, close it and return its path."""
     fig.savefig(path, dpi=dpi)
@@ -131,15 +149,16 @@ def main(
     ncount: float = 1e6,
     neutrons: int = 1_000_000,
     seed: int = 1,
-    transmission: float = 1.0,
+    transmission: float = 0.2,
 ) -> list[Path]:
     """Compare McStas and tof at the beam monitor, bender out and in, and save the figures.
 
-    McStas runs once per path, with McStasScript's diagnostics, and tof once: tof has no bender,
-    so the same run serves both. On each path, tof is scaled to the total of McStas at the source
-    monitor, and by ``transmission`` on top of it. Both figures of a
-    path, the diagnostics and the comparison,
-    ``trex_extraction_bender_out_diagnose.png`` and ``trex_extraction_bender_out.png``, or
+    McStas runs twice per path, once with McStasScript's diagnostics and once for its diagram
+    of the intensity along the instrument, and tof once: tof has no bender, so the same run serves
+    both. On each path, tof is scaled to the total of McStas at the source monitor, and by
+    ``transmission`` on top of it. The three figures of a path, the diagnostics, the diagram and
+    the comparison, ``trex_extraction_bender_out_diagnose.png``,
+    ``trex_extraction_bender_out_intensity.png`` and ``trex_extraction_bender_out.png``, or
     ``..._in``, go to ``out``.
 
     Parameters
@@ -154,12 +173,14 @@ def main(
         Seed of the random numbers of both models.
     transmission:
         The factor on tof at the beam monitor, on top of the scale of the source monitor: the
-        fraction of the beam the guides would let through, which tof does not model.
+        fraction of the beam the guides would let through, which tof does not model. 0.2 is
+        an estimate, close to the 0.18 McStas has with the bender out at the defaults.
 
     Returns
     -------
     :
-        The paths of the figures, bender out then in: the diagnostics, then the comparison.
+        The paths of the figures, bender out then in: the diagnostics, the diagram, then the
+        comparison.
     """
     extraction = Extraction()
 
@@ -171,7 +192,8 @@ def main(
 
     # McStasScript's diagnostics, the same for both paths: the beam after the source, guide 3
     # and guide 4b, its profile, wavelength against x, and its spectrum
-    diag = ms.Diagnostics(build_mcstas(extraction, input_path=default_input_dir(extraction)))
+    mcstas_instr = build_mcstas(extraction, input_path=default_input_dir(extraction))
+    diag = ms.Diagnostics(mcstas_instr)  # works on a copy: mcstas_instr is left as it is
     for component in ("source", "guide_3", "guide_4b"):
         # rays="all": a limited list stops early, which leaves the intensities too low
         diag.add_point(after=component, rays="all")  # pyright: ignore[reportArgumentType]
@@ -191,6 +213,24 @@ def main(
         diag.plot()  # draws on a new figure, which it does not return
         figure_folder = output_folder(out, folder)
         figures.append(_save(plt.gcf(), figure_folder / f"{run_name}_diagnose.png", dpi=100))
+
+        # McStasScript's diagram of the components, with the intensity and the rays before each:
+        # a McStas run of its own, in a folder of its own
+        mcstas_instr.set_parameters(bender_in=int(bender_in))
+        mcstas_instr.settings(
+            ncount=ncount,
+            suppress_output=True,
+            mpi="auto",
+            seed=seed,
+            output_path=str(run_folder(default_output_dir(), f"{run_name}_intensity", "diagram")),
+        )
+        # show_diagram ends in plt.show(), which in a window waits for it to close, and the
+        # figure goes with it: hold it back, to save the figure as the others
+        with patch.object(plt, "show"):
+            mcstas_instr.show_diagram(analysis=True)
+        diagram = plt.gcf()
+        _zoom_intensity(diagram, DIAGRAM_INTENSITY_LIMITS)
+        figures.append(_save(diagram, figure_folder / f"{run_name}_intensity.png", dpi=100))
 
         # tof's counts are scaled to the total of McStas at the source monitor, in n/s, and by
         # the transmission on top of it at the beam monitor
