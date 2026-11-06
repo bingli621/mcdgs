@@ -29,7 +29,8 @@ from mcdgs.core.components import (
     Pol_bender,
     Progress_bar,
 )
-from mcdgs.core.components.monitors import monitor_limits
+from mcdgs.core.components.monitors import monitor_time_limits
+from mcdgs.core.components.source import ESS_SOURCE_LENGTH, L_MAX, L_MIN
 from mcdgs.core.params import InstrParam, param
 from mcdgs.diagnostics.cli import output_folder, parse_out
 from mcdgs.diagnostics.compare import plot_comparison, read_comparison
@@ -104,7 +105,7 @@ class Extraction(Instrument):
         self.guide_4a = guide_4a(when="bender_in==0")
         self.bender = bender(when="bender_in==1")
         self.guide_4b = guide_4b(when="bender_in==1")
-        self.beam_monitor = beam_monitor(*monitor_limits(BEAM_MONITOR_Z))
+        self.beam_monitor = beam_monitor()
 
     @property
     def instr_params(self) -> list[InstrParam]:
@@ -155,9 +156,11 @@ def main(
     """
     extraction = Extraction()
     tof_result = build_tof(extraction, neutrons=neutrons, seed=seed).run()
-    (t_start, t_stop, t_bins), (l_start, l_stop, l_bins) = monitor_limits(
-        BEAM_MONITOR_Z
-    )  # as Extraction's
+    # FIXME: the axes of Extraction's beam monitor, its defaults written again: read them from
+    # the monitor instead, so that they cannot drift apart
+    l_start, l_stop, l_bins = L_MIN, L_MAX, 100
+    t_start, t_stop = monitor_time_limits(BEAM_MONITOR_Z, (l_start, l_stop), ESS_SOURCE_LENGTH)
+    t_bins = 100
     bins = {  # the bin edges of the beam monitor's map, in its order: time, wavelength
         "toa": sc.linspace("toa", t_start, t_stop, t_bins + 1, unit="s"),
         "wavelength": sc.linspace("wavelength", l_start, l_stop, l_bins + 1, unit="Å"),

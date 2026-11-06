@@ -5,6 +5,8 @@ of row 29, after guide 4, on the arm of guide 4; the sample monitor at ``sample_
 """
 
 from mcdgs.core.components import Monitor_nD
+from mcdgs.core.components.monitors import monitor_time_limits
+from mcdgs.core.components.source import ESS_SOURCE_LENGTH, L_MAX, L_MIN
 
 from .guides.bispectral import GUIDE_4_TILT, GUIDE_4A_IN_Z
 from .guides.extraction import z_along_arm
@@ -15,7 +17,10 @@ BEAM_MONITOR_Z = BEAM_MONITOR_GAP_Z + BEAM_MONITOR_GAP_LENGTH / 2  # m, mid-gap
 
 
 def beam_monitor(
-    time_limits: tuple[float, float, int], lambda_limits: tuple[float, float, int]
+    time_limits: tuple[float, float] | None = None,
+    lambda_limits: tuple[float, float] | None = None,
+    lambda_bins: int = 100,
+    time_bins: int = 100,
 ) -> Monitor_nD:
     """Create the time and wavelength monitor in the middle of the bunker gap of row 29.
 
@@ -25,25 +30,36 @@ def beam_monitor(
     Parameters
     ----------
     time_limits:
-        The time axis: start and stop in s, and the number of bins.
+        Start and stop of the time axis, in s. ``None`` takes them from
+        :func:`.monitor_time_limits` at ``BEAM_MONITOR_Z``, for ``lambda_limits`` and a pulse of
+        ``ESS_SOURCE_LENGTH``.
     lambda_limits:
-        The wavelength axis: start and stop in Å, and the number of bins.
+        Start and stop of the wavelength axis, in Å. ``None`` takes the widest band the source
+        simulates, ``L_MIN`` to ``L_MAX``.
+    lambda_bins:
+        Number of wavelength bins.
+    time_bins:
+        Number of time bins.
 
     Returns
     -------
     :
         A new monitor.
     """
-    t_start, t_stop, t_bins = time_limits
-    l_start, l_stop, l_bins = lambda_limits
+    if lambda_limits is None:
+        lambda_limits = (L_MIN, L_MAX)
+    if time_limits is None:
+        time_limits = monitor_time_limits(BEAM_MONITOR_Z, lambda_limits, ESS_SOURCE_LENGTH)
+    t_start, t_stop = time_limits
+    l_start, l_stop = lambda_limits
 
     return Monitor_nD(
         xwidth=0.06,  # FIXME cell E32, the entrance of guide 5
         yheight=0.046260695185495173,  # FIXME cell F32, the entrance of guide 5
         restore_neutron=1,
         options=(  # time in s, lambda in Å: one 2D map
-            f"time limits=[{t_start} {t_stop}] bins={t_bins} "
-            f"lambda limits=[{l_start} {l_stop}] bins={l_bins}"
+            f"time limits=[{t_start} {t_stop}] bins={time_bins} "
+            f"lambda limits=[{l_start} {l_stop}] bins={lambda_bins}"
         ),
         filename="beam_monitor",
         at=[0, 0, z_along_arm(BEAM_MONITOR_Z, GUIDE_4A_IN_Z, GUIDE_4_TILT)],

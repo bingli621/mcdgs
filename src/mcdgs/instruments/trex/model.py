@@ -11,7 +11,6 @@ from mcdgs.core.components import (
     Progress_bar,
     Single_crystal,
 )
-from mcdgs.core.components.monitors import monitor_limits
 from mcdgs.core.params import InstrParam, param
 
 from .choppers import Mode, chopper_timings, choppers
@@ -25,7 +24,7 @@ from .guides.bispectral import (
 from .guides.curve import guides_curve
 from .guides.extraction import guides_extraction
 from .guides.straight import guides_straight, sample_pos, slit_mc
-from .monitors import BEAM_MONITOR_Z, beam_monitor, sample_monitor
+from .monitors import beam_monitor, sample_monitor
 from .sources import source, wavelength_band
 
 
@@ -112,7 +111,7 @@ class TRex(Instrument):
         self.guide_4a = guide_4a(when="bender_in==0")
         self.bender = bender(when="bender_in==1")
         self.guide_4b = guide_4b(when="bender_in==1")
-        self.beam_monitor = beam_monitor(*monitor_limits(BEAM_MONITOR_Z, (lambda_min, lambda_max)))
+        self.beam_monitor = beam_monitor(lambda_limits=(lambda_min, lambda_max))
         # curved guides
         self.add_components(to_bwc1)
         self.bw1 = disks["bw1"]
