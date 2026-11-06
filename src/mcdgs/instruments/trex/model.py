@@ -137,8 +137,8 @@ class TRex(Instrument):
     def update_params(self, **values: Any) -> None:
         """Change control parameters.
 
-        A new ``lambda0`` also creates the source again, with the band of
-        :func:`.sources.wavelength_band`. The beam monitor keeps its wavelength axis.
+        A new ``lambda0`` also creates the source and the beam monitor again, with the band of
+        :func:`.sources.wavelength_band`.
 
         Parameters
         ----------
@@ -154,6 +154,7 @@ class TRex(Instrument):
         if "lambda0" in values:
             lambda_min, lambda_max = wavelength_band(self.params.lambda0)
             self.source = source(lambda_min, lambda_max)
+            self.beam_monitor = beam_monitor(lambda_limits=(lambda_min, lambda_max))
 
     def add_components(self, components: dict[str, Component]) -> None:
         """Set components as attributes under their names, keeping their order.

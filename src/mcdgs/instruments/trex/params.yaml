@@ -254,7 +254,7 @@ beam_monitor:
   max: 1.0e+40
   restore_neutron: 1
   radius: 0
-  options: time limits=[0.0016338927653763871 0.007833700021612214] bins=100 lambda limits=[1.09517711660141 2.90482288339859] bins=100
+  options: time limits=[0.0016338927653763871 0.007833892765376388] bins=124 lambda limits=[1.09517711660141 2.91517711660141] bins=91
   filename: beam_monitor
   nowritefile: 0
   nexus_bins: 0

@@ -33,6 +33,7 @@ from mcdgs.core.components import (
 from mcdgs.core.components.monitors import monitor_time_limits
 from mcdgs.core.components.source import ESS_SOURCE_LENGTH, L_MAX, L_MIN
 from mcdgs.core.params import InstrParam, param
+from mcdgs.core.utils import bins_from_limits
 from mcdgs.diagnostics.cli import output_folder, parse_out
 from mcdgs.diagnostics.compare import plot_comparison, read_comparison
 from mcdgs.instruments.trex.guides.bispectral import (
@@ -43,7 +44,12 @@ from mcdgs.instruments.trex.guides.bispectral import (
     guide_4b,
 )
 from mcdgs.instruments.trex.guides.extraction import guides_extraction
-from mcdgs.instruments.trex.monitors import BEAM_MONITOR_Z, beam_monitor
+from mcdgs.instruments.trex.monitors import (
+    BEAM_MONITOR_LAMBDA_RESOLUTION,
+    BEAM_MONITOR_TIME_RESOLUTION,
+    BEAM_MONITOR_Z,
+    beam_monitor,
+)
 from mcdgs.instruments.trex.sources import source
 from mcdgs.mcstas.builder import build_mcstas, default_input_dir
 from mcdgs.mcstas.run_folders import default_output_dir, run_folder
@@ -157,11 +163,12 @@ def main(
     """
     extraction = Extraction()
     tof_result = build_tof(extraction, neutrons=neutrons, seed=seed).run()
-    # FIXME: the axes of Extraction's beam monitor, its defaults written again: read them from
-    # the monitor instead, so that they cannot drift apart
-    (l_start, l_stop) = L_MIN, L_MAX
-    t_start, t_stop = monitor_time_limits(BEAM_MONITOR_Z, (l_start, l_stop), ESS_SOURCE_LENGTH)
-    t_bins, l_bins = 100, 100
+    # FIXME: the axes of Extraction's beam monitor, worked out again as beam_monitor does from
+    # its defaults: read them from the monitor instead, so that they cannot drift apart
+    band = (L_MIN, L_MAX)
+    time_limits = monitor_time_limits(BEAM_MONITOR_Z, band, ESS_SOURCE_LENGTH)
+    t_start, t_stop, t_bins = bins_from_limits(time_limits, BEAM_MONITOR_TIME_RESOLUTION)
+    l_start, l_stop, l_bins = bins_from_limits(band, BEAM_MONITOR_LAMBDA_RESOLUTION)
     bins = {  # the bin edges of the beam monitor's map, in its order: time, wavelength
         "toa": sc.linspace("toa", t_start, t_stop, t_bins + 1, unit="s"),
         "wavelength": sc.linspace("wavelength", l_start, l_stop, l_bins + 1, unit="Å"),

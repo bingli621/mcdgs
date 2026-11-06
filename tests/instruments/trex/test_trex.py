@@ -90,10 +90,13 @@ def test_the_band_of_the_source_is_centered_on_lambda0():
     assert (source.Lmin, source.Lmax) == pytest.approx((2.0 - HALF_BAND, 2.0 + HALF_BAND))
 
 
-def test_a_new_lambda0_moves_the_band_of_the_source():
+def test_a_new_lambda0_moves_the_band_of_the_source_and_the_beam_monitor():
     trex = TRex()
+    names = list(trex.components)
     trex.update_params(lambda0=4.0)
     assert (trex.source.Lmin, trex.source.Lmax) == pytest.approx((4.0 - HALF_BAND, 4.0 + HALF_BAND))
+    assert trex.beam_monitor == TRex(params=trex.params).beam_monitor
+    assert list(trex.components) == names  # in their place
 
 
 def test_the_beam_monitor_is_in_the_middle_of_its_gap():

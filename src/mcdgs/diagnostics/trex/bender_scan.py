@@ -86,8 +86,8 @@ def read_spectra(h5_file: Path) -> tuple[NDArray, NDArray, NDArray]:
 
     The map of the beam monitor is summed over time, then over each band of
     :data:`BAND_WIDTH`, centered on a multiple of it. A wavelength bin goes to the band whose
-    center is nearest to its own, so a band's edges are those of its bins, within half a bin of
-    the band's. Only the bands the axis of the monitor covers whole are kept. The bins are
+    center is nearest to its own, and to the band above when it is centered on the edge of two,
+    so a band's edges are those of its bins, within half a bin of the band's. Only the bands the axis of the monitor covers whole are kept. The bins are
     independent, so their errors add in quadrature.
 
     Parameters
@@ -119,7 +119,9 @@ def read_spectra(h5_file: Path) -> tuple[NDArray, NDArray, NDArray]:
 
     half_bin = (wavelengths[1] - wavelengths[0]) / 2
     start, stop = wavelengths[0] - half_bin, wavelengths[-1] + half_bin  # the axis, in Å
-    band_of_bin = np.rint(wavelengths / BAND_WIDTH).astype(int)  # the nearest center, in widths
+    # the nearest center, in widths; a bin centered on the edge of two bands, as 0.25 Å, goes to
+    # the band above, whatever the rounding of its center
+    band_of_bin = np.floor(wavelengths / BAND_WIDTH + 0.5 + 1e-9).astype(int)
     tolerance = 1e-9  # Å: an edge of the axis on that of a band covers it
     whole = [
         int(band)

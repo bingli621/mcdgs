@@ -65,8 +65,7 @@ neutron mass, so a neutron of 1 Å flies at 3956 m/s. The band is then
 
 centered on `lambda0` and cut to 0.1 to 10 Å, the widest band of `ESS_butterfly`. The 3.5 ms is
 longer than the 2.857 ms of the ESS pulse in McStas, to keep its tail. A new `lambda0`, through
-`update_params`, creates the source again with its band. The beam monitor keeps the band of the
-`lambda0` T-Rex was created with.
+`update_params`, creates the source and the beam monitor again with its band.
 
 ## Extraction guides
 
@@ -179,12 +178,14 @@ Both monitors leave the neutrons unchanged. They are in
 
 | Monitor | Where | Size | What it records |
 | ------- | ----- | ---- | --------------- |
-| `beam_monitor` | In the middle of the bunker gap of row 29, after guide 4, 5.902 m along the beam, on the arm of guide 4 | 0.06 m × 0.0463 m | Time against wavelength, 100 × 100 bins |
+| `beam_monitor` | In the middle of the bunker gap of row 29, after guide 4, 5.902 m along the beam, on the arm of guide 4 | 0.06 m × 0.0463 m | Time against wavelength, in bins of 0.05 ms and 0.02 Å |
 | `sample_monitor` | At `sample_pos` | 0.1 m × 0.1 m | Wavelength, 0.5 to 5.3 Å in 12 bins |
 
 The wavelength axis of `beam_monitor` is the band of the source. Its time axis runs from the
 fastest neutron of that band, leaving at the start of the pulse, to the slowest, leaving 3.5 ms
-later: 1.63 to 7.83 ms at the default `lambda0`.
+later. Each axis has the fewest bins of its width that cover it, so its stop moves up to the end
+of the last bin: at the default `lambda0`, 1.095 to 2.915 Å in 91 bins and 1.63 to 7.83 ms in
+124.
 
 ## Chopper timing
 

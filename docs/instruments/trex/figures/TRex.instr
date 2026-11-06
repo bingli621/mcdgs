@@ -15,7 +15,7 @@
 * 
 * %Identification
 * Written by: Python McStas Instrument Generator
-* Date: 13:23:55 on November 06, 2026
+* Date: 13:46:02 on November 06, 2026
 * Origin: ESS DMSC
 * %INSTRUMENT_SITE: Generated_instruments
 * 
@@ -219,7 +219,7 @@ COMPONENT beam_monitor = Monitor_nD(
  zmax = 0, bins = 0,
  min = -1e+40, max = 1e+40,
  restore_neutron = 1, radius = 0,
- options = "time limits=[0.0016338927653763871 0.007833700021612214] bins=100 lambda limits=[1.09517711660141 2.90482288339859] bins=100", filename = "beam_monitor",
+ options = "time limits=[0.0016338927653763871 0.007833892765376388] bins=124 lambda limits=[1.09517711660141 2.91517711660141] bins=91", filename = "beam_monitor",
  geometry = "NULL", nowritefile = 0,
  nexus_bins = 0)
 AT (0, 0, 0.5013534758010247) RELATIVE arm_guide_4

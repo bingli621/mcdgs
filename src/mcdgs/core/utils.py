@@ -5,6 +5,7 @@
   instrument parameters (``"-chi"``, ``"2.0*omega + 5"``) is parsed with ``ast`` and computed as
   McStas would. Only what McStas offers is allowed, and no code is run.
 - :func:`speed_from_wavelength` computes the speed of a neutron.
+- :func:`bins_from_limits` gives an axis of bins of one width, such as that of a monitor.
 """
 
 import ast
@@ -158,3 +159,38 @@ def speed_from_wavelength(wavelength: float) -> float:
     3956.034
     """
     return h / (m_n * wavelength * 1e-10)
+
+
+def bins_from_limits(limits: tuple[float, float], bin_width: float) -> tuple[float, float, int]:
+    """Return an axis of bins of exactly ``bin_width``, covering ``limits``.
+
+    The axis starts at the start of ``limits``. It has the fewest bins that cover them, so its
+    stop moves up to the end of the last bin, by less than one bin.
+
+    Parameters
+    ----------
+    limits:
+        Start and stop of the values to cover, such as wavelengths in Å or times in s.
+    bin_width:
+        Width of a bin, in the unit of ``limits``.
+
+    Returns
+    -------
+    :
+        Start and stop of the axis, and its number of bins.
+
+    Raises
+    ------
+    ValueError
+        If ``bin_width`` is not positive, or the stop is not above the start.
+
+    Examples
+    --------
+    >>> bins_from_limits((0.0, 1.1), 0.5)  # 2.2 bins: 3, up to 1.5
+    (0.0, 1.5, 3)
+    """
+    start, stop = limits
+    if bin_width <= 0 or stop <= start:
+        raise ValueError(f"need a positive bin width and stop > start, not {bin_width}, {limits}")
+    bins = math.ceil((stop - start) / bin_width - 1e-9)  # an exact multiple is not one more
+    return (start, start + bins * bin_width, bins)

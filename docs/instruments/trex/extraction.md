@@ -40,10 +40,11 @@ grainy. The spectra, on one axis, are smooth.
 ## McStas and tof at the beam monitor
 
 The beam monitor is in the gap after guide 4, at 5.902 m, 0.06 m wide and 0.0463 m high. It
-records one map of time, 0.15 to 18.4 ms in 100 bins of 0.18 ms, against wavelength, 0.1 to 10 Å
-in 100 bins of 0.099 Å. The time runs from the fastest neutron of the band, 0.1 Å, leaving at the
+records one map of time, 0.15 to 18.4 ms in 366 bins of 0.05 ms, against wavelength, 0.1 to 10 Å
+in 495 bins of 0.02 Å. The time runs from the fastest neutron of the band, 0.1 Å, leaving at the
 start of the pulse, to the slowest, 10 Å, leaving 3.5 ms later. Both models see the same monitor;
-see [Source](source.md) for how the two are read and compared.
+see [Source](source.md) for how the two are read and compared. With 1e6 neutrons spread over
+that many bins, the McStas map and spectra are grainy.
 
 tof has no guides and no bender: every neutron of its pulse reaches the monitor, at the time of
 its straight flight from the source. Its counts are scaled to the McStas total at the monitor, on

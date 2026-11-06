@@ -10,9 +10,10 @@ guide 4.
 `run_bender_scan` runs McStas at 19 values of `b_rot`, from −0.8 to 0.1 deg in steps of 0.05 deg,
 with the bender in, and once with it out, through the thermal guide 4a. `read_spectra` sums the
 map of the beam monitor over time, and then over bands of 0.5 Å centered on 0.5, 1.0, … 9.5 Å:
-19 bands over the 0.1 to 10 Å of the monitor. Each wavelength bin, 0.099 Å wide, goes to the band
-whose center is nearest to its own, so the edges of a band are those of its bins, within half a
-bin. The bins are independent, so their errors add in quadrature.
+19 bands over the 0.1 to 10 Å of the monitor. Each wavelength bin, 0.02 Å wide, goes to the band
+whose center is nearest to its own, 25 bins to a band. A bin is centered on each edge of two
+bands, and goes to the band above, so each band is that of its center moved up by half a bin,
+0.01 Å. The bins are independent, so their errors add in quadrature.
 `transmission` divides each band of the scan by the same band with the bender out, and the
 relative errors of the two add in quadrature.
 
@@ -27,20 +28,20 @@ At −0.4 deg, the point of the scan nearest the nominal rotation:
 
 | Band center | Transmission |
 | ----------- | ------------ |
-| 8.5 to 9.5 Å | 0.80 to 0.86 |
-| 3.0 to 8.0 Å | 0.91 to 1.05 |
+| 8.5 to 9.5 Å | 0.81 to 0.86 |
+| 3.0 to 8.0 Å | 0.92 to 1.06 |
 | 2.5 Å | 0.88 |
-| 2.0 Å | 0.71 |
-| 1.5 Å | 0.33 |
-| 0.5 and 1.0 Å | 0.15 and 0.13 |
+| 2.0 Å | 0.67 |
+| 1.5 Å | 0.30 |
+| 0.5 and 1.0 Å | 0.14 and 0.12 |
 
-The errors are 0.007 to 0.04, the larger at the longer wavelengths, where fewer neutrons are.
+The errors are 0.007 to 0.05, the larger at the longer wavelengths, where fewer neutrons are.
 Above 1 means the bender passes a band slightly better than guide 4a; within the errors the bands
 from 3 to 8 Å pass completely. They are flat from about −0.6 to −0.2 deg, so the nominal rotation
-sits in the middle of that range. Above 8 Å the transmission is lower, 0.80 to 0.86 here and
-0.75 to 0.94 over the scan. The bands of 1.0 and 1.5 Å keep rising up to the end of the scan at 0.1 deg,
-so their maximum lies outside it. The shortest band, around 0.5 Å, stays below 0.22 at every
-angle.
+sits in the middle of that range. Above 8 Å the transmission is lower, 0.81 to 0.86 here and
+0.75 to 0.93 over the scan. The bands of 1.0 and 1.5 Å keep rising up to the end of the scan at
+0.1 deg, so their maximum lies outside it. The shortest band, around 0.5 Å, stays below 0.2 at
+every angle.
 
 ## Making the figure
 
