@@ -194,6 +194,19 @@ def test_monitor_nd_defaults_are_mcstas_s():
     assert (monitor.bins, monitor.restore_neutron, monitor.nowritefile) == (0, 0, 0)
 
 
+def test_monitor_nd_bin_limits_reads_every_axis_of_options():
+    monitor = Monitor_nD(options="time limits=[0.01 0.1] bins=1800 lambda limits=[0.1 10] bins=495")
+    assert monitor.bin_limits == {"time": (0.01, 0.1, 1800), "lambda": (0.1, 10.0, 495)}
+    assert Monitor_nD(options="lambda limits=[0.5 5] bins=50").bin_limits == {
+        "lambda": (0.5, 5.0, 50)
+    }
+
+
+def test_monitor_nd_bin_limits_is_empty_without_axes():
+    assert Monitor_nD().bin_limits == {}
+    assert Monitor_nD(options="x bins=4, y bins=3, list all, pixel id, t").bin_limits == {}
+
+
 def test_a_bender_keeps_the_defaults_of_mcstas():
     bender = Pol_bender(xwidth=0.06, yheight=0.04, length=0.05, radius=7.2)
     parameters = bender.mcstas_parameters()

@@ -1,10 +1,14 @@
 """Monitors: Monitor_nD, and monitor_time_limits for the time window of its map."""
 
+import re
 from dataclasses import dataclass
 
 from mcdgs.core.utils import speed_from_wavelength
 
 from .base import Component
+
+# one axis of ``options`` as written here: ``<variable> limits=[<start> <stop>] bins=<bins>``
+_AXIS = re.compile(r"(\w+)\s+limits=\[\s*(\S+)\s+(\S+)\s*\]\s+bins=(\d+)")
 
 
 def monitor_time_limits(
@@ -73,6 +77,11 @@ class Monitor_nD(Component):
         NeXus output only: -1 stores no bin information, 0 stores it for event lists, 1 for any
         monitor.
 
+    Attributes
+    ----------
+    bin_limits:
+        Start, stop and number of bins of each axis in ``options``, by variable.
+
     Notes
     -----
     Every default is McStas's; ``None`` is McStas's unset string, ``"NULL"``.
@@ -87,6 +96,8 @@ class Monitor_nD(Component):
     ... )
     >>> lambda_monitor.mcstas_parameters()["options"]
     'lambda limits=[0.5 5] bins=50'
+    >>> lambda_monitor.bin_limits
+    {'lambda': (0.5, 5.0, 50)}
     """
 
     xwidth: float = 0
@@ -108,3 +119,17 @@ class Monitor_nD(Component):
     geometry: str | None = None
     nowritefile: int = 0
     nexus_bins: int = 0
+
+    @property
+    def bin_limits(self) -> dict[str, tuple[float, float, int]]:
+        """Start, stop and number of bins of each axis in ``options``, by variable.
+
+        Reads every axis written as ``<variable> limits=[<start> <stop>] bins=<bins>``, in the
+        order of ``options``, such as ``{"time": (0.01, 0.1, 1800), "lambda": (0.1, 10.0, 495)}``.
+        An axis written in another form McStas accepts (``bins`` before ``limits``, or no
+        ``limits``) is left out. Empty if ``options`` is ``None`` or has no such axis.
+        """
+        return {
+            variable: (float(start), float(stop), int(bins))
+            for variable, start, stop, bins in _AXIS.findall(self.options or "")
+        }
