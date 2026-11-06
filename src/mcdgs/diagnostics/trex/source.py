@@ -44,15 +44,13 @@ from mcdgs.core.components import ESS_butterfly, Monitor_nD
 from mcdgs.core.params import InstrParam
 from mcdgs.diagnostics.cli import output_folder, parse_out
 from mcdgs.diagnostics.compare import plot_comparison, read_comparison
+from mcdgs.instruments.trex.monitors import source_monitor
 from mcdgs.instruments.trex.sources import source
 from mcdgs.mcstas.simulation import Simulation
 from mcdgs.tof.builder import build_tof
 
+
 # --8<-- [start:trex_source]
-TIME_EDGES = np.linspace(0.0, 0.015, 301)  # s: the whole pulse and the flight up to 10 Å
-WAVELENGTH_EDGES = np.linspace(0.0, 10.0, 201)  # Å: the band of the source, 0.1 to 10 Å
-
-
 @dataclass(frozen=True)
 class TRexSourceParams:
     """Control parameters of :class:`TRexSource`: there are none."""
@@ -78,20 +76,8 @@ class TRexSource(Instrument):
 
     def __init__(self, params: TRexSourceParams | None = None) -> None:
         super().__init__(params)
-        self.source = source(l_min=0.1, l_max=10)
-        self.source_monitor = Monitor_nD(
-            xwidth=0.089955,  # m, cell E13, the entrance of guide 1
-            yheight=0.029992,  # m, cell F13, the entrance of guide 1
-            restore_neutron=1,
-            options=(  # time in s, lambda in Å: one 2D map
-                f"time limits=[{TIME_EDGES[0]} {TIME_EDGES[-1]}] bins={len(TIME_EDGES) - 1} "
-                f"lambda limits=[{WAVELENGTH_EDGES[0]} {WAVELENGTH_EDGES[-1]}] "
-                f"bins={len(WAVELENGTH_EDGES) - 1}"
-            ),
-            filename="source_monitor",  # the name of the monitor, in both models
-            at=[0, 0, 1.895927],  # m, cell B13, the entrance of guide 1
-            relative="source",
-        )
+        self.source = source()
+        self.source_monitor = source_monitor()
 
     @property
     def instr_params(self) -> list[InstrParam]:
@@ -141,9 +127,12 @@ def main(
     # --8<-- [start:run_tof]
     # run tof, then read the monitor of both on the bins of the McStas map: time, wavelength
     tof_result = build_tof(instrument, neutrons=neutrons, seed=seed).run()
+    limits = instrument.source_monitor.bin_limits  # the axes of the monitor, read from it
+    t_start, t_stop, t_bins = limits["time"]
+    l_start, l_stop, l_bins = limits["lambda"]
     bins = {
-        "toa": sc.array(dims=["toa"], values=TIME_EDGES, unit="s"),
-        "wavelength": sc.array(dims=["wavelength"], values=WAVELENGTH_EDGES, unit="Å"),
+        "toa": sc.linspace("toa", t_start, t_stop, t_bins + 1, unit="s"),
+        "wavelength": sc.linspace("wavelength", l_start, l_stop, l_bins + 1, unit="Å"),
     }
     # tof's counts are scaled to the total of McStas, in n/s
     comparison = read_comparison("source_monitor", mcstas_data, tof_result, bins, ncount, neutrons)

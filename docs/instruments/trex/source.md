@@ -13,17 +13,19 @@ It is the smallest T-Rex: two components and no McStas instrument parameters.
 | Component | What it is |
 | --------- | ---------- |
 | `source` | The T-Rex source, `ESS_butterfly` on beam port W7, one pulse at 2 MW, as in `TRex` but with the widest band, 0.1 to 10 Å, in place of the band around `lambda0`. |
-| `source_monitor` | A `Monitor_nD` at the entrance of guide 1, 1.895927 m from the source on its axis, unrotated, with the opening of guide 1: 0.089955 m wide and 0.029992 m high. |
+| `source_monitor` | `source_monitor()` of [`mcdgs.instruments.trex.monitors`](../../reference/trex.md), a `Monitor_nD` at the entrance of guide 1, 1.895927 m from the source on its axis, unrotated, with the opening of guide 1: 0.089955 m wide and 0.029992 m high. |
 
 The monitor records one 2D map of time against wavelength:
 
 | Axis | Range | Bins | Bin width |
 | ---- | ----- | ---- | --------- |
-| Time | 0 to 15 ms | 300 | 0.05 ms |
-| Wavelength | 0 to 10 Å | 200 | 0.05 Å |
+| Time | 0.048 to 8.30 ms | 165 | 0.05 ms |
+| Wavelength | 0.1 to 10 Å | 198 | 0.05 Å |
 
-15 ms holds the whole pulse and the flight to guide 1 up to 10 Å. The monitor has
-`restore_neutron=1`, so it does not change the beam.
+The wavelength axis is the band of the source. The time axis runs from the fastest neutron of
+that band, 0.1 Å leaving at the start of the pulse, to the slowest, 10 Å leaving at its end, so it
+holds every neutron of the source. Each axis has the fewest bins of its width that cover it. The
+monitor has `restore_neutron=1`, so it does not change the beam.
 
 `TRexSource` has no control parameters and no McStas parameters. It is defined like any instrument of mcdgs: a parameters class, then an `Instrument` subclass that
 creates its components in beam order, with their positions.
@@ -125,7 +127,7 @@ same is `scale × neutrons ≈ Φ / f`, the n/s of the whole tof pulse. That dep
   the rays of McStas pass, so which part of the flux Φ is. tof has no apertures: only its choppers
   remove neutrons, so here every tof neutron reaches the monitor, whatever its size. Move or
   resize the monitor and Φ, so the scale, changes.
-- **The window of the bins.** The edges, 0 to 15 ms and 0 to 10 Å, set both which part of Φ is
+- **The window of the bins.** The edges, 0.048 to 8.30 ms and 0.1 to 10 Å, set both which part of Φ is
   counted and f. If tof's pulse reaches beyond 10 Å, f is below 1. At the defaults of `main`,
   8.25e11 n/s and 8.25e5 n/s per tof neutron make 1.00e6 neutrons in the bins, as many as were
   drawn: here f is 1, to three figures.
@@ -226,7 +228,7 @@ instantaneous rate (n/s) = time profile (n/s per bin) / 14 Hz / 0.05 ms
 ```
 
 Its maximum is the peak rate. At the entrance of guide 1, in the map of `main` at its defaults,
-it is 1.9e13 n/s at 2.9 ms, some 23 times the average. That is what the length of the pulse
+it is 2.0e13 n/s at 2.7 ms, some 24 times the average. That is what the length of the pulse
 suggests: most of the 5.9e10 neutrons of a pulse arrive within about 3 ms, and
 5.9e10 / 3 ms ≈ 2e13 n/s.
 

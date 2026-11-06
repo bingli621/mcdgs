@@ -173,19 +173,22 @@ choppers 1 and 2, beam monitor 1, the P-Chopper and the M-Chopper. The choppers 
 
 ## Monitors
 
-Both monitors leave the neutrons unchanged. They are in
+`TRex` has two monitors, `beam_monitor` and `sample_monitor`; `source_monitor` is that of
+[`TRexSource`](source.md). All three leave the neutrons unchanged. They are in
 [`mcdgs.instruments.trex.monitors`](../../reference/trex.md).
 
 | Monitor | Where | Size | What it records |
 | ------- | ----- | ---- | --------------- |
+| `source_monitor` | At the entrance of guide 1, 1.895927 m from the source on its axis | 0.089955 m × 0.029992 m | Time against wavelength, in bins of 0.05 ms and 0.05 Å |
 | `beam_monitor` | In the middle of the bunker gap of row 29, after guide 4, 5.902 m along the beam, on the arm of guide 4 | 0.06 m × 0.0463 m | Time against wavelength, in bins of 0.05 ms and 0.02 Å |
 | `sample_monitor` | At `sample_pos` | 0.1 m × 0.1 m | Wavelength, 0.5 to 5.3 Å in 12 bins |
 
-The wavelength axis of `beam_monitor` is the band of the source. Its time axis runs from the
-fastest neutron of that band, leaving at the start of the pulse, to the slowest, leaving 3.5 ms
-later. Each axis has the fewest bins of its width that cover it, so its stop moves up to the end
-of the last bin: at the default `lambda0`, 1.095 to 2.915 Å in 91 bins and 1.63 to 7.83 ms in
-124.
+The axes of `source_monitor` and `beam_monitor` follow one rule. The wavelength axis is the band
+of the source. The time axis runs from the fastest neutron of that band, leaving at the start of
+the pulse, to the slowest, leaving 3.5 ms later. Each axis has the fewest bins of its width that
+cover it, so its stop moves up to the end of the last bin. `source_monitor` has the widest band,
+0.1 to 10 Å in 198 bins and 0.048 to 8.30 ms in 165. `beam_monitor` has the band around
+`lambda0`: at its default, 1.095 to 2.915 Å in 91 bins and 1.63 to 7.83 ms in 124.
 
 ## Chopper timing
 

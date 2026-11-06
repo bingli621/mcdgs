@@ -30,10 +30,7 @@ from mcdgs.core.components import (
     Pol_bender,
     Progress_bar,
 )
-from mcdgs.core.components.monitors import monitor_time_limits
-from mcdgs.core.components.source import ESS_SOURCE_LENGTH, L_MAX, L_MIN
 from mcdgs.core.params import InstrParam, param
-from mcdgs.core.utils import bins_from_limits
 from mcdgs.diagnostics.cli import output_folder, parse_out
 from mcdgs.diagnostics.compare import plot_comparison, read_comparison
 from mcdgs.instruments.trex.guides.bispectral import (
@@ -44,12 +41,7 @@ from mcdgs.instruments.trex.guides.bispectral import (
     guide_4b,
 )
 from mcdgs.instruments.trex.guides.extraction import guides_extraction
-from mcdgs.instruments.trex.monitors import (
-    BEAM_MONITOR_LAMBDA_RESOLUTION,
-    BEAM_MONITOR_TIME_RESOLUTION,
-    BEAM_MONITOR_Z,
-    beam_monitor,
-)
+from mcdgs.instruments.trex.monitors import beam_monitor
 from mcdgs.instruments.trex.sources import source
 from mcdgs.mcstas.builder import build_mcstas, default_input_dir
 from mcdgs.mcstas.run_folders import default_output_dir, run_folder
@@ -162,17 +154,17 @@ def main(
         The paths of the figures, bender out then in: the diagnostics, then the comparison.
     """
     extraction = Extraction()
-    tof_result = build_tof(extraction, neutrons=neutrons, seed=seed).run()
-    # FIXME: the axes of Extraction's beam monitor, worked out again as beam_monitor does from
-    # its defaults: read them from the monitor instead, so that they cannot drift apart
-    band = (L_MIN, L_MAX)
-    time_limits = monitor_time_limits(BEAM_MONITOR_Z, band, ESS_SOURCE_LENGTH)
-    t_start, t_stop, t_bins = bins_from_limits(time_limits, BEAM_MONITOR_TIME_RESOLUTION)
-    l_start, l_stop, l_bins = bins_from_limits(band, BEAM_MONITOR_LAMBDA_RESOLUTION)
+
+    # the axes of the beam monitor, read from it so that they cannot drift apart
+    limits = extraction.beam_monitor.bin_limits
+    t_start, t_stop, t_bins = limits["time"]
+    l_start, l_stop, l_bins = limits["lambda"]
     bins = {  # the bin edges of the beam monitor's map, in its order: time, wavelength
         "toa": sc.linspace("toa", t_start, t_stop, t_bins + 1, unit="s"),
         "wavelength": sc.linspace("wavelength", l_start, l_stop, l_bins + 1, unit="Å"),
     }
+
+    tof_result = build_tof(extraction, neutrons=neutrons, seed=seed).run()
 
     # McStasScript's diagnostics, the same for both paths: the beam after the source, guide 3
     # and guide 4b, its profile, wavelength against x, and its spectrum

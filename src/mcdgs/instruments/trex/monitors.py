@@ -1,7 +1,8 @@
 """The monitors of T-Rex.
 
-Each monitor leaves the neutrons unchanged. The beam monitor sits in the middle of the bunker gap
-of row 29, after guide 4, on the arm of guide 4; the sample monitor at ``sample_pos``.
+Each monitor leaves the neutrons unchanged. The source monitor sits at the entrance of guide 1;
+the beam monitor in the middle of the bunker gap of row 29, after guide 4, on the arm of guide 4;
+the sample monitor at ``sample_pos``.
 """
 
 from mcdgs.core.components import Monitor_nD
@@ -12,12 +13,58 @@ from mcdgs.core.utils import bins_from_limits
 from .guides.bispectral import GUIDE_4_TILT, GUIDE_4A_IN_Z
 from .guides.extraction import z_along_arm
 
+SOURCE_MONITOR_Z = 1.895927  # m, cell B13, the entrance of guide 1
+SOURCE_MONITOR_LAMBDA_RESOLUTION = 0.05  # Å, the width of a wavelength bin
+SOURCE_MONITOR_TIME_RESOLUTION = 5e-5  # s, the width of a time bin, 0.05 ms
+
 BEAM_MONITOR_GAP_Z = 5.892  # m, cell B29
 BEAM_MONITOR_GAP_LENGTH = 0.02  # m, cell D29
 BEAM_MONITOR_Z = BEAM_MONITOR_GAP_Z + BEAM_MONITOR_GAP_LENGTH / 2  # m, mid-gap
-
 BEAM_MONITOR_LAMBDA_RESOLUTION = 0.02  # Å, the width of a wavelength bin
 BEAM_MONITOR_TIME_RESOLUTION = 5e-5  # s, the width of a time bin, 0.05 ms
+
+
+def source_monitor(
+    lambda_resolution: float = SOURCE_MONITOR_LAMBDA_RESOLUTION,
+    time_resolution: float = SOURCE_MONITOR_TIME_RESOLUTION,
+) -> Monitor_nD:
+    """Create the time and wavelength monitor at the entrance of guide 1.
+
+    It has the opening of guide 1 and is where guide 1 begins, ``SOURCE_MONITOR_Z`` from the
+    source on its axis, unrotated. It records one 2D map of time against wavelength, and leaves
+    the neutrons unchanged. The wavelength axis is the widest band the source simulates,
+    ``L_MIN`` to ``L_MAX``; the time axis is :func:`.monitor_time_limits` at
+    ``SOURCE_MONITOR_Z``, for that band and a pulse of ``ESS_SOURCE_LENGTH``.
+
+    Parameters
+    ----------
+    lambda_resolution:
+        Width of a wavelength bin, in Å. The axis has the fewest bins that cover the band, see
+        :func:`.bins_from_limits`.
+    time_resolution:
+        Width of a time bin, in s, likewise.
+
+    Returns
+    -------
+    :
+        A new monitor.
+    """
+    lambda_limits = (L_MIN, L_MAX)
+    time_limits = monitor_time_limits(SOURCE_MONITOR_Z, lambda_limits, ESS_SOURCE_LENGTH)
+    t_start, t_stop, t_bins = bins_from_limits(time_limits, time_resolution)
+    l_start, l_stop, l_bins = bins_from_limits(lambda_limits, lambda_resolution)
+    return Monitor_nD(
+        xwidth=0.089955,  # m, cell E13, the entrance of guide 1
+        yheight=0.029992,  # m, cell F13, the entrance of guide 1
+        restore_neutron=1,
+        options=(  # time in s, lambda in Å: one 2D map
+            f"time limits=[{t_start} {t_stop}] bins={t_bins} "
+            f"lambda limits=[{l_start} {l_stop}] bins={l_bins}"
+        ),
+        filename="source_monitor",  # the name of the monitor, in both models
+        at=[0, 0, SOURCE_MONITOR_Z],
+        relative="source",
+    )
 
 
 def beam_monitor(
