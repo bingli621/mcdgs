@@ -49,6 +49,36 @@ def test_a_given_scale_is_kept(tof_result):
     np.testing.assert_allclose(comparison.tof_error, 2 * np.sqrt(counts))  # Poisson
 
 
+def test_the_transmission_scales_tof_on_top_of_a_given_scale(tof_result):
+    comparison = read_comparison(
+        "source_monitor",
+        _mcstas_map((20, 30)),
+        tof_result,
+        BINS,
+        1e6,
+        NEUTRONS,
+        scale=2.0,
+        transmission=0.25,
+    )
+    counts = read_tof_monitor(tof_result["source_monitor"], BINS)
+    np.testing.assert_allclose(comparison.tof_intensity, 0.5 * counts)
+    np.testing.assert_allclose(comparison.tof_error, 0.5 * np.sqrt(counts))
+    assert (comparison.scale, comparison.transmission) == (2.0, 0.25)
+
+
+def test_a_transmission_without_a_scale_is_refused(tof_result):
+    with pytest.raises(ValueError, match="needs a given scale"):
+        read_comparison(
+            "source_monitor",
+            _mcstas_map((20, 30)),
+            tof_result,
+            BINS,
+            1e6,
+            NEUTRONS,
+            transmission=0.5,
+        )
+
+
 def test_a_map_on_other_bins_is_refused(tof_result):
     with pytest.raises(ValueError, match="source_monitor"):
         read_comparison("source_monitor", _mcstas_map((30, 20)), tof_result, BINS, 1e6, NEUTRONS)

@@ -2,12 +2,13 @@
 
 :class:`Extraction` is the section from the source to the beam monitor after guide 4, at 5.9 m,
 with the same components as :class:`.TRex`, but for the band: its source and its beam monitor
-keep the widest band, 0.1 to 10 Å, where those of :class:`.TRex` follow ``lambda0``.
+keep the widest band, 0.1 to 10 Å, where those of :class:`.TRex` follow ``lambda0``. It also has
+the source monitor of :class:`.TRexSource`, at the entrance of guide 1.
 
 :func:`main` compares McStas and tof at the beam monitor, with the bender out and in. tof has
 no guides: every neutron of its pulse reaches the monitor. tof is scaled to the total of McStas
-at the monitor, on each path, so both have the same total and only their shapes in time and
-wavelength differ. The McStas runs also draw McStasScript's diagnostics of each path: the beam
+at the source monitor, where both see the same beam, and by ``transmission`` on top of it, so
+the beam monitor shows what the guides let through in McStas against that factor. The McStas runs also draw McStasScript's diagnostics of each path: the beam
 after the source, after guide 3 and at the exit of guide 4b. Run the module for both::
 
     pixi run python -m mcdgs.diagnostics.trex.extraction
@@ -18,7 +19,6 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import mcstasscript as ms
-import scipp as sc
 from matplotlib.figure import Figure
 
 from mcdgs.core.base import Instrument
@@ -41,11 +41,12 @@ from mcdgs.instruments.trex.guides.bispectral import (
     guide_4b,
 )
 from mcdgs.instruments.trex.guides.extraction import guides_extraction
-from mcdgs.instruments.trex.monitors import beam_monitor
+from mcdgs.instruments.trex.monitors import beam_monitor, source_monitor
 from mcdgs.instruments.trex.sources import source
 from mcdgs.mcstas.builder import build_mcstas, default_input_dir
 from mcdgs.mcstas.run_folders import default_output_dir, run_folder
 from mcdgs.tof.builder import build_tof
+from mcdgs.tof.reader import monitor_bins
 
 
 @dataclass(frozen=True)
@@ -84,6 +85,7 @@ class Extraction(Instrument):
 
     origin: Progress_bar
     source: ESS_butterfly
+    source_monitor: Monitor_nD
     arm_nboa: Arm
     guide_1: Guide_gravity
     guide_2: Guide_gravity
@@ -98,6 +100,7 @@ class Extraction(Instrument):
         super().__init__(params)
         self.origin = Progress_bar(at=[0, 0, 0])
         self.source = source()  # the widest band, as the beam monitor's default limits
+        self.source_monitor = source_monitor()
         for name, component in guides_extraction().items():
             setattr(self, name, component)
         self.arm_guide_4 = arm_guide_4()
@@ -128,11 +131,13 @@ def main(
     ncount: float = 1e6,
     neutrons: int = 1_000_000,
     seed: int = 1,
+    transmission: float = 1.0,
 ) -> list[Path]:
     """Compare McStas and tof at the beam monitor, bender out and in, and save the figures.
 
     McStas runs once per path, with McStasScript's diagnostics, and tof once: tof has no bender,
-    so the same run serves both, scaled to the total of McStas on each path. Both figures of a
+    so the same run serves both. On each path, tof is scaled to the total of McStas at the source
+    monitor, and by ``transmission`` on top of it. Both figures of a
     path, the diagnostics and the comparison,
     ``trex_extraction_bender_out_diagnose.png`` and ``trex_extraction_bender_out.png``, or
     ``..._in``, go to ``out``.
@@ -147,6 +152,9 @@ def main(
         Number of tof neutrons, in each run.
     seed:
         Seed of the random numbers of both models.
+    transmission:
+        The factor on tof at the beam monitor, on top of the scale of the source monitor: the
+        fraction of the beam the guides would let through, which tof does not model.
 
     Returns
     -------
@@ -155,14 +163,9 @@ def main(
     """
     extraction = Extraction()
 
-    # the axes of the beam monitor, read from it so that they cannot drift apart
-    limits = extraction.beam_monitor.bin_limits
-    t_start, t_stop, t_bins = limits["time"]
-    l_start, l_stop, l_bins = limits["lambda"]
-    bins = {  # the bin edges of the beam monitor's map, in its order: time, wavelength
-        "toa": sc.linspace("toa", t_start, t_stop, t_bins + 1, unit="s"),
-        "wavelength": sc.linspace("wavelength", l_start, l_stop, l_bins + 1, unit="Å"),
-    }
+    # the bin edges of each monitor, read from it so that they cannot drift apart
+    source_bins = monitor_bins(extraction.source_monitor)
+    bins = monitor_bins(extraction.beam_monitor)
 
     tof_result = build_tof(extraction, neutrons=neutrons, seed=seed).run()
 
@@ -189,12 +192,26 @@ def main(
         figure_folder = output_folder(out, folder)
         figures.append(_save(plt.gcf(), figure_folder / f"{run_name}_diagnose.png", dpi=100))
 
-        # tof's counts are scaled to the total of McStas at the beam monitor, in n/s
-        comparison = read_comparison(
-            "beam_monitor", ms.load_data(str(folder)), tof_result, bins, ncount, neutrons
+        # tof's counts are scaled to the total of McStas at the source monitor, in n/s, and by
+        # the transmission on top of it at the beam monitor
+        mcstas_data = ms.load_data(str(folder))
+        at_source = read_comparison(
+            "source_monitor", mcstas_data, tof_result, source_bins, ncount, neutrons
         )
+        comparison = read_comparison(
+            "beam_monitor",
+            mcstas_data,
+            tof_result,
+            bins,
+            ncount,
+            neutrons,
+            scale=at_source.scale,
+            transmission=transmission,
+        )
+        mcstas_total = comparison.mcstas_intensity.sum()
         print(
-            f"{path}: McStas total {comparison.mcstas_intensity.sum():.4g} n/s, "
+            f"{path}: McStas total {mcstas_total:.4g} n/s, "
+            f"{mcstas_total / at_source.mcstas_intensity.sum():.4g} of that at the source, "
             f"{comparison.scale:.4g} n/s per tof neutron"
         )
         fig = plot_comparison(comparison, f"T-Rex flux at the beam monitor after guide 4, {path}")

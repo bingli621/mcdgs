@@ -48,6 +48,7 @@ from mcdgs.instruments.trex.monitors import source_monitor
 from mcdgs.instruments.trex.sources import source
 from mcdgs.mcstas.simulation import Simulation
 from mcdgs.tof.builder import build_tof
+from mcdgs.tof.reader import monitor_bins
 
 
 # --8<-- [start:trex_source]
@@ -127,13 +128,7 @@ def main(
     # --8<-- [start:run_tof]
     # run tof, then read the monitor of both on the bins of the McStas map: time, wavelength
     tof_result = build_tof(instrument, neutrons=neutrons, seed=seed).run()
-    limits = instrument.source_monitor.bin_limits  # the axes of the monitor, read from it
-    t_start, t_stop, t_bins = limits["time"]
-    l_start, l_stop, l_bins = limits["lambda"]
-    bins = {
-        "toa": sc.linspace("toa", t_start, t_stop, t_bins + 1, unit="s"),
-        "wavelength": sc.linspace("wavelength", l_start, l_stop, l_bins + 1, unit="Å"),
-    }
+    bins = monitor_bins(instrument.source_monitor)  # read from the monitor
     # tof's counts are scaled to the total of McStas, in n/s
     comparison = read_comparison("source_monitor", mcstas_data, tof_result, bins, ncount, neutrons)
     # --8<-- [end:run_tof]

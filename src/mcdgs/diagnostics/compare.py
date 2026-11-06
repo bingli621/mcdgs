@@ -7,7 +7,10 @@ tof has no flux: each neutron has weight 1. :func:`read_comparison` scales its c
 ``scale``, the n/s each tof neutron stands for. Left out, it is the total of McStas over that of
 tof at this monitor, so both have the same total and only their shapes differ. Further down the
 beam, pass the scale found where both see the same beam, at the source, for a difference in what
-the guides and choppers let through to show.
+the guides and choppers let through to show. ``transmission`` then scales tof on top of it, for
+what the beam loses that tof does not model, such as the guides: tof has none.
+
+:func:`.monitor_bins` gives the bin edges of a monitor's map, read from its ``options``.
 """
 
 from collections.abc import Mapping
@@ -44,15 +47,18 @@ class MonitorComparison:
         Its error per bin. The bins are independent, so summed over an axis their errors add in
         quadrature.
     tof_intensity:
-        The intensity of tof per bin: its counts times ``scale``.
+        The intensity of tof per bin: its counts times ``scale`` and ``transmission``.
     tof_error:
-        Its error per bin: the Poisson error of the counts, √N, times ``scale``.
+        Its error per bin: the Poisson error of the counts, √N, times ``scale`` and
+        ``transmission``.
     ncount:
         Number of McStas neutrons.
     neutrons:
         Number of tof neutrons.
     scale:
         The n/s each tof neutron stands for.
+    transmission:
+        The fraction of the beam tof is scaled to on top of ``scale``.
     """
 
     name: str
@@ -64,6 +70,7 @@ class MonitorComparison:
     ncount: float
     neutrons: int
     scale: float
+    transmission: float
 
 
 def read_comparison(
@@ -74,6 +81,7 @@ def read_comparison(
     ncount: float,
     neutrons: int,
     scale: float | None = None,
+    transmission: float = 1.0,
 ) -> MonitorComparison:
     """Read one monitor from a McStas and a tof run, in n/s per bin.
 
@@ -95,6 +103,10 @@ def read_comparison(
     scale:
         The n/s each tof neutron stands for. If ``None``, the total of McStas over that of tof
         at this monitor.
+    transmission:
+        A factor on tof on top of ``scale``, for what the beam loses that tof does not model,
+        such as the guides. Only with a given ``scale``: with that of this monitor, tof would
+        no longer have the total of McStas.
 
     Returns
     -------
@@ -104,8 +116,11 @@ def read_comparison(
     Raises
     ------
     ValueError
-        If the map of McStas does not have the shape of ``bins``.
+        If the map of McStas does not have the shape of ``bins``, or ``transmission`` is not 1
+        without a given ``scale``.
     """
+    if scale is None and transmission != 1:
+        raise ValueError(f"{name}: a transmission of {transmission} needs a given scale")
     monitor = ms.name_search(name, mcstas_data)
     # McStasScript has the map as (wavelength, time), the y axis first
     mcstas_intensity = np.asarray(monitor.Intensity, dtype=float).T
@@ -125,11 +140,12 @@ def read_comparison(
         bins=bins,
         mcstas_intensity=mcstas_intensity,
         mcstas_error=mcstas_error,
-        tof_intensity=tof_counts * scale,
-        tof_error=np.sqrt(tof_counts) * scale,  # Poisson, scaled as the counts
+        tof_intensity=tof_counts * scale * transmission,  # in n/s, times the transmission
+        tof_error=np.sqrt(tof_counts) * scale * transmission,  # Poisson, scaled as the counts
         ncount=ncount,
         neutrons=neutrons,
         scale=scale,
+        transmission=transmission,
     )
 
 
@@ -179,6 +195,8 @@ def plot_comparison(comparison: MonitorComparison, title: str) -> Figure:
     errorbar_style = {"fmt": ".", "markersize": 3, "elinewidth": 0.8}
     mcstas_label = f"McStas, ncount = {int(c.ncount):,}"
     tof_label = f"tof, {c.neutrons:,} neutrons × {c.scale:.3g} n/s each"
+    if c.transmission != 1:
+        tof_label += f"\ntransmission {c.transmission:.3g}"
 
     # the wavelength spectrum, summed over time, and the time profile, summed over wavelength
     for ax, centers, axis in ((spectrum_ax, wavelength_centers, 0), (profile_ax, time_centers, 1)):
