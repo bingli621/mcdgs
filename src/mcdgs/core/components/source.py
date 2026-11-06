@@ -5,7 +5,11 @@ from typing import Any
 
 from .base import Component
 
-ESS_SOURCE_FREQUENCY = 14  # Hz, the pulse frequency McStas fixes, as in ess_source-lib.h
+ESS_SOURCE_FREQUENCY = 14  # Hz, the pulse frequency
+ESS_SOURCE_LENGTH = 3.5e-3  # s, the pulse length
+# the widest band the source simulates: the band is clipped to it
+L_MIN = 0.1  # Å
+L_MAX = 10.0  # Å
 
 
 @dataclass(kw_only=True, repr=False)  # repr: Component's
@@ -98,6 +102,15 @@ class ESS_butterfly(Component):
         only, and no McStas parameter.
         """
         return ESS_SOURCE_FREQUENCY
+
+    @property
+    def pulse_length(self) -> float:
+        """Pulse length in s, for an instrument's choppers to be phased to.
+
+        McStas fixes it at 3.5 ms (``ESS_SOURCE_LENGTH`` in ess_source-lib.h), so it is read
+        only, and no McStas parameter.
+        """
+        return ESS_SOURCE_LENGTH
 
     def mcstas_parameters(self) -> dict[str, Any]:
         """Return the McStas parameters, once ``sector`` is checked.

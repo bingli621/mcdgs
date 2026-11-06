@@ -20,6 +20,7 @@ ARM_MC_Z = 161.985  # m, cell B140
 MC_GAP_LENGTH = 0.095  # m, cell D140
 ARM_PSC_Z = 107.9  # m, cell B115
 PSC_GAP_LENGTH = 0.2  # m, cell D115
+SAMPLE_Z = 163.8  # m, cell C148
 
 
 def guides_straight() -> list[dict[str, Component]]:
@@ -317,9 +318,7 @@ def sample_pos() -> Arm:
     :
         A new arm.
     """
-    sample_z = 163.8  # m, cell C148
-
-    return Arm(at=[0, 0, sample_z - ARM_MC_Z], relative="arm_mc")
+    return Arm(at=[0, 0, SAMPLE_Z - ARM_MC_Z], relative="arm_mc")
 
 
 def sample_monitor() -> Monitor_nD:

@@ -78,7 +78,7 @@ class TRexSource(Instrument):
 
     def __init__(self, params: TRexSourceParams | None = None) -> None:
         super().__init__(params)
-        self.source = source()
+        self.source = source(l_min=0.1, l_max=10)
         self.source_monitor = Monitor_nD(
             xwidth=0.089955,  # m, cell E13, the entrance of guide 1
             yheight=0.029992,  # m, cell F13, the entrance of guide 1

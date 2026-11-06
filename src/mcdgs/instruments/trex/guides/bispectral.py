@@ -19,6 +19,9 @@ the guide axis, so nothing downstream of it is rotated.
 import math
 
 from mcdgs.core.components import Arm, Guide_gravity, Monitor_nD, Pol_bender
+from mcdgs.core.components.source import ESS_SOURCE_LENGTH
+from mcdgs.core.utils import speed_from_wavelength
+from mcdgs.instruments.trex.sources import L_MAX, L_MIN
 
 from .extraction import entrance_x, half_taper_angle, z_along_arm
 
@@ -154,7 +157,8 @@ def guide_4b(when: str | None = None) -> Guide_gravity:
 
 
 def beam_monitor(
-    time_limits: tuple[float, float, int], lambda_limits: tuple[float, float, int]
+    time_limits: tuple[float, float, int] | None = None,
+    lambda_limits: tuple[float, float, int] = (L_MIN, L_MAX, 100),
 ) -> Monitor_nD:
     """Create the time and wavelength monitor in the middle of the bunker gap of row 29.
 
@@ -174,7 +178,13 @@ def beam_monitor(
         A new monitor.
     """
     monitor_z = BEAM_MONITOR_GAP_Z + BEAM_MONITOR_GAP_LENGTH / 2
-    t_start, t_stop, t_bins = time_limits
+    if time_limits is None:
+        t_min = monitor_z / speed_from_wavelength(lambda_limits[0])
+        # the slowest neutron, leaving at the end of the pulse
+        t_max = monitor_z / speed_from_wavelength(lambda_limits[1]) + ESS_SOURCE_LENGTH
+        t_start, t_stop, t_bins = (t_min, t_max, 400)
+    else:
+        t_start, t_stop, t_bins = time_limits
     l_start, l_stop, l_bins = lambda_limits
 
     return Monitor_nD(

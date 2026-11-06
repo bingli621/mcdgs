@@ -41,7 +41,7 @@ from mcdgs.instruments.trex.guides.bispectral import (
     guide_4b,
 )
 from mcdgs.instruments.trex.guides.extraction import guides_extraction
-from mcdgs.instruments.trex.model import BEAM_MONITOR_LAMBDA_LIMITS, BEAM_MONITOR_TIME_LIMITS
+from mcdgs.instruments.trex.model import BEAM_MONITOR_TIME_LIMITS, beam_monitor_lambda_limits
 from mcdgs.instruments.trex.sources import source
 from mcdgs.mcstas.builder import build_mcstas, default_input_dir
 from mcdgs.mcstas.run_folders import default_output_dir, run_folder
@@ -97,14 +97,16 @@ class Extraction(Instrument):
     def __init__(self, params: ExtractionParams = DEFAULT_PARAMS) -> None:
         super().__init__(params)
         self.origin = Progress_bar(at=[0, 0, 0])
-        self.source = source()
+        self.source = source(l_min=0.1, l_max=10)
         for name, component in guides_extraction().items():
             setattr(self, name, component)
         self.arm_guide_4 = arm_guide_4()
         self.guide_4a = guide_4a(when="bender_in==0")
         self.bender = bender(when="bender_in==1")
         self.guide_4b = guide_4b(when="bender_in==1")
-        self.beam_monitor = beam_monitor(BEAM_MONITOR_TIME_LIMITS, BEAM_MONITOR_LAMBDA_LIMITS)
+        self.beam_monitor = beam_monitor(
+            BEAM_MONITOR_TIME_LIMITS, beam_monitor_lambda_limits(self.source)
+        )
 
     @property
     def instr_params(self) -> list[InstrParam]:
@@ -156,7 +158,7 @@ def main(
     extraction = Extraction()
     tof_result = build_tof(extraction, neutrons=neutrons, seed=seed).run()
     t_start, t_stop, t_bins = BEAM_MONITOR_TIME_LIMITS
-    l_start, l_stop, l_bins = BEAM_MONITOR_LAMBDA_LIMITS
+    l_start, l_stop, l_bins = beam_monitor_lambda_limits(extraction.source)
     bins = {  # the bin edges of the beam monitor's map, in its order: time, wavelength
         "toa": sc.linspace("toa", t_start, t_stop, t_bins + 1, unit="s"),
         "wavelength": sc.linspace("wavelength", l_start, l_stop, l_bins + 1, unit="Å"),

@@ -1,12 +1,13 @@
 """The T-Rex instrument and its control parameters."""
 
 from dataclasses import dataclass, replace
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from mcdgs.core.base import Instrument
 from mcdgs.core.components import (
     Arm,
     Component,
+    ESS_butterfly,
     Guide_gravity,
     Progress_bar,
     Single_crystal,
@@ -25,12 +26,41 @@ from .guides.bispectral import (
 from .guides.curve import guides_curve
 from .guides.extraction import guides_extraction
 from .guides.straight import guides_straight, sample_monitor, sample_pos, slit_mc
-from .sources import source
+from .sources import source, wavelength_band
 
-# the axes of the beam monitor's map, start, stop and number of bins: 15 ms take in the whole
-# pulse up to 5.3 Å
-BEAM_MONITOR_TIME_LIMITS = (0.0, 0.015, 300)  # s
-BEAM_MONITOR_LAMBDA_LIMITS = (0.0, 5.3, 96)  # Å
+# the axes of the beam monitor's map. Time: start, stop and number of bins, 0.05 ms each; a
+# 10 Å neutron flies 14.9 ms to the monitor at 5.90 m, so 20 ms take in the whole pulse up to
+# the source's Lmax. Wavelength: the source's band, see beam_monitor_lambda_limits, in bins of
+# 0.055 Å from 0.1 to 10 Å
+BEAM_MONITOR_TIME_LIMITS = (0.0, 0.020, 400)  # s
+BEAM_MONITOR_LAMBDA_BINS = 180
+
+
+def beam_monitor_lambda_limits(source: ESS_butterfly) -> tuple[float, float, int]:
+    """Return the wavelength axis of the beam monitor's map: the band the source simulates.
+
+    Parameters
+    ----------
+    source:
+        The source, whose ``Lmin`` and ``Lmax`` must be numbers, not instrument parameters.
+
+    Returns
+    -------
+    :
+        Start and stop in Å, ``Lmin`` and ``Lmax``, and ``BEAM_MONITOR_LAMBDA_BINS`` bins.
+
+    Raises
+    ------
+    TypeError
+        If ``Lmin`` or ``Lmax`` is an instrument parameter, whose value the monitor's options
+        cannot hold.
+    """
+    if isinstance(source.Lmin, str) or isinstance(source.Lmax, str):
+        raise TypeError(
+            f"the beam monitor needs a numeric Lmin and Lmax, not {source.Lmin!r} and "
+            f"{source.Lmax!r}"
+        )
+    return (float(source.Lmin), float(source.Lmax), BEAM_MONITOR_LAMBDA_BINS)
 
 
 @dataclass(frozen=True)
@@ -108,14 +138,16 @@ class TRex(Instrument):
         to_psc, to_mc, to_slit = guides_straight()
 
         self.origin = Progress_bar(at=[0, 0, 0])
-        self.source = source()
+        self.source = source(*wavelength_band(self.params.lambda0))
         self.add_components(guides_extraction())
         # bispectral switch: guide 4a (thermal) or bender and guide 4b (cold)
         self.arm_guide_4 = arm_guide_4()
         self.guide_4a = guide_4a(when="bender_in==0")
         self.bender = bender(when="bender_in==1")
         self.guide_4b = guide_4b(when="bender_in==1")
-        self.beam_monitor = beam_monitor(BEAM_MONITOR_TIME_LIMITS, BEAM_MONITOR_LAMBDA_LIMITS)
+        self.beam_monitor = beam_monitor(
+            BEAM_MONITOR_TIME_LIMITS, beam_monitor_lambda_limits(self.source)
+        )
         # curved guides
         self.add_components(to_bwc1)
         self.bw1 = disks["bw1"]
@@ -137,6 +169,26 @@ class TRex(Instrument):
         self.sample = None
         if sample is not None:
             self.sample = replace(sample, relative=sample.relative or "sample_pos")
+
+    def update_params(self, **values: Any) -> None:
+        """Change control parameters.
+
+        A new ``lambda0`` also creates the source again, with the band of
+        :func:`.sources.wavelength_band`. The beam monitor keeps its wavelength axis.
+
+        Parameters
+        ----------
+        **values:
+            New values by parameter name, e.g. ``update_params(lambda0=4.0)``.
+
+        Raises
+        ------
+        TypeError
+            If a name is not a field of :class:`Params`.
+        """
+        super().update_params(**values)
+        if "lambda0" in values:
+            self.source = source(*wavelength_band(self.params.lambda0))
 
     def add_components(self, components: dict[str, Component]) -> None:
         """Set components as attributes under their names, keeping their order.
