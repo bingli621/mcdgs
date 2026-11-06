@@ -13,7 +13,7 @@ It is the smallest T-Rex: two components and no McStas instrument parameters.
 | Component | What it is |
 | --------- | ---------- |
 | `source` | The T-Rex source, `ESS_butterfly` on beam port W7, one pulse at 2 MW, as in `TRex` but with the widest band, 0.1 to 10 Å, in place of the band around `lambda0`. |
-| `source_monitor` | `source_monitor()` of [`mcdgs.instruments.trex.monitors`](../../reference/trex.md), a `Monitor_nD` at the entrance of guide 1, 1.895927 m from the source on its axis, unrotated, with the opening of guide 1: 0.089955 m wide and 0.029992 m high. |
+| `source_monitor` | `source_monitor()` of [`mcdgs.instruments.trex.monitors`](../../reference/trex.md), a `Monitor_nD` that is the entrance of guide 1: its opening, 0.089955 m wide and 0.029992 m high, 1.895927 m from the source, 2.0 mm off its axis towards −x and turned by −0.215°, the place and rotation of `arm_nboa` in `TRex`. |
 
 The monitor records one 2D map of time against wavelength:
 
@@ -129,7 +129,7 @@ same is `scale × neutrons ≈ Φ / f`, the n/s of the whole tof pulse. That dep
   resize the monitor and Φ, so the scale, changes.
 - **The window of the bins.** The edges, 0.048 to 8.30 ms and 0.1 to 10 Å, set both which part of Φ is
   counted and f. If tof's pulse reaches beyond 10 Å, f is below 1. At the defaults of `main`,
-  8.25e11 n/s and 8.25e5 n/s per tof neutron make 1.00e6 neutrons in the bins, as many as were
+  8.46e11 n/s and 8.46e5 n/s per tof neutron make 1.00e6 neutrons in the bins, as many as were
   drawn: here f is 1, to three figures.
 - **The statistics.** Both totals are noisy, so the scale has a relative error of about
   √(1/(neutrons × f) + (σ/Φ)²), with σ the error of the McStas total. That is 0.1 % at a million
@@ -170,7 +170,7 @@ The figure has two rows:
 ![McStas and tof at the entrance of guide 1: time and wavelength maps, the wavelength spectrum and the time profile](figures/trex_source.png)
 
 This is `main` at its defaults: 1e6 McStas neutrons, 1e6 tof neutrons and seed 1. The total at
-the entrance of guide 1 is 8.25e11 n/s, so each tof neutron stands for 8.25e5 n/s. Both models
+the entrance of guide 1 is 8.46e11 n/s, so each tof neutron stands for 8.46e5 n/s. Both models
 have the same means, 2.84 ms and 2.40 Å.
 
 The two models agree within their error bars almost everywhere. The spectrum has the thermal
@@ -209,8 +209,8 @@ is the total through the opening:
 
 | Quantity | How | At the entrance of guide 1 |
 | -------- | --- | -------------------------- |
-| Total rate | sum of all bins | 8.25e11 n/s |
-| Per pulse | total / 14 Hz | 5.9e10 n per pulse |
+| Total rate | sum of all bins | 8.46e11 n/s |
+| Per pulse | total / 14 Hz | 6.0e10 n per pulse |
 | Per area | total / (8.9955 cm × 2.9992 cm) | 3.1e10 n/s/cm² |
 
 Halving the widths of the bins halves each value of the map, but leaves these sums unchanged;
@@ -229,8 +229,8 @@ instantaneous rate (n/s) = time profile (n/s per bin) / 14 Hz / 0.05 ms
 
 Its maximum is the peak rate. At the entrance of guide 1, in the map of `main` at its defaults,
 it is 2.0e13 n/s at 2.7 ms, some 24 times the average. That is what the length of the pulse
-suggests: most of the 5.9e10 neutrons of a pulse arrive within about 3 ms, and
-5.9e10 / 3 ms ≈ 2e13 n/s.
+suggests: most of the 6.0e10 neutrons of a pulse arrive within about 3 ms, and
+6.0e10 / 3 ms ≈ 2e13 n/s.
 
 ### What the monitor counts
 
@@ -258,8 +258,8 @@ lower ε, a smaller opening, or a faster monitor. Leave a factor of 2 to 10 for 
 power and for the model.
 
 For example, with ε = 1e-4 at 1.8 Å, growing as λ: at the mean wavelength of 2.4 Å ε is 1.3e-4,
-so the monitor counts about 1.1e8 counts/s on average and, from the map, 2.4e9 counts/s at the
-peak. With a dead time of 100 ns, peak rate × τ is about 240, far above 0.1: the monitor is
+so the monitor counts about 1.1e8 counts/s on average and, from the map, 2.5e9 counts/s at the
+peak. With a dead time of 100 ns, peak rate × τ is about 250, far above 0.1: the monitor is
 saturated, at most 1e7 counts/s. No counting monitor of that ε works at the entrance of guide 1,
 which is close to the moderator and inside the monolith. Monitors stand further downstream, after
 the choppers, where the beam is weaker and shorter in wavelength band. Put the `Monitor_nD`

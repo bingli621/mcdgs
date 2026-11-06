@@ -80,9 +80,21 @@ HALF_BAND = 0.5 * 3956.034006 * (1 / 14 + 3.5e-3) / 163.8  # Å
 def test_the_source_is_that_of_trex_primary():
     source = TRex().source
     assert (source.sector, source.beamline, source.acc_power) == ("W", 7, 2)
-    assert (source.yheight, source.cold_frac, source.dist) == (0.03, 0.3, 2)
-    assert (source.focus_xw, source.focus_yh) == (0.095, 0.035)
+    assert (source.yheight, source.cold_frac) == (0.03, 0.3)
     assert source.n_pulses == 1
+
+
+def test_the_source_focuses_on_the_whole_entrance_of_guide_1():
+    trex = TRex()
+    source, guide_1, arm = trex.source, trex.guide_1, trex.components["arm_nboa"]
+    x, _, z = arm.at
+    assert source.dist == z  # the plane of the entrance
+    assert source.focus_yh == guide_1.h1
+    # centered on the axis, the rectangle reaches both walls of the entrance, off the axis
+    half_width = guide_1.w1 * math.cos(math.radians(arm.rotated[1])) / 2
+    walls = (x - half_width, x + half_width)
+    assert walls == pytest.approx((-0.047, 0.042954), abs=1e-6)
+    assert source.focus_xw / 2 == pytest.approx(max(abs(wall) for wall in walls))
 
 
 def test_the_band_of_the_source_is_centered_on_lambda0():

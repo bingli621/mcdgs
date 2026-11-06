@@ -29,19 +29,18 @@ At −0.4 deg, the point of the scan nearest the nominal rotation:
 | Band center | Transmission |
 | ----------- | ------------ |
 | 8.5 to 9.5 Å | 0.81 to 0.86 |
-| 3.0 to 8.0 Å | 0.92 to 1.06 |
+| 3.0 to 8.0 Å | 0.93 to 1.02 |
 | 2.5 Å | 0.88 |
-| 2.0 Å | 0.67 |
-| 1.5 Å | 0.30 |
-| 0.5 and 1.0 Å | 0.14 and 0.12 |
+| 2.0 Å | 0.68 |
+| 1.5 Å | 0.29 |
+| 0.5 and 1.0 Å | 0.13 and 0.12 |
 
-The errors are 0.007 to 0.05, the larger at the longer wavelengths, where fewer neutrons are.
-Above 1 means the bender passes a band slightly better than guide 4a; within the errors the bands
-from 3 to 8 Å pass completely. They are flat from about −0.6 to −0.2 deg, so the nominal rotation
+The errors are 0.007 to 0.04, the larger at the longer wavelengths, where fewer neutrons are.
+Above 1 means the bender passes a band slightly better than guide 4a; the bands from 3 to 8 Å
+pass within a few percent of guide 4a, within about two errors. They are flat from about −0.6 to −0.2 deg, so the nominal rotation
 sits in the middle of that range. Above 8 Å the transmission is lower, 0.81 to 0.86 here and
 0.75 to 0.93 over the scan. The bands of 1.0 and 1.5 Å keep rising up to the end of the scan at
-0.1 deg, so their maximum lies outside it. The shortest band, around 0.5 Å, stays below 0.2 at
-every angle.
+0.1 deg, so their maximum lies outside it. The shortest band, around 0.5 Å, reaches at most 0.2.
 
 ## Making the figure
 

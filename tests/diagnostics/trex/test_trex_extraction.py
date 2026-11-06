@@ -38,3 +38,14 @@ def test_the_instrument_parameters_follow_the_control_parameters():
         ("bender_in", 1),
         ("b_rot", -0.5),
     ]
+
+
+def test_the_source_monitor_is_the_entrance_of_guide_1():
+    extraction = Extraction()
+    positions = extraction.positions()
+    assert positions["source_monitor"] == positions["guide_1"]
+    assert extraction.source_monitor.rotated == extraction.components["arm_nboa"].rotated
+    assert (extraction.source_monitor.xwidth, extraction.source_monitor.yheight) == (
+        extraction.guide_1.w1,
+        extraction.guide_1.h1,
+    )

@@ -44,7 +44,8 @@ is `-`. `position` is where it ends up in the lab frame. Lengths are in m and an
 
 ## Source
 
-`ESS_butterfly` on beamline W7, with a focusing rectangle 2 m downstream.
+`ESS_butterfly` on beamline W7, with its focusing rectangle at the entrance of guide 1,
+1.895927 m downstream.
 
 | Parameter | Value |
 | --------- | ----- |
@@ -52,7 +53,7 @@ is `-`. `position` is where it ends up in the lab frame. Lengths are in m and an
 | Accelerator power | 2 MW |
 | Moderator height | 0.03 m |
 | Fraction of events from the cold moderator | 0.3 |
-| Focusing rectangle | 0.095 m × 0.035 m |
+| Focusing rectangle | 0.094 m × 0.029992 m |
 | Wavelength band | `lambda0` ± 0.905 Å, within 0.1 to 10 Å: 1.095 to 2.905 Å at the default |
 | Pulses | 1 |
 
@@ -66,6 +67,13 @@ neutron mass, so a neutron of 1 Å flies at 3956 m/s. The band is then
 centered on `lambda0` and cut to 0.1 to 10 Å, the widest band of `ESS_butterfly`. The 3.5 ms is
 longer than the 2.857 ms of the ESS pulse in McStas, to keep its tail. A new `lambda0`, through
 `update_params`, creates the source and the beam monitor again with its band.
+
+The source sends each ray from the moderator towards the focusing rectangle, and weights it by
+the solid angle of the rectangle. The flux into guide 1 is right only if the rectangle covers the
+whole entrance as seen from every point of the moderator. In the plane of the entrance it does,
+when it is as large as the entrance. The rectangle is centered on the axis, while the entrance is
+2.0 mm off it, from the fixed wall at x = -0.047 m to x = 0.043 m, so the rectangle is 0.094 m
+wide to reach both walls.
 
 ## Extraction guides
 
@@ -179,7 +187,7 @@ choppers 1 and 2, beam monitor 1, the P-Chopper and the M-Chopper. The choppers 
 
 | Monitor | Where | Size | What it records |
 | ------- | ----- | ---- | --------------- |
-| `source_monitor` | At the entrance of guide 1, 1.895927 m from the source on its axis | 0.089955 m × 0.029992 m | Time against wavelength, in bins of 0.05 ms and 0.05 Å |
+| `source_monitor` | The entrance of guide 1, at the place and rotation of `arm_nboa` | 0.089955 m × 0.029992 m | Time against wavelength, in bins of 0.05 ms and 0.05 Å |
 | `beam_monitor` | In the middle of the bunker gap of row 29, after guide 4, 5.902 m along the beam, on the arm of guide 4 | 0.06 m × 0.0463 m | Time against wavelength, in bins of 0.05 ms and 0.02 Å |
 | `sample_monitor` | At `sample_pos` | 0.1 m × 0.1 m | Wavelength, 0.5 to 5.3 Å in 12 bins |
 

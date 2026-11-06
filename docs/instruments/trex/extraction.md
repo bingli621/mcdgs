@@ -58,23 +58,25 @@ ray, inside an opening or not.
 
 | Lost in | Bender out | Bender in | Intensity after it |
 | ------- | ---------- | --------- | ------------------ |
-| guide 1 | 51 % | 51 % | 4.58e11 n/s |
-| guide 2 | 36 % | 36 % | 2.92e11 n/s |
-| guide 3 | 41 % | 41 % | 1.73e11 n/s |
-| guide 4a | 14 % | | 1.49e11 n/s |
-| bender | | 36 % | 1.12e11 n/s |
-| guide 4b | | 6 % | 1.05e11 n/s |
+| guide 1 | 48 % | 48 % | 4.58e11 n/s |
+| guide 2 | 36 % | 36 % | 2.91e11 n/s |
+| guide 3 | 41 % | 41 % | 1.72e11 n/s |
+| guide 4a | 14 % | | 1.48e11 n/s |
+| bender | | 36 % | 1.10e11 n/s |
+| guide 4b | | 6 % | 1.03e11 n/s |
 
-The beam leaves the source at 9.38e11 n/s, all it sends towards guide 1, and passes the source
-monitor unchanged. Guides 1 to 3 take most of it: after guide 3, 18 % is left, on both paths.
-With the bender out, guide 4a takes 14 % more, and 1.49e11 n/s reaches the beam monitor, 16 % of
+The beam leaves the source at 8.85e11 n/s, all it sends towards guide 1, and passes the source
+monitor unchanged. Guides 1 to 3 take most of it: after guide 3, 19 % is left, on both paths.
+With the bender out, guide 4a takes 14 % more, and 1.48e11 n/s reaches the beam monitor, 17 % of
 the beam before guide 1. With the bender in, the components of the other path are skipped, so their
-rows are empty or flat. The bender takes 36 % and guide 4b 6 %, and 1.05e11 n/s reaches the beam
-monitor, 11 %.
+rows are empty or flat. The bender takes 36 % and guide 4b 6 %, and 1.03e11 n/s reaches the beam
+monitor, 12 %.
 
-The 51 % of guide 1 includes the beam that misses its opening. The source monitor, which has that
-opening, sees 8.25e11 n/s, so about 12 % of the 9.38e11 never enters guide 1. From the opening of
-guide 1, 18 % reaches the beam monitor with the bender out and 13 % with it in.
+The 48 % of guide 1 includes the beam that misses its opening. The source aims at a rectangle
+4 mm wider than the entrance, as it is centered on the axis and the entrance is not (see
+[Source](details.md#source)). The source monitor, which is the entrance, sees 8.46e11 n/s, so
+4 % of the 8.85e11 never enters guide 1. From the entrance of guide 1, 17 % reaches the beam
+monitor with the bender out and 12 % with it in.
 
 ## McStas and tof at the beam monitor
 
@@ -87,23 +89,23 @@ that many bins, the McStas map and spectra are grainy.
 
 tof has no guides and no bender: every neutron of its pulse reaches the monitor, at the time of
 its straight flight from the source. Its counts are scaled where both models see the same beam,
-at the source monitor, to the McStas total there: 8.25e5 n/s per tof neutron. At the beam monitor
+at the source monitor, to the McStas total there: 8.46e5 n/s per tof neutron. At the beam monitor
 they are scaled again by a `transmission` of 0.2, the argument of `main`, for what the guides
-would let through. That is close to the 18 % and 13 % of McStas above, so where McStas is above
+would let through. That is close to the 17 % and 12 % of McStas above, so where McStas is above
 tof the guides pass more than 0.2 of the beam, and where it is below, less.
 
-**Bender out**, 1.48e11 n/s at the monitor:
+**Bender out**, 1.47e11 n/s at the monitor:
 
 ![McStas and tof at the beam monitor with the bender out](figures/trex_extraction_bender_out.png)
 
-**Bender in**, 1.04e11 n/s at the monitor:
+**Bender in**, 1.03e11 n/s at the monitor:
 
 ![McStas and tof at the beam monitor with the bender in](figures/trex_extraction_bender_in.png)
 
 At the cold peak, 2.6 Å, McStas and tof agree on both paths: the guides pass about 0.2 of it.
 Above about 4 Å McStas is above tof, since the guides pass a long wavelength at a larger angle,
 so more of it reaches the monitor. With the bender out, McStas is below tof at the thermal peak,
-1.1 Å, where the guides pass about 12 %, and below 0.3 Å it has a fraction of tof's peak. With
+1.1 Å, where the guides pass about 13 %, and below 0.3 Å it has a fraction of tof's peak. With
 the bender in, McStas has almost nothing below about 1.5 Å, and its time profile peaks about
 1.5 ms later than tof's, since the beam is made of longer, slower wavelengths.
 

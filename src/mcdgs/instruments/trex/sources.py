@@ -58,9 +58,13 @@ def source(l_min: float = L_MIN, l_max: float = L_MAX) -> ESS_butterfly:
         beamline=7,
         yheight=0.03,
         cold_frac=0.3,
-        dist=2,
-        focus_xw=0.095,
-        focus_yh=0.035,
+        # the focusing rectangle is the entrance of guide 1, in its plane: seen from every point
+        # of the moderator it then covers the whole opening, so the flux into guide 1 is right
+        dist=1.895927,  # m, cell B13, the entrance of guide 1
+        # centered on the axis, it reaches the fixed wall of guide 1 at x = -0.047 m
+        # on both sides, so it covers the entrance 2.0 mm off the axis
+        focus_xw=0.094,
+        focus_yh=0.029992,  # m, cell F13, the height of the entrance of guide 1
         Lmin=l_min,
         Lmax=l_max,
         n_pulses=1,

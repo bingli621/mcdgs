@@ -40,9 +40,9 @@ source:
   acc_power: 2
   yheight: 0.03
   cold_frac: 0.3
-  dist: 2
-  focus_xw: 0.095
-  focus_yh: 0.035
+  dist: 1.895927
+  focus_xw: 0.094
+  focus_yh: 0.029992
   n_pulses: 1
   c_performance: 1
   t_performance: 1

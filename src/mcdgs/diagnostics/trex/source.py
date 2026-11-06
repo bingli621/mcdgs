@@ -60,8 +60,8 @@ class TRexSourceParams:
 class TRexSource(Instrument):
     """The source of T-Rex and a time and wavelength monitor at the entrance of guide 1.
 
-    The monitor has the opening of guide 1. It is where guide 1 begins, on the axis of the source,
-    unrotated.
+    The monitor is the entrance of guide 1: its opening, where guide 1 begins, 2.0 mm off the axis
+    of the source and turned with the guide.
 
     Parameters
     ----------

@@ -15,7 +15,7 @@
 * 
 * %Identification
 * Written by: Python McStas Instrument Generator
-* Date: 13:46:02 on November 06, 2026
+* Date: 18:20:19 on November 06, 2026
 * Origin: ESS DMSC
 * %INSTRUMENT_SITE: Generated_instruments
 * 
@@ -97,8 +97,8 @@ ROTATED (0, 0, 0) ABSOLUTE
 COMPONENT source = ESS_butterfly(
  sector = "W", beamline = 7,
  yheight = 0.03, cold_frac = 0.3,
- target_index = 0, dist = 2,
- focus_xw = 0.095, focus_yh = 0.035,
+ target_index = 0, dist = 1.895927,
+ focus_xw = 0.094, focus_yh = 0.029992,
  c_performance = 1, t_performance = 1,
  Lmin = 1.09517711660141, Lmax = 2.90482288339859,
  tmax_multiplier = 3, n_pulses = 1,
