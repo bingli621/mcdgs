@@ -7,15 +7,16 @@ from mcdgs.core.base import Instrument
 from mcdgs.core.components import (
     Arm,
     Component,
-    ESS_butterfly,
     Guide_gravity,
     Progress_bar,
     Single_crystal,
 )
+from mcdgs.core.components.monitors import monitor_limits
 from mcdgs.core.params import InstrParam, param
 
 from .choppers import Mode, chopper_timings, choppers
 from .guides.bispectral import (
+    BEAM_MONITOR_Z,
     BENDER_ROTATION,
     arm_guide_4,
     beam_monitor,
@@ -27,40 +28,6 @@ from .guides.curve import guides_curve
 from .guides.extraction import guides_extraction
 from .guides.straight import guides_straight, sample_monitor, sample_pos, slit_mc
 from .sources import source, wavelength_band
-
-# the axes of the beam monitor's map. Time: start, stop and number of bins, 0.05 ms each; a
-# 10 Å neutron flies 14.9 ms to the monitor at 5.90 m, so 20 ms take in the whole pulse up to
-# the source's Lmax. Wavelength: the source's band, see beam_monitor_lambda_limits, in bins of
-# 0.055 Å from 0.1 to 10 Å
-BEAM_MONITOR_TIME_LIMITS = (0.0, 0.020, 400)  # s
-BEAM_MONITOR_LAMBDA_BINS = 180
-
-
-def beam_monitor_lambda_limits(source: ESS_butterfly) -> tuple[float, float, int]:
-    """Return the wavelength axis of the beam monitor's map: the band the source simulates.
-
-    Parameters
-    ----------
-    source:
-        The source, whose ``Lmin`` and ``Lmax`` must be numbers, not instrument parameters.
-
-    Returns
-    -------
-    :
-        Start and stop in Å, ``Lmin`` and ``Lmax``, and ``BEAM_MONITOR_LAMBDA_BINS`` bins.
-
-    Raises
-    ------
-    TypeError
-        If ``Lmin`` or ``Lmax`` is an instrument parameter, whose value the monitor's options
-        cannot hold.
-    """
-    if isinstance(source.Lmin, str) or isinstance(source.Lmax, str):
-        raise TypeError(
-            f"the beam monitor needs a numeric Lmin and Lmax, not {source.Lmin!r} and "
-            f"{source.Lmax!r}"
-        )
-    return (float(source.Lmin), float(source.Lmax), BEAM_MONITOR_LAMBDA_BINS)
 
 
 @dataclass(frozen=True)
@@ -138,16 +105,15 @@ class TRex(Instrument):
         to_psc, to_mc, to_slit = guides_straight()
 
         self.origin = Progress_bar(at=[0, 0, 0])
-        self.source = source(*wavelength_band(self.params.lambda0))
+        band = wavelength_band(self.params.lambda0)
+        self.source = source(*band)
         self.add_components(guides_extraction())
         # bispectral switch: guide 4a (thermal) or bender and guide 4b (cold)
         self.arm_guide_4 = arm_guide_4()
         self.guide_4a = guide_4a(when="bender_in==0")
         self.bender = bender(when="bender_in==1")
         self.guide_4b = guide_4b(when="bender_in==1")
-        self.beam_monitor = beam_monitor(
-            BEAM_MONITOR_TIME_LIMITS, beam_monitor_lambda_limits(self.source)
-        )
+        self.beam_monitor = beam_monitor(*monitor_limits(BEAM_MONITOR_Z, band))  # the source's band
         # curved guides
         self.add_components(to_bwc1)
         self.bw1 = disks["bw1"]

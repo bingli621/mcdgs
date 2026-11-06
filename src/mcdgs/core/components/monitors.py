@@ -1,8 +1,49 @@
-"""Monitors: Monitor_nD."""
+"""Monitors: Monitor_nD, and monitor_limits for the axes of its map."""
 
 from dataclasses import dataclass
 
+from mcdgs.core.utils import speed_from_wavelength
+
 from .base import Component
+from .source import ESS_SOURCE_LENGTH, L_MAX, L_MIN
+
+
+def monitor_limits(
+    distance: float,
+    lambda_limits: tuple[float, float] = (L_MIN, L_MAX),
+    lambda_bins: int = 100,
+    time_bins: int = 400,
+    pulse_length: float = ESS_SOURCE_LENGTH,
+) -> tuple[tuple[float, float, int], tuple[float, float, int]]:
+    """Return the time and wavelength limits of a monitor's map, for a band of the source.
+
+    The time axis runs from the fastest neutron of the band, leaving at the start of the pulse,
+    to the slowest, leaving at its end.
+
+    Parameters
+    ----------
+    distance:
+        Flight path from the moderator to the monitor, in m.
+    lambda_limits:
+        Start and stop of the wavelength axis, in Å; the default is the widest band the source
+        simulates. The start must be above 0 Å.
+    lambda_bins:
+        Number of wavelength bins; the default makes them 0.099 Å wide over the widest band.
+    time_bins:
+        Number of time bins.
+    pulse_length:
+        Time over which the neutrons leave the moderator, in s.
+
+    Returns
+    -------
+    :
+        The time axis, start and stop in s, and the wavelength axis, start and stop in Å,
+        each with its number of bins.
+    """
+    l_start, l_stop = lambda_limits
+    t_start = distance / speed_from_wavelength(l_start)
+    t_stop = distance / speed_from_wavelength(l_stop) + pulse_length
+    return (t_start, t_stop, time_bins), (l_start, l_stop, lambda_bins)
 
 
 @dataclass(kw_only=True, repr=False)  # repr: Component's
