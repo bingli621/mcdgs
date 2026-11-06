@@ -16,17 +16,16 @@ from mcdgs.core.params import InstrParam, param
 
 from .choppers import Mode, chopper_timings, choppers
 from .guides.bispectral import (
-    BEAM_MONITOR_Z,
     BENDER_ROTATION,
     arm_guide_4,
-    beam_monitor,
     bender,
     guide_4a,
     guide_4b,
 )
 from .guides.curve import guides_curve
 from .guides.extraction import guides_extraction
-from .guides.straight import guides_straight, sample_monitor, sample_pos, slit_mc
+from .guides.straight import guides_straight, sample_pos, slit_mc
+from .monitors import BEAM_MONITOR_Z, beam_monitor, sample_monitor
 from .sources import source, wavelength_band
 
 
@@ -105,15 +104,15 @@ class TRex(Instrument):
         to_psc, to_mc, to_slit = guides_straight()
 
         self.origin = Progress_bar(at=[0, 0, 0])
-        band = wavelength_band(self.params.lambda0)
-        self.source = source(*band)
+        lambda_min, lambda_max = wavelength_band(self.params.lambda0)
+        self.source = source(lambda_min, lambda_max)
         self.add_components(guides_extraction())
         # bispectral switch: guide 4a (thermal) or bender and guide 4b (cold)
         self.arm_guide_4 = arm_guide_4()
         self.guide_4a = guide_4a(when="bender_in==0")
         self.bender = bender(when="bender_in==1")
         self.guide_4b = guide_4b(when="bender_in==1")
-        self.beam_monitor = beam_monitor(*monitor_limits(BEAM_MONITOR_Z, band))  # the source's band
+        self.beam_monitor = beam_monitor(*monitor_limits(BEAM_MONITOR_Z, (lambda_min, lambda_max)))
         # curved guides
         self.add_components(to_bwc1)
         self.bw1 = disks["bw1"]
@@ -154,7 +153,8 @@ class TRex(Instrument):
         """
         super().update_params(**values)
         if "lambda0" in values:
-            self.source = source(*wavelength_band(self.params.lambda0))
+            lambda_min, lambda_max = wavelength_band(self.params.lambda0)
+            self.source = source(lambda_min, lambda_max)
 
     def add_components(self, components: dict[str, Component]) -> None:
         """Set components as attributes under their names, keeping their order.

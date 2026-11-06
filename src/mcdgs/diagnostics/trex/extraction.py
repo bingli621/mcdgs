@@ -34,15 +34,14 @@ from mcdgs.core.params import InstrParam, param
 from mcdgs.diagnostics.cli import output_folder, parse_out
 from mcdgs.diagnostics.compare import plot_comparison, read_comparison
 from mcdgs.instruments.trex.guides.bispectral import (
-    BEAM_MONITOR_Z,
     BENDER_ROTATION,
     arm_guide_4,
-    beam_monitor,
     bender,
     guide_4a,
     guide_4b,
 )
 from mcdgs.instruments.trex.guides.extraction import guides_extraction
+from mcdgs.instruments.trex.monitors import BEAM_MONITOR_Z, beam_monitor
 from mcdgs.instruments.trex.sources import source
 from mcdgs.mcstas.builder import build_mcstas, default_input_dir
 from mcdgs.mcstas.run_folders import default_output_dir, run_folder

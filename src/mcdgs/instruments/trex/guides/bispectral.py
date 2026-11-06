@@ -12,13 +12,13 @@ plane: they are alternative optics, chosen by their ``when`` condition, not para
 The bender's entrance is oriented toward the cold moderator and its exit tangent is parallel to
 the guide axis, so nothing downstream of it is rotated.
 
-``beam_monitor`` follows guide 4 on its arm, in the bunker gap left for the ESS beam monitor
-(row 29), before guide 5.
+After guide 4, before guide 5, the bunker gap of row 29 is left for the ESS beam monitor, which
+is in :mod:`mcdgs.instruments.trex.monitors`.
 """
 
 import math
 
-from mcdgs.core.components import Arm, Guide_gravity, Monitor_nD, Pol_bender
+from mcdgs.core.components import Arm, Guide_gravity, Pol_bender
 
 from .extraction import entrance_x, half_taper_angle, z_along_arm
 
@@ -33,10 +33,6 @@ GUIDE_4_OUT_WIDTH = 0.060255817017560886  # m, cells G24 and G25
 GUIDE_4_TILT = half_taper_angle(
     GUIDE_4A_IN_WIDTH, GUIDE_4_OUT_WIDTH, GUIDE_4A_LENGTH
 )  # -0.2134 deg, half of cells N25 and N26
-
-BEAM_MONITOR_GAP_Z = 5.892  # m, cell B29
-BEAM_MONITOR_GAP_LENGTH = 0.02  # m, cell D29
-BEAM_MONITOR_Z = BEAM_MONITOR_GAP_Z + BEAM_MONITOR_GAP_LENGTH / 2  # m, mid-gap
 
 
 def arm_guide_4() -> Arm:
@@ -151,41 +147,4 @@ def guide_4b(when: str | None = None) -> Guide_gravity:
         at=[0, 0, z_along_arm(guide_4b_in_z, GUIDE_4A_IN_Z, GUIDE_4_TILT)],
         relative="arm_guide_4",
         when=when,
-    )
-
-
-def beam_monitor(
-    time_limits: tuple[float, float, int], lambda_limits: tuple[float, float, int]
-) -> Monitor_nD:
-    """Create the time and wavelength monitor in the middle of the bunker gap of row 29.
-
-    It records the intensity leaving guide 4 as one 2D map of time against wavelength, and
-    leaves the neutrons unchanged.
-
-    Parameters
-    ----------
-    time_limits:
-        The time axis: start and stop in s, and the number of bins.
-    lambda_limits:
-        The wavelength axis: start and stop in Å, and the number of bins.
-
-    Returns
-    -------
-    :
-        A new monitor.
-    """
-    t_start, t_stop, t_bins = time_limits
-    l_start, l_stop, l_bins = lambda_limits
-
-    return Monitor_nD(
-        xwidth=0.06,  # FIXME cell E32, the entrance of guide 5
-        yheight=0.046260695185495173,  # FIXME cell F32, the entrance of guide 5
-        restore_neutron=1,
-        options=(  # time in s, lambda in Å: one 2D map
-            f"time limits=[{t_start} {t_stop}] bins={t_bins} "
-            f"lambda limits=[{l_start} {l_stop}] bins={l_bins}"
-        ),
-        filename="beam_monitor",
-        at=[0, 0, z_along_arm(BEAM_MONITOR_Z, GUIDE_4A_IN_Z, GUIDE_4_TILT)],
-        relative="arm_guide_4",
     )
