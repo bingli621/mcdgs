@@ -169,9 +169,10 @@ errors add in quadrature.
 ## The figure
 
 `main` runs both models with the same seed, reads each monitor on the same bins, prints the mean
-time and wavelength of each and the McStas total, scales tof to McStas, and saves
-`trex_source.png` next to the `mccode.h5` of the McStas run, or to the folder given with `--out`.
-The figure has two rows:
+time and wavelength of each and the McStas total, scales tof to McStas, and saves `<name>.png`,
+by default `trex_source.png`, next to the `mccode.h5` of the McStas run, or to the folder given
+with `--out`. Run as a module, it makes three figures: `trex_source_1e6.png`, this one,
+`trex_source_1e5.png` and `trex_source_lambda0_2.png`, below. The figure has two rows:
 
 - **Top:** the time and wavelength map of McStas and of tof, side by side on one color scale, in
   n/s per 0.05 ms and 0.05 Å.
@@ -179,7 +180,7 @@ The figure has two rows:
   wavelength, of both models on the same axes, with their error bars. The legend gives the
   McStas `ncount`, the number of tof neutrons and the n/s that each of them stands for.
 
-![McStas and tof at the entrance of guide 1: time and wavelength maps, the wavelength spectrum and the time profile](figures/trex_source.png)
+![McStas and tof at the entrance of guide 1: time and wavelength maps, the wavelength spectrum and the time profile](figures/trex_source_1e6.png)
 
 This is `main` at its defaults: 1e6 McStas neutrons, 1e6 tof neutrons and seed 1. The total at
 the entrance of guide 1 is 8.46e11 n/s, so each tof neutron stands for 8.46e5 n/s. Both models

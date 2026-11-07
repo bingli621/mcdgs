@@ -92,7 +92,8 @@ component, and list it in `__init__.py` there. Copy `Arm` or `Monitor_nD`:
 - Add a page in `docs/instruments/` and a page in `docs/reference/`, and list them in the `nav` of
   `zensical.toml`.
 - Put setups that study one part of it, and what reads their results, in
-  `src/mcdgs/diagnostics/<instrument>/`, as T-Rex does, one module per page of results.
+  `src/mcdgs/diagnostics/`, one module per page of results, named and numbered after the
+  instrument, as T-Rex does with `trex_00_overview` to `trex_05_choppers`.
 - Make the files of its pages with those modules, not by hand. Give each a `main` that writes its
   files to the folder of `--out` ([`mcdgs.diagnostics.cli`](../reference/diagnostics.md)), and
   run it in the `docs-diagnostics` task. Its files are committed: the site does not make them.

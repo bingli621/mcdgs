@@ -35,8 +35,9 @@ src/mcdgs/
   mcstas/        build the McStasScript instrument, run simulations, read NeXus output
   tof/           build the chopper cascade of an instrument as a tof model
   reduction/     data reduction
-  diagnostics/   setups that study one part of an instrument, one package per instrument; each
-                 module with a main makes the files of one page of the documentation
+  diagnostics/   setups that study one part of an instrument, one module each, numbered per
+                 instrument (trex_01_source, ...); each module with a main makes the files of
+                 one page of the documentation
 scripts/         build tooling of the documentation site
 notebooks/       Jupyter notebooks to look at an instrument interactively, such as in 3D
 tests/
