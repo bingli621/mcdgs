@@ -123,3 +123,13 @@ def test_chopper_frequencies_are_signed_by_name_in_beam_order():
 
 def test_running_conditions_default_to_the_name():
     assert Toy().running_conditions() == "toy"
+
+
+def test_numeric_instr_params_leave_out_strings():
+    class Named(Toy):
+        @property
+        def instr_params(self) -> list[InstrParam]:
+            return [*super().instr_params, InstrParam("label", "a", "", "a string")]
+
+    assert Named(params=ToyParams(omega=5)).numeric_instr_params() == {"omega": 5}
+    del INSTRUMENTS["Named"]

@@ -18,7 +18,7 @@ from mcdgs.core.utils import evaluate, speed_from_wavelength
 from mcdgs.instruments.trex.choppers import DISK_DISTANCE
 from mcdgs.instruments.trex.model import TRex
 from mcdgs.samples import aluminum
-from mcdgs.tof.builder import _numeric_params, build_tof
+from mcdgs.tof.builder import build_tof
 
 
 @dataclass(frozen=True)
@@ -159,7 +159,7 @@ def test_tof_choppers_open_when_the_mcstas_disks_do(mode):
     # every 0.5 us over two pulses: under 2 % of the shortest opening, 28 us, that of the
     # monochromatic choppers
     trex = _trex(mode)
-    params = _numeric_params(trex)
+    params = trex.numeric_instr_params()
     t = np.arange(0, 2 / 14, 0.5e-6)
     for name, chopper in build_tof(trex, neutrons=1000, seed=1).choppers.items():
         mcstas = _mcstas_open(trex.components[name], params, t)
@@ -178,7 +178,7 @@ def test_the_neutron_the_choppers_are_phased_to_gets_through_every_disk(mode):
 
 def test_neutrons_reach_the_sample_exactly_when_every_mcstas_disk_lets_them_through():
     trex = TRex()
-    params = _numeric_params(trex)
+    params = trex.numeric_instr_params()
     model = build_tof(trex, neutrons=200_000, seed=1)
     neutrons = model.run()["sample_monitor"].data["pulse", 0]
     birth = neutrons.coords["birth_time"].to(unit="s").values

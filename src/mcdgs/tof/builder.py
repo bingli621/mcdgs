@@ -122,30 +122,12 @@ def get_choppers(instrument: Instrument) -> dict[str, DiskChopper]:
         If the instrument has no ``ESS_butterfly`` or more than one, or a chopper is parked.
     """
     _, after_source = beamline(instrument)
-    params = _numeric_params(instrument)
+    params = instrument.numeric_instr_params()
     return {
         name: disk_chopper(component, distance, params)
         for name, component, distance in after_source
         if isinstance(component, NXdisk_chopper)
     }
-
-
-def _numeric_params(instrument: Instrument) -> dict[str, float]:
-    """Return the instrument parameters that are numbers, by name.
-
-    Only numbers can stand in a component's values; a string parameter cannot.
-
-    Parameters
-    ----------
-    instrument:
-        The instrument.
-
-    Returns
-    -------
-    :
-        Value by McStas name.
-    """
-    return {p.name: p.value for p in instrument.instr_params if isinstance(p.value, int | float)}
 
 
 def _source(
@@ -265,7 +247,7 @@ def build_tof(
         If the instrument has no ``ESS_butterfly`` or more than one.
     """
     source, after_source = beamline(instrument)
-    params = _numeric_params(instrument)
+    params = instrument.numeric_instr_params()
     model = tof.Model(
         source=_source(source, params, neutrons, seed),
     )

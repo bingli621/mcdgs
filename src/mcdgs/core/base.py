@@ -133,7 +133,7 @@ class Instrument:
             1 nm so that rotation noise reads ``0.0``, never ``-0.0``.
         """
         at_rotated_dict = place_absolute(
-            self.components, self._numeric_instr_params()
+            self.components, self.numeric_instr_params()
         )  # name -> (position, rotation)
         return {
             name: (position.round(9) + 0.0).tolist()
@@ -154,7 +154,7 @@ class Instrument:
             ``nu`` in Hz by chopper name, in beam order, at the current parameters: the sign is
             the sense of rotation, as in McStas.
         """
-        params = self._numeric_instr_params()
+        params = self.numeric_instr_params()
         return {
             name: float(evaluate(component.nu, params))
             for name, component in self.components.items()
@@ -174,10 +174,16 @@ class Instrument:
         """
         return self.name
 
-    def _numeric_instr_params(self) -> dict[str, float]:
+    def numeric_instr_params(self) -> dict[str, float]:
         """Return the McStas instrument parameters that are numbers, by name.
 
-        Only numbers can stand in a component's values; a string parameter cannot.
+        Only numbers can stand in a component's values; a string parameter cannot. These are
+        the values to evaluate a component's expressions with, such as ``nu="nu_ps1"``.
+
+        Returns
+        -------
+        :
+            Value by McStas name.
         """
         return {p.name: p.value for p in self.instr_params if isinstance(p.value, int | float)}
 

@@ -28,7 +28,7 @@ from mcdgs.core.components import NXdisk_chopper
 from mcdgs.core.components.source import ESS_SOURCE_LENGTH
 from mcdgs.core.utils import evaluate, speed_from_wavelength
 
-from .builder import _numeric_params, beamline, disk_chopper
+from .builder import beamline, disk_chopper
 
 
 def chopper_cascade(
@@ -68,7 +68,7 @@ def chopper_cascade(
         pulse ends before it starts, or ``n_pulses`` is below 1.
     """
     source, after_source = beamline(instrument)
-    params = _numeric_params(instrument)
+    params = instrument.numeric_instr_params()
     l_min = float(evaluate(source.Lmin, params) if wavelength_min is None else wavelength_min)
     l_max = float(evaluate(source.Lmax, params) if wavelength_max is None else wavelength_max)
     frequency = sc.scalar(float(source.frequency), unit="Hz")
