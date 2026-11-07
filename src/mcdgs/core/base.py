@@ -12,16 +12,17 @@ An instrument is two things:
 
 The io/ and mcstas/ layers rely only on what this base class provides: ``name``, ``params``,
 ``update_params``, ``components``, ``instr_params``, ``positions``, equality and the summary
-(``repr``).
+(``repr``). ``running_conditions`` and ``chopper_frequencies`` describe the settings of a run in
+one line, such as the title of a figure.
 """
 
 from dataclasses import asdict, fields, replace
 from typing import Any
 
-from .components import Component
+from .components import Component, NXdisk_chopper
 from .geometry import place_absolute
 from .params import InstrParam
-from .utils import format_value
+from .utils import evaluate, format_value
 
 INSTRUMENTS: dict[str, type["Instrument"]] = {}  # every subclass of Instrument by class name
 
@@ -131,16 +132,54 @@ class Instrument:
             ``[x, y, z]`` in m by component name, at the current angles. Values are rounded to
             1 nm so that rotation noise reads ``0.0``, never ``-0.0``.
         """
-        instr_param_dict = {  # only numbers can place a component; a string parameter cannot
-            p.name: p.value for p in self.instr_params if isinstance(p.value, int | float)
-        }
         at_rotated_dict = place_absolute(
-            self.components, instr_param_dict
+            self.components, self._numeric_instr_params()
         )  # name -> (position, rotation)
         return {
             name: (position.round(9) + 0.0).tolist()
             for name, (position, _rotation) in at_rotated_dict.items()
         }
+
+    def chopper_frequencies(self, prefix: str = "") -> dict[str, float]:
+        """Return the signed frequency of the disk choppers whose names start with ``prefix``.
+
+        Parameters
+        ----------
+        prefix:
+            Start of the chopper names, such as ``"ps"``. ``""`` takes every disk chopper.
+
+        Returns
+        -------
+        :
+            ``nu`` in Hz by chopper name, in beam order, at the current parameters: the sign is
+            the sense of rotation, as in McStas.
+        """
+        params = self._numeric_instr_params()
+        return {
+            name: float(evaluate(component.nu, params))
+            for name, component in self.components.items()
+            if isinstance(component, NXdisk_chopper) and name.startswith(prefix)
+        }
+
+    def running_conditions(self) -> str:
+        """Describe the settings of the instrument in one line, such as the title of a figure.
+
+        The instrument's name. A subclass adds what sets its run, such as its control
+        parameters and the frequencies of its choppers (:meth:`chopper_frequencies`).
+
+        Returns
+        -------
+        :
+            The description, its parts joined by ``" · "``.
+        """
+        return self.name
+
+    def _numeric_instr_params(self) -> dict[str, float]:
+        """Return the McStas instrument parameters that are numbers, by name.
+
+        Only numbers can stand in a component's values; a string parameter cannot.
+        """
+        return {p.name: p.value for p in self.instr_params if isinstance(p.value, int | float)}
 
     def __repr__(self) -> str:
         """Summarize the instrument as tables.

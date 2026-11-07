@@ -14,7 +14,6 @@ pulse.
 """
 
 import math
-from collections.abc import Sequence
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -147,45 +146,6 @@ def _openings(disk: DiskChopper, t_start: float, t_end: float) -> Chopper:
     )
 
 
-def diagram_title(instrument: Instrument, chopper_groups: Sequence[str] = ()) -> str:
-    """Return the title of the acceptance diagram of an instrument.
-
-    The instrument's name; its ``mode`` and ``lambda0``, if its control parameters have them;
-    then for each group, the signed frequencies of the disk choppers whose names start with it,
-    in beam order, as ``"PS 189/-189 Hz"``: the sign is the sense of rotation, as in McStas's
-    ``nu``. A group without choppers is left out.
-
-    Parameters
-    ----------
-    instrument:
-        The instrument, at its current parameters.
-    chopper_groups:
-        Name prefixes of the choppers whose frequencies to show, such as ``("ps", "mc")``.
-
-    Returns
-    -------
-    :
-        The title, its parts joined by ``" · "``.
-    """
-    parts = [instrument.name]
-    if (mode := getattr(instrument.params, "mode", None)) is not None:
-        parts.append(str(mode))
-    if (lambda0 := getattr(instrument.params, "lambda0", None)) is not None:
-        parts.append(f"λ0 = {lambda0:g} Å")
-
-    params = _numeric_params(instrument)
-    _, after_source = beamline(instrument)
-    for group in chopper_groups:
-        frequencies = [
-            f"{float(evaluate(component.nu, params)):g}"
-            for name, component, _ in after_source
-            if isinstance(component, NXdisk_chopper) and name.startswith(group)
-        ]
-        if frequencies:
-            parts.append(f"{group.upper()} {'/'.join(frequencies)} Hz")
-    return " · ".join(parts)
-
-
 def acceptance_diagram(
     instrument: Instrument,
     *,
@@ -194,14 +154,13 @@ def acceptance_diagram(
     time_min: float | None = None,
     time_max: float | None = None,
     n_pulses: int | None = None,
-    chopper_groups: Sequence[str] = (),
 ) -> Figure:
     """Draw the chopper acceptance diagram of an instrument.
 
     The pulse at the source and what each chopper accepts of it, moved back to the source,
     time on x and wavelength on y. Each chopper is drawn over the ones before it, in turbo from the
     source to the last chopper, so the last color is what reaches the end of the cascade. The
-    title is :func:`diagram_title`.
+    title is the instrument's :meth:`.Instrument.running_conditions`.
 
     Parameters
     ----------
@@ -215,9 +174,6 @@ def acceptance_diagram(
     n_pulses:
         Number of pulses, one source period apart. ``None`` takes the source's ``n_pulses``, at
         least 1.
-    chopper_groups:
-        Name prefixes of the choppers whose frequencies the title shows, such as
-        ``("ps", "mc")``.
 
     Returns
     -------
@@ -252,7 +208,7 @@ def acceptance_diagram(
     ax.autoscale_view()
     ax.set_xlabel("Time at the source (ms)")
     ax.set_ylabel("Wavelength (Å)")
-    ax.set_title(diagram_title(instrument, chopper_groups))
+    ax.set_title(instrument.running_conditions())
     ax.grid(True, linewidth=0.5, alpha=0.5)
     ax.legend(loc="center left", bbox_to_anchor=(1, 0.5), frameon=False)
     return fig

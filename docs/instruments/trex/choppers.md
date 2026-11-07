@@ -149,8 +149,8 @@ Each chopper is drawn over the ones before it, in turbo from the source to the l
   sub-pulses, about 0.1 Å apart, are what reaches the sample. `mc2` lies over `mc1`, which
   accepts almost the same.
 
-The title gives the mode, `lambda0`, and the signed frequencies of the pulse-shaping (PS) and
-monochromatic (MC) choppers.
+The title is `trex.running_conditions()`: the mode, `lambda0`, `rrm` (RRM) and the signed
+frequencies of the pulse-shaping (PS) and monochromatic (MC) choppers.
 The band, the times and the number of pulses can be changed, all in Å and s:
 
 ```python

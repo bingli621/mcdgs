@@ -574,3 +574,14 @@ def test_two_instruments_share_no_component():
     assert first.bw1 is not second.bw1
     first.guide_1.w1 = 0.1
     assert second.guide_1.w1 == pytest.approx(0.089955)
+
+
+def test_running_conditions_give_the_settings_and_the_chopper_frequencies():
+    trex = TRex()
+    assert trex.running_conditions() == (
+        "TRex · FF · λ0 = 2 Å · RRM = 18 · PS 189/-189 Hz · MC 252/252 Hz"
+    )
+    trex.update_params(mode="RR", lambda0=4.0, rrm=12)
+    assert trex.running_conditions() == (
+        "TRex · RR · λ0 = 4 Å · RRM = 12 · PS 126/-126 Hz · MC 168/168 Hz"
+    )

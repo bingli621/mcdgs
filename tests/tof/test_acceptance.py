@@ -6,7 +6,7 @@ matplotlib.use("Agg")
 from matplotlib.figure import Figure
 
 from mcdgs.instruments.trex.model import TRex
-from mcdgs.tof.acceptance import chopper_cascade, diagram_title
+from mcdgs.tof.acceptance import chopper_cascade
 
 
 @pytest.mark.parametrize("mode", ["FF", "RR"])
@@ -51,18 +51,10 @@ def test_trex_draws_one_legend_entry_per_frame():
     assert [label.split()[0] for label in labels[1:]] == ["bw1", "bw2", "ps1", "ps2", "mc1", "mc2"]
 
 
-def test_title_gives_mode_lambda0_and_the_chopper_frequencies():
+def test_the_title_is_the_running_conditions():
     trex = TRex()
-    trex.update_params(mode="RR", lambda0=4.0)
-    nu = {p.name: p.value for p in trex.instr_params}
-    ps = f"{nu['nu_ps1']:g}/{nu['nu_ps2']:g}"
-    mc = f"{nu['nu_mc1']:g}/{nu['nu_mc2']:g}"
-    title = trex.acceptance_diagram().axes[0].get_title()
-    assert title == f"TRex · RR · λ0 = 4 Å · PS {ps} Hz · MC {mc} Hz"
-
-
-def test_title_leaves_out_chopper_groups_without_choppers():
-    assert diagram_title(TRex(), ("ps", "fan")).count("·") == 3  # name, mode, lambda0, PS
+    trex.update_params(mode="RR", rrm=12)
+    assert trex.acceptance_diagram().axes[0].get_title() == trex.running_conditions()
 
 
 def test_cascade_takes_the_times_and_pulses_given():

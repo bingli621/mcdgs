@@ -3,7 +3,7 @@ from dataclasses import dataclass
 import pytest
 
 from mcdgs.core.base import INSTRUMENTS, Instrument
-from mcdgs.core.components import Arm, Progress_bar
+from mcdgs.core.components import Arm, NXdisk_chopper, Progress_bar
 from mcdgs.core.params import InstrParam, param
 
 
@@ -108,3 +108,18 @@ def test_the_summary_shows_params_instr_params_and_components():
     assert "incident energy" in text
     assert "Instrument parameters (McStas):" in text
     assert "[0, omega, 0]" in text  # the sample's rotation, as given
+
+
+def test_chopper_frequencies_are_signed_by_name_in_beam_order():
+    toy = Toy()
+    toy.slow = NXdisk_chopper(slit_edges=[0, 10], nu=14, at=[0, 0, 3])
+    toy.fast_1 = NXdisk_chopper(slit_edges=[0, 10], nu="omega", at=[0, 0, 4])
+    toy.fast_2 = NXdisk_chopper(slit_edges=[0, 10], nu="-2*omega", at=[0, 0, 5])
+    toy.update_params(omega=70)
+    assert toy.chopper_frequencies() == {"slow": 14.0, "fast_1": 70.0, "fast_2": -140.0}
+    assert toy.chopper_frequencies("fast") == {"fast_1": 70.0, "fast_2": -140.0}
+    assert toy.chopper_frequencies("none") == {}
+
+
+def test_running_conditions_default_to_the_name():
+    assert Toy().running_conditions() == "toy"

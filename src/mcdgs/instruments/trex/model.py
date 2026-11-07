@@ -170,8 +170,8 @@ class TRex(Instrument):
     ) -> Figure:
         """Draw the chopper acceptance diagram of T-Rex, at its current parameters.
 
-        See :func:`mcdgs.tof.acceptance.acceptance_diagram`. The title gives the mode,
-        ``lambda0`` and the frequencies of the pulse-shaping and monochromatic choppers.
+        See :func:`mcdgs.tof.acceptance.acceptance_diagram`. The title is
+        :meth:`running_conditions`.
 
         Parameters
         ----------
@@ -196,8 +196,29 @@ class TRex(Instrument):
             time_min=time_min,
             time_max=time_max,
             n_pulses=n_pulses,
-            chopper_groups=("ps", "mc"),
         )
+
+    def running_conditions(self) -> str:
+        """Describe the settings of T-Rex in one line, such as the title of a figure.
+
+        The name, the mode, ``lambda0`` and ``rrm``, then the signed frequencies of the
+        pulse-shaping (PS) and monochromatic (MC) choppers, in beam order.
+
+        Returns
+        -------
+        :
+            Such as ``"TRex · FF · λ0 = 2 Å · RRM = 18 · PS 189/-189 Hz · MC 252/252 Hz"``.
+        """
+        parts = [
+            self.name,
+            self.params.mode,
+            f"λ0 = {self.params.lambda0:g} Å",
+            f"RRM = {self.params.rrm}",
+        ]
+        for group in ("ps", "mc"):
+            frequencies = "/".join(f"{nu:g}" for nu in self.chopper_frequencies(group).values())
+            parts.append(f"{group.upper()} {frequencies} Hz")
+        return " · ".join(parts)
 
     def add_components(self, components: dict[str, Component]) -> None:
         """Set components as attributes under their names, keeping their order.
