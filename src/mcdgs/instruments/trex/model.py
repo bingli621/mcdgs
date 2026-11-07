@@ -3,6 +3,8 @@
 from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Any
 
+from matplotlib.figure import Figure
+
 from mcdgs.core.base import Instrument
 from mcdgs.core.components import (
     Arm,
@@ -12,6 +14,7 @@ from mcdgs.core.components import (
     Single_crystal,
 )
 from mcdgs.core.params import InstrParam, param
+from mcdgs.tof.acceptance import acceptance_diagram
 
 from .choppers import Mode, chopper_timings, choppers
 from .guides.bispectral import (
@@ -155,6 +158,46 @@ class TRex(Instrument):
             lambda_min, lambda_max = wavelength_band(self.params.lambda0)
             self.source = source(lambda_min, lambda_max)
             self.beam_monitor = beam_monitor(lambda_limits=(lambda_min, lambda_max))
+
+    def acceptance_diagram(
+        self,
+        *,
+        wavelength_min: float | None = None,
+        wavelength_max: float | None = None,
+        time_min: float | None = None,
+        time_max: float | None = None,
+        n_pulses: int | None = None,
+    ) -> Figure:
+        """Draw the chopper acceptance diagram of T-Rex, at its current parameters.
+
+        See :func:`mcdgs.tof.acceptance.acceptance_diagram`. The title gives the mode,
+        ``lambda0`` and the frequencies of the P- and M-Choppers.
+
+        Parameters
+        ----------
+        wavelength_min, wavelength_max:
+            Band of the pulse, in Å. ``None`` takes the source's band around ``lambda0``.
+        time_min, time_max:
+            Times at the source the pulse starts and ends, in s. ``None`` takes 0 or the ESS
+            pulse length.
+        n_pulses:
+            Number of pulses, one source period apart. ``None`` takes the source's
+            ``n_pulses``.
+
+        Returns
+        -------
+        :
+            The figure.
+        """
+        return acceptance_diagram(
+            self,
+            wavelength_min=wavelength_min,
+            wavelength_max=wavelength_max,
+            time_min=time_min,
+            time_max=time_max,
+            n_pulses=n_pulses,
+            chopper_groups=("ps", "mc"),
+        )
 
     def add_components(self, components: dict[str, Component]) -> None:
         """Set components as attributes under their names, keeping their order.

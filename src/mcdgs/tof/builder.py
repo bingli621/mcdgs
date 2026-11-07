@@ -31,7 +31,7 @@ import tof
 from scippneutron.chopper.disk_chopper import DiskChopper
 
 from mcdgs.core.base import Instrument
-from mcdgs.core.components import ESS_butterfly, Monitor_nD, NXdisk_chopper
+from mcdgs.core.components import Component, ESS_butterfly, Monitor_nD, NXdisk_chopper
 from mcdgs.core.utils import evaluate
 
 
@@ -227,21 +227,13 @@ def build_tof(
     ValueError
         If the instrument has no ``ESS_butterfly`` or more than one.
     """
-    components = instrument.components
-    sources = {name: c for name, c in components.items() if isinstance(c, ESS_butterfly)}
-    if len(sources) != 1:
-        raise ValueError(f"{instrument.name}: tof needs one ESS_butterfly, found {list(sources)}")
-    ((source_name, source),) = sources.items()
-    after_source = list(components)[list(components).index(source_name) + 1 :]
-
+    source, after_source = beamline(instrument)
     params = _numeric_params(instrument)
-    positions = {name: np.array(xyz) for name, xyz in instrument.positions().items()}
     model = tof.Model(
         source=_source(source, params, neutrons, seed),
     )
-    for name in after_source:
-        distance = float(np.linalg.norm(positions[name] - positions[source_name]))
-        match components[name]:
+    for _, component, distance in after_source:
+        match component:
             case NXdisk_chopper() as chopper:
                 model.add(_chopper(chopper, distance, params))
             case Monitor_nD() as monitor:
@@ -249,3 +241,39 @@ def build_tof(
             case _:
                 pass  # not something tof understands
     return model
+
+
+def beamline(
+    instrument: Instrument,
+) -> tuple[ESS_butterfly, list[tuple[str, Component, float]]]:
+    """Return the source of an instrument and the components after it, with their distances.
+
+    Parameters
+    ----------
+    instrument:
+        The instrument.
+
+    Returns
+    -------
+    :
+        The ``ESS_butterfly``, and each component after it in beam order: its name, itself and
+        its distance from the source, in m.
+
+    Raises
+    ------
+    ValueError
+        If the instrument has no ``ESS_butterfly`` or more than one.
+    """
+    components = instrument.components
+    sources = {name: c for name, c in components.items() if isinstance(c, ESS_butterfly)}
+    if len(sources) != 1:
+        raise ValueError(f"{instrument.name}: tof needs one ESS_butterfly, found {list(sources)}")
+    ((source_name, source),) = sources.items()
+    after_source = list(components)[list(components).index(source_name) + 1 :]
+
+    positions = {name: np.array(xyz) for name, xyz in instrument.positions().items()}
+    origin = positions[source_name]
+    return source, [
+        (name, components[name], float(np.linalg.norm(positions[name] - origin)))
+        for name in after_source
+    ]
