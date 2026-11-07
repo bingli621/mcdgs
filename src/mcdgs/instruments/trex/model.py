@@ -16,7 +16,7 @@ from mcdgs.core.components import (
 from mcdgs.core.params import InstrParam, param
 from mcdgs.tof.acceptance import acceptance_diagram
 
-from .choppers import Mode, chopper_timings, choppers
+from .choppers import Mode, chopper, chopper_timings
 from .guides.bispectral import (
     BENDER_ROTATION,
     arm_guide_4,
@@ -101,7 +101,6 @@ class TRex(Instrument):
     ) -> None:
         super().__init__(params)
 
-        disks = choppers()
         to_bwc1, to_bwc2, to_end_of_curve = guides_curve()
         to_psc, to_mc, to_slit = guides_straight()
 
@@ -117,17 +116,17 @@ class TRex(Instrument):
         self.beam_monitor = beam_monitor(lambda_limits=(lambda_min, lambda_max))
         # curved guides
         self.add_components(to_bwc1)
-        self.bw1 = disks["bw1"]
+        self.bw1 = chopper("bw1")
         self.add_components(to_bwc2)
-        self.bw2 = disks["bw2"]
+        self.bw2 = chopper("bw2")
         self.add_components(to_end_of_curve)
         # straight guides
         self.add_components(to_psc)
-        self.ps1 = disks["ps1"]
-        self.ps2 = disks["ps2"]
+        self.ps1 = chopper("ps1")
+        self.ps2 = chopper("ps2")
         self.add_components(to_mc)
-        self.mc1 = disks["mc1"]
-        self.mc2 = disks["mc2"]
+        self.mc1 = chopper("mc1")
+        self.mc2 = chopper("mc2")
         self.add_components(to_slit)
         self.slit_mc = slit_mc()
         #  sample position

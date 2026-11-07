@@ -44,10 +44,30 @@ SLIT_EDGES = {
 # deg, where the beam crosses each disk from its zero mark, zero means disk axel below guide, 180 means above
 BEAM_ANGLE = {"bw1": 0, "bw2": 0, "ps1": 180, "ps2": 180, "mc1": 180, "mc2": 0}
 
+# m, radial height of the slits of each disk
+SLIT_HEIGHT = {
+    "bw1": 0.085,  # FIXME slit height unknown
+    "bw2": 0.085,  # FIXME slit height unknown
+    "ps1": 0.095,
+    "ps2": 0.095,
+    "mc1": 0.045,
+    "mc2": 0.045,
+}
+
 # index of the slit of each disk on the beam in each mode: wide for flux, narrow for resolution
 MODE_SLIT: dict[Mode, dict[str, int]] = {
     "FF": {"bw1": 0, "bw2": 0, "ps1": 1, "ps2": 1, "mc1": 1, "mc2": 1},
     "RR": {"bw1": 0, "bw2": 0, "ps1": 2, "ps2": 2, "mc1": 0, "mc2": 0},
+}
+
+# the arm at the entrance of the gap of each disk, which places it
+GAP_ARM = {
+    "bw1": "arm_bwc1",
+    "bw2": "arm_bwc2",
+    "ps1": "arm_psc",
+    "ps2": "arm_psc",
+    "mc1": "arm_mc",
+    "mc2": "arm_mc",
 }
 
 # m, distance of each disk from the entrance of its gap
@@ -171,97 +191,31 @@ def chopper_timings(
     return timings
 
 
-def choppers() -> dict[str, NXdisk_chopper]:
-    """Create the choppers.
+def chopper(name: str) -> NXdisk_chopper:
+    """Create a chopper.
+
+    Parameters
+    ----------
+    name:
+        Chopper name, such as ``"ps1"``: a key of :data:`SLIT_EDGES`.
 
     Returns
     -------
     :
-        Choppers by name, in beam order, each relative to the arm of its gap.
+        A new chopper, relative to the arm of its gap, with its frequency and delay given by
+        the instrument parameters ``nu_<name>`` and ``delay_<name>``.
     """
-    return {
-        "bw1": NXdisk_chopper(
-            slit_edges=SLIT_EDGES["bw1"],
-            radius=0.35,
-            yheight=0.085,  # FIXME slit height unknown
-            xwidth=0.0,  # 0.06
-            nu="nu_bw1",
-            delay="delay_bw1",
-            beam_angle=BEAM_ANGLE["bw1"],
-            zero_angle=0,
-            abs_out=0,
-            verbose=1,
-            at=[0, 0, DISK_Z["bw1"]],
-            relative="arm_bwc1",
-        ),
-        "bw2": NXdisk_chopper(
-            slit_edges=SLIT_EDGES["bw2"],
-            radius=0.35,
-            yheight=0.085,  # FIXME slit height unknown
-            xwidth=0.0,  # 0.06
-            nu="nu_bw2",
-            delay="delay_bw2",
-            beam_angle=BEAM_ANGLE["bw2"],
-            zero_angle=0,
-            abs_out=0,
-            verbose=1,
-            at=[0, 0, DISK_Z["bw2"]],
-            relative="arm_bwc2",
-        ),
-        "ps1": NXdisk_chopper(
-            slit_edges=SLIT_EDGES["ps1"],
-            radius=0.35,
-            yheight=0.095,
-            xwidth=0.0,  # 0.06
-            nu="nu_ps1",
-            delay="delay_ps1",
-            beam_angle=BEAM_ANGLE["ps1"],
-            zero_angle=0,
-            abs_out=0,
-            verbose=1,
-            at=[0, 0, DISK_Z["ps1"]],
-            relative="arm_psc",
-        ),
-        "ps2": NXdisk_chopper(
-            slit_edges=SLIT_EDGES["ps2"],
-            radius=0.35,
-            yheight=0.095,
-            xwidth=0.0,  # 0.06
-            nu="nu_ps2",
-            delay="delay_ps2",
-            beam_angle=BEAM_ANGLE["ps2"],
-            zero_angle=0,
-            abs_out=0,
-            verbose=1,
-            at=[0, 0, DISK_Z["ps2"]],
-            relative="arm_psc",
-        ),
-        "mc1": NXdisk_chopper(
-            slit_edges=SLIT_EDGES["mc1"],
-            radius=0.35,
-            yheight=0.045,
-            xwidth=0.0,  # 0.06
-            nu="nu_mc1",
-            delay="delay_mc1",
-            beam_angle=BEAM_ANGLE["mc1"],
-            zero_angle=0,
-            abs_out=0,
-            verbose=1,
-            at=[0, 0, DISK_Z["mc1"]],
-            relative="arm_mc",
-        ),
-        "mc2": NXdisk_chopper(
-            slit_edges=SLIT_EDGES["mc2"],
-            radius=0.35,
-            yheight=0.045,
-            xwidth=0.0,  # 0.06
-            nu="nu_mc2",
-            delay="delay_mc2",
-            beam_angle=BEAM_ANGLE["mc2"],
-            zero_angle=0,
-            abs_out=0,
-            verbose=1,
-            at=[0, 0, DISK_Z["mc2"]],
-            relative="arm_mc",
-        ),
-    }
+    return NXdisk_chopper(
+        slit_edges=SLIT_EDGES[name],
+        radius=0.35,
+        yheight=SLIT_HEIGHT[name],
+        xwidth=0.0,  # 0.06
+        nu=f"nu_{name}",
+        delay=f"delay_{name}",
+        beam_angle=BEAM_ANGLE[name],
+        zero_angle=0,
+        abs_out=0,
+        verbose=1,
+        at=[0, 0, DISK_Z[name]],
+        relative=GAP_ARM[name],
+    )
