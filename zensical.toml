@@ -22,7 +22,7 @@ nav = [
       { "Parameters file" = "instruments/trex/params-file.md" },
       { "Source" ="instruments/trex/source.md" },
       { "Extraction guides" = "instruments/trex/extraction.md" },
-      { "Bender scan" = "instruments/trex/bender-scan.md" },
+      { "Bender" = "instruments/trex/bender-scan.md" },
     ] },
   ] },
   { "How-to guides" = [

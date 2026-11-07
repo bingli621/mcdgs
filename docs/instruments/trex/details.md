@@ -7,7 +7,7 @@ polarizers, collimators or detector yet.
 `sample_pos` is on the beam axis, 163.8 m along it from the origin.
 
 [T-Rex](index.md) shows the whole model as McStas draws it, and [Source](source.md),
-[Extraction guides](extraction.md) and [Bender scan](bender-scan.md) show what the model gives so
+[Extraction guides](extraction.md) and [Bender](bender-scan.md) show what the model gives so
 far. [Instrument layout](#instrument-layout) lists every component with its position. The code is
 in [`mcdgs.instruments.trex`](../../reference/trex.md).
 

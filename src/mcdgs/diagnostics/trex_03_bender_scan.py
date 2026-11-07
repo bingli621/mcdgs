@@ -5,7 +5,8 @@ wavelength map, summed over time, in bands of :data:`BAND_WIDTH` centered on its
 :func:`run_bender_scan` scans ``b_rot`` with the bender in, and runs once with it out;
 :func:`plot_bender_scan` draws the intensity per band of the scan over that of the same band
 with the bender out, from :func:`transmission`. :func:`read_angles` and :func:`read_spectra`
-read the files of the scan. :func:`main` does both; run the module for it::
+read the files of the scan. :func:`main` does both, and runs the path with the bender in at its
+nominal rotation with :func:`.diagnose_path`; run the module for it::
 
     pixi run python -m mcdgs.diagnostics.trex_03_bender_scan
 """
@@ -20,7 +21,7 @@ from mcstastox.LoadFile import Data
 from numpy.typing import NDArray
 
 from mcdgs.diagnostics.cli import output_folder, parse_out
-from mcdgs.diagnostics.trex_02_extraction import Extraction
+from mcdgs.diagnostics.trex_02_extraction import Extraction, diagnose_path
 from mcdgs.instruments.trex.guides.bispectral import BENDER_ROTATION
 from mcdgs.mcstas.simulation import Simulation
 
@@ -51,8 +52,10 @@ def transmission(
     :
         The ratio and its error, both with the shape of ``intensity``.
     """
+    # --8<-- [start:transmission]
     ratio = intensity / reference
     ratio_error = ratio * np.sqrt((error / intensity) ** 2 + (reference_error / reference) ** 2)
+    # --8<-- [end:transmission]
     return ratio, ratio_error
 
 
@@ -117,9 +120,11 @@ def read_spectra(h5_file: Path) -> tuple[NDArray, NDArray, NDArray]:
 
     half_bin = (wavelengths[1] - wavelengths[0]) / 2
     start, stop = wavelengths[0] - half_bin, wavelengths[-1] + half_bin  # the axis, in Å
+    # --8<-- [start:bands]
     # the nearest center, in widths; a bin centered on the edge of two bands, as 0.25 Å, goes to
     # the band above, whatever the rounding of its center
     band_of_bin = np.floor(wavelengths / BAND_WIDTH + 0.5 + 1e-9).astype(int)
+    # --8<-- [end:bands]
     tolerance = 1e-9  # Å: an edge of the axis on that of a band covers it
     whole = [
         int(band)
@@ -131,9 +136,11 @@ def read_spectra(h5_file: Path) -> tuple[NDArray, NDArray, NDArray]:
         raise ValueError(
             f"the wavelength axis, {start:.4g} to {stop:.4g} Å, covers no band of {BAND_WIDTH} Å"
         )
+    # --8<-- [start:sum_bands]
     intensity_bins, variance_bins = np.array(intensities), np.array(variances)
     intensity = np.stack([intensity_bins[:, band_of_bin == b].sum(axis=1) for b in whole], 1)
     variance = np.stack([variance_bins[:, band_of_bin == b].sum(axis=1) for b in whole], 1)
+    # --8<-- [end:sum_bands]
     return np.array(whole) * BAND_WIDTH, intensity, np.sqrt(variance)
 
 
@@ -167,12 +174,14 @@ def run_bender_scan(
     if angles is None:
         angles = np.linspace(-0.8, 0.1, 19)
 
+    # --8<-- [start:run_scan]
     simulation = Simulation(Extraction(), work_dir=work_dir)
     scan_file = simulation.scan(
         "b_rot", angles, "bender_scan", ncount=ncount, seed=seed, bender_in=1
     )
     print(f"Wrote {scan_file}")
     bender_out_file = simulation.run("bender_out", ncount=ncount, seed=seed, bender_in=0)
+    # --8<-- [end:run_scan]
     print(f"Wrote {bender_out_file}")
     return scan_file, bender_out_file
 
@@ -226,23 +235,36 @@ def plot_bender_scan(scan_file: Path, bender_out_file: Path) -> Figure:
     return fig
 
 
-def main(out: Path | None = None, ncount: float = 1e6, seed: int = 1) -> Path:
-    """Run the scan of the bender and save its figure.
+def main(
+    out: Path | None = None,
+    ncount: float = 1e6,
+    seed: int = 1,
+    path_ncount: float = 1e7,
+    neutrons: int = 1_000_000,
+    transmission: float = 0.2,
+) -> list[Path]:
+    """Run the scan of the bender and save its figure, then run the path with the bender in.
 
     Parameters
     ----------
     out:
-        Folder of the figure, ``bender_scan.png``. If ``None``, the folder of the scan, next to
-        its ``mccode.h5``.
+        Folder of the figures. If ``None``, the folder of the scan, next to its ``mccode.h5``,
+        for ``bender_scan.png``, and that of the McStas run of the path for the others.
     ncount:
         Number of McStas neutrons, per angle and in the run without the bender.
     seed:
         Seed of the random numbers.
+    path_ncount:
+        Number of McStas neutrons in each run of the path with the bender in, at its nominal
+        rotation: see :func:`.diagnose_path`.
+    neutrons, transmission:
+        Number of tof neutrons, and the factor on tof at the beam monitor, of that path.
 
     Returns
     -------
     :
-        The path of the figure.
+        The path of the figure of the scan, then those of the diagnostics, the diagram and the
+        comparison with the bender in.
     """
     scan_file, bender_out_file = run_bender_scan(ncount=ncount, seed=seed)
     figure = output_folder(out, scan_file.parent) / "bender_scan.png"
@@ -250,7 +272,12 @@ def main(out: Path | None = None, ncount: float = 1e6, seed: int = 1) -> Path:
     fig.savefig(figure, dpi=150)
     plt.close(fig)
     print(f"Saved {figure}")
-    return figure
+    # --8<-- [start:bender_in]
+    path = diagnose_path(
+        True, out, ncount=path_ncount, neutrons=neutrons, seed=seed, transmission=transmission
+    )
+    # --8<-- [end:bender_in]
+    return [figure, *path]
 
 
 if __name__ == "__main__":
