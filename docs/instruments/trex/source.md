@@ -296,75 +296,7 @@ pixi run python -c "from mcdgs.diagnostics.trex_01_source import main; main(ncou
 
 ## Estimating the count rate of a monitor
 
-The intensity on this monitor is also what a real beam monitor at that place would see, so the same
-map tells you which monitor can stand there. What decides it is the rate the monitor counts,
-above all at the peak of each pulse, not the average flux.
-
-### Per bin, per second, per pulse
-
-A value of the map is in n/s per bin: the neutrons per second that pass the opening of the
-monitor, with a time of arrival in that 0.05 ms and a wavelength in that 0.05 Å. The time is the
-time within each pulse; the second is the average over the 14 Hz pulses. Summed over all bins, it
-is the total through the opening:
-
-| Quantity | How | At the entrance of guide 1 |
-| -------- | --- | -------------------------- |
-| Total rate | sum of all bins | 8.46e11 n/s |
-| Per pulse | total / 14 Hz | 6.0e10 n per pulse |
-| Per area | total / (8.9955 cm × 2.9992 cm) | 3.1e10 n/s/cm² |
-
-Halving the widths of the bins halves each value of the map, but leaves these sums unchanged;
-only a change of the window changes them. Divide a bin by its widths, 0.05 ms and 0.05 Å, for a
-density in n/s/ms/Å that does not depend on the bins.
-
-### The peak rate
-
-Each pulse reaches the monitor within a few ms of the 71.4 ms between pulses, so while it passes
-the rate is far above the average. From the time profile, the sum of the map over wavelength, the
-instantaneous rate in a time bin is
-
-```text
-instantaneous rate (n/s) = time profile (n/s per bin) / 14 Hz / 0.05 ms
-```
-
-Its maximum is the peak rate. At the entrance of guide 1, in the map of `main` at its defaults,
-it is 2.0e13 n/s at 2.7 ms, some 24 times the average. That is what the length of the pulse
-suggests: most of the 6.0e10 neutrons of a pulse arrive within about 3 ms, and
-6.0e10 / 3 ms ≈ 2e13 n/s.
-
-### What the monitor counts
-
-A beam monitor must leave the beam almost unchanged, so it detects only a small fraction ε of the
-neutrons, typically 1e-5 to 1e-3. For ³He, ¹⁰B and most gas monitors ε grows about as the
-wavelength, so a cold beam counts more than its flux alone suggests. With ε(λ) from the data sheet,
-on the centers of the wavelength bins:
-
-```python
-time_profile = (mcstas_intensity * efficiency).sum(axis=1)  # counts/s per time bin
-average_rate = time_profile.sum()  # counts/s
-peak_rate = time_profile.max() / 14 / 0.05e-3  # counts/s, during the pulse
-```
-
-`mcstas_intensity` is the map of `main`, of shape (time bins, wavelength bins), and `efficiency`
-is ε at the wavelength centers.
-
-### Choosing
-
-Compare the peak rate with what the monitor can count. While peak rate × τ is small, a counting
-monitor with a dead time τ loses a fraction of about peak rate × τ of its counts; keep it below
-0.1, or the monitor no longer counts in proportion to the beam. Near 1 and above, it saturates:
-it cannot count much faster than 1/τ, whatever the beam. If peak rate × τ is too large, take a
-lower ε, a smaller opening, or a faster monitor. Leave a factor of 2 to 10 for a higher source
-power and for the model.
-
-For example, with ε = 1e-4 at 1.8 Å, growing as λ: at the mean wavelength of 2.4 Å ε is 1.3e-4,
-so the monitor counts about 1.1e8 counts/s on average and, from the map, 2.5e9 counts/s at the
-peak. With a dead time of 100 ns, peak rate × τ is about 250, far above 0.1: the monitor is
-saturated, at most 1e7 counts/s. No counting monitor of that ε works at the entrance of guide 1,
-which is close to the moderator and inside the monolith. Monitors stand further downstream, after
-the choppers, where the beam is weaker and shorter in wavelength band. Put the `Monitor_nD`
-there, with the opening of the real monitor, and repeat.
-
-McStas leaves out the fast neutrons and the γ rays from the source, which a monitor near the
-source also sees. They do not change the rate of slow neutrons, but they decide which kinds of
-monitor can stand there.
+The map of a monitor is also what a real monitor at that place would see, so it tells which
+monitor can stand there. See [Beam monitor](beam-monitor.md#estimating-the-count-rate-of-a-monitor)
+for how to read the average and the peak rate from it, with the example of an efficiency that
+grows as the wavelength.

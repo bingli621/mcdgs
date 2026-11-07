@@ -23,6 +23,7 @@ nav = [
       { "Source" ="instruments/trex/source.md" },
       { "Extraction guides" = "instruments/trex/extraction.md" },
       { "Bender" = "instruments/trex/bender-scan.md" },
+      { "Beam monitor" = "instruments/trex/beam-monitor.md" },
     ] },
   ] },
   { "How-to guides" = [
