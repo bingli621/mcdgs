@@ -12,7 +12,7 @@ It is the smallest T-Rex: two components and no McStas instrument parameters.
 
 | Component | What it is |
 | --------- | ---------- |
-| `source` | The T-Rex source, `ESS_butterfly` on beam port W7, one pulse at 2 MW, as in `TRex` but with the widest band, 0.1 to 10 Å, in place of the band around `lambda0`. |
+| `source` | The T-Rex source, `ESS_butterfly` on beam port W7, one pulse at 2 MW, as in `TRex`. By default it has the widest band, 0.1 to 10 Å; with `lambda0`, the band of `TRex` around it. |
 | `source_monitor` | `source_monitor()` of [`mcdgs.instruments.trex.monitors`](../../reference/trex.md), a `Monitor_nD` that is the entrance of guide 1: its opening, 0.089955 m wide and 0.029992 m high, 1.895927 m from the source, 2.0 mm off its axis towards −x and turned by −0.215°, the place and rotation of `arm_nboa` in `TRex`. |
 
 The monitor records one 2D map of time against wavelength:
@@ -27,7 +27,9 @@ that band, 0.1 Å leaving at the start of the pulse, to the slowest, 10 Å leavi
 holds every neutron of the source. Each axis has the fewest bins of its width that cover it. The
 monitor has `restore_neutron=1`, so it does not change the beam.
 
-`TRexSource` has no control parameters and no McStas parameters. It is defined like any instrument of mcdgs: a parameters class, then an `Instrument` subclass that
+`TRexSource` has one control parameter, `lambda0`, and no McStas parameters. Left at `None`,
+the source has the widest band; set, it has the band of `TRex` around `lambda0`, and the monitor
+keeps its window, so the two figures share their axes. It is defined like any instrument of mcdgs: a parameters class, then an `Instrument` subclass that
 creates its components in beam order, with their positions.
 
 <!-- fmt:off -->
@@ -111,29 +113,39 @@ The comparison is thus of shapes, not of absolute flux: by construction both hav
 
 The two totals behave differently with the number of neutrons. The McStas total is the flux Φ
 through the opening of the monitor, in n/s, and does not depend on `ncount`. The tof total is the
-number of tof neutrons that land in the bins: the `neutrons` drawn, times the fraction f of tof's
-pulse that falls inside the window of the monitor. So
+number of tof neutrons that land in the bins. tof draws `neutrons` neutrons, each with a time and a
+wavelength, but the bins cover only a window, 0.048 to 8.30 ms and 0.1 to 10 Å. A neutron outside
+that window lands in no bin and is not counted. Call f the share that lands inside:
 
 ```text
+f = (tof neutrons in the bins) / neutrons
 scale ≈ Φ / (neutrons × f)
 ```
+
+With f = 1, every neutron drawn lands in a bin, and each tof neutron stands for Φ / `neutrons` n/s.
+If 5 % of them fell outside, f would be 0.95: the remaining 95 % carry all of Φ, so each stands for
+a little more.
 
 The scale is thus not a constant: with twice the tof neutrons it is half as large. What stays the
 same is `scale × neutrons ≈ Φ / f`, the n/s of the whole tof pulse. That depends on:
 
-- **The source model.** The power, 2 MW, the beam port, W7, the band, 0.1 to 10 Å, and how
+- **The source model.** The power, 2 MW, the beam port, W7, the band, 0.1 to 10 Å (see
+  [With the band of lambda0 = 2 Å](#with-the-band-of-lambda0-2-a)), and how
   `ESS_butterfly` focuses its rays: Φ is proportional to the power, for example.
 - **The acceptance of the monitor.** Its opening and its distance from the source set which of
   the rays of McStas pass, so which part of the flux Φ is. tof has no apertures: only its choppers
   remove neutrons, so here every tof neutron reaches the monitor, whatever its size. Move or
   resize the monitor and Φ, so the scale, changes.
 - **The window of the bins.** The edges, 0.048 to 8.30 ms and 0.1 to 10 Å, set both which part of Φ is
-  counted and f. If tof's pulse reaches beyond 10 Å, f is below 1. At the defaults of `main`,
+  counted and f. If tof draws neutrons beyond 10 Å, f is below 1. At the defaults of `main`,
   8.46e11 n/s and 8.46e5 n/s per tof neutron make 1.00e6 neutrons in the bins, as many as were
   drawn: here f is 1, to three figures.
 - **The statistics.** Both totals are noisy, so the scale has a relative error of about
-  √(1/(neutrons × f) + (σ/Φ)²), with σ the error of the McStas total. That is 0.1 % at a million
-  tof neutrons, but 1 % at 10,000, and it is not in the error bars of tof.
+  √(1/(neutrons × f) + (σ/Φ)²), with σ the error of the McStas total. The first term is 0.1 % at
+  a million tof neutrons, but 1 % at 10,000. The second is larger here: 0.33 % at an `ncount` of
+  1e6, so the scale has an error of 0.34 % at the defaults (see
+  [With a tenth of the neutrons](#with-a-tenth-of-the-neutrons)). It is not in the error bars of
+  tof.
 
 Since tof has no flux, the scale is set where both models see the same beam, here at the
 source. Further down, keep that same scale rather than computing a new one at each monitor:
@@ -179,10 +191,98 @@ peak near 1.1 Å, the cold one near 2.6 Å, and a third peak at the shortest wav
 both rise over the 2.86 ms of the pulse and peak near 2.8 ms; the long wavelengths arrive later,
 up to about 8 ms at 10 Å.
 
-The figure needs McStas, so it is not made with the site: `pixi run docs-diagnostics` makes it
-again, with the other files of the T-Rex pages.
+### With a tenth of the neutrons
 
-To make it yourself, run:
+The same run with 1e5 neutrons in both models, McStas `ncount` = 100,000 and 100,000 tof
+neutrons, seed 1:
+
+![McStas and tof at the entrance of guide 1, with 1e5 neutrons in both models](figures/trex_source_1e5.png)
+
+| | 1e6 neutrons | 1e5 neutrons |
+| --- | --- | --- |
+| McStas total Φ | 8.457e11 n/s | 8.516e11 n/s |
+| Its relative error σ/Φ | 0.33 % | 1.07 % |
+| tof neutrons in the bins | 999,898 | 99,990 |
+| f | 0.9999 | 0.9999 |
+| Scale, n/s per tof neutron | 8.458e5 | 8.517e6 |
+| `scale × neutrons` | 8.458e11 n/s | 8.517e11 n/s |
+| Relative error of the scale | 0.34 % | 1.1 % |
+
+The two scenarios differ in what one neutron stands for, not in the beam:
+
+- **The scale is ten times larger.** The flux through the monitor is the same, about
+  8.5e11 n/s, but now 100,000 tof neutrons share it in place of 1,000,000, so each stands for ten
+  times as much, 8.5e6 n/s. McStas does the same with its own weights: with a tenth of the rays,
+  each ray has about ten times the weight. That is why both models give the same n/s.
+- **The beam stays the same.** `scale × neutrons`, the n/s of the whole tof pulse, is 8.46e11
+  and 8.52e11 n/s. These differ by 0.7 %, within the errors of 0.34 % and 1.1 %: the difference
+  is the noise of the McStas total Φ, which the scale takes over. f stays 0.9999: a tenth of the
+  neutrons does not change which part of the pulse lands in the window. The means are the same
+  as at 1e6, 2.85 ms and 2.40 Å.
+- **The noise grows by √10, about 3.2.** A bin has a tenth of the neutrons, so its relative error
+  is √10 times larger. The error bars are longer, and the maps are grainier. In the maps, the
+  noise also raises the highest bin: 1.04e9 n/s in McStas at 1e5 against 6.0e8 at 1e6. The color
+  scales of the two figures therefore differ, so compare the maps by their shape, not by their
+  colors. The sums do not change: the spectrum and the time profile have the same level in both.
+- **McStas is noisier than tof at the same number.** At 1e5 the McStas points scatter more than
+  the tof points. A tof neutron has weight 1 and its bin the Poisson error √N; McStas rays have
+  weights that differ from ray to ray, which adds to the error of each bin. That also makes the
+  McStas total, not tof, the larger part of the error of the scale: 1.07 % of the 1.1 %.
+
+So fewer neutrons give the same physics with larger error bars. A scale found at one number of tof
+neutrons serves at another only when it is rescaled by the ratio of the numbers, as
+`scale × neutrons` stays the same.
+
+The figures need McStas, so they are not made with the site: `pixi run docs-diagnostics` makes
+them again, with the other files of the T-Rex pages.
+
+### With the band of lambda0 = 2 Å
+
+`TRex` does not simulate the widest band. Its source sends only the wavelengths that reach the
+sample within one period of the source, a band of 1.81 Å around `lambda0`. At its default,
+`lambda0` = 2 Å, that is 1.095 to 2.905 Å. The same run with that band, 1e6 neutrons in both
+models and seed 1:
+
+![McStas and tof at the entrance of guide 1, with the band of lambda0 = 2 Å](figures/trex_source_lambda0_2.png)
+
+| | Widest band | Band of `lambda0` = 2 Å |
+| --- | --- | --- |
+| Band | 0.1 to 10 Å | 1.095 to 2.905 Å |
+| McStas total Φ | 8.457e11 n/s | 3.896e11 n/s |
+| Its relative error σ/Φ | 0.33 % | 0.22 % |
+| f | 0.9999 | 1.0000 |
+| Scale, n/s per tof neutron | 8.458e5 | 3.896e5 |
+| `scale × neutrons` | 8.458e11 n/s | 3.896e11 n/s |
+| Relative error of the scale | 0.34 % | 0.24 % |
+| Mean time, wavelength | 2.84 ms, 2.40 Å | 2.67 ms, 1.96 Å |
+
+What changes is how much of the beam the simulation covers, not the beam itself:
+
+- **The flux per Å is the same.** Inside 1.095 to 2.905 Å the spectrum is that of the widest band,
+  with the thermal peak at its short end and the cold peak near 2.6 Å, at the same n/s per bin.
+  Outside the band both models are 0. The first and last bins are low because the band ends inside
+  them: the bin of 1.05 to 1.10 Å holds only 1.095 to 1.10 Å.
+- **Φ is 46 % of that of the widest band.** It is only the flux of the band, so `scale × neutrons`
+  is 3.90e11 n/s in place of 8.46e11 n/s. It is a constant of this band, not of T-Rex: every
+  `lambda0` has its own.
+- **The scale is smaller, 3.90e5 n/s per tof neutron.** Both models now draw all their neutrons in
+  the band, so the same 1e6 neutrons cover a narrower part of the beam, and each stands for less.
+- **f is 1.** tof draws its neutrons only from the band of the source, `Lmin` to `Lmax`, and the
+  window of the monitor holds all of it. With the widest band, the few neutrons above 10 Å or past
+  8.30 ms made f 0.9999; here none are lost.
+- **The statistics are better.** With the neutrons in the band, a bin in it has about 2.2 times
+  as many, so its error bars are about 1.5 times shorter, and the error of the scale drops to
+  0.24 %.
+- **The pulse is shorter at the monitor.** Without the slow neutrons the time profile rises from
+  0.6 ms to a plateau from about 2 to 3.5 ms, and it ends near 6 ms, not 8 ms. The means move to
+  2.67 ms and 1.96 Å, the same in both models.
+- **The difference below 0.3 Å is gone.** The 15 % excess of McStas at the shortest wavelengths
+  is outside the band; inside it the two models agree within their error bars.
+
+So scale the tof run of a `TRex` at a given `lambda0` at the source with that same band, not with
+the 8.46e11 n/s of the widest band. That would make it 2.2 times too high at `lambda0` = 2 Å.
+
+To make all three yourself, run:
 
 ```bash
 pixi run python -m mcdgs.diagnostics.trex_01_source

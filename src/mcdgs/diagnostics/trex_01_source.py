@@ -25,13 +25,14 @@ error bars shrink with more neutrons, in both models, while the intensity stays.
 
 :func:`main` runs both models, reads the intensity of each on the bins of the monitor, scales
 tof to McStas, and :func:`.plot_comparison` draws them side by side. Run the module to do all
-of it::
+of it, at 1e6 and at 1e5 neutrons in both models, and with the band of ``lambda0`` = 2 Å::
 
     pixi run python -m mcdgs.diagnostics.trex_01_source
 """
 
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
 import matplotlib.pyplot as plt
 import mcstasscript as ms
@@ -41,11 +42,11 @@ from numpy.typing import NDArray
 
 from mcdgs.core.base import Instrument
 from mcdgs.core.components import ESS_butterfly, Monitor_nD
-from mcdgs.core.params import InstrParam
+from mcdgs.core.params import InstrParam, param
 from mcdgs.diagnostics.cli import output_folder, parse_out
 from mcdgs.diagnostics.compare import plot_comparison, read_comparison
 from mcdgs.instruments.trex.monitors import source_monitor
-from mcdgs.instruments.trex.sources import source
+from mcdgs.instruments.trex.sources import source, wavelength_band
 from mcdgs.mcstas.simulation import Simulation
 from mcdgs.tof.builder import build_tof
 from mcdgs.tof.reader import monitor_bins
@@ -54,14 +55,30 @@ from mcdgs.tof.reader import monitor_bins
 # --8<-- [start:trex_source]
 @dataclass(frozen=True)
 class TRexSourceParams:
-    """Control parameters of :class:`TRexSource`: there are none."""
+    """Control parameters of :class:`TRexSource`.
+
+    Parameters
+    ----------
+    lambda0:
+        Central wavelength, in Å: the source simulates the band of
+        :func:`.sources.wavelength_band` around it, as in ``TRex``. If ``None``, the widest band,
+        ``L_MIN`` to ``L_MAX``.
+    """
+
+    lambda0: float | None = param(None, "Å", "central wavelength, None for the widest band")
+
+
+def _source(lambda0: float | None) -> ESS_butterfly:
+    """Return the T-Rex source with the band around ``lambda0``, or the widest band if ``None``."""
+    return source() if lambda0 is None else source(*wavelength_band(lambda0))
 
 
 class TRexSource(Instrument):
     """The source of T-Rex and a time and wavelength monitor at the entrance of guide 1.
 
     The monitor is the entrance of guide 1: its opening, where guide 1 begins, 2.0 mm off the axis
-    of the source and turned with the guide.
+    of the source and turned with the guide. Its window is the widest band, whatever the band of
+    the source.
 
     Parameters
     ----------
@@ -77,8 +94,27 @@ class TRexSource(Instrument):
 
     def __init__(self, params: TRexSourceParams | None = None) -> None:
         super().__init__(params)
-        self.source = source()
+        self.source = _source(self.params.lambda0)
         self.source_monitor = source_monitor()
+
+    def update_params(self, **values: Any) -> None:
+        """Change control parameters.
+
+        A new ``lambda0`` also creates the source again, with its band.
+
+        Parameters
+        ----------
+        **values:
+            New values by parameter name, e.g. ``update_params(lambda0=2.0)``.
+
+        Raises
+        ------
+        TypeError
+            If a name is not a field of :class:`TRexSourceParams`.
+        """
+        super().update_params(**values)
+        if "lambda0" in values:
+            self.source = _source(self.params.lambda0)
 
     @property
     def instr_params(self) -> list[InstrParam]:
@@ -97,27 +133,33 @@ def main(
     ncount: float = 1e6,
     neutrons: int = 1_000_000,
     seed: int = 1,
+    name: str = "trex_source",
+    lambda0: float | None = None,
 ) -> Path:
     """Run both models of :class:`TRexSource`, print their means and save the figure.
 
     Parameters
     ----------
     out:
-        Folder of the figure, ``trex_source.png``. If ``None``, the folder of the McStas run,
-        next to its ``mccode.h5``.
+        Folder of the figure, ``<name>.png``. If ``None``, the folder of the McStas run, next to
+        its ``mccode.h5``.
     ncount:
         Number of McStas neutrons.
     neutrons:
         Number of tof neutrons.
     seed:
         Seed of the random numbers of both models.
+    name:
+        File name of the figure, without ``.png``.
+    lambda0:
+        Central wavelength of the band of the source, in Å. If ``None``, the widest band.
 
     Returns
     -------
     :
         The path of the figure.
     """
-    instrument = TRexSource()
+    instrument = TRexSource(TRexSourceParams(lambda0=lambda0))
 
     # --8<-- [start:run_mcstas]
     # run McStas and load its monitors, in n/s per bin
@@ -149,7 +191,7 @@ def main(
         f"{comparison.scale:.4g} n/s per tof neutron"
     )
 
-    figure = output_folder(out, folder) / "trex_source.png"
+    figure = output_folder(out, folder) / f"{name}.png"
     fig = plot_comparison(comparison, "T-Rex flux at the entrance of guide 1")
     fig.savefig(figure, dpi=150)
     plt.close(fig)
@@ -158,4 +200,9 @@ def main(
 
 
 if __name__ == "__main__":
-    main(out=parse_out(__doc__))
+    out_folder = parse_out(__doc__)
+    main(out=out_folder, ncount=1e6, neutrons=1_000_000, name="trex_source_1e6")
+    # a tenth of the neutrons in both models, for the scale with fewer tof neutrons
+    main(out=out_folder, ncount=1e5, neutrons=100_000, name="trex_source_1e5")
+    # the band of TRex at its default lambda0, 2 Å, in place of the widest band
+    main(out=out_folder, lambda0=2.0, name="trex_source_lambda0_2")
