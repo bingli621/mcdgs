@@ -243,8 +243,8 @@ def diagnose_path(
     for component in ("source", "guide_3", "guide_4b"):
         # rays="all": a limited list stops early, which leaves the intensities too low
         diag.add_point(after=component, rays="all")  # pyright: ignore[reportArgumentType]
-    diag.add_view("x", "y", bins=100)
-    diag.add_view("x", "l", bins=100)
+    diag.add_view("x", "y", bins=100, colormap="turbo")  # McStasScript's default is jet
+    diag.add_view("x", "l", bins=100, colormap="turbo")
     diag.add_view("l")
     # --8<-- [end:diagnostics]
 
