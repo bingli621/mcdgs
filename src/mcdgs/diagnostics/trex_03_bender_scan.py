@@ -15,8 +15,6 @@ from pathlib import Path
 import h5py
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.cm import ScalarMappable
-from matplotlib.colors import Normalize
 from matplotlib.figure import Figure
 from mcstastox.LoadFile import Data
 from numpy.typing import NDArray
@@ -183,7 +181,9 @@ def plot_bender_scan(scan_file: Path, bender_out_file: Path) -> Figure:
     """Draw the scan of :func:`run_bender_scan`.
 
     Each curve is one wavelength band, divided by the same band without the bender, so the
-    bender-out intensity is 1. Its color is the center of the band, on the colorbar.
+    bender-out intensity is 1. The bands take matplotlib's default colors in turn, solid for
+    the first ten and dash-dotted for the next, and the legend gives the center and half width
+    of each.
 
     Parameters
     ----------
@@ -204,12 +204,17 @@ def plot_bender_scan(scan_file: Path, bender_out_file: Path) -> Figure:
 
     ratio, ratio_error = transmission(intensity, error, reference, reference_error)
 
-    # one color per band, by its center, from the edge of the first band to that of the last
-    norm = Normalize(centers[0] - BAND_WIDTH / 2, centers[-1] + BAND_WIDTH / 2)
-    colors = ScalarMappable(norm=norm, cmap="turbo")
-    fig, ax = plt.subplots(figsize=(7, 4.8), layout="constrained")
+    fig, ax = plt.subplots(figsize=(8, 4.8), layout="constrained")
+    n_colors = 10  # the default color cycle, C0 to C9: past it the colors come again
     for band, center in enumerate(centers):
-        ax.errorbar(angles, ratio[:, band], ratio_error[:, band], color=colors.to_rgba(center))
+        ax.errorbar(
+            angles,
+            ratio[:, band],
+            ratio_error[:, band],
+            color=f"C{band % n_colors}",
+            linestyle="-" if band < n_colors else "-.",
+            label=f"{center:.2f}±{BAND_WIDTH / 2:.2f} Å",
+        )
     ax.axhline(1, color="black", linestyle="--", label="bender out")
     ax.axvline(
         BENDER_ROTATION, color="black", linestyle=":", label=f"b_rot = {BENDER_ROTATION:.3f} deg"
@@ -217,9 +222,7 @@ def plot_bender_scan(scan_file: Path, bender_out_file: Path) -> Figure:
     ax.set_ylim(bottom=0)
     ax.set_xlabel("b_rot [deg]")
     ax.set_ylabel("Intensity at the beam monitor / bender out")
-    ax.legend(loc="lower right")
-    colorbar = fig.colorbar(colors, ax=ax, ticks=centers[1::2])
-    colorbar.set_label(f"Center of the band of {BAND_WIDTH} Å [Å]")
+    ax.legend(loc="center left", bbox_to_anchor=(1, 0.5), fontsize="small")  # beside the plot
     return fig
 
 

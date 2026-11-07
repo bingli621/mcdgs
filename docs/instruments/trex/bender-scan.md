@@ -19,7 +19,8 @@ relative errors of the two add in quadrature.
 
 ![Intensity at the beam monitor against the rotation of the bender, per wavelength band, over the intensity with the bender out](figures/bender_scan.png)
 
-Each curve is one band, its color the center of the band on the colorbar. The dashed line at 1 is
+Each curve is one band, named in the legend by its center and half width. The first ten bands
+are solid lines and the next ones dash-dotted, in the same colors again. The dashed line at 1 is
 the bender-out intensity, and the dotted line the nominal rotation, −0.398 deg.
 
 ## Transmission at the nominal rotation
