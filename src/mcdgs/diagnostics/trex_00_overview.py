@@ -1,8 +1,10 @@
-"""The whole of T-Rex as McStas sees it: its instrument file and two views of its geometry.
+"""The whole of T-Rex as McStas sees it: its printout, its instrument file and two views of it.
 
-:func:`main` writes the McStas instrument file of :class:`.TRex` at the default control
-parameters, and draws it with McStasScript's ``show_instrument``, which runs mcdisplay:
+:func:`main` writes ``print(trex)`` and the McStas instrument file of :class:`.TRex` at the
+default control parameters, and draws it with McStasScript's ``show_instrument``, which runs
+mcdisplay:
 
+- ``trex_print.txt``: ``print(trex)``, the parameters and the position of every component;
 - ``TRex.instr``: the instrument file, written with its build files to ``mcstas_input/TRex/``;
 - ``overview_top.png``: the instrument seen from above, z along the beam and x across it;
 - ``overview_along_beam.png``: seen from the detector to the source, x across the beam and y up.
@@ -30,6 +32,27 @@ def _save_view(path: Path, dpi: int) -> Path:
     plt.gcf().savefig(path, dpi=dpi)
     plt.close("all")
     print(f"Saved {path}")
+    return path
+
+
+def write_printout(trex: TRex, folder: Path) -> Path:
+    """Write ``print(trex)`` to ``trex_print.txt``.
+
+    Parameters
+    ----------
+    trex:
+        The instrument.
+    folder:
+        Folder of the file.
+
+    Returns
+    -------
+    :
+        The path of the file.
+    """
+    path = folder / "trex_print.txt"
+    path.write_text(f"{trex}\n")
+    print(f"Written {path}")
     return path
 
 
@@ -73,18 +96,18 @@ def draw_views(mcstas_instr: McStas_instr, folder: Path) -> list[Path]:
 
 
 def main(out: Path | None = None) -> list[Path]:
-    """Write the instrument file of T-Rex and draw both views.
+    """Write the printout and the instrument file of T-Rex, and draw both views.
 
     Parameters
     ----------
     out:
-        Folder of the instrument file and the views. If ``None``, ``mcstas_input/TRex/``, where
-        the instrument file is written to build it.
+        Folder of the files. If ``None``, ``mcstas_input/TRex/``, where the instrument file is
+        written to build it.
 
     Returns
     -------
     :
-        The paths of the instrument file and of the two views.
+        The paths of the printout, of the instrument file and of the two views.
     """
     trex = TRex()  # the default control parameters
     input_dir = default_input_dir(trex)
@@ -96,7 +119,7 @@ def main(out: Path | None = None) -> list[Path]:
     if folder.resolve() != input_dir.resolve():
         instr_file = Path(shutil.copyfile(instr_file, folder / instr_file.name))
     print(f"Written {instr_file}")
-    return [instr_file, *draw_views(mcstas_instr, folder)]
+    return [write_printout(trex, folder), instr_file, *draw_views(mcstas_instr, folder)]
 
 
 if __name__ == "__main__":

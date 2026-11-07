@@ -23,7 +23,7 @@ def test_trex_cascade_accepts_a_band_around_lambda0(mode):
 def test_trex_cascade_splits_the_band_by_repetition_rate_multiplication():
     trex = TRex()
     frames, _ = chopper_cascade(trex)
-    # the P-Choppers turn at 13.5 times the source frequency: no whole multiple
+    # the pulse-shaping choppers turn at 13.5 times the source frequency: no whole multiple
     centers = sorted(
         {round(float(s.wavelength.mean().value), 2) for s in frames.frames[-1].subframes}
     )
@@ -61,7 +61,7 @@ def test_title_gives_mode_lambda0_and_the_chopper_frequencies():
     assert title == f"TRex · RR · λ0 = 4 Å · PS {ps} Hz · MC {mc} Hz"
 
 
-def test_title_leaves_out_groups_without_choppers():
+def test_title_leaves_out_chopper_groups_without_choppers():
     assert diagram_title(TRex(), ("ps", "fan")).count("·") == 3  # name, mode, lambda0, PS
 
 

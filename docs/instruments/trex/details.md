@@ -7,9 +7,10 @@ polarizers, collimators or detector yet.
 `sample_pos` is on the beam axis, 163.8 m along it from the origin.
 
 [T-Rex](index.md) shows the whole model as McStas draws it, and [Source](source.md),
-[Extraction guides](extraction.md), [Bender](bender-scan.md) and
-[Beam monitor](beam-monitor.md) show what the model gives so far. [Instrument layout](#instrument-layout) lists every component with its position. The code is
-in [`mcdgs.instruments.trex`](../../reference/trex.md).
+[Extraction guides](extraction.md), [Bender](bender-scan.md), [Beam monitor](beam-monitor.md)
+and [Choppers](choppers.md) show what the model gives so far.
+[Instrument layout](#instrument-layout) lists every component with its position. The code is in
+[`mcdgs.instruments.trex`](../../reference/trex.md).
 
 ## Control parameters
 
@@ -19,7 +20,7 @@ in [`mcdgs.instruments.trex`](../../reference/trex.md).
 | `b_rot` | −0.398 deg | Rotation of the bender about +y. |
 | `lambda0` | 2.0 Å | Central wavelength. |
 | `rrm` | 18 | Repetition rate multiplication factor. |
-| `mode` | `"FF"` | `"FF"` puts the wide slits of the P- and M-Chopper on the beam, for high flux; `"RR"` the narrow ones, for high resolution. |
+| `mode` | `"FF"` | `"FF"` puts the wide slits of the pulse-shaping and monochromatic choppers on the beam, for high flux; `"RR"` the narrow ones, for high resolution. |
 | `t0_offset` | 1.7 ms | Time from the start of the pulse at which the neutrons the choppers are phased to leave the moderator. |
 | `omega` | 0.0 deg | Goniometer rotation about +y. |
 
@@ -39,7 +40,7 @@ is `-`. `position` is where it ends up in the lab frame. Lengths are in m and an
     --8<-- "docs/instruments/trex/figures/trex_print.txt"
     ```
 
-[`mcdgs.diagnostics.trex_05_choppers`](../../reference/diagnostics.md) makes the printout, and
+[`mcdgs.diagnostics.trex_00_overview`](../../reference/diagnostics.md) makes the printout, and
 `pixi run docs-diagnostics` runs it.
 
 ## Source
@@ -176,8 +177,8 @@ Guide 48b is the plain guide in the polarizer slot: guides 48a and 48c are not m
 has no guide 46. The slit `slit_mc`, 20.5 mm × 34.5 mm, is 19 mm after guide 50a.
 
 The arms `arm_bwc1`, `arm_bwc2`, `arm_bm1`, `arm_psc` and `arm_mc` mark the gaps for bandwidth
-choppers 1 and 2, beam monitor 1, the P-Chopper and the M-Chopper. The choppers `bw1`, `bw2`,
-`ps1`, `ps2`, `mc1` and `mc2` come right after the arm of their gap.
+choppers 1 and 2, beam monitor 1, the pulse-shaping choppers and the monochromatic choppers. The
+choppers `bw1`, `bw2`, `ps1`, `ps2`, `mc1` and `mc2` come right after the arm of their gap.
 
 ## Monitors
 
@@ -206,25 +207,29 @@ Each chopper takes its frequency and delay from the McStas instrument parameters
 | Choppers | Frequency |
 | -------- | --------- |
 | `bw1`, `bw2` | 14 Hz, the source frequency |
-| `ps1`, `ps2` | 0.75 × `rrm` × 14 Hz, `ps2` counter-rotating |
-| `mc1`, `mc2` | `rrm` × 14 Hz |
+| `ps1`, `ps2` | 0.75 × `rrm` × 14 Hz, counter-rotating: `ps2` turns the other way |
+| `mc1`, `mc2` | `rrm` × 14 Hz, counter-rotating: they turn the same way on opposite sides of the beam |
+
+[Choppers](choppers.md#frequencies) explains these frequencies and the counter-rotation.
 
 A chopper's delay is the time a neutron of wavelength `lambda0` takes to reach it, plus
 `t0_offset`. The flight path is the chopper's distance from the moderator along the
 beam axis: the position of its gap in the Table of Optics plus its place in the gap. The path
 through the bender is taken to be that through guide 4a.
 
-The disks of the P- and M-Chopper have two kinds of slit: narrow ones (20° and 2.5°) and wide ones
-(35° and 4.4°). The mode chooses which is on the beam when a neutron of wavelength `lambda0`
-arrives. In `"RR"` the narrow slit is centered on the beam then, so the delay is the arrival
-time. In `"FF"` the disk is phased to the wide slit instead: it has turned past its zero mark by
-the angle from the center of the wide slit to the beam, 55° for the P-Chopper and 175° for the
-M-Chopper. The model keeps the disks as they are and changes the delay, which is the same as
-shifting the slit edges.
+The disks of the pulse-shaping and monochromatic choppers have two kinds of slit: narrow ones
+(20° and 2.5°) and wide ones (35° and 4.4°). The mode chooses which is on the beam when a
+neutron of wavelength `lambda0` arrives. In `"RR"` the narrow slit is centered on the beam then,
+so the delay is the arrival time. In `"FF"` the disk is phased to the wide slit instead: it has
+turned past its zero mark by the angle from the center of the wide slit to the beam, 55° for the
+pulse-shaping choppers and 175° for the monochromatic choppers. The model keeps the disks as they
+are and changes the delay, which is the same as shifting the slit edges.
+[Choppers](choppers.md#delays) gives the delay of each disk at the default parameters.
 
+[Choppers](choppers.md) draws each disk and the acceptance diagram of the cascade, and
 [Simulate the choppers with tof](../../how-to/simulate-the-choppers-with-tof.md#compare-settings)
-shows the result: the bandwidth choppers pass one band of wavelengths, and the P- and M-Chopper
-cut it into sub-pulses.
+follows neutrons through it: the bandwidth choppers pass one band of wavelengths, and the
+pulse-shaping and monochromatic choppers cut it into sub-pulses.
 
 The slit edges of each disk reach McStas as an array of their own, declared in the `.instr` file
 as `<name>_slit_edges`. McStas 3.10.2 sizes a list written in place by its first use, so the

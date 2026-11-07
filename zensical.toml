@@ -24,6 +24,7 @@ nav = [
       { "Extraction guides" = "instruments/trex/extraction.md" },
       { "Bender" = "instruments/trex/bender-scan.md" },
       { "Beam monitor" = "instruments/trex/beam-monitor.md" },
+      { "Choppers" = "instruments/trex/choppers.md" },
     ] },
   ] },
   { "How-to guides" = [

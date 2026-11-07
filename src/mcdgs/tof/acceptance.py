@@ -8,8 +8,9 @@ Copley, https://doi.org/10.1016/S0168-9002(03)01731-5).
 
 It takes the same choppers at the same distances as :func:`.build_tof`, through
 :func:`.disk_chopper`. The pulse is a rectangle: from 0 to the ESS pulse length, over the
-source's band, ``Lmin`` to ``Lmax``, and repeated for the source's ``n_pulses``, unless given. Unlike tof it has no neutrons, so it is exact
-and fast, but it does not show the shape of the pulse.
+source's band, ``Lmin`` to ``Lmax``, and repeated for the source's ``n_pulses``, unless given.
+Unlike tof it has no neutrons, so it is exact and fast, but it does not show the shape of the
+pulse.
 """
 
 import math
@@ -110,8 +111,8 @@ def _openings(disk: DiskChopper, t_start: float, t_end: float) -> Chopper:
     ``t_end``.
     :meth:`DiskChopper.time_offset_open` and :meth:`Chopper.from_disk_chopper` repeat them per
     source period instead, so they need a frequency that is a whole multiple or fraction of the
-    source's; the P-Choppers of T-Rex, at 13.5 times 14 Hz, are not. Their opening times also
-    follow the delay, so they need not start within the first period.
+    source's; the pulse-shaping choppers of T-Rex, at 13.5 times 14 Hz, are not. Their opening
+    times also follow the delay, so they need not start within the first period.
 
     Parameters
     ----------

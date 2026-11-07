@@ -156,7 +156,8 @@ def test_trex_choppers_are_placed_in_beam_order():
 
 @pytest.mark.parametrize("mode", ["FF", "RR"])
 def test_tof_choppers_open_when_the_mcstas_disks_do(mode):
-    # every 0.5 us over two pulses: under 2 % of the shortest opening, the M-Chopper's 28 us
+    # every 0.5 us over two pulses: under 2 % of the shortest opening, 28 us, that of the
+    # monochromatic choppers
     trex = _trex(mode)
     params = _numeric_params(trex)
     t = np.arange(0, 2 / 14, 0.5e-6)

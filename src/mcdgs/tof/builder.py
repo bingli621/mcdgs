@@ -1,4 +1,4 @@
-"""Build the tof model of any :class:`.Instrument`.
+"""Build the tof model of any :class:`.Instrument`, and give its disks as scippneutron choppers.
 
 tof follows each neutron along a single flight path from the source, through the choppers, to
 the detectors. It has no optics: guides, benders and slits transmit everything. So the builder
@@ -11,6 +11,10 @@ takes only the components tof understands, by type:
   An instrument without one gives a model without detectors.
 
 Every other component, such as the optics, the markers or a sample, is left out.
+
+:func:`get_choppers` gives the scippneutron :class:`DiskChopper` of each disk chopper by name,
+which scippneutron can draw and :mod:`.acceptance` follows the pulse through.
+:func:`beamline` gives the source and the distance of each component after it, for both.
 
 The source: tof has a pulse of the ESS moderator for each instrument, sampled at its beam port.
 The builder takes the one of the moderator's beam port, named by its ``sector`` and

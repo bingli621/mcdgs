@@ -73,7 +73,7 @@ def guides_straight() -> list[dict[str, Component]]:
             mtop=2.5,  # cell Q112
             mbottom=2.5,  # cell R112
         ),
-        "arm_psc": gap(  # row 115, the P-Chopper
+        "arm_psc": gap(  # row 115, the pulse-shaping choppers
             z=ARM_PSC_Z,
             length=PSC_GAP_LENGTH,
         ),
@@ -272,7 +272,7 @@ def guides_straight() -> list[dict[str, Component]]:
             mtop=4.5,  # cell Q139
             mbottom=4.5,  # cell R139
         ),
-        "arm_mc": gap(  # row 140, the M-Chopper
+        "arm_mc": gap(  # row 140, the monochromatic choppers
             z=ARM_MC_Z,
             length=MC_GAP_LENGTH,
         ),

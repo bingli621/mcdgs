@@ -11,8 +11,8 @@ draws it: from above and along the beam. Both figures have the same scale on the
 z is along the beam and x across it (projection `zx`). The circle at the origin is the drawing
 of the source. The guides follow it in alternating colors up to `sample_pos`, 163.8 m along the
 beam. Over that length the beam axis moves about 0.83 m in x, too little to see at this scale.
-The short ticks across the beam are the choppers: `bw1` near 32 m, `bw2` near 40 m, the P-Chopper
-near 108 m and the M-Chopper near 162 m.
+The short ticks across the beam are the choppers: `bw1` near 32 m, `bw2` near 40 m, the
+pulse-shaping choppers near 108 m and the monochromatic choppers near 162 m.
 
 This figure and the next need McStas, so they are not made with the site:
 [`mcdgs.diagnostics.trex_00_overview`](../../reference/diagnostics.md) draws them with McStasScript's
@@ -40,8 +40,8 @@ the colors change whenever a component is added: tell the disks apart by where t
 | Right, upper | `mc1` | x ≈ 0.82 m | Above |
 | Right, lower | `mc2` | x ≈ 0.82 m | Below |
 
-The notches at the edge of the disks are the slits. The four of the P-Chopper are the clearest:
-two of 20° and two of 35°. See [Chopper timing](details.md#chopper-timing) for how the mode puts
-a narrow or a wide slit on the beam, and
-[Simulate the choppers with tof](../../how-to/simulate-the-choppers-with-tof.md) for what the
-choppers pass.
+The notches at the edge of the disks are the slits. The four of each pulse-shaping chopper are
+the clearest: two of 20° and two of 35°. [Choppers](choppers.md) draws each disk on its own and
+explains its frequency, delay and counter-rotation, and its acceptance diagram shows what the
+choppers pass; [Simulate the choppers with tof](../../how-to/simulate-the-choppers-with-tof.md)
+follows neutrons through them.

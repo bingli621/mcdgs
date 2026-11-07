@@ -29,6 +29,7 @@ print(trex)  # every parameter and component, with its position in the lab frame
 | [T-Rex](instruments/trex/details.md) | Modeled from the source to the sample position: the guides and the choppers. The polarizers, the collimators and the detector are not modeled yet. |
 | Simulation with McStas | Single runs, parameter scans and split runs at the sample position. |
 | [Simulation with tof](how-to/simulate-the-choppers-with-tof.md) | The source, the choppers and any monitor or named position, with the choppers timed as in McStas. |
+| [Chopper acceptance](instruments/trex/choppers.md#acceptance-diagram) | The acceptance diagram of the choppers, exact and without neutrons, with scippneutron. |
 | Reading the output | Monitors and detector pixels from McStas NeXus files; the neutrons at each tof detector. |
 | [Parameters files](reference/io.md) | Save an instrument to a YAML file and load it back. A file need only hold what differs from the instrument the code makes. |
 | Reduction to S(Q,E) | Not written yet. |
@@ -40,8 +41,9 @@ print(trex)  # every parameter and component, with its position in the lab frame
 - [Core concepts](concepts.md): how instruments, components and parameters fit together.
 - [T-Rex](instruments/trex/details.md) and its results so far: the
   [source](instruments/trex/source.md), the [extraction guides](instruments/trex/extraction.md),
-  the [bender](instruments/trex/bender-scan.md) and the
-  [beam monitor](instruments/trex/beam-monitor.md).
+  the [bender](instruments/trex/bender-scan.md), the
+  [beam monitor](instruments/trex/beam-monitor.md) and the
+  [choppers](instruments/trex/choppers.md).
 - [How-to guides](how-to/run-a-simulation.md): run a McStas scan, simulate the choppers with tof,
   read the output, add an instrument.
 - [Reference](reference/core.md): the Python API, generated from the source.

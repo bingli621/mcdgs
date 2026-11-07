@@ -89,7 +89,7 @@ Dependencies point inwards, so an instrument never depends on how it is simulate
 | `core` | `Instrument`, the components, parameters and geometry. It imports nothing else from `mcdgs`. |
 | `instruments`, `samples` | The instruments and ready-made crystals, built on `core`. |
 | `mcstas` | An adapter that works with any instrument: builds it, runs it, reads the output. |
-| `tof` | An adapter that works with any instrument: builds its chopper cascade as a tof model. |
+| `tof` | An adapter that works with any instrument: builds its chopper cascade as a tof model, gives its disks as scippneutron disk choppers, and draws its chopper acceptance diagram. |
 | `io` | An adapter that saves any instrument to a YAML parameters file and loads it back. |
 | `reduction` | Reserved for data reduction. It holds no code yet. |
 | `diagnostics` | Setups that study one part of an instrument, such as T-Rex up to guide 4, and what reads their McStas and tof results. One module per setup, numbered per instrument, such as `trex_01_source`, built on `instruments`; nothing else imports it. |

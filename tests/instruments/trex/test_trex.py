@@ -245,7 +245,7 @@ def test_the_t0_offset_delays_every_chopper_by_as_much():
         assert after[f"nu_{name}"] == before[f"nu_{name}"]
 
 
-def test_the_default_mode_is_ff_and_rr_moves_only_the_p_and_m_choppers():
+def test_the_default_mode_is_ff_and_rr_moves_only_the_pulse_shaping_and_monochromatic_choppers():
     trex = TRex()
     assert trex.params.mode == "FF"
     ff = {p.name: p.value for p in trex.instr_params}

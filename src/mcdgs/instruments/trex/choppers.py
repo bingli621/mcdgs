@@ -1,14 +1,14 @@
 """The choppers of T-Rex and their timing.
 
-The disks take their frequency ``nu`` and their delay from the instrument parameters
-``nu_<name>`` and ``delay_<name>``, which :func:`chopper_timings` computes from the central
-wavelength, the repetition rate multiplication and the mode.
+:func:`chopper` creates one disk by name. The disks take their frequency ``nu`` and their delay
+from the instrument parameters ``nu_<name>`` and ``delay_<name>``, which :func:`chopper_timings`
+computes from the central wavelength, the repetition rate multiplication and the mode.
 
-The mode chooses the slit of the P- and M-Chopper disks that is on the beam: the wide one in
-``"FF"`` (high flux), the narrow one in ``"RR"`` (high resolution). Rather than shift the slit
-edges, the disks stay as they are and turn later, by the angle from the slit to the beam, which
-is the same. The narrow slits are centered on ``beam_angle``,
-so ``"RR"`` turns them by 0.
+The mode chooses the slit of the pulse-shaping and monochromatic chopper disks that is on the
+beam: the wide one in ``"FF"`` (high flux), the narrow one in ``"RR"`` (high resolution). Rather
+than shift the slit edges, the disks stay as they are and turn later, by the angle from the slit
+to the beam, which is the same. The narrow slits are centered on ``beam_angle``, so ``"RR"``
+turns them by 0.
 
 The flight path to a disk is its distance from the moderator along the beam axis: the position
 of its gap in the Table of Optics plus the disk's place in the gap. The path through the bender
@@ -41,7 +41,8 @@ SLIT_EDGES = {
     "mc2": [-1.25, 1.25, 182.8, 187.2],
 }
 
-# deg, where the beam crosses each disk from its zero mark, zero means disk axel below guide, 180 means above
+# deg, where the beam crosses each disk from its zero mark: 0 puts the axle below the guide,
+# 180 above it
 BEAM_ANGLE = {"bw1": 0, "bw2": 0, "ps1": 180, "ps2": 180, "mc1": 180, "mc2": 0}
 
 # m, radial height of the slits of each disk
@@ -137,12 +138,16 @@ def chopper_timings(
 ) -> dict[str, Timing]:
     """Compute the timing of every chopper.
 
-    The bandwidth choppers turn at the source frequency, the M-Chopper at ``rrm`` times it and
-    the P-Chopper at ``PSC_FREQUENCY_RATIO`` of that, its second disk counter-rotating. Each disk
+    The bandwidth choppers turn at the source frequency, the monochromatic choppers at ``rrm``
+    times it and the pulse-shaping choppers at ``PSC_FREQUENCY_RATIO`` of that. Both pairs are
+    counter-rotating: ``ps2`` turns the other way, and ``mc1`` and ``mc2`` turn the same way on
+    opposite sides of the beam. Each disk
     has the slit of ``mode`` on the beam when a neutron of wavelength ``lambda0``, leaving at
     ``t0_offset``, reaches it.
 
-    PSC_FREQUENCY_RATIO is 3/4 because the ratio of the distances from the source to the M-Chopper and from source to the P-Chopper is 162/108=3/2, and the P-Choppers has two openings per rotation.
+    PSC_FREQUENCY_RATIO is 3/4 because the ratio of the distances from the source to the
+    monochromatic choppers and to the pulse-shaping choppers is 162/108 = 3/2, and the
+    pulse-shaping choppers have two openings per rotation.
 
     Parameters
     ----------

@@ -45,7 +45,8 @@ class Params:
     rrm:
         Repetition rate multiplication factor.
     mode:
-        ``"FF"`` puts the wide slits of the P- and M-Chopper on the beam, for high flux;
+        ``"FF"`` puts the wide slits of the pulse-shaping and monochromatic choppers on the beam,
+        for high flux;
         ``"RR"`` the narrow ones, for high resolution.
     t0_offset:
         Time from the start of the pulse at which the neutrons the choppers are phased to leave
@@ -170,7 +171,7 @@ class TRex(Instrument):
         """Draw the chopper acceptance diagram of T-Rex, at its current parameters.
 
         See :func:`mcdgs.tof.acceptance.acceptance_diagram`. The title gives the mode,
-        ``lambda0`` and the frequencies of the P- and M-Choppers.
+        ``lambda0`` and the frequencies of the pulse-shaping and monochromatic choppers.
 
         Parameters
         ----------

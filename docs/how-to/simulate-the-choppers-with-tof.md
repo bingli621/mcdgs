@@ -71,7 +71,7 @@ in sub-pulses, told apart by the gaps of about 4 ms between them.
 [`summarize`](../reference/diagnostics.md) gives all of this at once:
 
 ```python
-from mcdgs.diagnostics.trex_05_choppers import summarize
+from mcdgs.diagnostics.trex_06_tof import summarize
 
 summary = summarize(result, "sample_monitor")
 print(summary.neutrons, summary.sub_pulses, summary.first_arrival, summary.last_arrival)
@@ -94,5 +94,8 @@ reaches the sample is:
 --8<-- "docs/instruments/trex/figures/tof_modes.txt"
 
 The wavelength band and the sub-pulses stay much the same, while the narrow slits of `"RR"` let
-fewer neutrons through. `pixi run docs-diagnostics` makes the result above and this
-table.
+fewer neutrons through. [`mcdgs.diagnostics.trex_06_tof`](../reference/diagnostics.md) makes the
+result above and this table, and `pixi run docs-diagnostics` runs it.
+
+Without neutrons, the [acceptance diagram](../instruments/trex/choppers.md#acceptance-diagram)
+shows the same cut of the band into sub-pulses, exactly, at the times they leave the moderator.
