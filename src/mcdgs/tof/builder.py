@@ -47,9 +47,11 @@ def disk_chopper(
     the beam angle carry over, and the phase is ``360 * nu * delay``, as
     :meth:`DiskChopper.from_nexus` computes it from a delay.
 
-    Only the timing on the beam axis is kept. ``zero_angle`` only says where the spindle lies,
-    so it does not change it; the size of the openings (``radius``, ``yheight``, ``xwidth``),
-    ``jitter`` and ``abs_out`` have no part in tof.
+    Only the timing on the beam axis counts for tof. ``zero_angle`` only says where the spindle
+    lies, so it does not change it; ``xwidth``, ``jitter`` and ``abs_out`` are left out. The
+    ``radius`` and, as the height of every slit, ``yheight`` carry over so that scippneutron
+    draws the disk to scale, but tof does not use them; a ``yheight`` of 0 reaches the spindle,
+    so the slits are as high as the radius.
 
     Parameters
     ----------
@@ -83,6 +85,8 @@ def disk_chopper(
         raise ValueError(f"{component.name}: a parked disk (nu = 0) cannot be modeled in tof")
     delay = float(evaluate(component.delay, params))
     edges = np.array(component.slit_edges, float)
+    n_slits = len(edges) // 2
+    slit_height = component.yheight if component.yheight > 0 else component.radius
     return DiskChopper(
         axle_position=sc.vector([0.0, 0.0, distance], unit="m"),
         frequency=sc.scalar(nu, unit="Hz"),
@@ -90,7 +94,36 @@ def disk_chopper(
         phase=sc.scalar(360 * nu * delay, unit="deg"),
         slit_begin=sc.array(dims=["slit"], values=edges[0::2], unit="deg"),
         slit_end=sc.array(dims=["slit"], values=edges[1::2], unit="deg"),
+        slit_height=sc.full(dims=["slit"], shape=[n_slits], value=float(slit_height), unit="m"),
+        radius=sc.scalar(float(component.radius), unit="m"),
     )
+
+
+def get_choppers(instrument: Instrument) -> dict[str, DiskChopper]:
+    """Return the scippneutron disk choppers of an instrument, through :func:`disk_chopper`.
+
+    Parameters
+    ----------
+    instrument:
+        The instrument, at its current parameters.
+
+    Returns
+    -------
+    :
+        The disk chopper of each ``NXdisk_chopper`` after the source, by name, in beam order.
+
+    Raises
+    ------
+    ValueError
+        If the instrument has no ``ESS_butterfly`` or more than one, or a chopper is parked.
+    """
+    _, after_source = beamline(instrument)
+    params = _numeric_params(instrument)
+    return {
+        name: disk_chopper(component, distance, params)
+        for name, component, distance in after_source
+        if isinstance(component, NXdisk_chopper)
+    }
 
 
 def _numeric_params(instrument: Instrument) -> dict[str, float]:
