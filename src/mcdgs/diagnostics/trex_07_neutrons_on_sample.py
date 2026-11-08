@@ -49,6 +49,7 @@ LOG_DECADES = 3  # the log color scale of the maps spans this many decades below
 PATCH_GAP = 1.0  # ms: a longer gap in time starts a new patch; they are at least 2 ms apart
 
 
+# --8<-- [start:trex_to_sample]
 class TRexToSample(TRex):
     """T-Rex from the source to the sample monitor, without a sample.
 
@@ -67,6 +68,7 @@ class TRexToSample(TRex):
         # after the sample monitor
         del self.beamstop
         del self.banana_detector
+        # --8<-- [end:trex_to_sample]
 
 
 @dataclass(frozen=True)
