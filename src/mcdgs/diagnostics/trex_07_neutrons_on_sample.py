@@ -39,7 +39,7 @@ from matplotlib.lines import Line2D
 from numpy.typing import NDArray
 
 from mcdgs.diagnostics.cli import output_folder, parse_out
-from mcdgs.diagnostics.compare import MonitorComparison, plot_comparison, read_comparison
+from mcdgs.diagnostics.compare import MonitorComparison, plot_comparison, read_scaled_comparisons
 from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
 from mcdgs.mcstas.simulation import Simulation
 from mcdgs.tof.builder import build_tof
@@ -287,29 +287,21 @@ def main(
 
     # run tof, then read the monitors of both on the bins of the McStas maps: time, wavelength
     tof_result = build_tof(instrument, neutrons=neutrons, seed=seed).run()
-    source_bins = monitor_bins(instrument.source_monitor)
-    bins = monitor_bins(instrument.sample_monitor)
-    # tof's counts are scaled to the total of McStas at the source monitor, in n/s
-    at_source = read_comparison(
-        "source_monitor", mcstas_data, tof_result, source_bins, ncount, neutrons
-    )
-
-    # at the sample monitor, the same scale, and the transmission on top of it
-    comparison = read_comparison(
-        "sample_monitor", mcstas_data, tof_result, bins, ncount, neutrons, scale=at_source.scale
-    )
-    if transmission is None:  # tuned: the transmission that gives tof the total of McStas
-        transmission = float(comparison.mcstas_intensity.sum() / comparison.tof_intensity.sum())
-    comparison = read_comparison(
-        "sample_monitor",
+    # tof's counts are scaled to the total of McStas at the source monitor, in n/s; at the
+    # sample monitor, the same scale, and the transmission on top of it
+    comparisons = read_scaled_comparisons(
         mcstas_data,
         tof_result,
-        bins,
+        {
+            "source_monitor": monitor_bins(instrument.source_monitor),
+            "sample_monitor": monitor_bins(instrument.sample_monitor),
+        },
         ncount,
         neutrons,
-        scale=at_source.scale,
         transmission=transmission,
     )
+    at_source, comparison = comparisons["source_monitor"], comparisons["sample_monitor"]
+    transmission = comparison.transmission
 
     # print the totals, and the scale and transmission of tof
     mcstas_total = comparison.mcstas_intensity.sum()

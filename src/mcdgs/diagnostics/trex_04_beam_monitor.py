@@ -39,7 +39,7 @@ from mcdgs.core.components import Arm, ESS_butterfly, Guide_gravity, Monitor_nD,
 from mcdgs.core.components.source import ESS_SOURCE_FREQUENCY
 from mcdgs.core.params import InstrParam
 from mcdgs.diagnostics.cli import output_folder, parse_out
-from mcdgs.diagnostics.compare import plot_comparison, read_comparison
+from mcdgs.diagnostics.compare import plot_comparison, read_scaled_comparisons
 from mcdgs.instruments.trex.guides.bispectral import arm_guide_4, guide_4a
 from mcdgs.instruments.trex.guides.extraction import guides_extraction
 from mcdgs.instruments.trex.monitors import beam_monitor, source_monitor
@@ -231,29 +231,20 @@ def main(
     tof_result = build_tof(instrument, neutrons=neutrons, seed=seed).run()
     source_bins = monitor_bins(instrument.source_monitor)  # read from the monitors
     bins = monitor_bins(instrument.beam_monitor)
-    # tof's counts are scaled to the total of McStas at the source monitor, in n/s
-    at_source = read_comparison(
-        "source_monitor", mcstas_data, tof_result, source_bins, ncount, neutrons
-    )
     # --8<-- [end:run_tof]
 
     # --8<-- [start:transmission]
-    # at the beam monitor, the same scale, and the transmission on top of it
-    comparison = read_comparison(
-        "beam_monitor", mcstas_data, tof_result, bins, ncount, neutrons, scale=at_source.scale
-    )
-    if transmission is None:  # tuned: the transmission that gives tof the total of McStas
-        transmission = float(comparison.mcstas_intensity.sum() / comparison.tof_intensity.sum())
-    comparison = read_comparison(
-        "beam_monitor",
+    # tof's counts are scaled to the total of McStas at the source monitor, in n/s; at the beam
+    # monitor, the same scale, and the transmission on top of it, tuned if it is None
+    comparisons = read_scaled_comparisons(
         mcstas_data,
         tof_result,
-        bins,
+        {"source_monitor": source_bins, "beam_monitor": bins},
         ncount,
         neutrons,
-        scale=at_source.scale,
         transmission=transmission,
     )
+    at_source, comparison = comparisons["source_monitor"], comparisons["beam_monitor"]
     # --8<-- [end:transmission]
 
     # print the mean time and wavelength of each model, and the scale and transmission of tof
@@ -271,7 +262,7 @@ def main(
     print(
         f"McStas total {mcstas_total:.4g} n/s, "
         f"{mcstas_total / at_source.mcstas_intensity.sum():.4g} of that at the source, "
-        f"{comparison.scale:.4g} n/s per tof neutron, transmission {transmission:.4g}"
+        f"{comparison.scale:.4g} n/s per tof neutron, transmission {comparison.transmission:.4g}"
     )
     monitor = instrument.beam_monitor
     _print_rates(comparison.mcstas_intensity, bins, area=monitor.xwidth * monitor.yheight * 1e4)

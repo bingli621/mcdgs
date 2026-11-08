@@ -37,7 +37,7 @@ from mcdgs.core.components import (
 )
 from mcdgs.core.params import InstrParam, param
 from mcdgs.diagnostics.cli import output_folder, parse_out
-from mcdgs.diagnostics.compare import plot_comparison, read_comparison
+from mcdgs.diagnostics.compare import plot_comparison, read_scaled_comparisons
 from mcdgs.instruments.trex.guides.bispectral import (
     BENDER_ROTATION,
     arm_guide_4,
@@ -282,19 +282,15 @@ def diagnose_path(
     # tof's counts are scaled to the total of McStas at the source monitor, in n/s, and by the
     # transmission on top of it at the beam monitor
     mcstas_data = ms.load_data(str(folder))
-    at_source = read_comparison(
-        "source_monitor", mcstas_data, tof_result, source_bins, ncount, neutrons
-    )
-    comparison = read_comparison(
-        "beam_monitor",
+    comparisons = read_scaled_comparisons(
         mcstas_data,
         tof_result,
-        bins,
+        {"source_monitor": source_bins, "beam_monitor": bins},
         ncount,
         neutrons,
-        scale=at_source.scale,
         transmission=transmission,
     )
+    at_source, comparison = comparisons["source_monitor"], comparisons["beam_monitor"]
     # --8<-- [end:scale_tof]
     mcstas_total = comparison.mcstas_intensity.sum()
     print(

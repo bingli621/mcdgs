@@ -6,7 +6,7 @@ import tof
 from matplotlib.colors import LogNorm
 from mcstasscript.data.data import McStasData, McStasMetaData
 
-from mcdgs.diagnostics.compare import plot_comparison, read_comparison
+from mcdgs.diagnostics.compare import plot_comparison, read_comparison, read_scaled_comparisons
 from mcdgs.diagnostics.trex_01_source import TRexSource
 from mcdgs.tof.builder import build_tof
 from mcdgs.tof.reader import read_tof_monitor
@@ -23,10 +23,10 @@ def tof_result() -> tof.Result:
     return build_tof(TRexSource(), neutrons=NEUTRONS, seed=1).run()
 
 
-def _mcstas_map(shape: tuple[int, int]) -> list[McStasData]:
-    """A McStas monitor named source_monitor, as McStasScript has it: (wavelength, time)."""
+def _mcstas_map(shape: tuple[int, int], name: str = "source_monitor") -> list[McStasData]:
+    """A McStas monitor, source_monitor by default, as McStasScript has it: (wavelength, time)."""
     metadata = McStasMetaData()
-    metadata.component_name = "source_monitor"
+    metadata.component_name = name
     data = McStasData(metadata)
     data.Intensity = np.arange(np.prod(shape), dtype=float).reshape(shape)
     data.Error = np.ones(shape)
@@ -83,6 +83,62 @@ def test_a_transmission_without_a_scale_is_refused(tof_result):
 def test_a_map_on_other_bins_is_refused(tof_result):
     with pytest.raises(ValueError, match="source_monitor"):
         read_comparison("source_monitor", _mcstas_map((30, 20)), tof_result, BINS, 1e6, NEUTRONS)
+
+
+def _two_monitors() -> list[McStasData]:
+    """The same McStas map twice: as source_monitor and as a monitor further down the beam."""
+    (first,) = _mcstas_map((20, 30))
+    (second,) = _mcstas_map((20, 30), name="later_monitor")
+    second.Intensity = first.Intensity / 4  # a quarter of the beam gets there
+    return [first, second]
+
+
+@pytest.fixture(scope="module")
+def tof_two_monitors(tof_result) -> dict:
+    """The tof reading of source_monitor, also as later_monitor."""
+    return {
+        "source_monitor": tof_result["source_monitor"],
+        "later_monitor": tof_result["source_monitor"],
+    }
+
+
+def test_tof_is_scaled_at_the_first_monitor_and_the_transmission_tuned_at_the_second(
+    tof_two_monitors,
+):
+    comparisons = read_scaled_comparisons(
+        _two_monitors(),
+        tof_two_monitors,
+        {"source_monitor": BINS, "later_monitor": BINS},
+        1e6,
+        NEUTRONS,
+    )
+    first, later = comparisons["source_monitor"], comparisons["later_monitor"]
+    assert list(comparisons) == ["source_monitor", "later_monitor"]
+    assert first.transmission == 1.0
+    assert later.scale == first.scale
+    assert later.transmission == pytest.approx(0.25)
+    assert later.tof_intensity.sum() == pytest.approx(later.mcstas_intensity.sum())
+
+
+def test_a_given_transmission_is_kept_after_the_first_monitor(tof_two_monitors):
+    comparisons = read_scaled_comparisons(
+        _two_monitors(),
+        tof_two_monitors,
+        {"source_monitor": BINS, "later_monitor": BINS},
+        1e6,
+        NEUTRONS,
+        transmission=0.5,
+    )
+    first, later = comparisons["source_monitor"], comparisons["later_monitor"]
+    np.testing.assert_allclose(later.tof_intensity, 0.5 * first.tof_intensity)
+    assert later.transmission == 0.5
+
+
+def test_one_monitor_is_not_enough_to_scale(tof_result):
+    with pytest.raises(ValueError, match="one after it"):
+        read_scaled_comparisons(
+            _mcstas_map((20, 30)), tof_result, {"source_monitor": BINS}, 1e6, NEUTRONS
+        )
 
 
 def test_the_figure_has_the_two_maps_the_spectrum_and_the_profile(tof_result):

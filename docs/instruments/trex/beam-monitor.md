@@ -44,7 +44,7 @@ sends. Both monitors have `restore_neutron=1`, so they do not change the beam.
 ## Running both models
 
 As on [Source](source.md#running-both-models), the same object runs in McStas and in tof, and
-`read_comparison` reads each monitor of both models on the bins of the McStas map:
+each monitor of both models is read on the bins of the McStas map:
 
 <!-- fmt:off -->
 ```python
@@ -97,6 +97,9 @@ both have the same total at the beam monitor:
 ```text
 T = McStas total at the beam monitor / (tof neutrons at the beam monitor × scale)
 ```
+
+`read_scaled_comparisons` does both steps: it reads each monitor with `read_comparison`, sets the
+scale at the first, the source monitor, and tunes T at the second, unless it is given:
 
 <!-- fmt:off -->
 ```python

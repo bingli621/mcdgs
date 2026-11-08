@@ -121,9 +121,9 @@ at the source monitor, to the McStas total there: 8.46e5 n/s per tof neutron. At
 they are scaled again by a `transmission` of 0.2, the argument of `main`, for what the guides
 would let through. That is close to the 17 % of McStas above, so where McStas is above tof the
 guides pass more than 0.2 of the beam, and where it is below, less. [Beam monitor](beam-monitor.md)
-runs the same path with the transmission tuned to McStas, 0.1734, and explains both factors. `read_comparison` reads
-each monitor of both models on its bins, from `monitor_bins`; the scale of the source monitor
-is passed on to the beam monitor:
+runs the same path with the transmission tuned to McStas, 0.1734, and explains both factors. `read_scaled_comparisons`
+reads each monitor of both models on its bins, from `monitor_bins`; the scale of the source
+monitor is passed on to the beam monitor:
 
 <!-- fmt:off -->
 ```python

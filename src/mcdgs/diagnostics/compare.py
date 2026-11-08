@@ -1,7 +1,9 @@
 """McStas and tof at one monitor, side by side.
 
 :func:`read_comparison` reads one time and wavelength map from both runs, in n/s, and
-:func:`plot_comparison` draws it. One run of each model can feed several monitors.
+:func:`plot_comparison` draws it. One run of each model can feed several monitors:
+:func:`read_scaled_comparisons` reads them all, tof scaled at the first and, at the others, with
+the transmission on top of it.
 
 tof has no flux: each neutron has weight 1. :func:`read_comparison` scales its counts by
 ``scale``, the n/s each tof neutron stands for. Left out, it is the total of McStas over that of
@@ -148,6 +150,75 @@ def read_comparison(
         scale=scale,
         transmission=transmission,
     )
+
+
+def read_scaled_comparisons(
+    mcstas_data: list[McStasData],
+    tof_result: tof.Result,
+    bins: Mapping[str, Mapping[str, sc.Variable]],
+    ncount: float,
+    neutrons: int,
+    transmission: float | None = None,
+) -> dict[str, MonitorComparison]:
+    """Read several monitors from a McStas and a tof run, tof scaled at the first one.
+
+    The first monitor is where both models see the same beam, such as the source monitor: there
+    tof is scaled to the total of McStas. The others, further down the beam, have that scale and
+    ``transmission`` on top of it, as :func:`read_comparison` explains.
+
+    Parameters
+    ----------
+    mcstas_data:
+        The monitors of the McStas run, as ``mcstasscript.load_data`` reads them.
+    tof_result:
+        The tof run.
+    bins:
+        The bin edges of each McStas map, ``"toa"`` and ``"wavelength"``, by the name of the
+        monitor, in beam order: at least two monitors.
+    ncount:
+        Number of McStas neutrons.
+    neutrons:
+        Number of tof neutrons.
+    transmission:
+        A factor on tof at every monitor after the first, on top of the scale of the first. If
+        ``None``, tuned so that tof has the total of McStas at the second monitor.
+
+    Returns
+    -------
+    :
+        Every monitor, by name, in the order of ``bins``.
+
+    Raises
+    ------
+    ValueError
+        If ``bins`` has fewer than two monitors.
+    """
+    if len(bins) < 2:
+        raise ValueError(f"needs a monitor to scale tof at and one after it, got {list(bins)}")
+    (first, first_bins), *rest = bins.items()
+    at_first = read_comparison(first, mcstas_data, tof_result, first_bins, ncount, neutrons)
+
+    def after_first(
+        name: str, edges: Mapping[str, sc.Variable], factor: float
+    ) -> MonitorComparison:
+        """Read a monitor after the first, with its scale and a transmission."""
+        return read_comparison(
+            name,
+            mcstas_data,
+            tof_result,
+            edges,
+            ncount,
+            neutrons,
+            scale=at_first.scale,
+            transmission=factor,
+        )
+
+    if transmission is None:  # tuned: the transmission that gives tof the total of McStas
+        second = after_first(*rest[0], 1.0)
+        transmission = float(second.mcstas_intensity.sum() / second.tof_intensity.sum())
+    return {first: at_first} | {
+        name: after_first(name, edges, transmission) for name, edges in rest
+    }
 
 
 def plot_comparison(
