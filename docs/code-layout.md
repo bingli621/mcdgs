@@ -14,7 +14,7 @@ Dependencies point inwards, so an instrument never depends on how it is simulate
 | `mcstas` | An adapter that works with any instrument: builds it, runs it, reads the output. |
 | `tof` | An adapter that works with any instrument: builds its chopper cascade as a tof model, gives its disks as scippneutron disk choppers, and draws its chopper acceptance diagram. |
 | `io` | An adapter that saves any instrument to a YAML parameters file and loads it back. |
-| `reduction` | Reserved for data reduction. It holds no code yet. |
+| `reduction` | Data reduction with the kernels of scippneutron, such as the incident energy of a straight flight. It imports nothing else from `mcdgs`. |
 | `diagnostics` | Setups that study one part of an instrument, such as T-Rex up to guide 4, and what reads their McStas and tof results. One module per setup, numbered per instrument, such as `trex_01_source`, built on `instruments`; nothing else imports it. |
 
 Each box is a package, with the main things it offers, and each dashed arrow points to a package it
@@ -56,10 +56,12 @@ classDiagram
     }
     class reduction {
         <<package>>
+        EI_GRAPH
+        incident_flight()
     }
     class diagnostics {
         <<package>>
-        trex_00_overview to trex_06_time_distance_diagram
+        trex_00_overview to trex_08_determine_ei
     }
     instruments ..> core
     samples ..> core
@@ -69,4 +71,5 @@ classDiagram
     diagnostics ..> instruments
     diagnostics ..> mcstas
     diagnostics ..> tof
+    diagnostics ..> reduction
 ```

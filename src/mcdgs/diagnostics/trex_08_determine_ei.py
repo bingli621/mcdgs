@@ -17,28 +17,27 @@ The incident energy of each sub-pulse follows from its flight between the monito
 from its flight from the source to the pre-sample monitor alone, leaving the source at
 ``t0_offset``, the time the choppers are phased to.
 :func:`subpulse_flights` finds the sub-pulses at each monitor with :func:`.find_patches` and pairs
-them; ``EI_GRAPH``, built from the kernels of scippneutron, turns the start and end of a straight
-flight, and the times there, into the flight path, the time of flight, the incident wavelength
-and the incident energy. The mean wavelength of each sub-pulse at the pre-sample monitor, which the
-monitors record, gives the incident energy it should have.
+them; :func:`.incident_flight`, of :mod:`mcdgs.reduction.incident_energy`, turns the start and
+end of each flight, and the times there, into the flight path, the time of flight, the incident
+wavelength and the incident energy, through a graph of scippneutron's kernels. The mean
+wavelength of each sub-pulse at the pre-sample monitor, which the monitors record, gives the
+incident energy it should have.
 
-:func:`plot_time_profiles` draws the intensity of both monitors against time, and
-:func:`plot_incident_energies` the incident energy of each sub-pulse. Run the module to do it::
+:func:`plot_time_profiles` draws the intensity of both monitors against time,
+:func:`plot_incident_energies` the incident energy of each sub-pulse, and :func:`save_graph` the
+graph. Run the module to do it::
 
     pixi run python -m mcdgs.diagnostics.trex_08_determine_ei
 """
 
 from pathlib import Path
-from typing import cast
 
 import matplotlib.pyplot as plt
 import mcstasscript as ms
 import scipp as sc
 from matplotlib.figure import Figure
 from numpy.typing import NDArray
-from scipp.coords.graph import GraphDict
 from scippneutron.conversion import tof as tof_kernels
-from scippneutron.conversion.graph import beamline
 
 from mcdgs.core.components import Single_crystal
 from mcdgs.diagnostics.cli import output_folder, parse_out
@@ -46,6 +45,7 @@ from mcdgs.diagnostics.compare import MonitorComparison, read_scaled_comparisons
 from mcdgs.diagnostics.trex_07_neutrons_on_sample import find_patches
 from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
 from mcdgs.mcstas.simulation import Simulation
+from mcdgs.reduction.incident_energy import EI_GRAPH, incident_flight
 from mcdgs.samples import la2ni7
 from mcdgs.tof.builder import build_tof
 from mcdgs.tof.reader import monitor_bins
@@ -56,60 +56,6 @@ MONITOR_LABELS = {
     "beamstop_monitor": "Beamstop monitor",
 }
 MIN_FRACTION = 0.02  # a patch weaker than this fraction of the strongest is not a sub-pulse
-
-
-def time_of_flight(time_at_start: sc.Variable, time_at_end: sc.Variable) -> sc.Variable:
-    """Return the time of flight from the start to the end of a straight flight."""
-    return time_at_end - time_at_start
-
-
-# a straight flight from a start to an end, as scippneutron's beam from a source to a position,
-# without scattering: from the pre-sample to the beamstop monitor, or from the source to the
-# pre-sample monitor
-EI_GRAPH: GraphDict = {
-    **beamline.beamline(scatter=False),  # Ltotal, from source_position to position
-    "source_position": "start_position",
-    "position": "end_position",
-    "tof": time_of_flight,
-    "incident_wavelength": tof_kernels.wavelength_from_tof,  # from tof and Ltotal
-    "incident_energy": tof_kernels.incident_energy_from_wavelength,
-}
-
-
-def incident_flight(
-    start_position: sc.Variable,
-    time_at_start: sc.Variable,
-    end_position: sc.Variable,
-    time_at_end: sc.Variable,
-) -> dict[str, sc.Variable]:
-    """Compute the incident energy of a straight flight with ``EI_GRAPH``.
-
-    Parameters
-    ----------
-    start_position, end_position:
-        Where the flight starts and ends, as vectors.
-    time_at_start, time_at_end:
-        When it passes each, along ``subpulse`` or, for the start, one time for all.
-
-    Returns
-    -------
-    :
-        ``Ltotal``, ``tof``, ``incident_wavelength`` and ``incident_energy``, by name.
-    """
-    flight = sc.DataArray(
-        sc.zeros(sizes=time_at_end.sizes),  # only the coordinates count
-        coords={
-            "start_position": start_position,
-            "time_at_start": time_at_start,
-            "end_position": end_position,
-            "time_at_end": time_at_end,
-        },
-    )
-    names = ["Ltotal", "tof", "incident_wavelength", "incident_energy"]
-    flight = cast(
-        sc.DataArray, flight.transform_coords(names, graph=EI_GRAPH, keep_intermediate=False)
-    )
-    return {name: flight.coords[name] for name in names}
 
 
 class TRexToBeamstopMonitor(TRex):
@@ -151,7 +97,7 @@ def subpulse_flights(
     the intensity of the strongest. The flight between the monitors is shorter than the time
     between sub-pulses, so the n-th sub-pulse at one is the n-th at the other.
 
-    The incident energy comes from two flights, each through :func:`incident_flight`: from the
+    The incident energy comes from two flights, each through :func:`.incident_flight`: from the
     pre-sample to the beamstop monitor, and from the source to the pre-sample monitor alone,
     every sub-pulse leaving the source at ``time_on_source``.
 
@@ -172,7 +118,7 @@ def subpulse_flights(
     -------
     :
         The intensity of each sub-pulse at the pre-sample monitor, along ``subpulse``, with the
-        times at both monitors; the coordinates of :func:`incident_flight` between the
+        times at both monitors; the coordinates of :func:`.incident_flight` between the
         monitors, ``Ltotal``, ``tof``, ``incident_wavelength`` and ``incident_energy``, and from
         the source, with the prefix ``one_monitor_``; and ``reference_energy``, from the mean
         wavelength at the pre-sample monitor.
@@ -198,6 +144,7 @@ def subpulse_flights(
     time_at_pre_sample = sc.array(dims=["subpulse"], values=first.time[keep_first], unit="ms")
     time_at_beamstop = sc.array(dims=["subpulse"], values=second.time[keep_second], unit="ms")
     pre_sample_position = sc.vector(positions["pre_sample_monitor"], unit="m")
+    # --8<-- [start:two_flights]
     between_monitors = incident_flight(
         pre_sample_position,
         time_at_pre_sample,
@@ -210,6 +157,7 @@ def subpulse_flights(
         pre_sample_position,
         time_at_pre_sample,
     )
+    # --8<-- [end:two_flights]
     flights = sc.DataArray(
         sc.array(dims=["subpulse"], values=first.intensity[keep_first], unit="1/s"),  # n/s
         coords={
@@ -367,6 +315,27 @@ def plot_incident_energies(flights: dict[str, sc.DataArray], title: str) -> Figu
     return fig
 
 
+def save_graph(path: Path) -> Path:
+    """Draw ``EI_GRAPH`` with ``sc.show_graph`` and save it as an SVG file.
+
+    The coordinates are boxes and the kernels gray labels between them, with an arrow from each
+    coordinate to the kernel that takes it. It needs graphviz, which the pixi feature ``mcstas``
+    installs.
+
+    Parameters
+    ----------
+    path:
+        The file, without the extension, which graphviz adds.
+
+    Returns
+    -------
+    :
+        The path of the SVG file.
+    """
+    graph = sc.show_graph(EI_GRAPH, simplified=False)
+    return Path(graph.render(path, format="svg", cleanup=True))
+
+
 def main(
     out: Path | None = None,
     ncount: float = 1e8,
@@ -377,8 +346,9 @@ def main(
     """Run both models of :class:`TRexToBeamstopMonitor`, print Ei and save the figures.
 
     The figures are ``trex_determine_ei.png``, the time profiles, from
-    :func:`plot_time_profiles`, and ``trex_determine_ei_values.png``, the incident energy of each
-    sub-pulse, from :func:`plot_incident_energies`.
+    :func:`plot_time_profiles`; ``trex_determine_ei_values.png``, the incident energy of each
+    sub-pulse, from :func:`plot_incident_energies`; and ``trex_determine_ei_graph.svg``, the graph
+    of the calculation, from :func:`save_graph`.
 
     Parameters
     ----------
@@ -398,7 +368,7 @@ def main(
     Returns
     -------
     :
-        The paths of the figures: the time profiles, then the incident energies.
+        The paths of the figures: the time profiles, the incident energies, then the graph.
     """
     instrument = TRexToBeamstopMonitor()  # the default control parameters
     name = "trex_determine_ei"
@@ -452,6 +422,9 @@ def main(
         plt.close(fig)
         print(f"Saved {figure}")
         figures.append(figure)
+    figure = save_graph(output_folder(out, folder) / f"{name}_graph")
+    print(f"Saved {figure}")
+    figures.append(figure)
     return figures
 
 
