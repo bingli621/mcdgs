@@ -11,42 +11,36 @@ scale stands for what the guides take out of the beam. It is tuned so that tof m
 by default, so that both have the same total. The transmission is then that of the guides in
 McStas, and the shape in time and wavelength that of each model.
 
+The choppers cut the beam into sub-pulses, a bin or two wide and about 4 ms apart, so
+:func:`.plot_comparison` draws both models with the maps on a log scale, ``LOG_DECADES`` deep,
+and the points of the wavelength spectrum and the time profile joined by lines.
+
 :func:`main` runs both models, reads the intensity of each on the bins of the monitors, scales
-tof at the source monitor, tunes the transmission at the sample monitor, and
-:func:`.plot_comparison` draws them side by side. Run the module to do it::
+tof at the source monitor, tunes the transmission at the sample monitor and saves the figure.
+Run the module to do it::
 
     pixi run python -m mcdgs.diagnostics.trex_07_neutrons_on_sample
 """
 
 from pathlib import Path
-from typing import Any
 
 import matplotlib.pyplot as plt
 import mcstasscript as ms
-import numpy as np
-import scipp as sc
-from numpy.typing import NDArray
 
-from mcdgs.core.components import Monitor_nD
 from mcdgs.diagnostics.cli import output_folder, parse_out
 from mcdgs.diagnostics.compare import plot_comparison, read_comparison
 from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
-from mcdgs.instruments.trex.monitors import sample_monitor
-from mcdgs.instruments.trex.sources import wavelength_band
 from mcdgs.mcstas.simulation import Simulation
 from mcdgs.tof.builder import build_tof
 from mcdgs.tof.reader import monitor_bins
 
-SAMPLE_MONITOR_TIME_RESOLUTION = 5e-6  # s, 5 µs: about 12 bins across a sub-pulse of 60 µs
-SAMPLE_MONITOR_LAMBDA_RESOLUTION = 0.004  # Å: about 10 bins across a sub-pulse of 0.04 Å
+LOG_DECADES = 3  # the log color scale of the maps spans this many decades below the highest bin
 
 
 class TRexToSample(TRex):
     """T-Rex from the source to the sample monitor, without a sample.
 
-    The beamstop and the banana detector, after the sample, are left out. The sample monitor
-    has finer bins than that of :class:`.TRex`, ``SAMPLE_MONITOR_TIME_RESOLUTION`` and
-    ``SAMPLE_MONITOR_LAMBDA_RESOLUTION``, to resolve the shape of each sub-pulse.
+    The beamstop and the banana detector, after the sample, are left out.
 
     Parameters
     ----------
@@ -58,35 +52,9 @@ class TRexToSample(TRex):
 
     def __init__(self, params: Params = DEFAULT_PARAMS) -> None:
         super().__init__(params=params)
-        self.sample_monitor = self._fine_sample_monitor()
         # after the sample monitor
         del self.beamstop
         del self.banana_detector
-
-    def update_params(self, **values: Any) -> None:
-        """Change control parameters, as :meth:`.TRex.update_params`, keeping the fine bins.
-
-        Parameters
-        ----------
-        **values:
-            New values by parameter name, e.g. ``update_params(lambda0=4.0)``.
-        """
-        super().update_params(**values)
-        if "lambda0" in values:
-            self.sample_monitor = self._fine_sample_monitor()
-
-    def _fine_sample_monitor(self) -> Monitor_nD:
-        """Return the sample monitor on the band of ``lambda0``, with the fine bins."""
-        return sample_monitor(
-            lambda_limits=wavelength_band(self.params.lambda0),
-            lambda_resolution=SAMPLE_MONITOR_LAMBDA_RESOLUTION,
-            time_resolution=SAMPLE_MONITOR_TIME_RESOLUTION,
-        )
-
-
-def _mean(intensity: NDArray, centers: NDArray, axis: int) -> float:
-    """Return the mean of a bin center, weighted by the intensity summed over the other axis."""
-    return float(np.average(centers, weights=intensity.sum(axis=1 - axis)))
 
 
 def main(
@@ -96,9 +64,9 @@ def main(
     seed: int = 1,
     transmission: float | None = None,
 ) -> Path:
-    """Run both models of :class:`TRexToSample`, print their means and save the figure.
+    """Run both models of :class:`TRexToSample`, print the transmission and save the figure.
 
-    The figure is ``trex_neutrons_on_sample.png``.
+    The figure is ``trex_neutrons_on_sample.png``, from :func:`.plot_comparison`.
 
     Parameters
     ----------
@@ -155,17 +123,7 @@ def main(
         transmission=transmission,
     )
 
-    # print the mean time and wavelength of each model, and the scale and transmission of tof
-    time_centers = sc.midpoints(bins["toa"]).to(unit="ms").values
-    wavelength_centers = sc.midpoints(bins["wavelength"]).to(unit="Å").values
-    for label, intensity in (
-        ("McStas", comparison.mcstas_intensity),
-        ("tof", comparison.tof_intensity),
-    ):
-        print(
-            f"{label:>6}: mean time {_mean(intensity, time_centers, 0):.3f} ms, "
-            f"mean wavelength {_mean(intensity, wavelength_centers, 1):.3f} Å"
-        )
+    # print the totals, and the scale and transmission of tof
     mcstas_total = comparison.mcstas_intensity.sum()
     tof_counts = comparison.tof_intensity.sum() / comparison.scale / transmission
     print(
@@ -177,7 +135,7 @@ def main(
 
     figure = output_folder(out, folder) / f"{name}.png"
     title = f"T-Rex flux at the sample monitor\n{instrument.running_conditions()}"
-    fig = plot_comparison(comparison, title)
+    fig = plot_comparison(comparison, title, log_decades=LOG_DECADES, connect=True)
     plt.show()
     fig.savefig(figure, dpi=150)
     plt.close(fig)
