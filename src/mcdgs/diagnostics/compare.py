@@ -21,6 +21,7 @@ import mcstasscript as ms
 import numpy as np
 import scipp as sc
 import tof
+from matplotlib.colors import LogNorm, Normalize
 from matplotlib.figure import Figure
 from mcstasscript.data.data import McStasData
 from numpy.typing import NDArray
@@ -149,7 +150,13 @@ def read_comparison(
     )
 
 
-def plot_comparison(comparison: MonitorComparison, title: str) -> Figure:
+def plot_comparison(
+    comparison: MonitorComparison,
+    title: str,
+    *,
+    log_decades: int | None = None,
+    connect: bool = False,
+) -> Figure:
     """Draw both models at one monitor, in n/s.
 
     The top row has the time and wavelength map of each, on one color scale; the bottom row
@@ -162,6 +169,13 @@ def plot_comparison(comparison: MonitorComparison, title: str) -> Figure:
         Both maps.
     title:
         The title of the figure.
+    log_decades:
+        If given, the color scale of the maps is logarithmic, this many decades deep below the
+        highest bin, in viridis with the empty bins in white: for a beam whose bins differ by
+        orders of magnitude, such as the sub-pulses the choppers cut. Its weakest bins are dark,
+        so they stand out on the white. If ``None``, linear from 0, in turbo.
+    connect:
+        True joins the points of the spectrum and the profile with lines.
 
     Returns
     -------
@@ -173,6 +187,13 @@ def plot_comparison(comparison: MonitorComparison, title: str) -> Figure:
     wavelengths = c.bins["wavelength"].to(unit="Å").values
     time_bin, wavelength_bin = times[1] - times[0], wavelengths[1] - wavelengths[0]
     vmax = max(c.mcstas_intensity.max(), c.tof_intensity.max())  # one color scale for both
+    maps = [c.mcstas_intensity.T, c.tof_intensity.T]
+    norm: Normalize = Normalize(vmin=0, vmax=vmax)
+    cmap = plt.get_cmap("turbo")
+    if log_decades is not None:  # the empty bins, masked, in white
+        maps = [np.ma.masked_less_equal(m, 0) for m in maps]
+        norm = LogNorm(vmin=vmax / 10**log_decades, vmax=vmax, clip=True)
+        cmap = plt.get_cmap("viridis").with_extremes(bad="white")
 
     fig, ((mcstas_ax, tof_ax), (spectrum_ax, profile_ax)) = plt.subplots(
         2, 2, figsize=(12, 9), layout="constrained"
@@ -180,8 +201,8 @@ def plot_comparison(comparison: MonitorComparison, title: str) -> Figure:
     fig.suptitle(title)
 
     # the time and wavelength maps
-    mcstas_ax.pcolormesh(times, wavelengths, c.mcstas_intensity.T, cmap="turbo", vmin=0, vmax=vmax)
-    mesh = tof_ax.pcolormesh(times, wavelengths, c.tof_intensity.T, cmap="turbo", vmin=0, vmax=vmax)
+    mcstas_ax.pcolormesh(times, wavelengths, maps[0], cmap=cmap, norm=norm)
+    mesh = tof_ax.pcolormesh(times, wavelengths, maps[1], cmap=cmap, norm=norm)
     mcstas_ax.set(title="McStas", xlabel="Time [ms]", ylabel="Wavelength [Å]")
     tof_ax.set(title="tof", xlabel="Time [ms]", ylabel="Wavelength [Å]")
     fig.colorbar(
@@ -192,7 +213,12 @@ def plot_comparison(comparison: MonitorComparison, title: str) -> Figure:
 
     time_centers = sc.midpoints(c.bins["toa"]).to(unit="ms").values
     wavelength_centers = sc.midpoints(c.bins["wavelength"]).to(unit="Å").values
-    errorbar_style = {"fmt": ".", "markersize": 3, "elinewidth": 0.8}
+    errorbar_style = {
+        "fmt": ".-" if connect else ".",  # the line only joins the points
+        "markersize": 3,
+        "linewidth": 0.8,
+        "elinewidth": 0.8,
+    }
     mcstas_label = f"McStas, ncount = {int(c.ncount):,}"
     tof_label = f"tof, {c.neutrons:,} neutrons × {c.scale:.3g} n/s each"
     if c.transmission != 1:

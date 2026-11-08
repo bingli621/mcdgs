@@ -3,6 +3,7 @@ import numpy as np
 import pytest
 import scipp as sc
 import tof
+from matplotlib.colors import LogNorm
 from mcstasscript.data.data import McStasData, McStasMetaData
 
 from mcdgs.diagnostics.compare import plot_comparison, read_comparison
@@ -91,4 +92,18 @@ def test_the_figure_has_the_two_maps_the_spectrum_and_the_profile(tof_result):
     fig = plot_comparison(comparison, "A title")
     assert fig.get_suptitle() == "A title"
     assert len(fig.axes) == 5  # four plots and the color bar
+    plt.close(fig)
+
+
+def test_the_maps_can_be_drawn_on_a_log_scale(tof_result):
+    comparison = read_comparison(
+        "source_monitor", _mcstas_map((20, 30)), tof_result, BINS, 1e6, NEUTRONS
+    )
+    fig = plot_comparison(comparison, "A title", log_decades=3, connect=True)
+    mesh = fig.axes[0].collections[0]
+    vmax = max(comparison.mcstas_intensity.max(), comparison.tof_intensity.max())
+    assert isinstance(mesh.norm, LogNorm)
+    assert mesh.norm.vmin == pytest.approx(vmax / 1e3)
+    assert mesh.get_array().mask.any()  # the empty bins, in white
+    assert mesh.cmap.name.startswith("viridis")
     plt.close(fig)
