@@ -164,8 +164,8 @@ def test_trex_choppers_are_placed_in_beam_order():
     assert list(model.detectors) == [
         "beam_monitor",
         "pre_sample_monitor",
-        "sample_monitor",
         "beamstop_monitor",
+        "sample_monitor",
         "banana_detector",
     ]
 

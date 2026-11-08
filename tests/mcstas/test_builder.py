@@ -44,8 +44,8 @@ def test_components_are_added_in_order_with_their_mcstas_names(tmp_path):
         "Arm", "Guide_gravity", "Pol_bender", "Guide_gravity", "Monitor_nD", "Arm",
     ]  # fmt: skip
     assert [c.component_name for c in inst.component_list][-8:] == [
-        "Slit", "Monitor_nD", "Arm", "Monitor_nD", "Single_crystal",
-        "Monitor_nD", "Beamstop", "Monitor_nD",
+        "Slit", "Monitor_nD", "Monitor_nD", "Arm", "Monitor_nD", "Single_crystal",
+        "Beamstop", "Monitor_nD",
     ]  # fmt: skip
 
 

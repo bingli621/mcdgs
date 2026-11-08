@@ -2,8 +2,8 @@
 
 Each monitor leaves the neutrons unchanged. The source monitor is the entrance of guide 1;
 the beam monitor in the middle of the bunker gap of row 29, after guide 4, on the arm of guide 4;
-the pre-sample monitor between ``slit_mc`` and the sample; the sample monitor at ``sample_pos``;
-the beamstop monitor on the face of the beamstop.
+the pre-sample monitor between ``slit_mc`` and the sample; the beamstop monitor on the face of
+the beamstop, but before the sample in beam order; the sample monitor at ``sample_pos``.
 
 The beamstop is here too, behind its monitor: an absorbing plate on the beam axis just in front
 of the banana detector of :mod:`.detectors`, which stops the direct beam there.
@@ -240,10 +240,11 @@ def beamstop_monitor(
 ) -> Monitor_nD:
     """Create the time and wavelength monitor on the face of the beamstop.
 
-    It records the beam the beamstop stops, mostly that through the sample, as one 2D map of
-    time against wavelength, and leaves the neutrons unchanged, so the beamstop behind it stops
-    those it counted. It has the size and the place of the beamstop, ``BEAMSTOP_DISTANCE`` after
-    ``sample_pos`` on the beam axis.
+    It has the size and the place of the beamstop, ``BEAMSTOP_DISTANCE`` after ``sample_pos`` on
+    the beam axis, but comes before the sample in beam order, so it records the direct beam as if
+    there were no sample: each neutron is taken to its plane, counted, and given back unchanged
+    to the sample. It records one 2D map of time against wavelength. ``sample_pos`` comes after
+    it, so it hangs off ``arm_mc``, whose axis runs straight to the sample.
 
     Parameters
     ----------
@@ -268,8 +269,8 @@ def beamstop_monitor(
             time_resolution,
         ),
         filename="beamstop_monitor",
-        at=[0, 0, BEAMSTOP_DISTANCE],
-        relative="sample_pos",
+        at=[0, 0, SAMPLE_Z + BEAMSTOP_DISTANCE - ARM_MC_Z],
+        relative="arm_mc",
     )
 
 

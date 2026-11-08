@@ -194,7 +194,7 @@ They are in [`mcdgs.instruments.trex.monitors`](../../reference/trex.md).
 | `beam_monitor` | In the middle of the bunker gap of row 29, after guide 4, 5.902 m along the beam, on the arm of guide 4 | 0.06 m × 0.0463 m | Time against wavelength, in bins of 0.05 ms and 0.02 Å |
 | `pre_sample_monitor` | Between `slit_mc` and the sample, 163.5 m along the beam, on the arm of the monochromatic choppers | 0.1 m × 0.1 m | Time against wavelength, in bins of 0.05 ms and 0.02 Å |
 | `sample_monitor` | At `sample_pos` | 0.1 m × 0.1 m | Wavelength, 0.5 to 5.3 Å in 12 bins |
-| `beamstop_monitor` | On the face of the [`beamstop`](#detectors), 2.999 m after `sample_pos` | 0.1 m × 0.1 m, that of the beamstop | Time against wavelength, in bins of 0.05 ms and 0.02 Å |
+| `beamstop_monitor` | On the face of the [`beamstop`](#detectors), 2.999 m after `sample_pos`, but before the sample in beam order, on the arm of the monochromatic choppers | 0.1 m × 0.1 m, that of the beamstop | Time against wavelength, in bins of 0.05 ms and 0.02 Å, of the direct beam as if there were no sample |
 
 The time and wavelength maps (`source_monitor`, `beam_monitor`, `pre_sample_monitor` and
 `beamstop_monitor`) follow one rule. The wavelength axis is the band
@@ -211,6 +211,13 @@ After the sample, both placed on `sample_pos`, come the beamstop, in
 and the banana detector, in [`mcdgs.instruments.trex.detectors`](../../reference/trex.md). None
 is in the Table of Optics: their sizes are placeholders, to be replaced by those of the
 instrument.
+
+In McStas the order of the components, not their place, decides what happens to a neutron.
+`beamstop_monitor` comes before `sample_pos`, after `pre_sample_monitor`. Each neutron is taken
+to its plane, 3 m beyond the sample, counted, and given back unchanged, still upstream of the
+sample. So it counts the whole direct beam, as if there were no sample, and the sample then
+scatters the same neutrons. The beamstop behind the sample stops those that pass straight
+through.
 
 | Component | Where | Size | What it does |
 | --------- | ----- | ---- | ------------ |

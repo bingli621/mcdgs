@@ -86,5 +86,5 @@ neutrons in part 2 is the number in the file.
 - Part 2 runs in the frame of `sample_pos`, so anything after it must be placed `relative` to it,
   not in the lab frame.
 
-T-Rex can: its `beamstop_monitor`, `beamstop` and `banana_detector` are placed `relative` to
-`sample_pos`.
+T-Rex can: its `beamstop` and `banana_detector` are placed `relative` to `sample_pos`. Its
+`beamstop_monitor` comes before `sample_pos`, so it is counted in part 1, not part 2.

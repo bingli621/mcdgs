@@ -69,9 +69,9 @@ def test_the_components_are_in_beam_order():
         "guide_50a",
         "slit_mc",
         "pre_sample_monitor",
+        "beamstop_monitor",
         "sample_pos",
         "sample_monitor",
-        "beamstop_monitor",
         "beamstop",
         "banana_detector",
     ]
@@ -276,11 +276,10 @@ def test_without_a_sample_there_is_none():
 
 def test_a_sample_goes_after_the_sample_position():
     trex = TRex(sample=aluminum())
-    assert list(trex.components)[-6:] == [
+    assert list(trex.components)[-5:] == [
         "sample_pos",
         "sample_monitor",
         "sample",
-        "beamstop_monitor",
         "beamstop",
         "banana_detector",
     ]
@@ -532,7 +531,7 @@ def test_the_next_guide_is_on_the_arm_of_the_gap(name, following, distance):
 def test_the_length_along_the_axis_is_that_of_the_sheet():
     trex = TRex()
     positions = lab_placement(trex)
-    names = list(trex.components)
+    names = [n for n in trex.components if n != "beamstop_monitor"]  # 3 m past the sample
     path = sum(
         float(np.linalg.norm(positions[name][0] - positions[previous][0]))
         for previous, name in pairwise(
@@ -588,18 +587,26 @@ def test_the_pre_sample_monitor_is_between_the_slit_and_the_sample():
     assert trex.slit_mc.at[2] < trex.pre_sample_monitor.at[2] < trex.sample_pos.at[2]
 
 
-def test_the_beamstop_stops_what_its_detector_counts_just_in_front_of_the_banana():
+def test_the_beamstop_is_just_in_front_of_the_banana_with_its_monitor_on_its_face():
     trex = TRex()
-    detector, stop, banana = trex.beamstop_monitor, trex.beamstop, trex.banana_detector
-    assert detector.restore_neutron == 1  # the beamstop behind it stops them
-    assert (stop.at, stop.relative) == (detector.at, detector.relative)
-    assert (stop.xwidth, stop.yheight) == (detector.xwidth, detector.yheight)
-    assert (detector.xwidth, detector.yheight) == (
+    monitor, stop, banana = trex.beamstop_monitor, trex.beamstop, trex.banana_detector
+    positions = trex.positions()
+    assert positions["beamstop_monitor"] == positions["beamstop"]
+    assert (stop.xwidth, stop.yheight) == (monitor.xwidth, monitor.yheight)
+    assert (monitor.xwidth, monitor.yheight) == (
         trex.pre_sample_monitor.xwidth,
         trex.pre_sample_monitor.yheight,
     )
-    assert detector.relative == banana.relative == "sample_pos"
-    assert banana.curved_radius - detector.at[2] == pytest.approx(0.001, abs=1e-12)
+    assert stop.relative == banana.relative == "sample_pos"
+    assert banana.curved_radius - stop.at[2] == pytest.approx(0.001, abs=1e-12)
+
+
+def test_the_beamstop_monitor_sees_the_beam_before_the_sample_and_gives_it_back_unchanged():
+    trex = TRex(sample=aluminum())
+    names = list(trex.components)
+    assert names.index("beamstop_monitor") < names.index("sample_pos") < names.index("sample")
+    assert trex.beamstop_monitor.restore_neutron == 1
+    assert trex.beamstop_monitor.relative == "arm_mc"  # sample_pos comes after it
 
 
 def test_the_banana_detector_is_around_the_sample_and_lists_its_pixels():

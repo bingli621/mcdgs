@@ -139,14 +139,16 @@ class TRex(Instrument):
         self.add_components(to_slit)
         self.slit_mc = slit_mc()
         self.pre_sample_monitor = pre_sample_monitor(lambda_limits=(lambda_min, lambda_max))
+        # before the sample in order, 3 m after it in space: it counts the beam as if there were
+        # no sample, and gives the sample each neutron back unchanged
+        self.beamstop_monitor = beamstop_monitor(lambda_limits=(lambda_min, lambda_max))
         #  sample position
         self.sample_pos = sample_pos()
         self.sample_monitor = sample_monitor()
         self.sample = None
         if sample is not None:
             self.sample = replace(sample, relative=sample.relative or "sample_pos")
-        # detectors: the beamstop stops the direct beam its monitor counts
-        self.beamstop_monitor = beamstop_monitor(lambda_limits=(lambda_min, lambda_max))
+        # detectors: the beamstop stops the direct beam through the sample
         self.beamstop = beamstop()
         self.banana_detector = banana_detector()
 
