@@ -33,7 +33,9 @@ PRE_SAMPLE_MONITOR_Z = 163.5  # m, FIXME, not in Table of Optics v3.2: between s
 PRE_SAMPLE_MONITOR_WIDTH = 0.1  # m, FIXME, not in Table of Optics v3.2: wider than the beam
 PRE_SAMPLE_MONITOR_HEIGHT = 0.1  # m, FIXME, not in Table of Optics v3.2: wider than the beam
 PRE_SAMPLE_MONITOR_LAMBDA_RESOLUTION = 0.02  # Å, FIXME, as the beam monitor
-PRE_SAMPLE_MONITOR_TIME_RESOLUTION = 5e-5  # s, FIXME, as the beam monitor
+# 5 µs, finer than the other monitors: a sub-pulse spans a bin or two of 0.05 ms, so its mean
+# time would move by up to half a bin, about 1 % of Ei over the 3.3 m to the beamstop monitor
+PRE_SAMPLE_MONITOR_TIME_RESOLUTION = 5e-6  # s, FIXME, not in Table of Optics v3.2
 
 SAMPLE_MONITOR_WIDTH = 0.1  # m, FIXME, not in Table of Optics v3.2: wider than the beam
 SAMPLE_MONITOR_HEIGHT = 0.1  # m, FIXME, not in Table of Optics v3.2: wider than the beam
@@ -45,7 +47,7 @@ BEAMSTOP_DISTANCE = BANANA_RADIUS - BEAMSTOP_GAP  # m, from the sample
 BEAMSTOP_WIDTH = PRE_SAMPLE_MONITOR_WIDTH  # m, FIXME, as the pre-sample monitor
 BEAMSTOP_HEIGHT = PRE_SAMPLE_MONITOR_HEIGHT  # m, FIXME, as the pre-sample monitor
 BEAMSTOP_MONITOR_LAMBDA_RESOLUTION = 0.02  # Å, FIXME, as the beam monitor
-BEAMSTOP_MONITOR_TIME_RESOLUTION = 5e-5  # s, FIXME, as the beam monitor
+BEAMSTOP_MONITOR_TIME_RESOLUTION = 5e-6  # s, FIXME, as the pre-sample monitor
 
 
 def time_lambda_options(

@@ -1852,7 +1852,7 @@ pre_sample_monitor:
   max: 1.0e+40
   restore_neutron: 1
   radius: 0
-  options: time limits=[0.045262871423083585 0.12356287142308359] bins=1566 lambda limits=[1.09517711660141 2.91517711660141] bins=91
+  options: time limits=[0.045262871423083585 0.12355787142308358] bins=15659 lambda limits=[1.09517711660141 2.91517711660141] bins=91
   filename: pre_sample_monitor
   nowritefile: 0
   nexus_bins: 0
@@ -1876,7 +1876,7 @@ beamstop_monitor:
   max: 1.0e+40
   restore_neutron: 1
   radius: 0
-  options: time limits=[0.04617615712843375 0.12602615712843376] bins=1597 lambda limits=[1.09517711660141 2.91517711660141] bins=91
+  options: time limits=[0.04617615712843375 0.12598115712843375] bins=15961 lambda limits=[1.09517711660141 2.91517711660141] bins=91
   filename: beamstop_monitor
   nowritefile: 0
   nexus_bins: 0
