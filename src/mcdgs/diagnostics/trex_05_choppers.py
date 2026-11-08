@@ -4,7 +4,7 @@
 
 - ``chopper_<name>.svg``: scippneutron's drawing of each disk, from :func:`.get_choppers`;
 - ``trex_acceptance.png``: the chopper acceptance diagram, from
-  :meth:`.TRex.acceptance_diagram`.
+  :func:`.acceptance_diagram`.
 
 It needs only mcdgs and scippneutron. Run the module for them::
 
@@ -17,6 +17,7 @@ import matplotlib.pyplot as plt
 
 from mcdgs.diagnostics.cli import output_folder, parse_out
 from mcdgs.instruments.trex.model import TRex
+from mcdgs.tof.acceptance import acceptance_diagram
 from mcdgs.tof.builder import get_choppers
 
 
@@ -45,7 +46,7 @@ def main(out: Path | None = None) -> list[Path]:
         paths.append(path)
 
     # --8<-- [start:acceptance]
-    figure = trex.acceptance_diagram()
+    figure = acceptance_diagram(trex)
     figure.savefig(folder / "trex_acceptance.png", dpi=150)
     # --8<-- [end:acceptance]
     plt.close(figure)

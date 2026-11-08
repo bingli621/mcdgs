@@ -132,6 +132,8 @@ problem with direct geometry neutron chopper spectrometers](https://doi.org/10.1
 
 <!-- fmt:off -->
 ```python
+from mcdgs.tof.acceptance import acceptance_diagram
+
 --8<-- "src/mcdgs/diagnostics/trex_05_choppers.py:acceptance"
 ```
 <!-- fmt:on -->
@@ -154,8 +156,8 @@ frequencies of the pulse-shaping (PS) and monochromatic (MC) choppers.
 The band, the times and the number of pulses can be changed, all in Å and s:
 
 ```python
-trex.acceptance_diagram(wavelength_min=0.1, wavelength_max=10)  # the widest band
-trex.acceptance_diagram(time_min=0, time_max=0.005, n_pulses=2)  # two pulses, 5 ms long
+acceptance_diagram(trex, wavelength_min=0.1, wavelength_max=10)  # the widest band
+acceptance_diagram(trex, time_min=0, time_max=0.005, n_pulses=2)  # two pulses, 5 ms long
 ```
 
 Unlike [tof](../../how-to/simulate-the-choppers-with-tof.md), the diagram follows no neutrons:

@@ -3,8 +3,6 @@
 from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Any
 
-from matplotlib.figure import Figure
-
 from mcdgs.core.base import Instrument
 from mcdgs.core.components import (
     Arm,
@@ -14,8 +12,6 @@ from mcdgs.core.components import (
     Single_crystal,
 )
 from mcdgs.core.params import InstrParam, param
-from mcdgs.tof.acceptance import acceptance_diagram
-from mcdgs.tof.time_distance import time_distance_diagram
 
 from .choppers import Mode, chopper, chopper_timings
 from .detectors import banana_detector
@@ -177,95 +173,6 @@ class TRex(Instrument):
             self.pre_sample_monitor = pre_sample_monitor(lambda_limits=(lambda_min, lambda_max))
             self.beamstop_monitor = beamstop_monitor(lambda_limits=(lambda_min, lambda_max))
             self.sample_monitor = sample_monitor(lambda_limits=(lambda_min, lambda_max))
-
-    def acceptance_diagram(
-        self,
-        *,
-        wavelength_min: float | None = None,
-        wavelength_max: float | None = None,
-        time_min: float | None = None,
-        time_max: float | None = None,
-        n_pulses: int | None = None,
-    ) -> Figure:
-        """Draw the chopper acceptance diagram of T-Rex, at its current parameters.
-
-        See :func:`mcdgs.tof.acceptance.acceptance_diagram`. The title is
-        :meth:`running_conditions`.
-
-        Parameters
-        ----------
-        wavelength_min, wavelength_max:
-            Band of the pulse, in Å. ``None`` takes the source's band around ``lambda0``.
-        time_min, time_max:
-            Times at the source the pulse starts and ends, in s. ``None`` takes 0 or the ESS
-            pulse length.
-        n_pulses:
-            Number of pulses, one source period apart. ``None`` takes the source's
-            ``n_pulses``.
-
-        Returns
-        -------
-        :
-            The figure.
-        """
-        return acceptance_diagram(
-            self,
-            wavelength_min=wavelength_min,
-            wavelength_max=wavelength_max,
-            time_min=time_min,
-            time_max=time_max,
-            n_pulses=n_pulses,
-        )
-
-    def time_distance_diagram(
-        self,
-        neutrons: int = 1_000_000,
-        *,
-        seed: int | None = None,
-        n_pulses: int | None = None,
-        visible_rays: int = 2000,
-        blocked_rays: int = 5000,
-        figsize: tuple[float, float] = (10, 6),
-        cmap: str = "turbo",
-    ) -> Figure:
-        """Draw the time-distance diagram of T-Rex, from its tof model at its current parameters.
-
-        See :func:`mcdgs.tof.time_distance.time_distance_diagram`. The title is
-        :meth:`running_conditions`.
-
-        Parameters
-        ----------
-        neutrons:
-            Number of tof neutrons per pulse.
-        seed:
-            Seed of the random numbers. If ``None``, every run differs.
-        n_pulses:
-            Number of pulses, one source period apart. ``None`` takes the source's
-            ``n_pulses``.
-        visible_rays:
-            Most rays drawn, per pulse, of the neutrons that reach the last detector.
-        blocked_rays:
-            Most rays drawn in gray, per pulse, of the neutrons a chopper stops. 0 draws none.
-        figsize:
-            Size of the figure, in inches.
-        cmap:
-            Colormap of the wavelength.
-
-        Returns
-        -------
-        :
-            The figure.
-        """
-        return time_distance_diagram(
-            self,
-            neutrons,
-            seed=seed,
-            n_pulses=n_pulses,
-            visible_rays=visible_rays,
-            blocked_rays=blocked_rays,
-            figsize=figsize,
-            cmap=cmap,
-        )
 
     def running_conditions(self) -> str:
         """Describe the settings of T-Rex in one line, such as the title of a figure.

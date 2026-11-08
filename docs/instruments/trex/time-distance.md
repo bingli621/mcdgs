@@ -9,11 +9,14 @@ letting everything through.
 
 ## The code
 
-`trex.time_distance_diagram()` builds the tof model of T-Rex at its current parameters, runs it
-and draws the diagram:
+`time_distance_diagram(trex)`, from `mcdgs.tof.time_distance`, builds the tof model of T-Rex at
+its current parameters, runs it and draws the diagram. It takes any instrument:
 
 <!-- fmt:off -->
 ```python
+from mcdgs.instruments.trex.model import TRex
+from mcdgs.tof.time_distance import time_distance_diagram
+
 --8<-- "src/mcdgs/diagnostics/trex_06_time_distance_diagram.py:time_distance"
 ```
 <!-- fmt:on -->
@@ -60,7 +63,7 @@ keyword arguments; `figsize` and `cmap` set the size of the figure and the color
 
 ```python
 trex.update_params(mode="RR", rrm=12)
-trex.time_distance_diagram(100_000, seed=1, n_pulses=1, blocked_rays=0)  # no gray lines
+time_distance_diagram(trex, 100_000, seed=1, n_pulses=1, blocked_rays=0)  # no gray lines
 ```
 
 Unlike the [acceptance diagram](choppers.md#acceptance-diagram), the time-distance diagram

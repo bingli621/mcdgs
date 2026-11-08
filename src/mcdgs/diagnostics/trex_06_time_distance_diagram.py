@@ -3,7 +3,7 @@
 :func:`main` writes, at the default control parameters:
 
 - ``trex_time_distance.png``: the time-distance diagram of two pulses, from
-  :meth:`.TRex.time_distance_diagram`;
+  :func:`.time_distance_diagram`;
 - ``trex_time_distance_params.txt``: the parameters of that run, from :func:`parameters_table`.
 
 It needs only mcdgs and tof. Run the module for them::
@@ -20,6 +20,7 @@ from mcdgs.core.utils import evaluate
 from mcdgs.diagnostics.cli import output_folder, parse_out
 from mcdgs.instruments.trex.model import TRex
 from mcdgs.tof.builder import beamline
+from mcdgs.tof.time_distance import time_distance_diagram
 
 N_PULSES = 2
 """Pulses of the diagram."""
@@ -122,7 +123,8 @@ def main(out: Path | None = None, neutrons: int = 1_000_000, seed: int = 1) -> l
 
     # --8<-- [start:time_distance]
     trex = TRex()  # the default control parameters
-    figure = trex.time_distance_diagram(
+    figure = time_distance_diagram(
+        trex,
         neutrons,
         seed=seed,
         n_pulses=N_PULSES,

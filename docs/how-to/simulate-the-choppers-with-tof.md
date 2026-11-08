@@ -29,7 +29,8 @@ The result says how many neutrons each chopper lets through and how many it stop
 
 `result.plot()` draws the time-distance diagram of the run: the path of each neutron, time across
 and distance up, with the choppers where they stop it.
-`trex.time_distance_diagram()` builds, runs and draws it in one call; see
+`time_distance_diagram(trex)`, from `mcdgs.tof.time_distance`, builds, runs and draws it in one
+call; see
 [Time-distance diagram](../instruments/trex/time-distance.md).
 
 ## What goes into the model

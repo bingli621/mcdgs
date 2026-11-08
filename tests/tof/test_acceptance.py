@@ -6,7 +6,7 @@ matplotlib.use("Agg")
 from matplotlib.figure import Figure
 
 from mcdgs.instruments.trex.model import TRex
-from mcdgs.tof.acceptance import chopper_cascade
+from mcdgs.tof.acceptance import acceptance_diagram, chopper_cascade
 
 
 @pytest.mark.parametrize("mode", ["FF", "RR"])
@@ -43,7 +43,7 @@ def test_cascade_takes_a_wider_band_than_the_source():
 
 
 def test_trex_draws_one_legend_entry_per_frame():
-    figure = TRex().acceptance_diagram()
+    figure = acceptance_diagram(TRex())
     assert isinstance(figure, Figure)
     (ax,) = figure.axes
     labels = [text.get_text() for text in ax.get_legend().get_texts()]
@@ -54,7 +54,7 @@ def test_trex_draws_one_legend_entry_per_frame():
 def test_the_title_is_the_running_conditions():
     trex = TRex()
     trex.update_params(mode="RR", rrm=12)
-    assert trex.acceptance_diagram().axes[0].get_title() == trex.running_conditions()
+    assert acceptance_diagram(trex).axes[0].get_title() == trex.running_conditions()
 
 
 def test_cascade_takes_the_times_and_pulses_given():
