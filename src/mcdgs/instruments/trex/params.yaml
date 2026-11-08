@@ -1901,7 +1901,7 @@ beamstop:
 banana_detector:
   component: Monitor_nD
   xwidth: 0
-  yheight: 2.202770551758364
+  yheight: 2.2
   zdepth: 0
   xmin: 0
   xmax: 0
@@ -1918,7 +1918,7 @@ banana_detector:
   filename: banana_detector
   nowritefile: 0
   nexus_bins: 0
-  at: [0, -0.29753769858581397, 0]
+  at: [0, -0.2978, 0]
   rotated: [0, 0, 0]
   relative: sample_pos
-  position: [0.830079437, -0.297537699, 163.797243861]
+  position: [0.830079437, -0.2978, 163.797243861]

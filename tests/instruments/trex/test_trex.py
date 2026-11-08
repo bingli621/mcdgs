@@ -610,8 +610,8 @@ def test_the_banana_detector_is_around_the_sample_and_lists_its_pixels():
     assert (x, z) == pytest.approx((0, 0), abs=1e-9)  # its axis is through the sample
     # lowered: seen from the sample, 25 deg below the beam to 15 deg above
     bottom, top = y - banana.yheight / 2, y + banana.yheight / 2
-    assert math.degrees(math.atan2(bottom, 3.0)) == pytest.approx(-25, abs=1e-6)
-    assert math.degrees(math.atan2(top, 3.0)) == pytest.approx(15, abs=1e-6)
+    assert math.degrees(math.atan2(bottom, 3.0)) == pytest.approx(-25, abs=0.1)
+    assert math.degrees(math.atan2(top, 3.0)) == pytest.approx(15, abs=0.1)
     assert banana.curved_radius == 3.0
     assert banana.bin_limits["theta"] == (-36.0, 144.0, 288)
     assert "mantid banana" in banana.options

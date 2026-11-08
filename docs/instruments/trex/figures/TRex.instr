@@ -15,7 +15,7 @@
 * 
 * %Identification
 * Written by: Python McStas Instrument Generator
-* Date: 17:27:43 on November 08, 2026
+* Date: 17:42:15 on November 08, 2026
 * Origin: ESS DMSC
 * %INSTRUMENT_SITE: Generated_instruments
 * 
@@ -1144,7 +1144,7 @@ AT (0, 0, 2.999) RELATIVE sample_pos
 ROTATED (0, 0, 0) RELATIVE sample_pos
 
 COMPONENT banana_detector = Monitor_nD(
- xwidth = 0, yheight = 2.202770551758364,
+ xwidth = 0, yheight = 2.2,
  zdepth = 0, xmin = 0,
  xmax = 0, ymin = 0,
  ymax = 0, zmin = 0,
@@ -1154,7 +1154,7 @@ COMPONENT banana_detector = Monitor_nD(
  options = "mantid banana, theta limits=[-36 144] bins=288, y bins=136, neutron pixel min=0 t lambda, list all neutrons", filename = "banana_detector",
  geometry = "NULL", nowritefile = 0,
  nexus_bins = 0)
-AT (0, -0.29753769858581397, 0) RELATIVE sample_pos
+AT (0, -0.2978, 0) RELATIVE sample_pos
 ROTATED (0, 0, 0) RELATIVE sample_pos
 
 FINALLY 

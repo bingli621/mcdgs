@@ -215,7 +215,7 @@ instrument.
 | Component | Where | Size | What it does |
 | --------- | ----- | ---- | ------------ |
 | `beamstop` | On the beam axis, 2.999 m after `sample_pos`, 1 mm in front of the banana detector | 0.1 m × 0.1 m, as `pre_sample_monitor` | A McStas `Beamstop`: absorbs every neutron that hits it, so the direct beam does not reach the banana detector |
-| `banana_detector` | A vertical cylinder of radius 3 m centered on `sample_pos` | −36° to 144° in the horizontal plane, 0° along the beam; 2.2028 m high, lowered by 0.2975 m so that, seen from the sample, it spans 25° below the beam to 15° above | Lists every neutron reaching it, with its pixel, time and wavelength. The pixels are 288 in angle by 136 in height, numbered from 0 as Mantid does |
+| `banana_detector` | A vertical cylinder of radius 3 m centered on `sample_pos` | −36° to 144° in the horizontal plane, 0° along the beam; 2.2 m high, lowered by 0.2978 m so that, seen from the sample, it spans about 25° below the beam to 15° above | Lists every neutron reaching it, with its pixel, time and wavelength. The pixels are 288 in angle by 136 in height, numbered from 0 as Mantid does |
 
 A neutron that misses the beamstop, or is scattered away from it, goes on to the banana
 detector. The beamstop is small: seen from the sample it covers ±0.95°, so the edge of the direct
