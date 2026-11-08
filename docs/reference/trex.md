@@ -10,6 +10,8 @@ See the [technical details of T-Rex](../instruments/trex/details.md) for the des
 
 ::: mcdgs.instruments.trex.monitors
 
+::: mcdgs.instruments.trex.detectors
+
 ::: mcdgs.instruments.trex.guides.sections
 
 ::: mcdgs.instruments.trex.guides.extraction

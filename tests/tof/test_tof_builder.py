@@ -84,6 +84,16 @@ def test_monitors_become_detectors_and_the_rest_is_left_out():
         assert model.detectors[name].distance.value == pytest.approx(np.hypot(x, z)), name
 
 
+def test_a_banana_detector_is_its_radius_beyond_the_sample():
+    trex = TRex()
+    model = build_tof(trex, neutrons=1000, seed=1)
+    sample = model.detectors["sample_monitor"].distance.value
+    banana = model.detectors["banana_detector"].distance.value
+    # within 1 mm: the banana's center is 0.3 m below the sample, off the straight line
+    assert banana - sample == pytest.approx(trex.banana_detector.curved_radius, abs=1e-3)
+    assert banana > model.detectors["beamstop_detector"].distance.value
+
+
 def test_the_model_runs():
     result = build_tof(_Beamline(), neutrons=1000, seed=1).run()
     assert isinstance(result, tof.Result)
@@ -151,7 +161,13 @@ def test_trex_choppers_are_placed_in_beam_order():
     assert list(model.choppers) == list(DISK_DISTANCE)
     for name, chopper in model.choppers.items():
         assert chopper.distance.value == pytest.approx(DISK_DISTANCE[name], abs=1e-3), name
-    assert list(model.detectors) == ["beam_monitor", "sample_monitor"]
+    assert list(model.detectors) == [
+        "beam_monitor",
+        "pre_sample_monitor",
+        "sample_monitor",
+        "beamstop_detector",
+        "banana_detector",
+    ]
 
 
 @pytest.mark.parametrize("mode", ["FF", "RR"])

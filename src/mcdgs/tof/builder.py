@@ -8,7 +8,8 @@ takes only the components tof understands, by type:
 - each ``NXdisk_chopper`` becomes a :class:`tof.Chopper`, through scippneutron's
   :class:`DiskChopper` (:func:`disk_chopper`), as both follow NeXus;
 - each ``Monitor_nD`` becomes a :class:`tof.Detector`, which records the neutrons reaching it.
-  An instrument without one gives a model without detectors.
+  An instrument without one gives a model without detectors. A curved one, such as a banana,
+  is centered on the sample: its detector is its radius further on.
 
 Every other component, such as the optics, the markers or a sample, is left out.
 
@@ -211,7 +212,7 @@ def _detector(component: Monitor_nD, distance: float) -> tof.Detector:
     component:
         The monitor.
     distance:
-        Its distance from the source, in m.
+        Distance from the source at which the neutrons reach it, in m.
 
     Returns
     -------
@@ -262,7 +263,7 @@ def build_tof(
             case NXdisk_chopper() as chopper:
                 model.add(_chopper(chopper, distance, params))
             case Monitor_nD() as monitor:
-                model.add(_detector(monitor, distance))
+                model.add(_detector(monitor, distance + (monitor.curved_radius or 0)))
             case _:
                 pass  # not something tof understands
     return model

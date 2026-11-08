@@ -15,12 +15,13 @@ from .choppers import NXdisk_chopper
 from .crystal import Single_crystal
 from .misc import Arm, Progress_bar
 from .monitors import Monitor_nD
-from .optics import Guide_gravity, Pol_bender, Slit
+from .optics import Beamstop, Guide_gravity, Pol_bender, Slit
 from .source import ESS_butterfly
 
 __all__ = [
     "COMPONENTS",
     "Arm",
+    "Beamstop",
     "Component",
     "ESS_butterfly",
     "Guide_gravity",

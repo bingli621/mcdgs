@@ -1,4 +1,4 @@
-"""Neutron optics: guides, benders and slits."""
+"""Neutron optics: guides, benders, slits and beamstops."""
 
 from dataclasses import dataclass, field
 
@@ -177,6 +177,31 @@ class Slit(Component):
     >>> slit = Slit(name="slit", xwidth=0.02, yheight=0.03)
     >>> slit.mcstas_parameters()
     {'xwidth': 0.02, 'yheight': 0.03}
+    """
+
+    xwidth: float
+    yheight: float
+
+
+@dataclass(kw_only=True, repr=False)  # repr: Component's
+class Beamstop(Component):
+    """A rectangular plate that absorbs every neutron hitting it, as McStas ``Beamstop``.
+
+    It is infinitely thin and absorbs fully; a neutron that misses it, or would reach its plane
+    only going backward, is left unchanged. Name and instance keywords (``name``, ``at``, ...)
+    are as in :class:`.Component`. The McStas parameters left out here (edges ``xmin``,
+    ``xmax``, ``ymin``, ``ymax``; a circular plate's ``radius``) keep McStas's defaults.
+
+    Parameters
+    ----------
+    xwidth, yheight:
+        Width and height of the plate in m.
+
+    Examples
+    --------
+    >>> beamstop = Beamstop(name="beamstop", xwidth=0.1, yheight=0.1)
+    >>> beamstop.mcstas_parameters()
+    {'xwidth': 0.1, 'yheight': 0.1}
     """
 
     xwidth: float

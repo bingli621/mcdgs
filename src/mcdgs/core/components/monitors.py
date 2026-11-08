@@ -9,6 +9,7 @@ from .base import Component
 
 # one axis of ``options`` as written here: ``<variable> limits=[<start> <stop>] bins=<bins>``
 _AXIS = re.compile(r"(\w+)\s+limits=\[\s*(\S+)\s+(\S+)\s*\]\s+bins=(\d+)")
+_CURVED_SHAPES = ("cylinder", "banana", "sphere")  # the shapes McStas centers on the sample
 
 
 def monitor_time_limits(
@@ -81,6 +82,8 @@ class Monitor_nD(Component):
     ----------
     bin_limits:
         Start, stop and number of bins of each axis in ``options``, by variable.
+    curved_radius:
+        Radius of a cylinder, sphere or banana in m; ``None`` for a flat monitor.
 
     Notes
     -----
@@ -133,3 +136,17 @@ class Monitor_nD(Component):
             variable: (float(start), float(stop), int(bins))
             for variable, start, stop, bins in _AXIS.findall(self.options or "")
         }
+
+    @property
+    def curved_radius(self) -> float | None:
+        """Radius of a cylinder, sphere or banana in m; ``None`` for a flat monitor.
+
+        As McStas: the shape is curved if ``options`` names one of them, or if ``radius`` is
+        set; the radius is ``radius``, else half ``xwidth``, else half ``zdepth``. A curved
+        monitor is centered on the scattering point, so a neutron reaches it that far from its
+        position.
+        """
+        curved = self.radius != 0 or any(shape in (self.options or "") for shape in _CURVED_SHAPES)
+        if not curved:
+            return None
+        return self.radius or (self.xwidth / 2 if self.xwidth else self.zdepth / 2)

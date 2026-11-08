@@ -68,8 +68,12 @@ def test_the_components_are_in_beam_order():
         "mc2",
         "guide_50a",
         "slit_mc",
+        "pre_sample_monitor",
         "sample_pos",
         "sample_monitor",
+        "beamstop_detector",
+        "beamstop",
+        "banana_detector",
     ]
 
 
@@ -102,12 +106,15 @@ def test_the_band_of_the_source_is_centered_on_lambda0():
     assert (source.Lmin, source.Lmax) == pytest.approx((2.0 - HALF_BAND, 2.0 + HALF_BAND))
 
 
-def test_a_new_lambda0_moves_the_band_of_the_source_and_the_beam_monitor():
+def test_a_new_lambda0_moves_the_band_of_the_source_and_the_time_and_wavelength_monitors():
     trex = TRex()
     names = list(trex.components)
     trex.update_params(lambda0=4.0)
     assert (trex.source.Lmin, trex.source.Lmax) == pytest.approx((4.0 - HALF_BAND, 4.0 + HALF_BAND))
-    assert trex.beam_monitor == TRex(params=trex.params).beam_monitor
+    fresh = TRex(params=trex.params)
+    for name in ("beam_monitor", "pre_sample_monitor", "beamstop_detector"):
+        assert getattr(trex, name) == getattr(fresh, name)
+        assert getattr(trex, name).bin_limits["lambda"][0] == pytest.approx(4.0 - HALF_BAND)
     assert list(trex.components) == names  # in their place
 
 
@@ -269,7 +276,14 @@ def test_without_a_sample_there_is_none():
 
 def test_a_sample_goes_after_the_sample_position():
     trex = TRex(sample=aluminum())
-    assert list(trex.components)[-3:] == ["sample_pos", "sample_monitor", "sample"]
+    assert list(trex.components)[-6:] == [
+        "sample_pos",
+        "sample_monitor",
+        "sample",
+        "beamstop_detector",
+        "beamstop",
+        "banana_detector",
+    ]
     assert trex.sample.relative == "sample_pos"
     assert trex.positions()["sample"] == trex.positions()["sample_pos"]
 
@@ -565,6 +579,43 @@ def test_the_slit_is_after_guide_50a():
     assert trex.slit_mc.relative == "arm_mc"
     assert trex.slit_mc.at[2] == pytest.approx(163.105 - 161.985, abs=1e-12)
     assert trex.slit_mc.at[2] > trex.guide_50a.at[2] + trex.guide_50a.l
+
+
+def test_the_pre_sample_monitor_is_between_the_slit_and_the_sample():
+    trex = TRex()
+    assert trex.pre_sample_monitor.relative == "arm_mc"
+    assert trex.pre_sample_monitor.at[2] == pytest.approx(163.5 - 161.985, abs=1e-12)
+    assert trex.slit_mc.at[2] < trex.pre_sample_monitor.at[2] < trex.sample_pos.at[2]
+
+
+def test_the_beamstop_stops_what_its_detector_counts_just_in_front_of_the_banana():
+    trex = TRex()
+    detector, stop, banana = trex.beamstop_detector, trex.beamstop, trex.banana_detector
+    assert detector.restore_neutron == 1  # the beamstop behind it stops them
+    assert (stop.at, stop.relative) == (detector.at, detector.relative)
+    assert (stop.xwidth, stop.yheight) == (detector.xwidth, detector.yheight)
+    assert (detector.xwidth, detector.yheight) == (
+        trex.pre_sample_monitor.xwidth,
+        trex.pre_sample_monitor.yheight,
+    )
+    assert detector.relative == banana.relative == "sample_pos"
+    assert banana.curved_radius - detector.at[2] == pytest.approx(0.001, abs=1e-12)
+
+
+def test_the_banana_detector_is_around_the_sample_and_lists_its_pixels():
+    trex = TRex(sample=aluminum())
+    banana = trex.banana_detector
+    positions = trex.positions()
+    x, y, z = np.subtract(positions["banana_detector"], positions["sample"])
+    assert (x, z) == pytest.approx((0, 0), abs=1e-9)  # its axis is through the sample
+    # lowered: seen from the sample, 25 deg below the beam to 15 deg above
+    bottom, top = y - banana.yheight / 2, y + banana.yheight / 2
+    assert math.degrees(math.atan2(bottom, 3.0)) == pytest.approx(-25, abs=1e-6)
+    assert math.degrees(math.atan2(top, 3.0)) == pytest.approx(15, abs=1e-6)
+    assert banana.curved_radius == 3.0
+    assert banana.bin_limits["theta"] == (-36.0, 144.0, 288)
+    assert "mantid banana" in banana.options
+    assert "list all neutrons" in banana.options
 
 
 def test_two_instruments_share_no_component():

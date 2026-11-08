@@ -94,7 +94,7 @@ def test_a_sample_a_file_adds_is_built_where_the_file_puts_it(tmp_path):
         "  relative: sample_pos\n"
     )
     trex = load(tmp_path / "sample.yaml")
-    assert list(trex.components)[-3:] == ["sample_pos", "sample_monitor", "sample"]
+    assert list(trex.components)[-4:-3] == ["sample"]  # before the detectors, as made
     assert trex.sample.relative == "sample_pos"
 
 

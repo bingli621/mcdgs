@@ -2,8 +2,9 @@
 
 T-Rex is modeled from the source to the sample position, as a chain of guides with its
 [`NXdisk_chopper`](../../reference/components.md) choppers in the gaps. The choppers are phased
-to the central wavelength `lambda0` (see [Chopper timing](#chopper-timing)). There are no
-polarizers, collimators or detector yet.
+to the central wavelength `lambda0` (see [Chopper timing](#chopper-timing)). After the sample
+are a beamstop and a banana detector (see [Detectors](#detectors)). There are no polarizers or
+collimators yet.
 `sample_pos` is on the beam axis, 163.8 m along it from the origin.
 
 [T-Rex](index.md) shows the whole model as McStas draws it, and [Source](source.md),
@@ -182,22 +183,44 @@ choppers `bw1`, `bw2`, `ps1`, `ps2`, `mc1` and `mc2` come right after the arm of
 
 ## Monitors
 
-`TRex` has two monitors, `beam_monitor` and `sample_monitor`; `source_monitor` is that of
-[`TRexSource`](source.md). All three leave the neutrons unchanged. They are in
-[`mcdgs.instruments.trex.monitors`](../../reference/trex.md).
+`TRex` has three monitors, `beam_monitor`, `pre_sample_monitor` and `sample_monitor`;
+`source_monitor` is that of [`TRexSource`](source.md). All four leave the neutrons unchanged.
+They are in [`mcdgs.instruments.trex.monitors`](../../reference/trex.md).
 
 | Monitor | Where | Size | What it records |
 | ------- | ----- | ---- | --------------- |
 | `source_monitor` | The entrance of guide 1, at the place and rotation of `arm_nboa` | 0.089955 m × 0.029992 m | Time against wavelength, in bins of 0.05 ms and 0.05 Å |
 | `beam_monitor` | In the middle of the bunker gap of row 29, after guide 4, 5.902 m along the beam, on the arm of guide 4 | 0.06 m × 0.0463 m | Time against wavelength, in bins of 0.05 ms and 0.02 Å |
+| `pre_sample_monitor` | Between `slit_mc` and the sample, 163.5 m along the beam, on the arm of the monochromatic choppers | 0.1 m × 0.1 m | Time against wavelength, in bins of 0.05 ms and 0.02 Å |
 | `sample_monitor` | At `sample_pos` | 0.1 m × 0.1 m | Wavelength, 0.5 to 5.3 Å in 12 bins |
 
-The axes of `source_monitor` and `beam_monitor` follow one rule. The wavelength axis is the band
+The time and wavelength maps (`source_monitor`, `beam_monitor`, `pre_sample_monitor` and the
+`beamstop_detector` below) follow one rule. The wavelength axis is the band
 of the source. The time axis runs from the fastest neutron of that band, leaving at the start of
 the pulse, to the slowest, leaving 3.5 ms later. Each axis has the fewest bins of its width that
 cover it, so its stop moves up to the end of the last bin. `source_monitor` has the widest band,
 0.1 to 10 Å in 198 bins and 0.048 to 8.30 ms in 165. `beam_monitor` has the band around
 `lambda0`: at its default, 1.095 to 2.915 Å in 91 bins and 1.63 to 7.83 ms in 124.
+
+## Detectors
+
+After the sample, all placed on `sample_pos`, come three components in
+[`mcdgs.instruments.trex.detectors`](../../reference/trex.md). They are not in the Table of
+Optics: their sizes are placeholders, to be replaced by those of the instrument.
+
+| Component | Where | Size | What it does |
+| --------- | ----- | ---- | ------------ |
+| `beamstop_detector` | On the beam axis, 2.999 m after `sample_pos`, 1 mm in front of the banana detector | 0.1 m × 0.1 m, as `pre_sample_monitor` | Records time against wavelength, in bins of 0.05 ms and 0.02 Å, and leaves the neutrons unchanged |
+| `beamstop` | At the place of `beamstop_detector` | The same | A McStas `Beamstop`: absorbs every neutron that hits it, so the direct beam does not reach the banana detector |
+| `banana_detector` | A vertical cylinder of radius 3 m centered on `sample_pos` | −36° to 144° in the horizontal plane, 0° along the beam; 2.2028 m high, lowered by 0.2975 m so that, seen from the sample, it spans 25° below the beam to 15° above | Lists every neutron reaching it, with its pixel, time and wavelength. The pixels are 288 in angle by 136 in height, numbered from 0 as Mantid does |
+
+A neutron that misses the beamstop, or is scattered away from it, goes on to the banana
+detector. The beamstop is small: seen from the sample it covers ±0.95°, so the edge of the direct
+beam reaches the banana detector at about ±1° to ±1.5°.
+
+The events of `banana_detector` are read per pixel with `read_pixels` (see
+[Detector pixels](../../how-to/read-the-output.md#detector-pixels)). In the tof model, the
+banana detector is 3 m beyond the sample, where its neutrons arrive.
 
 ## Chopper timing
 

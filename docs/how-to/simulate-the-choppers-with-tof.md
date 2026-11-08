@@ -40,7 +40,7 @@ and distance up, with the choppers where they stop it.
 | --------- | ------ |
 | `ESS_butterfly` | The source: tof's pulse for the beam port that `sector` and `beamline` name, from `Lmin` to `Lmax`, with `n_pulses` pulses at 14 Hz. W7 gets the T-Rex pulse and W3 the C-SPEC one; a beam port mcdgs does not know yet gets tof's standard ESS pulse. `cold_frac` and the focusing are not used. |
 | `NXdisk_chopper` | A chopper, with the same slit edges, frequency, direction and phase as in McStas. |
-| `Monitor_nD` | A detector, which records the neutrons reaching it. T-Rex has two: `beam_monitor`, after guide 4, and `sample_monitor`, at the sample position. With no monitor, the model has no detector. |
+| `Monitor_nD` | A detector, which records the neutrons reaching it. T-Rex has five: `beam_monitor`, after guide 4; `pre_sample_monitor`, before the sample; `sample_monitor`, at the sample position; `beamstop_detector` and `banana_detector`, after it. A curved one, such as the banana, is its radius beyond its position, where its neutrons arrive. With no monitor, the model has no detector. |
 | Anything else, such as `Guide_gravity`, `Slit` or `Single_crystal` | Left out: tof takes the optics as letting everything through. |
 
 A component's distance is the straight line from the moderator to its position. For T-Rex this

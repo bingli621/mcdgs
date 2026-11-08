@@ -18,6 +18,7 @@ from mcdgs.tof.acceptance import acceptance_diagram
 from mcdgs.tof.time_distance import time_distance_diagram
 
 from .choppers import Mode, chopper, chopper_timings
+from .detectors import banana_detector, beamstop, beamstop_detector
 from .guides.bispectral import (
     BENDER_ROTATION,
     arm_guide_4,
@@ -28,7 +29,7 @@ from .guides.bispectral import (
 from .guides.curve import guides_curve
 from .guides.extraction import guides_extraction
 from .guides.straight import guides_straight, sample_pos, slit_mc
-from .monitors import beam_monitor, sample_monitor
+from .monitors import beam_monitor, pre_sample_monitor, sample_monitor
 from .sources import source, wavelength_band
 
 
@@ -131,17 +132,23 @@ class TRex(Instrument):
         self.mc2 = chopper("mc2")
         self.add_components(to_slit)
         self.slit_mc = slit_mc()
+        self.pre_sample_monitor = pre_sample_monitor(lambda_limits=(lambda_min, lambda_max))
         #  sample position
         self.sample_pos = sample_pos()
         self.sample_monitor = sample_monitor()
         self.sample = None
         if sample is not None:
             self.sample = replace(sample, relative=sample.relative or "sample_pos")
+        # detectors: the beamstop stops the direct beam its detector counts
+        self.beamstop_detector = beamstop_detector(lambda_limits=(lambda_min, lambda_max))
+        self.beamstop = beamstop()
+        self.banana_detector = banana_detector()
 
     def update_params(self, **values: Any) -> None:
         """Change control parameters.
 
-        A new ``lambda0`` also creates the source and the beam monitor again, with the band of
+        A new ``lambda0`` also creates the source and the time and wavelength monitors again
+        (the beam monitor, the pre-sample monitor and the beamstop detector), with the band of
         :func:`.sources.wavelength_band`.
 
         Parameters
@@ -159,6 +166,8 @@ class TRex(Instrument):
             lambda_min, lambda_max = wavelength_band(self.params.lambda0)
             self.source = source(lambda_min, lambda_max)
             self.beam_monitor = beam_monitor(lambda_limits=(lambda_min, lambda_max))
+            self.pre_sample_monitor = pre_sample_monitor(lambda_limits=(lambda_min, lambda_max))
+            self.beamstop_detector = beamstop_detector(lambda_limits=(lambda_min, lambda_max))
 
     def acceptance_diagram(
         self,

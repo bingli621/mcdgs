@@ -1812,6 +1812,30 @@ slit_mc:
   rotated: [0, 0, 0]
   relative: arm_mc
   position: [0.824862147, 0.0, 163.102263444]
+pre_sample_monitor:
+  component: Monitor_nD
+  xwidth: 0.1
+  yheight: 0.1
+  zdepth: 0
+  xmin: 0
+  xmax: 0
+  ymin: 0
+  ymax: 0
+  zmin: 0
+  zmax: 0
+  bins: 0
+  min: -1.0e+40
+  max: 1.0e+40
+  restore_neutron: 1
+  radius: 0
+  options: time limits=[0.045262871423083585 0.12356287142308359] bins=1566 lambda limits=[1.09517711660141 2.91517711660141] bins=91
+  filename: pre_sample_monitor
+  nowritefile: 0
+  nexus_bins: 0
+  at: [0, 0, 1.5149999999999864]
+  rotated: [0, 0, 0]
+  relative: arm_mc
+  position: [0.82782737, 0.0, 163.497252314]
 sample_pos:
   component: Arm
   at: [0, 0, 1.8149999999999977]
@@ -1842,3 +1866,59 @@ sample_monitor:
   rotated: [0, 0, 0]
   relative: sample_pos
   position: [0.830079437, 0.0, 163.797243861]
+beamstop_detector:
+  component: Monitor_nD
+  xwidth: 0.1
+  yheight: 0.1
+  zdepth: 0
+  xmin: 0
+  xmax: 0
+  ymin: 0
+  ymax: 0
+  zmin: 0
+  zmax: 0
+  bins: 0
+  min: -1.0e+40
+  max: 1.0e+40
+  restore_neutron: 1
+  radius: 0
+  options: time limits=[0.04617615712843375 0.12602615712843376] bins=1597 lambda limits=[1.09517711660141 2.91517711660141] bins=91
+  filename: beamstop_detector
+  nowritefile: 0
+  nexus_bins: 0
+  at: [0, 0, 2.999]
+  rotated: [0, 0, 0]
+  relative: sample_pos
+  position: [0.852592606, 0.0, 166.796159358]
+beamstop:
+  component: Beamstop
+  xwidth: 0.1
+  yheight: 0.1
+  at: [0, 0, 2.999]
+  rotated: [0, 0, 0]
+  relative: sample_pos
+  position: [0.852592606, 0.0, 166.796159358]
+banana_detector:
+  component: Monitor_nD
+  xwidth: 0
+  yheight: 2.202770551758364
+  zdepth: 0
+  xmin: 0
+  xmax: 0
+  ymin: 0
+  ymax: 0
+  zmin: 0
+  zmax: 0
+  bins: 0
+  min: -1.0e+40
+  max: 1.0e+40
+  restore_neutron: 1
+  radius: 3.0
+  options: mantid banana, theta limits=[-36 144] bins=288, y bins=136, neutron pixel min=0 t lambda, list all neutrons
+  filename: banana_detector
+  nowritefile: 0
+  nexus_bins: 0
+  at: [0, -0.29753769858581397, 0]
+  rotated: [0, 0, 0]
+  relative: sample_pos
+  position: [0.830079437, -0.297537699, 163.797243861]

@@ -2,7 +2,10 @@ Result:
   Source: 1 pulses, 1000000 neutrons per pulse.
   Detectors:
     beam_monitor: visible=1000000
+    pre_sample_monitor: visible=4093
     sample_monitor: visible=4093
+    beamstop_detector: visible=4093
+    banana_detector: visible=4093
   Choppers:
     bw1: visible=805824, blocked=194176
     bw2: visible=643585, blocked=162239
