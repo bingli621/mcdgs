@@ -27,6 +27,7 @@ nav = [
       { "Choppers" = "instruments/trex/choppers.md" },
       { "Time-distance diagram" = "instruments/trex/time-distance.md" },
       { "Neutrons on sample" = "instruments/trex/neutrons-on-sample.md" },
+      { "Incident energy" = "instruments/trex/incident-energy.md" },
     ] },
   ] },
   { "How-to guides" = [
@@ -41,6 +42,7 @@ nav = [
     { "Samples" = "reference/samples.md" },
     { "McStas" = "reference/mcstas.md" },
     { "tof" = "reference/tof.md" },
+    { "Reduction" = "reference/reduction.md" },
     { "Diagnostics" = "reference/diagnostics.md" },
     { "Parameters files" = "reference/io.md" },
   ] },

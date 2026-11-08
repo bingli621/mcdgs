@@ -203,6 +203,10 @@ cover it, so its stop moves up to the end of the last bin. `source_monitor` has 
 0.1 to 10 Å in 198 bins and 0.048 to 8.30 ms in 165. `beam_monitor` has the band around
 `lambda0`: at its default, 1.095 to 2.915 Å in 91 bins and 1.63 to 7.83 ms in 124.
 
+`pre_sample_monitor` and `beamstop_monitor` have time bins ten times finer than the others,
+0.005 ms: the incident energy follows from the short flight between them, and in bins of 0.05 ms
+it is off by up to 1 %. See [Incident energy](incident-energy.md#why-the-time-bins-matter).
+
 ## Detectors
 
 After the sample, both placed on `sample_pos`, come the beamstop, in
