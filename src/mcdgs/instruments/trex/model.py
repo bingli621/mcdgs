@@ -31,6 +31,7 @@ from .monitors import (
     beamstop_monitor,
     pre_sample_monitor,
     sample_monitor,
+    source_monitor,
 )
 from .sources import source, wavelength_band
 
@@ -112,6 +113,7 @@ class TRex(Instrument):
         self.origin = Progress_bar(at=[0, 0, 0])
         lambda_min, lambda_max = wavelength_band(self.params.lambda0)
         self.source = source(lambda_min, lambda_max)
+        self.source_monitor = source_monitor()  # the entrance of guide 1, the widest band
         self.add_components(guides_extraction())
         # bispectral switch: guide 4a (thermal) or bender and guide 4b (cold)
         self.arm_guide_4 = arm_guide_4()

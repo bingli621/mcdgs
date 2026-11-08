@@ -15,7 +15,7 @@
 * 
 * %Identification
 * Written by: Python McStas Instrument Generator
-* Date: 18:15:42 on November 08, 2026
+* Date: 19:24:06 on November 08, 2026
 * Origin: ESS DMSC
 * %INSTRUMENT_SITE: Generated_instruments
 * 
@@ -106,6 +106,20 @@ COMPONENT source = ESS_butterfly(
  tfocus_time = 0, tfocus_width = 0)
 AT (0, 0, 0) ABSOLUTE
 ROTATED (0, 0, 0) ABSOLUTE
+
+COMPONENT source_monitor = Monitor_nD(
+ xwidth = 0.089955, yheight = 0.029992,
+ zdepth = 0, xmin = 0,
+ xmax = 0, ymin = 0,
+ ymax = 0, zmin = 0,
+ zmax = 0, bins = 0,
+ min = -1e+40, max = 1e+40,
+ restore_neutron = 1, radius = 0,
+ options = "time limits=[4.792494192585962e-05 0.00829792494192586] bins=165 lambda limits=[0.1 10.0] bins=198", filename = "source_monitor",
+ geometry = "NULL", nowritefile = 0,
+ nexus_bins = 0)
+AT (-0.002022816656807591, 0, 1.895927) RELATIVE source
+ROTATED (0, -0.21499811064881996, 0) RELATIVE source
 
 COMPONENT arm_nboa = Arm()
 AT (-0.002022816656807591, 0, 1.895927) ABSOLUTE

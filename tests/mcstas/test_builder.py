@@ -39,8 +39,8 @@ def test_components_are_added_in_order_with_their_mcstas_names(tmp_path):
     trex = TRex(sample=aluminum())
     inst = build_mcstas(trex, input_path=tmp_path)
     assert [c.name for c in inst.component_list] == list(trex.components)
-    assert [c.component_name for c in inst.component_list][:12] == [
-        "Progress_bar", "ESS_butterfly", "Arm", "Guide_gravity", "Guide_gravity", "Guide_gravity",
+    assert [c.component_name for c in inst.component_list][:13] == [
+        "Progress_bar", "ESS_butterfly", "Monitor_nD", "Arm", "Guide_gravity", "Guide_gravity", "Guide_gravity",
         "Arm", "Guide_gravity", "Pol_bender", "Guide_gravity", "Monitor_nD", "Arm",
     ]  # fmt: skip
     assert [c.component_name for c in inst.component_list][-8:] == [

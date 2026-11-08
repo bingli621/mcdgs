@@ -58,7 +58,12 @@ def test_what_follows_from_the_rest_is_not_read():
 
 def test_a_new_component_is_built_where_its_section_is():
     data = _with_section_after(to_dict(TRex()), "source", "extra_slit", EXTRA_SLIT)
-    assert list(from_dict(data).components)[:4] == ["origin", "source", "extra_slit", "arm_nboa"]
+    assert list(from_dict(data).components)[:4] == [
+        "origin",
+        "source",
+        "extra_slit",
+        "source_monitor",
+    ]
 
 
 def test_a_component_of_the_class_without_a_section_is_left_out():

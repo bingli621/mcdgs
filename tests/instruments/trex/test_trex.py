@@ -24,6 +24,7 @@ def test_the_components_are_in_beam_order():
     assert list(TRex().components) == [
         "origin",
         "source",
+        "source_monitor",
         "arm_nboa",
         "guide_1",
         "guide_2",

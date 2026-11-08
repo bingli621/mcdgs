@@ -183,9 +183,8 @@ choppers `bw1`, `bw2`, `ps1`, `ps2`, `mc1` and `mc2` come right after the arm of
 
 ## Monitors
 
-`TRex` has four monitors, `beam_monitor`, `pre_sample_monitor`, `sample_monitor` and
-`beamstop_monitor`; `source_monitor` is that of [`TRexSource`](source.md). All five leave the
-neutrons unchanged.
+`TRex` has five monitors, `source_monitor`, `beam_monitor`, `pre_sample_monitor`,
+`sample_monitor` and `beamstop_monitor`. All five leave the neutrons unchanged.
 They are in [`mcdgs.instruments.trex.monitors`](../../reference/trex.md).
 
 | Monitor | Where | Size | What it records |
