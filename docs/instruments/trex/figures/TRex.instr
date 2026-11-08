@@ -15,7 +15,7 @@
 * 
 * %Identification
 * Written by: Python McStas Instrument Generator
-* Date: 17:56:46 on November 08, 2026
+* Date: 18:15:42 on November 08, 2026
 * Origin: ESS DMSC
 * %INSTRUMENT_SITE: Generated_instruments
 * 
@@ -1132,7 +1132,7 @@ COMPONENT sample_monitor = Monitor_nD(
  zmax = 0, bins = 0,
  min = -1e+40, max = 1e+40,
  restore_neutron = 1, radius = 0,
- options = "lambda limits=[0.5 5.3] bins=12", filename = "sample_monitor",
+ options = "time limits=[0.045345922563309424 0.12379592256330943] bins=1569 lambda limits=[1.09517711660141 2.91517711660141] bins=91", filename = "sample_monitor",
  geometry = "NULL", nowritefile = 0,
  nexus_bins = 0)
 AT (0, 0, 0) RELATIVE sample_pos

@@ -55,8 +55,8 @@ print(trex.positions()["sample_pos"])  # [x, y, z] in m
 
 ## Run it
 
-`TRex` has a wavelength monitor, `sample_monitor`, at the sample position. This script runs
-T-Rex with the bender in and prints what that monitor records. Save it as `first_run.py` and run
+`TRex` has a time and wavelength monitor, `sample_monitor`, at the sample position. This script
+runs T-Rex with the bender in and prints the spectrum that monitor records, summed over time. Save it as `first_run.py` and run
 it with `pixi run python first_run.py`.
 
 ```python
@@ -71,16 +71,22 @@ print(h5_file)
 
 with h5py.File(h5_file) as file:
     components = file["entry1/instrument/components"]
-    monitor = next(c for name, c in components.items() if name.endswith("_sample_monitor"))
-    spectrum = monitor["output/sample_monitor_L"]
-    for wavelength, intensity in zip(spectrum["Wavelength__Angs_"][()], spectrum["data"][()]):
-        print(f"{wavelength:.1f} Å  {intensity:.3g}")
+    # groups are numbered, such as 0076_sample_monitor; not 0073_pre_sample_monitor
+    monitor = next(
+        c for name, c in components.items() if name.partition("_")[2] == "sample_monitor"
+    )
+    time_map = monitor["output/sample_monitor_t_L"]  # intensity per time and wavelength bin
+    wavelengths = time_map["Wavelength__Angs_"][()]  # bin centers, 0.02 Å apart
+    spectrum = time_map["data"][()].sum(axis=0)  # summed over time
+    for start in range(0, len(spectrum), 5):  # 0.1 Å at a time
+        print(f"{wavelengths[start]:.2f} Å  {spectrum[start : start + 5].sum():.3g}")
 ```
 
 The choppers pass one band of wavelengths around `lambda0`, 2.0 Å by default, from about 1.3 to
-2.9 Å. It is highest near 2.3 Å, since the bender removes much of the short-wavelength side.
+2.7 Å. It is highest near 2.4 Å, since the bender removes much of the short-wavelength side.
 Few neutrons get through the choppers, so the script runs 1e7, of which about 300 reach the
-monitor: with 1e6 only a few dozen do, and the spectrum can have empty bins inside the band.
+monitor: with 1e6 only a few dozen do, and the spectrum can have empty steps inside the band.
+The monitor's own bins are 0.02 Å, so the script adds them up 0.1 Å at a time.
 
 ## What the run left behind
 

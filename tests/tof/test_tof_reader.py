@@ -63,4 +63,5 @@ def test_an_axis_tof_does_not_have_is_left_out():
 
 def test_the_sample_monitor_is_read_on_its_own_bins(sample_monitor):
     bins = monitor_bins(TRex().sample_monitor)
-    assert read_tof_monitor(sample_monitor, bins).shape == (12,)
+    shape = tuple(n_bins for _, _, n_bins in TRex().sample_monitor.bin_limits.values())
+    assert read_tof_monitor(sample_monitor, bins).shape == shape  # time, then wavelength

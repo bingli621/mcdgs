@@ -144,7 +144,7 @@ class TRex(Instrument):
         self.beamstop_monitor = beamstop_monitor(lambda_limits=(lambda_min, lambda_max))
         #  sample position
         self.sample_pos = sample_pos()
-        self.sample_monitor = sample_monitor()
+        self.sample_monitor = sample_monitor(lambda_limits=(lambda_min, lambda_max))
         self.sample = None
         if sample is not None:
             self.sample = replace(sample, relative=sample.relative or "sample_pos")
@@ -156,7 +156,7 @@ class TRex(Instrument):
         """Change control parameters.
 
         A new ``lambda0`` also creates the source and the time and wavelength monitors again
-        (the beam monitor, the pre-sample monitor and the beamstop monitor), with the band of
+        (the beam, pre-sample, sample and beamstop monitors), with the band of
         :func:`.sources.wavelength_band`.
 
         Parameters
@@ -176,6 +176,7 @@ class TRex(Instrument):
             self.beam_monitor = beam_monitor(lambda_limits=(lambda_min, lambda_max))
             self.pre_sample_monitor = pre_sample_monitor(lambda_limits=(lambda_min, lambda_max))
             self.beamstop_monitor = beamstop_monitor(lambda_limits=(lambda_min, lambda_max))
+            self.sample_monitor = sample_monitor(lambda_limits=(lambda_min, lambda_max))
 
     def acceptance_diagram(
         self,

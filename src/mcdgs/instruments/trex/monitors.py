@@ -35,6 +35,11 @@ PRE_SAMPLE_MONITOR_HEIGHT = 0.1  # m, FIXME, not in Table of Optics v3.2: wider 
 PRE_SAMPLE_MONITOR_LAMBDA_RESOLUTION = 0.02  # Å, FIXME, as the beam monitor
 PRE_SAMPLE_MONITOR_TIME_RESOLUTION = 5e-5  # s, FIXME, as the beam monitor
 
+SAMPLE_MONITOR_WIDTH = 0.1  # m, FIXME, not in Table of Optics v3.2: wider than the beam
+SAMPLE_MONITOR_HEIGHT = 0.1  # m, FIXME, not in Table of Optics v3.2: wider than the beam
+SAMPLE_MONITOR_LAMBDA_RESOLUTION = 0.02  # Å, FIXME, as the beam monitor
+SAMPLE_MONITOR_TIME_RESOLUTION = 5e-5  # s, FIXME, as the beam monitor
+
 BEAMSTOP_GAP = 0.001  # m, FIXME, not in Table of Optics v3.2: in front of the banana detector
 BEAMSTOP_DISTANCE = BANANA_RADIUS - BEAMSTOP_GAP  # m, from the sample
 BEAMSTOP_WIDTH = PRE_SAMPLE_MONITOR_WIDTH  # m, FIXME, as the pre-sample monitor
@@ -211,11 +216,21 @@ def pre_sample_monitor(
     )
 
 
-def sample_monitor() -> Monitor_nD:
-    """Create the wavelength monitor at the sample position.
+def sample_monitor(
+    time_limits: tuple[float, float] | None = None,
+    lambda_limits: tuple[float, float] | None = None,
+    lambda_resolution: float = SAMPLE_MONITOR_LAMBDA_RESOLUTION,
+    time_resolution: float = SAMPLE_MONITOR_TIME_RESOLUTION,
+) -> Monitor_nD:
+    """Create the time and wavelength monitor at the sample position.
 
-    It records the beam reaching the sample and leaves the neutrons unchanged. It is at
-    ``sample_pos``, before the sample.
+    It records the beam reaching the sample as one 2D map of time against wavelength, and leaves
+    the neutrons unchanged. It is at ``sample_pos``, before the sample.
+
+    Parameters
+    ----------
+    time_limits, lambda_limits, lambda_resolution, time_resolution:
+        As in :func:`time_lambda_options`, at ``SAMPLE_Z``.
 
     Returns
     -------
@@ -223,10 +238,12 @@ def sample_monitor() -> Monitor_nD:
         A new monitor.
     """
     return Monitor_nD(
-        xwidth=0.1,  # FIXME, not in Table of Optics v3.2: wider than the beam
-        yheight=0.1,  # FIXME, not in Table of Optics v3.2: wider than the beam
+        xwidth=SAMPLE_MONITOR_WIDTH,
+        yheight=SAMPLE_MONITOR_HEIGHT,
         restore_neutron=1,
-        options="lambda limits=[0.5 5.3] bins=12",  # FIXME, not in Table of Optics v3.2
+        options=time_lambda_options(
+            SAMPLE_Z, time_limits, lambda_limits, lambda_resolution, time_resolution
+        ),
         filename="sample_monitor",
         relative="sample_pos",
     )

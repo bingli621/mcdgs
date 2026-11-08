@@ -13,16 +13,20 @@ import h5py
 
 with h5py.File(h5_file) as file:
     components = file["entry1/instrument/components"]
-    monitor = next(c for name, c in components.items() if name.endswith("_sample_monitor"))
-    spectrum = monitor["output/sample_monitor_L"]
-    wavelengths = spectrum["Wavelength__Angs_"][()]  # bin centers, in Å
-    intensity = spectrum["data"][()]
-    error = spectrum["errors"][()]
+    monitor = next(
+        c for name, c in components.items() if name.partition("_")[2] == "sample_monitor"
+    )
+    time_map = monitor["output/sample_monitor_t_L"]
+    times = time_map["TOF__s_"][()]  # bin centers, in s
+    wavelengths = time_map["Wavelength__Angs_"][()]  # bin centers, in Å
+    intensity = time_map["data"][()]  # one row per time bin, one column per wavelength bin
+    error = time_map["errors"][()]
 ```
 
-Component groups are numbered in beam order, such as `0074_sample_monitor`, which is why this
-finds the group by the end of its name. McStas adds a suffix for the variable to the file name,
-`_L` for wavelength. To see what a monitor wrote, use `list(monitor["output"])`.
+Component groups are numbered in beam order, such as `0076_sample_monitor`, which is why this
+finds the group by the name after the number: matching its end would also find
+`0073_pre_sample_monitor`. McStas adds a suffix for the variables to the file name, `_t_L` for
+time and wavelength. To see what a monitor wrote, use `list(monitor["output"])`.
 
 To read every entry of a scan, count through the entries, since sorted by name `entry10` comes
 before `entry2`:

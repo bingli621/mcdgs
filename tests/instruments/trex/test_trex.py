@@ -112,7 +112,7 @@ def test_a_new_lambda0_moves_the_band_of_the_source_and_the_time_and_wavelength_
     trex.update_params(lambda0=4.0)
     assert (trex.source.Lmin, trex.source.Lmax) == pytest.approx((4.0 - HALF_BAND, 4.0 + HALF_BAND))
     fresh = TRex(params=trex.params)
-    for name in ("beam_monitor", "pre_sample_monitor", "beamstop_monitor"):
+    for name in ("beam_monitor", "pre_sample_monitor", "sample_monitor", "beamstop_monitor"):
         assert getattr(trex, name) == getattr(fresh, name)
         assert getattr(trex, name).bin_limits["lambda"][0] == pytest.approx(4.0 - HALF_BAND)
     assert list(trex.components) == names  # in their place

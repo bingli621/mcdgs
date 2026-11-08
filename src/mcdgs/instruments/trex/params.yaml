@@ -1882,7 +1882,7 @@ sample_monitor:
   max: 1.0e+40
   restore_neutron: 1
   radius: 0
-  options: lambda limits=[0.5 5.3] bins=12
+  options: time limits=[0.045345922563309424 0.12379592256330943] bins=1569 lambda limits=[1.09517711660141 2.91517711660141] bins=91
   filename: sample_monitor
   nowritefile: 0
   nexus_bins: 0

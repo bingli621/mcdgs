@@ -193,11 +193,11 @@ They are in [`mcdgs.instruments.trex.monitors`](../../reference/trex.md).
 | `source_monitor` | The entrance of guide 1, at the place and rotation of `arm_nboa` | 0.089955 m × 0.029992 m | Time against wavelength, in bins of 0.05 ms and 0.05 Å |
 | `beam_monitor` | In the middle of the bunker gap of row 29, after guide 4, 5.902 m along the beam, on the arm of guide 4 | 0.06 m × 0.0463 m | Time against wavelength, in bins of 0.05 ms and 0.02 Å |
 | `pre_sample_monitor` | Between `slit_mc` and the sample, 163.5 m along the beam, on the arm of the monochromatic choppers | 0.1 m × 0.1 m | Time against wavelength, in bins of 0.05 ms and 0.02 Å |
-| `sample_monitor` | At `sample_pos` | 0.1 m × 0.1 m | Wavelength, 0.5 to 5.3 Å in 12 bins |
+| `sample_monitor` | At `sample_pos` | 0.1 m × 0.1 m | Time against wavelength, in bins of 0.05 ms and 0.02 Å |
 | `beamstop_monitor` | On the face of the [`beamstop`](#detectors), 2.999 m after `sample_pos`, but before the sample in beam order, on the arm of the monochromatic choppers | 0.1 m × 0.1 m, that of the beamstop | Time against wavelength, in bins of 0.05 ms and 0.02 Å, of the direct beam as if there were no sample |
 
-The time and wavelength maps (`source_monitor`, `beam_monitor`, `pre_sample_monitor` and
-`beamstop_monitor`) follow one rule. The wavelength axis is the band
+The time and wavelength maps (`source_monitor`, `beam_monitor`, `pre_sample_monitor`,
+`sample_monitor` and `beamstop_monitor`) follow one rule. The wavelength axis is the band
 of the source. The time axis runs from the fastest neutron of that band, leaving at the start of
 the pulse, to the slowest, leaving 3.5 ms later. Each axis has the fewest bins of its width that
 cover it, so its stop moves up to the end of the last bin. `source_monitor` has the widest band,
