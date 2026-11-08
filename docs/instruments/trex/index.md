@@ -23,10 +23,11 @@ that run.
 
 ![T-Rex seen against the beam, x across it and y up](figures/overview_along_beam.png)
 
-x is across the beam and y up (projection `xy`), with every component drawn on top of each other
-and the view limited to x from −0.5 to 1.5 m and y from −1 to 1 m. The gray background is the
-drawing of the source. The guides are the narrow band at y = 0, running from x ≈ 0 at the source
-to x ≈ 0.83 m at the sample.
+x is across the beam and y up (projection `xy`), with the components drawn on top of each other
+and the view limited to x from −0.5 to 1.5 m and y from −1 to 1 m. It leaves out the source and
+the banana detector, which would cover the rest: it draws the components from `arm_nboa` to the
+beamstop. The guides are the narrow band at y = 0, running from x ≈ 0 near the source to
+x ≈ 0.83 m at the sample.
 
 The chopper disks are 0.7 m across, each to one side of the beam. The two disks of `bw1` and
 `bw2`, and of `ps1` and `ps2`, sit on the same side and overlap. `mc1` and `mc2` sit on

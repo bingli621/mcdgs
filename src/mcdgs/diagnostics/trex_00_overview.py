@@ -7,7 +7,9 @@ mcdisplay:
 - ``trex_print.txt``: ``print(trex)``, the parameters and the position of every component;
 - ``TRex.instr``: the instrument file, written with its build files to ``mcstas_input/TRex/``;
 - ``overview_top.png``: the instrument seen from above, z along the beam and x across it;
-- ``overview_along_beam.png``: seen from the detector to the source, x across the beam and y up.
+- ``overview_along_beam.png``: seen from the detector to the source, x across the beam and y up,
+  with the components from after the source up to before the banana detector, which would
+  hide the rest.
 
 Both views have the same scale on their two axes. Run the module for them::
 
@@ -56,7 +58,30 @@ def write_printout(trex: TRex, folder: Path) -> Path:
     return path
 
 
-def draw_views(mcstas_instr: McStas_instr, folder: Path) -> list[Path]:
+def along_beam_range(trex: TRex) -> tuple[int, int]:
+    """Return the indices of the components the view along the beam draws.
+
+    The source and the banana detector are left out: seen along the beam they are wide disks
+    and arcs that cover the guides and the choppers.
+
+    Parameters
+    ----------
+    trex:
+        The instrument.
+
+    Returns
+    -------
+    :
+        The index of the first component after the source, and that of the banana detector,
+        the first one not drawn.
+    """
+    names = list(trex.components)
+    return names.index("source") + 1, names.index("banana_detector")
+
+
+def draw_views(
+    mcstas_instr: McStas_instr, folder: Path, along_beam_indices: tuple[int, int]
+) -> list[Path]:
     """Draw the instrument from above and along the beam, and save both figures.
 
     show_instrument returns None and has no aspect option, so the aspect is set on the axes it
@@ -68,6 +93,9 @@ def draw_views(mcstas_instr: McStas_instr, folder: Path) -> list[Path]:
         The McStasScript instrument.
     folder:
         Folder of the figures.
+    along_beam_indices:
+        Index of the first component the view along the beam draws, and of the first it does
+        not, as :func:`along_beam_range` gives them. The view from above draws them all.
 
     Returns
     -------
@@ -87,6 +115,8 @@ def draw_views(mcstas_instr: McStas_instr, folder: Path) -> list[Path]:
         mcstas_instr.show_instrument(
             backend="matplotlib_2d",
             projection="xy",
+            index_min=along_beam_indices[0],
+            index_max=along_beam_indices[1],
             limits=[-0.5, 1.5, -1, 1],
             width=600,
             height=600,
@@ -119,7 +149,11 @@ def main(out: Path | None = None) -> list[Path]:
     if folder.resolve() != input_dir.resolve():
         instr_file = Path(shutil.copyfile(instr_file, folder / instr_file.name))
     print(f"Written {instr_file}")
-    return [write_printout(trex, folder), instr_file, *draw_views(mcstas_instr, folder)]
+    return [
+        write_printout(trex, folder),
+        instr_file,
+        *draw_views(mcstas_instr, folder, along_beam_range(trex)),
+    ]
 
 
 if __name__ == "__main__":
