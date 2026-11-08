@@ -11,12 +11,13 @@ scale stands for what the guides take out of the beam. It is tuned so that tof m
 by default, so that both have the same total. The transmission is then that of the guides in
 McStas, and the shape in time and wavelength that of each model.
 
-The choppers cut the beam into sub-pulses, a bin or two wide and about 4 ms apart, so
-:func:`.plot_comparison` draws both models with the maps on a log scale, ``LOG_DECADES`` deep,
-and the points of the wavelength spectrum and the time profile joined by lines.
+The choppers cut the beam into sub-pulses, a bin or two wide and about 4 ms apart.
+:func:`.plot_comparison` draws both models twice, with the points of the wavelength spectrum and
+the time profile joined by lines: first all on linear scales, then all on log scales, the maps
+``LOG_DECADES`` deep, so that the weak bins show too.
 
 :func:`main` runs both models, reads the intensity of each on the bins of the monitors, scales
-tof at the source monitor, tunes the transmission at the sample monitor and saves the figure.
+tof at the source monitor, tunes the transmission at the sample monitor and saves both figures.
 Run the module to do it::
 
     pixi run python -m mcdgs.diagnostics.trex_07_neutrons_on_sample
@@ -63,15 +64,16 @@ def main(
     neutrons: int = 1_000_000,
     seed: int = 1,
     transmission: float | None = None,
-) -> Path:
-    """Run both models of :class:`TRexToSample`, print the transmission and save the figure.
+) -> list[Path]:
+    """Run both models of :class:`TRexToSample`, print the transmission and save the figures.
 
-    The figure is ``trex_neutrons_on_sample.png``, from :func:`.plot_comparison`.
+    The figures, from :func:`.plot_comparison`, are ``trex_neutrons_on_sample.png``, on linear
+    scales, and ``trex_neutrons_on_sample_log.png``, on log scales.
 
     Parameters
     ----------
     out:
-        Folder of the figure. If ``None``, the folder of the McStas run, next to its
+        Folder of the figures. If ``None``, the folder of the McStas run, next to its
         ``mccode.h5``.
     ncount:
         Number of McStas neutrons. Many: the guides and the choppers let through a small
@@ -88,7 +90,7 @@ def main(
     Returns
     -------
     :
-        The path of the figure.
+        The paths of the figures, linear then log.
     """
     instrument = TRexToSample()  # the default control parameters
     name = "trex_neutrons_on_sample"
@@ -133,14 +135,16 @@ def main(
         f"{comparison.scale:.4g} n/s each, transmission {transmission:.4g}"
     )
 
-    figure = output_folder(out, folder) / f"{name}.png"
     title = f"T-Rex flux at the sample monitor\n{instrument.running_conditions()}"
-    fig = plot_comparison(comparison, title, log_decades=LOG_DECADES, connect=True)
-    plt.show()
-    fig.savefig(figure, dpi=150)
-    plt.close(fig)
-    print(f"Saved {figure}")
-    return figure
+    figures = []
+    for suffix, log_decades, log_y in (("", None, False), ("_log", LOG_DECADES, True)):
+        figure = output_folder(out, folder) / f"{name}{suffix}.png"
+        fig = plot_comparison(comparison, title, log_decades=log_decades, connect=True, log_y=log_y)
+        fig.savefig(figure, dpi=150)
+        plt.close(fig)
+        print(f"Saved {figure}")
+        figures.append(figure)
+    return figures
 
 
 if __name__ == "__main__":
