@@ -13,6 +13,7 @@ nav = [
   { "Getting started" = [
     { "Install and first run" = "getting-started.md" },
     { "Core concepts" = "concepts.md" },
+    { "Code layout" = "code-layout.md" },
   ] },
   { "Instruments" = [
     { "T-Rex" = [
@@ -97,7 +98,9 @@ pymdownx.highlight.anchor_linenums = true
 pymdownx.inlinehilite = {}
 pymdownx.snippets.check_paths = true  # a missing file fails the build
 pymdownx.snippets.dedent_subsections = true  # a section from inside a function starts at column 0
-pymdownx.superfences = {}
+pymdownx.superfences.custom_fences = [  # ```mermaid blocks become diagrams
+  { name = "mermaid", class = "mermaid", format = "pymdownx.superfences.fence_code_format" },
+]
 
 [project.plugins.glightbox]  # click an image to open it full size, and zoom in on it
 
