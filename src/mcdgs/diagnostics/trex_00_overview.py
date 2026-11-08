@@ -1,11 +1,13 @@
 """The whole of T-Rex as McStas sees it: its printout, its instrument file and two views of it.
 
-:func:`main` writes ``print(trex)`` and the McStas instrument file of :class:`.TRex` at the
-default control parameters, and draws it with McStasScript's ``show_instrument``, which runs
-mcdisplay:
+:func:`main` writes ``print(trex)``, the McStas instrument file of :class:`.TRex` at the default
+control parameters and McStasScript's diagram of how its components are placed, and draws it
+with McStasScript's ``show_instrument``, which runs mcdisplay:
 
 - ``trex_print.txt``: ``print(trex)``, the parameters and the position of every component;
 - ``TRex.instr``: the instrument file, written with its build files to ``mcstas_input/TRex/``;
+- ``trex_diagram_legend.png`` and ``trex_diagram.png``: McStasScript's ``show_diagram()``, its
+  legend and which component each one is placed and rotated relative to;
 - ``overview_top.png``: the instrument seen from above, z along the beam and x across it;
 - ``overview_along_beam.png``: seen from the detector to the source, x across the beam and y up,
   with the components from after the source up to before the banana detector, which would
@@ -79,6 +81,38 @@ def along_beam_range(trex: TRex) -> tuple[int, int]:
     return names.index("source") + 1, names.index("banana_detector")
 
 
+def draw_diagram(mcstas_instr: McStas_instr, folder: Path) -> list[Path]:
+    """Draw McStasScript's diagram of how the components are placed and its legend, and save them.
+
+    ``show_diagram()`` lists the components in beam order, each with an arrow to the component
+    it is placed ``AT ... RELATIVE`` to, in blue, and ``ROTATED ... RELATIVE`` to, in red. It
+    draws its legend first, in a figure of its own: the color of each kind of McStas component,
+    and the dashed box of a component with a ``WHEN``. It returns None, so the two figures it
+    would show are saved instead, without their empty margins.
+
+    Parameters
+    ----------
+    mcstas_instr:
+        The McStasScript instrument.
+    folder:
+        Folder of the figure.
+
+    Returns
+    -------
+    :
+        The paths of the legend and of the diagram.
+    """
+    with patch("matplotlib.pyplot.show"):
+        mcstas_instr.show_diagram()
+    legend, diagram = (plt.figure(number) for number in plt.get_fignums())  # in drawing order
+    paths = [folder / "trex_diagram_legend.png", folder / "trex_diagram.png"]
+    for figure, path in zip((legend, diagram), paths, strict=True):
+        figure.savefig(path, dpi=100, bbox_inches="tight")
+        print(f"Saved {path}")
+    plt.close("all")
+    return paths
+
+
 def draw_views(
     mcstas_instr: McStas_instr, folder: Path, along_beam_indices: tuple[int, int]
 ) -> list[Path]:
@@ -137,7 +171,8 @@ def main(out: Path | None = None) -> list[Path]:
     Returns
     -------
     :
-        The paths of the printout, of the instrument file and of the two views.
+        The paths of the printout, of the instrument file, of the legend and the diagram, and of
+        the two views.
     """
     trex = TRex()  # the default control parameters
     input_dir = default_input_dir(trex)
@@ -152,6 +187,7 @@ def main(out: Path | None = None) -> list[Path]:
     return [
         write_printout(trex, folder),
         instr_file,
+        *draw_diagram(mcstas_instr, folder),
         *draw_views(mcstas_instr, folder, along_beam_range(trex)),
     ]
 

@@ -12,3 +12,19 @@ check that this copy matches the current code. [Download it](figures/TRex.instr)
     ```c
     --8<-- "docs/instruments/trex/figures/TRex.instr"
     ```
+
+## How the components are placed
+
+McStasScript's `show_diagram()` draws the components of the same file in beam order. Each blue
+arrow points from a component to the one it is placed `AT ... RELATIVE` to, and each red arrow to
+the one it is `ROTATED ... RELATIVE` to; `ABSOLUTE` is the lab frame. The color of a box is the
+kind of McStas component, and a dashed box is a component with a `WHEN`, here those of the
+bispectral switch.
+[`mcdgs.diagnostics.trex_00_overview`](../../reference/diagnostics.md) draws it with the
+instrument file.
+
+![The legend of show_diagram(): the colors of the kinds of McStas component, the blue and red arrows, and the dashed box of a WHEN](figures/trex_diagram_legend.png)
+
+??? abstract "show_diagram()"
+
+    ![McStasScript's diagram of the components of T-Rex and what each is placed relative to](figures/trex_diagram.png)
