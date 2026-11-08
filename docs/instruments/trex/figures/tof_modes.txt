@@ -1,4 +1,0 @@
-| Mode | Neutrons at the sample, of 1,000,000 | Wavelengths, Å | Sub-pulses | Arrival, ms |
-| ---- | ---- | ---- | ---- | ---- |
-| `"FF"` | 4093 | 1.30 to 2.60 | 14 | 56 to 109 |
-| `"RR"` | 1372 | 1.41 to 2.59 | 14 | 60 to 109 |

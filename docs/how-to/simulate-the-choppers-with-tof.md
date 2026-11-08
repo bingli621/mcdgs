@@ -21,11 +21,7 @@ result = model.run()
 print(result)
 ```
 
-The result says how many neutrons each chopper lets through and how many it stops:
-
-```text
---8<-- "docs/instruments/trex/figures/tof_result.txt"
-```
+The result says how many neutrons each chopper lets through and how many it stops.
 
 `result.plot()` draws the time-distance diagram of the run: the path of each neutron, time across
 and distance up, with the choppers where they stop it.
@@ -71,14 +67,6 @@ print(reached.coords["toa"].to(unit="ms"))  # time of arrival
 
 The coordinates also hold the `birth_time` and the `speed` of each neutron. The neutrons arrive
 in sub-pulses, told apart by the gaps of about 4 ms between them.
-[`summarize`](../reference/diagnostics.md) gives all of this at once:
-
-```python
-from mcdgs.diagnostics.trex_07_tof import summarize
-
-summary = summarize(result, "sample_monitor")
-print(summary.neutrons, summary.sub_pulses, summary.first_arrival, summary.last_arrival)
-```
 
 ## Compare settings
 
@@ -91,14 +79,7 @@ for mode in ("FF", "RR"):
     print(mode, reading)
 ```
 
-With the same seed, both runs start from the same neutrons. At the default parameters, what
-reaches the sample is:
-
---8<-- "docs/instruments/trex/figures/tof_modes.txt"
-
-The wavelength band and the sub-pulses stay much the same, while the narrow slits of `"RR"` let
-fewer neutrons through. [`mcdgs.diagnostics.trex_07_tof`](../reference/diagnostics.md) makes the
-result above and this table, and `pixi run docs-diagnostics` runs it.
+With the same seed, both runs start from the same neutrons.
 
 Without neutrons, the [acceptance diagram](../instruments/trex/choppers.md#acceptance-diagram)
 shows the same cut of the band into sub-pulses, exactly, at the times they leave the moderator.

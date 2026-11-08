@@ -26,4 +26,3 @@ and [Time-distance diagram](../instruments/trex/time-distance.md) for what they 
 
 ::: mcdgs.diagnostics.trex_06_time_distance_diagram
 
-::: mcdgs.diagnostics.trex_07_tof
