@@ -31,7 +31,6 @@ nav = [
     { "Run a McStas simulation" = "how-to/run-a-simulation.md" },
     { "Simulate the choppers with tof" = "how-to/simulate-the-choppers-with-tof.md" },
     { "Read the output" = "how-to/read-the-output.md" },
-    { "Add an instrument" = "how-to/add-an-instrument.md" },
   ] },
   { "Reference" = [
     { "Instrument and geometry" = "reference/core.md" },

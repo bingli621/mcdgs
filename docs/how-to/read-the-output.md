@@ -44,15 +44,18 @@ scan this way, and the module is a complete example, from a scan to a figure: se
 ## Detector pixels
 
 [`read_pixels`](../reference/mcstas.md) reads a detector into [scipp](https://scipp.github.io). The
-detector must record an event list with pixel ids, as `Small` does in
-[Add an instrument](add-an-instrument.md):
+detector must record an event list with pixel ids, as `banana_detector` of T-Rex does:
 
 ```python
 Monitor_nD(
-    xwidth=0.1,
-    yheight=0.1,
-    options="x bins=4, y bins=3, list all, pixel id, t",
-    at=[0, 0, 1],
+    radius=3.0,
+    yheight=2.2,
+    options=(
+        "mantid banana, theta limits=[-36 144] bins=288, y bins=136, "
+        "neutron pixel min=0 t lambda, list all neutrons"
+    ),
+    filename="banana_detector",
+    at=[0, -0.2978, 0],
     relative="sample_pos",
 )
 ```
@@ -63,7 +66,7 @@ returns one `(parameters, pixels)` per entry:
 ```python
 from mcdgs.mcstas.nexus_io import read_pixels
 
-points = read_pixels(h5_file.parent, "detector", "source", "sample_pos")
+points = read_pixels(h5_file.parent, "banana_detector", "source", "sample_pos")
 for parameters, pixels in points:
     print(parameters, pixels.sum().value)
 ```
@@ -76,5 +79,7 @@ A run started from a beam file has no source in its file. Give the direction of 
 sample, in the frame of `sample_pos`:
 
 ```python
-points = read_pixels(h5_file.parent, "detector", "source", "sample_pos", beam_direction=[0, 0, 1])
+points = read_pixels(
+    h5_file.parent, "banana_detector", "source", "sample_pos", beam_direction=[0, 0, 1]
+)
 ```
