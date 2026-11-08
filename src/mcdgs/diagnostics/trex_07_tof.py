@@ -9,7 +9,7 @@ sub-pulses. :func:`count_groups` tells them apart by the gaps between arrival ti
 :func:`main` writes the files of the documentation that need only mcdgs and tof: the tof run at
 the default control parameters, and the table of the modes. Run the module for them::
 
-    pixi run python -m mcdgs.diagnostics.trex_06_tof --out docs/instruments/trex/figures
+    pixi run python -m mcdgs.diagnostics.trex_07_tof --out docs/instruments/trex/figures
 """
 
 from dataclasses import dataclass

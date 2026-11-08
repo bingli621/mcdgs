@@ -25,6 +25,7 @@ nav = [
       { "Bender" = "instruments/trex/bender-scan.md" },
       { "Beam monitor" = "instruments/trex/beam-monitor.md" },
       { "Choppers" = "instruments/trex/choppers.md" },
+      { "Time-distance diagram" = "instruments/trex/time-distance.md" },
     ] },
   ] },
   { "How-to guides" = [

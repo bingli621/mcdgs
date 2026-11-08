@@ -1,6 +1,6 @@
 import pytest
 
-from mcdgs.diagnostics.trex_06_tof import (
+from mcdgs.diagnostics.trex_07_tof import (
     ArrivalSummary,
     count_groups,
     main,

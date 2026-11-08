@@ -5,8 +5,8 @@ Setups that study one part of an instrument, and what reads their results. Each 
 documentation. See [Source](../instruments/trex/source.md),
 [Extraction guides](../instruments/trex/extraction.md),
 [Bender](../instruments/trex/bender-scan.md),
-[Beam monitor](../instruments/trex/beam-monitor.md) and [Choppers](../instruments/trex/choppers.md)
-for what they show for T-Rex.
+[Beam monitor](../instruments/trex/beam-monitor.md), [Choppers](../instruments/trex/choppers.md)
+and [Time-distance diagram](../instruments/trex/time-distance.md) for what they show for T-Rex.
 
 ::: mcdgs.diagnostics.compare
 
@@ -24,4 +24,6 @@ for what they show for T-Rex.
 
 ::: mcdgs.diagnostics.trex_05_choppers
 
-::: mcdgs.diagnostics.trex_06_tof
+::: mcdgs.diagnostics.trex_06_time_distance_diagram
+
+::: mcdgs.diagnostics.trex_07_tof

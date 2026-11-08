@@ -135,6 +135,7 @@ def _source(
     params: Mapping[str, float],
     neutrons: int,
     seed: int | None,
+    n_pulses: int | None = None,
 ) -> tof.Source:
     """Return the tof source of the ESS butterfly moderator.
 
@@ -153,18 +154,20 @@ def _source(
         Number of neutrons per pulse.
     seed:
         Seed of the random numbers. If ``None``, every run differs.
+    n_pulses:
+        Number of pulses. If ``None``, the moderator's ``n_pulses``, at least 1.
 
     Returns
     -------
     :
-        The source, from ``Lmin`` to ``Lmax``, with ``n_pulses`` pulses (at least 1) at the
-        moderator's frequency.
+        The source, from ``Lmin`` to ``Lmax``, with ``n_pulses`` pulses at the moderator's
+        frequency.
     """
     tof_sources = {"W7": "ess-trex", "W3": "ess-cspec"}  # tof's pulse by beam port
     return tof.Source(
         facility=tof_sources.get(f"{component.sector}{component.beamline}", "ess"),
         neutrons=neutrons,
-        pulses=max(component.n_pulses, 1),  # McStas takes 0 as 1
+        pulses=max(component.n_pulses, 1) if n_pulses is None else n_pulses,  # McStas takes 0 as 1
         frequency=sc.scalar(float(component.frequency), unit="Hz"),
         wmin=sc.scalar(float(evaluate(component.Lmin, params)), unit="angstrom"),
         wmax=sc.scalar(float(evaluate(component.Lmax, params)), unit="angstrom"),
@@ -223,6 +226,7 @@ def build_tof(
     *,
     neutrons: int = 1_000_000,
     seed: int | None = None,
+    n_pulses: int | None = None,
 ) -> tof.Model:
     """Build the tof model of an instrument.
 
@@ -234,6 +238,8 @@ def build_tof(
         Number of neutrons per pulse.
     seed:
         Seed of the random numbers of the source. If ``None``, every build differs.
+    n_pulses:
+        Number of pulses of the source. If ``None``, the moderator's ``n_pulses``, at least 1.
 
     Returns
     -------
@@ -249,7 +255,7 @@ def build_tof(
     source, after_source = beamline(instrument)
     params = instrument.numeric_instr_params()
     model = tof.Model(
-        source=_source(source, params, neutrons, seed),
+        source=_source(source, params, neutrons, seed, n_pulses),
     )
     for _, component, distance in after_source:
         match component:

@@ -1,0 +1,25 @@
+| tof run | Value |
+| ------- | ----- |
+| Source | ESS pulse of beam port W7 at 14 Hz |
+| Band of the source | 1.095 to 2.905 Å |
+| `neutrons`, per pulse | 1,000,000 |
+| `n_pulses` | 2 |
+| `seed` | 1 |
+| `visible_rays`, per pulse | 2,000 |
+| `blocked_rays`, per pulse | 5,000 |
+
+| Control parameter | Value |
+| ----------------- | ----- |
+| `mode` | `"FF"` |
+| `lambda0` | 2 Å |
+| `rrm` | 18 |
+| `t0_offset` | 1.7 ms |
+
+| Chopper | Distance from the source | Frequency | Delay |
+| ------- | ------------------------ | --------- | ----- |
+| `bw1` | 31.964 m | 14 Hz | 17.860 ms |
+| `bw2` | 39.955 m | 14 Hz | 21.900 ms |
+| `ps1` | 107.950 m | 189 Hz | 55.467 ms |
+| `ps2` | 108.050 m | −189 Hz | 57.134 ms |
+| `mc1` | 162.027 m | 252 Hz | 81.685 ms |
+| `mc2` | 162.037 m | 252 Hz | 81.690 ms |

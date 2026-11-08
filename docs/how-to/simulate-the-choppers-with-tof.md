@@ -29,6 +29,8 @@ The result says how many neutrons each chopper lets through and how many it stop
 
 `result.plot()` draws the time-distance diagram of the run: the path of each neutron, time across
 and distance up, with the choppers where they stop it.
+`trex.time_distance_diagram()` builds, runs and draws it in one call; see
+[Time-distance diagram](../instruments/trex/time-distance.md).
 
 ## What goes into the model
 
@@ -71,7 +73,7 @@ in sub-pulses, told apart by the gaps of about 4 ms between them.
 [`summarize`](../reference/diagnostics.md) gives all of this at once:
 
 ```python
-from mcdgs.diagnostics.trex_06_tof import summarize
+from mcdgs.diagnostics.trex_07_tof import summarize
 
 summary = summarize(result, "sample_monitor")
 print(summary.neutrons, summary.sub_pulses, summary.first_arrival, summary.last_arrival)
@@ -94,7 +96,7 @@ reaches the sample is:
 --8<-- "docs/instruments/trex/figures/tof_modes.txt"
 
 The wavelength band and the sub-pulses stay much the same, while the narrow slits of `"RR"` let
-fewer neutrons through. [`mcdgs.diagnostics.trex_06_tof`](../reference/diagnostics.md) makes the
+fewer neutrons through. [`mcdgs.diagnostics.trex_07_tof`](../reference/diagnostics.md) makes the
 result above and this table, and `pixi run docs-diagnostics` runs it.
 
 Without neutrons, the [acceptance diagram](../instruments/trex/choppers.md#acceptance-diagram)
