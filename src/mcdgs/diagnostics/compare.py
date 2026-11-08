@@ -156,6 +156,7 @@ def plot_comparison(
     *,
     log_decades: int | None = None,
     connect: bool = False,
+    log_y: bool = False,
 ) -> Figure:
     """Draw both models at one monitor, in n/s.
 
@@ -176,6 +177,9 @@ def plot_comparison(
         so they stand out on the white. If ``None``, linear from 0, in turbo.
     connect:
         True joins the points of the spectrum and the profile with lines.
+    log_y:
+        True puts the intensity of the spectrum and the profile on a log axis, where the empty
+        bins are left out. False, a linear one from 0.
 
     Returns
     -------
@@ -238,8 +242,11 @@ def plot_comparison(
                 **errorbar_style,
             )
         ax.legend()
-    spectrum_ax.set(
-        xlabel="Wavelength [Å]", ylabel=f"Intensity [n/s per {wavelength_bin:.2g} Å]", ylim=0
-    )
-    profile_ax.set(xlabel="Time [ms]", ylabel=f"Intensity [n/s per {time_bin:.2g} ms]", ylim=0)
+    spectrum_ax.set(xlabel="Wavelength [Å]", ylabel=f"Intensity [n/s per {wavelength_bin:.2g} Å]")
+    profile_ax.set(xlabel="Time [ms]", ylabel=f"Intensity [n/s per {time_bin:.2g} ms]")
+    for ax in (spectrum_ax, profile_ax):
+        if log_y:  # the empty bins, and the error bars below 0, are left out
+            ax.set_yscale("log", nonpositive="mask")
+        else:
+            ax.set_ylim(bottom=0)
     return fig

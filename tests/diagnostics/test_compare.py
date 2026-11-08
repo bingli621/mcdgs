@@ -107,3 +107,12 @@ def test_the_maps_can_be_drawn_on_a_log_scale(tof_result):
     assert mesh.get_array().mask.any()  # the empty bins, in white
     assert mesh.cmap.name.startswith("viridis")
     plt.close(fig)
+
+
+def test_the_spectrum_and_the_profile_can_be_on_a_log_axis(tof_result):
+    comparison = read_comparison(
+        "source_monitor", _mcstas_map((20, 30)), tof_result, BINS, 1e6, NEUTRONS
+    )
+    fig = plot_comparison(comparison, "A title", log_y=True)
+    assert [ax.get_yscale() for ax in fig.axes[2:4]] == ["log", "log"]
+    plt.close(fig)
