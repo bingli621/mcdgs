@@ -39,7 +39,8 @@ src/mcdgs/
   diagnostics/   setups that study one part of an instrument, one module each, numbered per
                  instrument (trex_01_source, ...); each module with a main makes the files of
                  one page of the documentation
-scripts/         build tooling of the documentation site
+scripts/         build tooling of the documentation site, and the pixi activation that
+                 registers the plugins of graphviz
 tests/
 docs/            the documentation site, built with Zensical
 mcstas_input/    generated McStas files, per instrument (git-ignored)

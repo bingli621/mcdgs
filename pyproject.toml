@@ -44,11 +44,15 @@ types-tabulate = ">=0.10.0.20261006,<0.11"
 [tool.pixi.pypi-dependencies]
 mcdgs = { path = ".", editable = true }
 
-# McStas, and the 3D view and interactive plots of the notebooks
+# McStas, the 3D view and interactive plots of the notebooks, and graphviz for sc.show_graph
 [tool.pixi.feature.mcstas.dependencies]
 mcstas = ">=3.10.2,<4"
 pythreejs = ">=2.4.2,<3"
 ipympl = ">=0.10.0,<0.11"
+python-graphviz = ">=0.21,<0.22"
+
+[tool.pixi.feature.mcstas.activation]
+scripts = ["scripts/graphviz_plugins.sh"]  # registers the plugins of graphviz
 
 [tool.pixi.feature.docs.tasks]
 # the site only renders the pages: the files they include are committed, made by docs-diagnostics
