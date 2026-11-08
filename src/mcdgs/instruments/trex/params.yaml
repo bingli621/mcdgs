@@ -1866,7 +1866,7 @@ sample_monitor:
   rotated: [0, 0, 0]
   relative: sample_pos
   position: [0.830079437, 0.0, 163.797243861]
-beamstop_detector:
+beamstop_monitor:
   component: Monitor_nD
   xwidth: 0.1
   yheight: 0.1
@@ -1883,7 +1883,7 @@ beamstop_detector:
   restore_neutron: 1
   radius: 0
   options: time limits=[0.04617615712843375 0.12602615712843376] bins=1597 lambda limits=[1.09517711660141 2.91517711660141] bins=91
-  filename: beamstop_detector
+  filename: beamstop_monitor
   nowritefile: 0
   nexus_bins: 0
   at: [0, 0, 2.999]

@@ -183,8 +183,9 @@ choppers `bw1`, `bw2`, `ps1`, `ps2`, `mc1` and `mc2` come right after the arm of
 
 ## Monitors
 
-`TRex` has three monitors, `beam_monitor`, `pre_sample_monitor` and `sample_monitor`;
-`source_monitor` is that of [`TRexSource`](source.md). All four leave the neutrons unchanged.
+`TRex` has four monitors, `beam_monitor`, `pre_sample_monitor`, `sample_monitor` and
+`beamstop_monitor`; `source_monitor` is that of [`TRexSource`](source.md). All five leave the
+neutrons unchanged.
 They are in [`mcdgs.instruments.trex.monitors`](../../reference/trex.md).
 
 | Monitor | Where | Size | What it records |
@@ -193,9 +194,10 @@ They are in [`mcdgs.instruments.trex.monitors`](../../reference/trex.md).
 | `beam_monitor` | In the middle of the bunker gap of row 29, after guide 4, 5.902 m along the beam, on the arm of guide 4 | 0.06 m × 0.0463 m | Time against wavelength, in bins of 0.05 ms and 0.02 Å |
 | `pre_sample_monitor` | Between `slit_mc` and the sample, 163.5 m along the beam, on the arm of the monochromatic choppers | 0.1 m × 0.1 m | Time against wavelength, in bins of 0.05 ms and 0.02 Å |
 | `sample_monitor` | At `sample_pos` | 0.1 m × 0.1 m | Wavelength, 0.5 to 5.3 Å in 12 bins |
+| `beamstop_monitor` | On the face of the [`beamstop`](#detectors), 2.999 m after `sample_pos` | 0.1 m × 0.1 m, that of the beamstop | Time against wavelength, in bins of 0.05 ms and 0.02 Å |
 
-The time and wavelength maps (`source_monitor`, `beam_monitor`, `pre_sample_monitor` and the
-`beamstop_detector` below) follow one rule. The wavelength axis is the band
+The time and wavelength maps (`source_monitor`, `beam_monitor`, `pre_sample_monitor` and
+`beamstop_monitor`) follow one rule. The wavelength axis is the band
 of the source. The time axis runs from the fastest neutron of that band, leaving at the start of
 the pulse, to the slowest, leaving 3.5 ms later. Each axis has the fewest bins of its width that
 cover it, so its stop moves up to the end of the last bin. `source_monitor` has the widest band,
@@ -204,14 +206,15 @@ cover it, so its stop moves up to the end of the last bin. `source_monitor` has 
 
 ## Detectors
 
-After the sample, all placed on `sample_pos`, come three components in
-[`mcdgs.instruments.trex.detectors`](../../reference/trex.md). They are not in the Table of
-Optics: their sizes are placeholders, to be replaced by those of the instrument.
+After the sample, both placed on `sample_pos`, come the beamstop, in
+[`mcdgs.instruments.trex.monitors`](../../reference/trex.md) with `beamstop_monitor` on its face,
+and the banana detector, in [`mcdgs.instruments.trex.detectors`](../../reference/trex.md). None
+is in the Table of Optics: their sizes are placeholders, to be replaced by those of the
+instrument.
 
 | Component | Where | Size | What it does |
 | --------- | ----- | ---- | ------------ |
-| `beamstop_detector` | On the beam axis, 2.999 m after `sample_pos`, 1 mm in front of the banana detector | 0.1 m × 0.1 m, as `pre_sample_monitor` | Records time against wavelength, in bins of 0.05 ms and 0.02 Å, and leaves the neutrons unchanged |
-| `beamstop` | At the place of `beamstop_detector` | The same | A McStas `Beamstop`: absorbs every neutron that hits it, so the direct beam does not reach the banana detector |
+| `beamstop` | On the beam axis, 2.999 m after `sample_pos`, 1 mm in front of the banana detector | 0.1 m × 0.1 m, as `pre_sample_monitor` | A McStas `Beamstop`: absorbs every neutron that hits it, so the direct beam does not reach the banana detector |
 | `banana_detector` | A vertical cylinder of radius 3 m centered on `sample_pos` | −36° to 144° in the horizontal plane, 0° along the beam; 2.2028 m high, lowered by 0.2975 m so that, seen from the sample, it spans 25° below the beam to 15° above | Lists every neutron reaching it, with its pixel, time and wavelength. The pixels are 288 in angle by 136 in height, numbered from 0 as Mantid does |
 
 A neutron that misses the beamstop, or is scattered away from it, goes on to the banana

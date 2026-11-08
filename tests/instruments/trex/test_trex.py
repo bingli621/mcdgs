@@ -71,7 +71,7 @@ def test_the_components_are_in_beam_order():
         "pre_sample_monitor",
         "sample_pos",
         "sample_monitor",
-        "beamstop_detector",
+        "beamstop_monitor",
         "beamstop",
         "banana_detector",
     ]
@@ -112,7 +112,7 @@ def test_a_new_lambda0_moves_the_band_of_the_source_and_the_time_and_wavelength_
     trex.update_params(lambda0=4.0)
     assert (trex.source.Lmin, trex.source.Lmax) == pytest.approx((4.0 - HALF_BAND, 4.0 + HALF_BAND))
     fresh = TRex(params=trex.params)
-    for name in ("beam_monitor", "pre_sample_monitor", "beamstop_detector"):
+    for name in ("beam_monitor", "pre_sample_monitor", "beamstop_monitor"):
         assert getattr(trex, name) == getattr(fresh, name)
         assert getattr(trex, name).bin_limits["lambda"][0] == pytest.approx(4.0 - HALF_BAND)
     assert list(trex.components) == names  # in their place
@@ -280,7 +280,7 @@ def test_a_sample_goes_after_the_sample_position():
         "sample_pos",
         "sample_monitor",
         "sample",
-        "beamstop_detector",
+        "beamstop_monitor",
         "beamstop",
         "banana_detector",
     ]
@@ -590,7 +590,7 @@ def test_the_pre_sample_monitor_is_between_the_slit_and_the_sample():
 
 def test_the_beamstop_stops_what_its_detector_counts_just_in_front_of_the_banana():
     trex = TRex()
-    detector, stop, banana = trex.beamstop_detector, trex.beamstop, trex.banana_detector
+    detector, stop, banana = trex.beamstop_monitor, trex.beamstop, trex.banana_detector
     assert detector.restore_neutron == 1  # the beamstop behind it stops them
     assert (stop.at, stop.relative) == (detector.at, detector.relative)
     assert (stop.xwidth, stop.yheight) == (detector.xwidth, detector.yheight)

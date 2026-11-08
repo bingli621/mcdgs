@@ -2,18 +2,22 @@
 
 Each monitor leaves the neutrons unchanged. The source monitor is the entrance of guide 1;
 the beam monitor in the middle of the bunker gap of row 29, after guide 4, on the arm of guide 4;
-the pre-sample monitor between ``slit_mc`` and the sample; the sample monitor at ``sample_pos``.
-The detectors after the sample are in :mod:`.detectors`.
+the pre-sample monitor between ``slit_mc`` and the sample; the sample monitor at ``sample_pos``;
+the beamstop monitor on the face of the beamstop.
+
+The beamstop is here too, behind its monitor: an absorbing plate on the beam axis just in front
+of the banana detector of :mod:`.detectors`, which stops the direct beam there.
 """
 
-from mcdgs.core.components import Monitor_nD
+from mcdgs.core.components import Beamstop, Monitor_nD
 from mcdgs.core.components.monitors import monitor_time_limits
 from mcdgs.core.components.source import ESS_SOURCE_LENGTH, L_MAX, L_MIN
 from mcdgs.core.utils import bins_from_limits
 
+from .detectors import BANANA_RADIUS
 from .guides.bispectral import GUIDE_4_TILT, GUIDE_4A_IN_Z
 from .guides.extraction import guides_extraction, z_along_arm
-from .guides.straight import ARM_MC_Z
+from .guides.straight import ARM_MC_Z, SAMPLE_Z
 
 SOURCE_MONITOR_Z = 1.895927  # m, cell B13, the entrance of guide 1
 SOURCE_MONITOR_LAMBDA_RESOLUTION = 0.05  # Å, the width of a wavelength bin
@@ -30,6 +34,13 @@ PRE_SAMPLE_MONITOR_WIDTH = 0.1  # m, FIXME, not in Table of Optics v3.2: wider t
 PRE_SAMPLE_MONITOR_HEIGHT = 0.1  # m, FIXME, not in Table of Optics v3.2: wider than the beam
 PRE_SAMPLE_MONITOR_LAMBDA_RESOLUTION = 0.02  # Å, FIXME, as the beam monitor
 PRE_SAMPLE_MONITOR_TIME_RESOLUTION = 5e-5  # s, FIXME, as the beam monitor
+
+BEAMSTOP_GAP = 0.001  # m, FIXME, not in Table of Optics v3.2: in front of the banana detector
+BEAMSTOP_DISTANCE = BANANA_RADIUS - BEAMSTOP_GAP  # m, from the sample
+BEAMSTOP_WIDTH = PRE_SAMPLE_MONITOR_WIDTH  # m, FIXME, as the pre-sample monitor
+BEAMSTOP_HEIGHT = PRE_SAMPLE_MONITOR_HEIGHT  # m, FIXME, as the pre-sample monitor
+BEAMSTOP_MONITOR_LAMBDA_RESOLUTION = 0.02  # Å, FIXME, as the beam monitor
+BEAMSTOP_MONITOR_TIME_RESOLUTION = 5e-5  # s, FIXME, as the beam monitor
 
 
 def time_lambda_options(
@@ -217,5 +228,62 @@ def sample_monitor() -> Monitor_nD:
         restore_neutron=1,
         options="lambda limits=[0.5 5.3] bins=12",  # FIXME, not in Table of Optics v3.2
         filename="sample_monitor",
+        relative="sample_pos",
+    )
+
+
+def beamstop_monitor(
+    time_limits: tuple[float, float] | None = None,
+    lambda_limits: tuple[float, float] | None = None,
+    lambda_resolution: float = BEAMSTOP_MONITOR_LAMBDA_RESOLUTION,
+    time_resolution: float = BEAMSTOP_MONITOR_TIME_RESOLUTION,
+) -> Monitor_nD:
+    """Create the time and wavelength monitor on the face of the beamstop.
+
+    It records the beam the beamstop stops, mostly that through the sample, as one 2D map of
+    time against wavelength, and leaves the neutrons unchanged, so the beamstop behind it stops
+    those it counted. It has the size and the place of the beamstop, ``BEAMSTOP_DISTANCE`` after
+    ``sample_pos`` on the beam axis.
+
+    Parameters
+    ----------
+    time_limits, lambda_limits, lambda_resolution, time_resolution:
+        As in :func:`time_lambda_options`, at ``SAMPLE_Z + BEAMSTOP_DISTANCE`` from the
+        moderator.
+
+    Returns
+    -------
+    :
+        A new monitor.
+    """
+    return Monitor_nD(
+        xwidth=BEAMSTOP_WIDTH,
+        yheight=BEAMSTOP_HEIGHT,
+        restore_neutron=1,
+        options=time_lambda_options(
+            SAMPLE_Z + BEAMSTOP_DISTANCE,
+            time_limits,
+            lambda_limits,
+            lambda_resolution,
+            time_resolution,
+        ),
+        filename="beamstop_monitor",
+        at=[0, 0, BEAMSTOP_DISTANCE],
+        relative="sample_pos",
+    )
+
+
+def beamstop() -> Beamstop:
+    """Create the beamstop, on the beam axis ``BEAMSTOP_DISTANCE`` after ``sample_pos``.
+
+    Returns
+    -------
+    :
+        A new beamstop.
+    """
+    return Beamstop(
+        xwidth=BEAMSTOP_WIDTH,
+        yheight=BEAMSTOP_HEIGHT,
+        at=[0, 0, BEAMSTOP_DISTANCE],
         relative="sample_pos",
     )

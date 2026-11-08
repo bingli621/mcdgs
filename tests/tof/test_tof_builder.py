@@ -91,7 +91,7 @@ def test_a_banana_detector_is_its_radius_beyond_the_sample():
     banana = model.detectors["banana_detector"].distance.value
     # within 1 mm: the banana's center is 0.3 m below the sample, off the straight line
     assert banana - sample == pytest.approx(trex.banana_detector.curved_radius, abs=1e-3)
-    assert banana > model.detectors["beamstop_detector"].distance.value
+    assert banana > model.detectors["beamstop_monitor"].distance.value
 
 
 def test_the_model_runs():
@@ -165,7 +165,7 @@ def test_trex_choppers_are_placed_in_beam_order():
         "beam_monitor",
         "pre_sample_monitor",
         "sample_monitor",
-        "beamstop_detector",
+        "beamstop_monitor",
         "banana_detector",
     ]
 
