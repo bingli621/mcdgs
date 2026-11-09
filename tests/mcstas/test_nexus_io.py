@@ -4,7 +4,7 @@ import h5py
 import numpy as np
 import pytest
 
-from mcdgs.mcstas.nexus_io import merge_entries, numeric_parameters, read_pixels
+from mcdgs.mcstas.nexus_io import merge_entries, numeric_parameters, read_events, read_pixels
 
 SPLIT = Path(__file__).parents[1] / "data" / "split_run" / "split"  # from mcstas_to_sqe
 
@@ -37,3 +37,16 @@ def test_read_pixels_puts_the_missing_source_upstream_along_the_beam_and_adds_no
     upstream = pixels.coords["sample_position"].value - pixels.coords["source_position"].value
     assert np.allclose(upstream, [0, 0, 1])  # 1 m, whatever the length of beam_direction
     assert "gamma" not in pixels.coords and "y" not in pixels.coords
+
+
+def test_read_events_gives_each_neutron_its_time_in_ms_and_its_weight_in_n_per_s():
+    binned = read_events(SPLIT, "detector", "sample_pos", "sample_pos")
+    assert binned.dims == ("pixel_id",)
+    assert binned.bins.unit == "1/s"
+    assert binned.bins.coords["time_at_detector"].bins.unit == "ms"
+    assert "t" not in binned.bins.coords
+    # the same neutrons as read_pixels sums, of the first scan point
+    (_, pixels), _ = read_pixels(
+        SPLIT, "detector", "source", "sample_pos", beam_direction=[0, 0, 1]
+    )
+    assert np.allclose(binned.bins.sum().values, pixels.values)

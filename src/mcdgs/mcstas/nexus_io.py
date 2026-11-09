@@ -1,5 +1,6 @@
 """Read and write McStas NeXus (HDF5) output.
 
+- :func:`read_events` reads the neutrons of a detector, by pixel, with mcstastox.
 - :func:`read_pixels` reads the detector pixels of every scan point, with mcstastox.
 - :func:`merge_entries` merges single-run files into one scan file.
 
@@ -40,6 +41,36 @@ def numeric_parameters(parameters: Mapping[str, Any]) -> dict[str, float]:
         except (TypeError, ValueError):
             pass
     return numeric
+
+
+def read_events(folder: str | Path, detector: str, source: str, sample: str) -> sc.DataArray:
+    """Read the neutrons of a detector of a McStas NeXus file, by pixel.
+
+    Parameters
+    ----------
+    folder:
+        Run folder with the ``mccode.h5`` to read. Of a scan file, the first scan point.
+    detector:
+        Name of the detector component, which must record an event list.
+    source:
+        Name of the component taken as the source. Only ``source_position`` comes from it, so
+        any component on the incident beam will do: one just before the sample gives the
+        direction of the beam there, where a guide bends it.
+    sample:
+        Name of the component at the sample position.
+
+    Returns
+    -------
+    :
+        The neutrons, binned by ``pixel_id``, each with its weight in n/s and its time
+        ``time_at_detector``, in ms. The coords are those mcstastox gives, in the lab frame,
+        including ``position``, ``sample_position`` and ``source_position``.
+    """
+    with mcstastox.Read(str(folder)) as data:
+        binned = data.export_scipp(source, sample, component_name=detector)["events"]
+    binned.bins.coords["time_at_detector"] = binned.bins.coords.pop("t").to(unit="ms")
+    binned.bins.unit = "1/s"  # McStas weights are n/s
+    return binned
 
 
 def read_pixels(

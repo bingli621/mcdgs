@@ -11,8 +11,9 @@ The reduction follows :mod:`mcdgs.reduction`:
    with :func:`.find_patches`, as :mod:`.trex_08_determine_ei` does, and gives each its incident
    energy, from its flight between the monitors with :func:`.subpulse_flight`, and the time it
    reaches the sample, with :func:`.time_at_sample`.
-2. :func:`read_events` reads the neutrons of the banana detector, by pixel, in the beam frame of
-   :func:`.beam_frame`: z along the beam between the pre-sample monitor and the sample, y up.
+2. :func:`read_events_in_beam_frame` reads the neutrons of the banana detector, by pixel, with
+   :func:`.read_events`, in the beam frame of :func:`.beam_frame`: z along the beam between the
+   pre-sample monitor and the sample, y up.
 3. :func:`.events_to_q_and_energy` gives each pixel and sub-pulse the arrival window of
    :func:`.arrival_window`, keeps the neutrons that :func:`.assign_subpulse` finds inside the
    window of a sub-pulse, whatever their energy transfer within it, and converts them with
@@ -30,7 +31,6 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import mcstasscript as ms
-import mcstastox
 import numpy as np
 import scipp as sc
 from matplotlib.axes import Axes
@@ -41,6 +41,7 @@ from mcstasscript.data.data import McStasData
 
 from mcdgs.diagnostics.cli import output_folder, parse_out
 from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
+from mcdgs.mcstas.nexus_io import read_events
 from mcdgs.mcstas.simulation import Simulation
 from mcdgs.reduction.binning import bin_edges
 from mcdgs.reduction.frame import beam_frame
@@ -141,7 +142,7 @@ def subpulse_timing(
     return pulses
 
 
-def read_events(folder: str | Path) -> sc.DataArray:
+def read_events_in_beam_frame(folder: str | Path) -> sc.DataArray:
     """Read the neutrons of the banana detector of a McStas run, in the beam frame.
 
     Parameters
@@ -152,23 +153,17 @@ def read_events(folder: str | Path) -> sc.DataArray:
     Returns
     -------
     :
-        The neutrons, binned by ``pixel_id``, each with its weight in n/s and its time
-        ``time_at_detector``. The pixels have their ``position``, and the data its
-        ``sample_position`` and ``source_position``: the pre-sample monitor, on the beam. Times in
-        ms, positions in the frame of :func:`.beam_frame`.
+        The neutrons of :func:`.read_events`, with the pre-sample monitor as the source, and
+        their positions in the frame of :func:`.beam_frame`.
     """
-    with mcstastox.Read(str(folder)) as data:
-        # the pre-sample monitor as the source: the beam from it to the sample is the incident
-        # beam, which the curved guide does not give from the source itself
-        binned = data.export_scipp(MONITORS[0], SAMPLE, component_name=DETECTOR)["events"]
+    # source_position only sets the direction of the incident beam, from it to the sample: the
+    # pre-sample monitor, 0.3 m before the sample, gives it where the curved guide has bent it
+    binned = read_events(folder, DETECTOR, MONITORS[0], SAMPLE)
     sample_position = binned.coords["sample_position"]
     upstream = binned.coords["source_position"]
     binned.coords["position"] = beam_frame(binned.coords["position"], sample_position, upstream)
     binned.coords["source_position"] = beam_frame(upstream, sample_position, upstream)
     binned.coords["sample_position"] = sc.vector([0.0, 0.0, 0.0], unit="m")
-    # in ms, as the times of the sub-pulses at the sample
-    binned.bins.coords["time_at_detector"] = binned.bins.coords.pop("t").to(unit="ms")
-    binned.bins.unit = "1/s"  # McStas weights are n/s
     return binned
 
 
@@ -313,7 +308,7 @@ def main(out: Path | None = None, ncount: float = 1e9, seed: int = 1) -> Path:
     bins = {monitor: monitor_bins(getattr(instrument, monitor)) for monitor in MONITORS}
     pulses = subpulse_timing(mcstas_data, bins, instrument.positions())
 
-    events = events_to_q_and_energy(read_events(folder), pulses)
+    events = events_to_q_and_energy(read_events_in_beam_frame(folder), pulses)
     print_subpulse_table(pulses, events)
 
     fig = plot_plane(
