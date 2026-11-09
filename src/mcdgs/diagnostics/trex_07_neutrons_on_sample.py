@@ -18,6 +18,11 @@ the time profile joined by lines: first all on linear scales, then all on log sc
 each model, the sub-pulses and the weak ones between them, and :func:`plot_patches` draws the
 center of mass of each in time and wavelength, with its width as error bars.
 
+:func:`subpulse_windows` reduces the tof run as :mod:`.trex_09_elastic_plane` reduces McStas:
+the sub-pulses at the pre-sample and beamstop monitors give their incident energy and the time
+they reach the sample, and :func:`.arrival_window` when the neutrons of each reach the banana
+detector. :func:`windows_table` lists them.
+
 :func:`main` runs both models, reads the intensity of each on the bins of the monitors, scales
 tof at the source monitor, tunes the transmission at the sample monitor and saves the figures.
 Run the module to do it::
@@ -29,19 +34,24 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import mcstasscript as ms
+import scipp as sc
+import tof
 from matplotlib.colors import LogNorm
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 
 from mcdgs.diagnostics.cli import output_folder, parse_out
 from mcdgs.diagnostics.compare import MonitorComparison, plot_comparison, read_scaled_comparisons
+from mcdgs.instruments.trex.detectors import BANANA_RADIUS
 from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
 from mcdgs.mcstas.simulation import Simulation
-from mcdgs.reduction.patches import find_patches
+from mcdgs.reduction.inelastic import DEFAULT_ENERGY_TRANSFER_RATIO, arrival_window, time_at_sample
+from mcdgs.reduction.patches import find_patches, subpulse_flight
 from mcdgs.tof.builder import build_tof
-from mcdgs.tof.reader import monitor_bins
+from mcdgs.tof.reader import monitor_bins, read_tof_monitor
 
 LOG_DECADES = 3  # the log color scale of the maps spans this many decades below the highest bin
+MONITORS = ("pre_sample_monitor", "beamstop_monitor")  # give the incident energy, in beam order
 
 
 # --8<-- [start:trex_to_sample]
@@ -160,6 +170,97 @@ def plot_patches(comparison: MonitorComparison, title: str) -> Figure:
     return fig
 
 
+def subpulse_windows(
+    instrument: TRex,
+    tof_result: tof.Result,
+    energy_transfer_ratio: tuple[float, float] = DEFAULT_ENERGY_TRANSFER_RATIO,
+) -> sc.DataArray:
+    """Give each sub-pulse of a tof run its arrival window at the banana detector.
+
+    As :mod:`.trex_09_elastic_plane` does with McStas: :func:`.find_patches` finds the
+    sub-pulses at both monitors, in the first pulse, :func:`.subpulse_flight` gives their
+    incident energy from the flight between them, :func:`.time_at_sample` the time they reach
+    the sample, and :func:`.arrival_window` when their neutrons reach the detector,
+    ``BANANA_RADIUS`` from the sample.
+
+    Parameters
+    ----------
+    instrument:
+        The instrument of the run, with the monitors of ``MONITORS``.
+    tof_result:
+        The tof run.
+    energy_transfer_ratio:
+        The smallest and the largest ``E / Ei`` of the windows, as :func:`.arrival_window`.
+
+    Returns
+    -------
+    :
+        The sub-pulses along ``subpulse``, with the coordinates of :func:`.subpulse_flight`,
+        ``time_at_sample``, and ``earliest_arrival`` and ``latest_arrival`` at the detector, in
+        ms. The data are tof neutrons at the pre-sample monitor, not n/s.
+    """
+    positions = {name: sc.vector(xyz, unit="m") for name, xyz in instrument.positions().items()}
+    start, end = (
+        find_patches(read_tof_monitor(tof_result[name], bins), bins)
+        for name in MONITORS
+        for bins in [monitor_bins(getattr(instrument, name))]
+    )
+    pulses = subpulse_flight(start, positions[MONITORS[0]], end, positions[MONITORS[1]])
+    pulses.unit = None  # tof neutrons, not n/s
+    pulses.coords["time_at_sample"] = time_at_sample(
+        pulses.coords["time_at_start"],
+        positions[MONITORS[0]],
+        positions["sample_pos"],
+        pulses.coords["incident_energy"],
+    )
+    window = arrival_window(
+        pulses.coords["time_at_sample"],
+        sc.scalar(BANANA_RADIUS, unit="m"),
+        pulses.coords["incident_energy"],
+        energy_transfer_ratio=energy_transfer_ratio,
+    )
+    pulses.coords.update(window)
+    return pulses
+
+
+def windows_table(windows: sc.DataArray) -> str:
+    """Return the arrival windows of :func:`subpulse_windows` as a Markdown table.
+
+    Each row is a sub-pulse: its incident wavelength and energy, when it reaches the sample,
+    and when its window at the detector opens and closes. The last column is the time from
+    the close of its window to the opening of the next: negative where the two overlap.
+
+    Parameters
+    ----------
+    windows:
+        The sub-pulses of :func:`subpulse_windows`.
+
+    Returns
+    -------
+    :
+        The table.
+    """
+    wavelength = windows.coords["incident_wavelength"].to(unit="Å").values
+    energy = windows.coords["incident_energy"].to(unit="meV").values
+    at_sample = windows.coords["time_at_sample"].to(unit="ms").values
+    opens = windows.coords["earliest_arrival"].to(unit="ms").values
+    closes = windows.coords["latest_arrival"].to(unit="ms").values
+    rows = [
+        "| Sub-pulse | λi | Ei | At the sample | Window opens | Window closes | To the next |",
+        "| --------- | -- | -- | ------------- | ------------ | ------------- | ----------- |",
+    ]
+    for i in range(windows.sizes["subpulse"]):
+        gap = ""
+        if i + 1 < len(opens):
+            # a minus sign, as in the docs
+            gap = f"{opens[i + 1] - closes[i]:.3f} ms".replace("-", "\u2212")
+        rows.append(
+            f"| {i} | {wavelength[i]:.4f} Å | {energy[i]:.3f} meV | {at_sample[i]:.3f} ms "
+            f"| {opens[i]:.3f} ms | {closes[i]:.3f} ms | {gap} |"
+        )
+    return "\n".join(rows) + "\n"
+
+
 def main(
     out: Path | None = None,
     ncount: float = 1e8,
@@ -172,7 +273,8 @@ def main(
     The figures are ``trex_neutrons_on_sample.png``, on linear scales, and
     ``trex_neutrons_on_sample_log.png``, on log scales, from :func:`.plot_comparison`; and
     ``trex_neutrons_on_sample_patches.png``, the center of mass of each patch, from
-    :func:`plot_patches`.
+    :func:`plot_patches`. ``trex_neutrons_on_sample_windows.txt`` is the table of the arrival
+    windows of tof, from :func:`windows_table`.
 
     Parameters
     ----------
@@ -194,7 +296,8 @@ def main(
     Returns
     -------
     :
-        The paths of the figures: linear, log, then the patches.
+        The paths of the figures: linear, log, then the patches; and of the table of the
+        arrival windows.
     """
     instrument = TRexToSample()  # the default control parameters
     name = "trex_neutrons_on_sample"
@@ -249,6 +352,12 @@ def main(
     plt.close(fig)
     print(f"Saved {figure}")
     figures.append(figure)
+
+    table = output_folder(out, folder) / f"{name}_windows.txt"
+    table.write_text(windows_table(subpulse_windows(instrument, tof_result)))
+    print(table.read_text(), end="")
+    print(f"Saved {table}")
+    figures.append(table)
     return figures
 
 

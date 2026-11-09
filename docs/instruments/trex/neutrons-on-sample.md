@@ -137,6 +137,34 @@ a patch of 100 to 300 n/s gets less than one. It finds three, of one or two neut
 times and wavelengths of McStas, and shows nothing of their intensity. In the log figure they
 look stronger than in McStas only because one neutron is the least tof can show.
 
+## Arrival windows at the detector
+
+Each sub-pulse reaches the sample with its own incident energy Ei, about 4 ms after the one
+before. A neutron the sample scatters reaches the banana detector, 3 m further, sooner if it
+gains energy and later if it loses it. `subpulse_windows` gives the window in which the neutrons
+of each sub-pulse arrive, for an energy transfer E from −0.8 Ei to 0.8 Ei. It reduces the tof
+run with the same functions as the McStas data of La2Ni7, from the
+[reduction package](../../reference/reduction.md):
+
+1. `find_patches` finds the sub-pulses at the pre-sample and beamstop monitors, as on
+   [Incident energy](incident-energy.md#finding-the-sub-pulses).
+2. `subpulse_flight` pairs them and gives each its Ei, from the flight between the monitors.
+3. `time_at_sample` adds the flight from the pre-sample monitor to the sample.
+4. `arrival_window` gives when the neutrons of each reach the detector, with Ef = Ei − E:
+   the window opens with the fastest, E = −0.8 Ei, and closes with the slowest, E = 0.8 Ei.
+
+--8<-- "docs/instruments/trex/figures/trex_neutrons_on_sample_windows.txt"
+
+The times are from the start of the pulse. Each window is about 1.6 ms long for the shortest
+wavelength and 2.9 ms for the longest, since slower neutrons spread more over the 3 m. The
+windows do not overlap: the last column, from the close of one to the opening of the next, stays
+positive, though it shrinks with the wavelength. So every neutron the detector counts within a
+window belongs to one sub-pulse, of the main sub-pulses: tof has too few neutrons in those at
+the band edges for them to count. The [weak patches](#the-weak-patches) are not separated,
+though. Their elastic neutrons arrive 2.0 ms after those of the sub-pulse before them, which is
+after its window closes below about 2.1 Å, but before it closes above. There they pass for
+neutrons of that sub-pulse that lost about 0.8 of their energy.
+
 ## Making the figures
 
 The figures need McStas, so they are not made with the site: `pixi run docs-diagnostics` makes
