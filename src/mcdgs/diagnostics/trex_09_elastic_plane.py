@@ -31,6 +31,12 @@ neutrons lie near its own circle, of radius ki through the origin, where the det
 Run the module to do it::
 
     pixi run python -m mcdgs.diagnostics.trex_09_elastic_plane
+
+:func:`main` is :func:`simulate`, which runs McStas, then :func:`analyze`, which reduces and
+draws. Reduce the runs again without McStas with :func:`analyze`, or :func:`reduce_runs` for the
+sub-pulses and the neutrons alone::
+
+    pixi run python -c "from mcdgs.diagnostics.trex_09_elastic_plane import analyze; analyze()"
 """
 
 from pathlib import Path
@@ -48,6 +54,7 @@ from mcstasscript.data.data import McStasData
 from mcdgs.diagnostics.cli import output_folder, parse_out
 from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
 from mcdgs.mcstas.nexus_io import read_events
+from mcdgs.mcstas.run_folders import default_output_dir
 from mcdgs.mcstas.simulation import Simulation
 from mcdgs.reduction.binning import bin_edges
 from mcdgs.reduction.inelastic import events_to_q_and_energy, time_at_sample
@@ -58,6 +65,9 @@ from mcdgs.tof.reader import monitor_bins
 MONITORS = ("pre_sample_monitor", "beamstop_monitor")  # in beam order
 DETECTOR = "banana_detector"
 SAMPLE = "sample_pos"
+NAME = "trex_elastic_plane"
+TO_SAMPLE = f"{NAME}_run_to_sample"  # the run folder of the first part, source -> sample_pos
+FROM_SAMPLE = f"{NAME}_run_from_sample"  # that of the second part, sample_pos -> detector
 BEAM_DIRECTION = (0.0, 0.0, 1.0)  # the incident beam in the frame of sample_pos: along arm_mc
 Q_STEP = 0.02  # 1/Å, the bin width in Qx and Qz
 LOG_DECADES = 4  # the log color scale spans this many decades below the highest bin
@@ -244,19 +254,16 @@ def plot_plane(events: sc.DataArray, title: str, step: float = Q_STEP) -> Figure
     return fig
 
 
-def main(out: Path | None = None, ncount: float = 1e9, seed: int = 1) -> Path:
-    """Run :class:`TRexWithLa2Ni7` in McStas, reduce its neutrons and save the (Qx, Qz) plane.
+def simulate(ncount: float = 1e9, seed: int = 1) -> tuple[Path, Path]:
+    """Run :class:`TRexWithLa2Ni7` in McStas, in two parts split at ``sample_pos``.
 
-    The first part runs from the source to ``sample_pos`` into the folder
-    ``trex_elastic_plane_run_to_sample``, with the monitors of the incident energy and the beam
-    file; the second from that beam to the detector, into ``trex_elastic_plane_run_from_sample``.
-    The figure is ``trex_elastic_plane.png``, from :func:`plot_plane`.
+    The first part runs from the source to ``sample_pos`` into ``TO_SAMPLE``, with the monitors
+    of the incident energy and the beam file; the second from that beam through the crystal to
+    the detector, into ``FROM_SAMPLE``, both in :func:`.default_output_dir`. Each replaces the
+    folder of an earlier run.
 
     Parameters
     ----------
-    out:
-        Folder of the figure. If ``None``, the folder of the second part, next to its
-        ``mccode.h5``.
     ncount:
         Number of McStas neutrons of the first part. The second part runs every neutron of the
         beam file.
@@ -266,36 +273,99 @@ def main(out: Path | None = None, ncount: float = 1e9, seed: int = 1) -> Path:
     Returns
     -------
     :
+        The folders of the first and the second part.
+    """
+    simulation = Simulation(TRexWithLa2Ni7())  # the default control parameters
+    beam_file = simulation.run_to_sample(TO_SAMPLE, ncount=ncount, seed=seed)
+    # sample_pos -> detector, from the beam file, in the frame of sample_pos: the beam frame
+    detector_file = simulation.run_from_sample(FROM_SAMPLE, beam_file=beam_file, seed=seed + 1)
+    return beam_file.parent, detector_file.parent
+
+
+def reduce_runs(
+    to_sample: str | Path | None = None, from_sample: str | Path | None = None
+) -> tuple[sc.DataArray, sc.DataArray]:
+    """Reduce the two parts of a McStas run of :func:`simulate`, without running McStas.
+
+    Parameters
+    ----------
+    to_sample, from_sample:
+        The folders of the first and the second part. If ``None``, ``TO_SAMPLE`` and
+        ``FROM_SAMPLE`` in :func:`.default_output_dir`, where :func:`simulate` writes.
+
+    Returns
+    -------
+    :
+        The sub-pulses of :func:`subpulse_timing`, and the neutrons of
+        :func:`.events_to_q_and_energy`.
+    """
+    to_sample = Path(to_sample or default_output_dir() / TO_SAMPLE)
+    from_sample = Path(from_sample or default_output_dir() / FROM_SAMPLE)
+    instrument = TRexWithLa2Ni7()  # the default control parameters, as simulate runs
+    # the first part: the incident energy and the time at the sample of each sub-pulse
+    bins = {monitor: monitor_bins(getattr(instrument, monitor)) for monitor in MONITORS}
+    pulses = subpulse_timing(ms.load_data(str(to_sample)), bins, instrument.positions())
+    # the second part has no source: the incident beam is given by its direction instead
+    binned = read_events(from_sample, DETECTOR, "source", SAMPLE, beam_direction=BEAM_DIRECTION)
+    return pulses, events_to_q_and_energy(binned, pulses)
+
+
+def analyze(
+    out: Path | None = None,
+    to_sample: str | Path | None = None,
+    from_sample: str | Path | None = None,
+) -> Path:
+    """Reduce the two parts of a McStas run, print the sub-pulses and save the (Qx, Qz) plane.
+
+    It runs no McStas, so it can run again on the same runs; :func:`main` runs them first. The
+    figure is ``trex_elastic_plane.png``, from :func:`plot_plane`.
+
+    Parameters
+    ----------
+    out:
+        Folder of the figure. If ``None``, the folder of the second part, next to its
+        ``mccode.h5``.
+    to_sample, from_sample:
+        The folders of the two parts, as :func:`reduce_runs`.
+
+    Returns
+    -------
+    :
         The path of the figure.
     """
-    instrument = TRexWithLa2Ni7()  # the default control parameters
-    name = "trex_elastic_plane"
-    simulation = Simulation(instrument)
-
-    # source -> sample_pos: the incident energy and the time at the sample of each sub-pulse
-    beam_file = simulation.run_to_sample(f"{name}_run_to_sample", ncount=ncount, seed=seed)
-    bins = {monitor: monitor_bins(getattr(instrument, monitor)) for monitor in MONITORS}
-    pulses = subpulse_timing(ms.load_data(str(beam_file.parent)), bins, instrument.positions())
-
-    # sample_pos -> detector, from the beam file, in the frame of sample_pos: the beam frame
-    folder = simulation.run_from_sample(
-        f"{name}_run_from_sample", beam_file=beam_file, seed=seed + 1
-    ).parent
-    # no source in this part: the incident beam is given by its direction instead
-    binned = read_events(folder, DETECTOR, "source", SAMPLE, beam_direction=BEAM_DIRECTION)
-    events = events_to_q_and_energy(binned, pulses)
+    from_sample = Path(from_sample or default_output_dir() / FROM_SAMPLE)
+    pulses, events = reduce_runs(to_sample, from_sample)
     print_subpulse_table(pulses, events)
 
     fig = plot_plane(
         events,
         f"T-Rex, La2Ni7: (Qx, Qz) of {pulses.sizes['subpulse']} sub-pulses\n"
-        f"{instrument.running_conditions()}",
+        f"{TRexWithLa2Ni7().running_conditions()}",
     )
-    figure = output_folder(out, folder) / f"{name}.png"
+    figure = output_folder(out, from_sample) / f"{NAME}.png"
     fig.savefig(figure, dpi=150)
     plt.close(fig)
     print(f"Saved {figure}")
     return figure
+
+
+def main(out: Path | None = None, ncount: float = 1e9, seed: int = 1) -> Path:
+    """Run McStas with :func:`simulate`, then reduce and draw it with :func:`analyze`.
+
+    Parameters
+    ----------
+    out:
+        Folder of the figure, as :func:`analyze`.
+    ncount, seed:
+        As :func:`simulate`.
+
+    Returns
+    -------
+    :
+        The path of the figure.
+    """
+    to_sample, from_sample = simulate(ncount=ncount, seed=seed)
+    return analyze(out, to_sample, from_sample)
 
 
 if __name__ == "__main__":
