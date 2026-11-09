@@ -19,6 +19,7 @@ from mcdgs.core.components import NXdisk_chopper
 from mcdgs.core.utils import evaluate
 from mcdgs.diagnostics.cli import output_folder, parse_out
 from mcdgs.instruments.trex.model import TRex
+from mcdgs.mcstas.run_folders import default_output_dir
 from mcdgs.tof.builder import beamline
 from mcdgs.tof.time_distance import time_distance_diagram
 
@@ -107,7 +108,7 @@ def main(out: Path | None = None, neutrons: int = 1_000_000, seed: int = 1) -> l
     Parameters
     ----------
     out:
-        Folder to write to. If ``None``, the current folder.
+        Folder to write to. If ``None``, ``mcstas_output/trex_time_distance``, beside the McStas runs.
     neutrons:
         Number of tof neutrons per pulse.
     seed:
@@ -118,7 +119,7 @@ def main(out: Path | None = None, neutrons: int = 1_000_000, seed: int = 1) -> l
     :
         The paths of the diagram and of the table of its parameters.
     """
-    folder = output_folder(out, Path.cwd())
+    folder = output_folder(out, default_output_dir() / "trex_time_distance")
     path = folder / "trex_time_distance.png"
 
     # --8<-- [start:time_distance]

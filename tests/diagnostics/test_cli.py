@@ -19,3 +19,9 @@ def test_out_is_created_with_its_parents(tmp_path):
     out = tmp_path / "a" / "b"
     assert output_folder(out, tmp_path) == out
     assert out.is_dir()
+
+
+def test_the_default_folder_is_created_too(tmp_path):
+    default = tmp_path / "mcstas_output" / "trex_choppers"
+    assert output_folder(None, default) == default
+    assert default.is_dir()

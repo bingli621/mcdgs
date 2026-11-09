@@ -31,21 +31,20 @@ def parse_out(description: str | None, argv: Sequence[str] | None = None) -> Pat
 
 
 def output_folder(out: Path | None, default: Path) -> Path:
-    """Return the folder to write to, creating ``out`` if it is given.
+    """Return the folder to write to, created with its parents.
 
     Parameters
     ----------
     out:
         The folder given with ``--out``, or ``None``.
     default:
-        The folder to use without ``out``. It must exist.
+        The folder to use without ``out``.
 
     Returns
     -------
     :
-        ``out``, created with its parents, or ``default``.
+        ``out``, or ``default`` without it.
     """
-    if out is None:
-        return default
-    out.mkdir(parents=True, exist_ok=True)
-    return out
+    folder = default if out is None else out
+    folder.mkdir(parents=True, exist_ok=True)
+    return folder
