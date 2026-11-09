@@ -7,8 +7,10 @@ documentation. See [Source](../instruments/trex/source.md),
 [Bender](../instruments/trex/bender-scan.md),
 [Beam monitor](../instruments/trex/beam-monitor.md), [Choppers](../instruments/trex/choppers.md),
 [Time-distance diagram](../instruments/trex/time-distance.md),
-[Neutrons on sample](../instruments/trex/neutrons-on-sample.md) and
-[Incident energy](../instruments/trex/incident-energy.md) for what they show for T-Rex.
+[Neutrons on sample](../instruments/trex/neutrons-on-sample.md),
+[Incident energy](../instruments/trex/incident-energy.md),
+[Elastic plane](../instruments/trex/elastic-plane.md) and
+[Rotation scan](../instruments/trex/elastic-scan.md) for what they show for T-Rex.
 
 ::: mcdgs.diagnostics.compare
 
@@ -31,4 +33,8 @@ documentation. See [Source](../instruments/trex/source.md),
 ::: mcdgs.diagnostics.trex_07_neutrons_on_sample
 
 ::: mcdgs.diagnostics.trex_08_determine_ei
+
+::: mcdgs.diagnostics.trex_09_elastic_plane
+
+::: mcdgs.diagnostics.trex_10_elastic_scan
 

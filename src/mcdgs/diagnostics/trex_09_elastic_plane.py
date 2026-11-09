@@ -392,7 +392,7 @@ def draw_plane(
     return fig
 
 
-def simulate(ncount: float = 1e9, seed: int = 1) -> tuple[Path, Path]:
+def simulate(ncount: float = 1e10, seed: int = 1) -> tuple[Path, Path]:
     """Run :class:`TRexWithLa2Ni7` in McStas, in two parts split at ``sample_pos``.
 
     The first part runs from the source to ``sample_pos`` into ``TO_SAMPLE``, with the monitors
@@ -503,7 +503,7 @@ def analyze(
     return figure
 
 
-def main(out: Path | None = None, ncount: float = 1e9, seed: int = 1) -> Path:
+def main(out: Path | None = None, ncount: float = 1e10, seed: int = 1) -> Path:
     """Run McStas with :func:`simulate`, then reduce and draw it with :func:`analyze`.
 
     Parameters

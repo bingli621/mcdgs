@@ -28,6 +28,8 @@ nav = [
       { "Time-distance diagram" = "instruments/trex/time-distance.md" },
       { "Neutrons on sample" = "instruments/trex/neutrons-on-sample.md" },
       { "Incident energy" = "instruments/trex/incident-energy.md" },
+      { "Elastic plane" = "instruments/trex/elastic-plane.md" },
+      { "Rotation scan" = "instruments/trex/elastic-scan.md" },
     ] },
   ] },
   { "How-to guides" = [
