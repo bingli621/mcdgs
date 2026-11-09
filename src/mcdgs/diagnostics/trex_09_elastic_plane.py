@@ -20,14 +20,19 @@ The reduction follows :mod:`mcdgs.reduction`:
    That part runs in the frame of ``sample_pos``, which is the beam frame: the origin is the
    sample, z the axis of ``arm_mc``, straight along the beam from the pre-sample monitor to the
    sample, y up and x to the left of the beam.
-3. :func:`.events_to_q_and_energy` gives each pixel and sub-pulse the arrival window of
-   :func:`.arrival_window`, keeps the neutrons that :func:`.assign_subpulse` finds inside the
-   window of a sub-pulse, whatever their energy transfer within it, and converts them with
-   ``QE_GRAPH`` to the momentum transfer (Qx, Qy, Qz).
+3. :func:`.events_to_q_and_energy`, within :func:`normalized_events`, gives each pixel and
+   sub-pulse the arrival window of :func:`.arrival_window`, keeps the neutrons that
+   :func:`.assign_subpulse` finds inside the window of a sub-pulse, whatever their energy
+   transfer within it, and converts them with ``QE_GRAPH`` to the momentum transfer (Qx, Qy,
+   Qz).
+4. :func:`normalized_events` divides each neutron by the solid angle of its pixel, from
+   :func:`pixel_solid_angle`, and by the incoming flux of its sub-pulse, its intensity at the
+   pre-sample monitor: per incident neutron and per steradian.
 
-:func:`plot_plane` draws the intensity in (Qx, Qz) of every sub-pulse, summed over Qy, on a
-linear and on a log scale. Each sub-pulse has its own incident wavevector ki, so its elastic
-neutrons lie near its own circle, of radius ki through the origin, where the detector covers it.
+:func:`plot_plane` draws the intensity in (Qx, Qz) of every sub-pulse, summed over a slice of
+Qy near the horizontal plane, ``|Qy| < QY_HALF_WIDTH``, on a log color scale. Each sub-pulse has
+its own incident wavevector ki, so its elastic neutrons lie near its own circle, of radius ki
+through the origin, where the detector covers it.
 Run the module to do it::
 
     pixi run python -m mcdgs.diagnostics.trex_09_elastic_plane
@@ -45,13 +50,18 @@ import matplotlib.pyplot as plt
 import mcstasscript as ms
 import numpy as np
 import scipp as sc
-from matplotlib.axes import Axes
-from matplotlib.collections import QuadMesh
-from matplotlib.colors import Colormap, LogNorm, Normalize
+from matplotlib.colors import LogNorm
 from matplotlib.figure import Figure
 from mcstasscript.data.data import McStasData
 
-from mcdgs.diagnostics.cli import output_folder, parse_out
+from mcdgs.diagnostics.cli import output_folder
+from mcdgs.instruments.trex.detectors import (
+    BANANA_HEIGHT,
+    BANANA_RADIUS,
+    BANANA_THETA_BINS,
+    BANANA_THETA_LIMITS,
+    BANANA_Y_BINS,
+)
 from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
 from mcdgs.mcstas.nexus_io import read_events
 from mcdgs.mcstas.run_folders import default_output_dir
@@ -59,6 +69,7 @@ from mcdgs.mcstas.simulation import Simulation
 from mcdgs.reduction.binning import bin_edges
 from mcdgs.reduction.inelastic import events_to_q_and_energy, time_at_sample
 from mcdgs.reduction.patches import MIN_FRACTION, find_patches, subpulse_flight
+from mcdgs.reduction.solid_angle import rectangle_solid_angle
 from mcdgs.samples import la2ni7
 from mcdgs.tof.reader import monitor_bins
 
@@ -70,10 +81,9 @@ TO_SAMPLE = f"{NAME}_run_to_sample"  # the run folder of the first part, source 
 FROM_SAMPLE = f"{NAME}_run_from_sample"  # that of the second part, sample_pos -> detector
 BEAM_DIRECTION = (0.0, 0.0, 1.0)  # the incident beam in the frame of sample_pos: along arm_mc
 Q_STEP = 0.02  # 1/Å, the bin width in Qx and Qz
-LOG_DECADES = 4  # the log color scale spans this many decades below the highest bin
-# the linear color scale ends at this percentile of the bins with neutrons: the direct beam that
-# passes the beamstop, near Q = 0, is a few bins far above all others
-LINEAR_PERCENTILE = 95
+LOG_DECADES = 4  # the color scale spans this many decades below the highest bin
+QY_HALF_WIDTH = 0.5  # 1/Å: the plane keeps the neutrons with |Qy| below this, near horizontal
+DIRECT_BEAM_RADIUS = 0.2  # 1/Å: the direct beam, far above the rest, is left out of the scale
 SAMPLE_SPLIT = 100  # McStas SPLIT on the crystal: each neutron reaching it is repeated this often
 
 
@@ -160,6 +170,66 @@ def subpulse_timing(
     return pulses
 
 
+def pixel_solid_angle(binned: sc.DataArray) -> sc.Variable:
+    """Return the solid angle of each pixel of the banana detector, seen from the sample.
+
+    A pixel is ``BANANA_THETA_BINS`` of the arc of ``BANANA_THETA_LIMITS`` wide, at
+    ``BANANA_RADIUS``, and ``BANANA_Y_BINS`` of ``BANANA_HEIGHT`` high, on a cylinder around the
+    vertical through the sample, as :func:`.rectangle_solid_angle`.
+
+    Parameters
+    ----------
+    binned:
+        The neutrons by pixel, as :func:`.read_events`, with the pixel ``position`` and the
+        ``sample_position``.
+
+    Returns
+    -------
+    :
+        The solid angle of each pixel, in sr, along the pixel dimension.
+    """
+    theta_start, theta_stop = BANANA_THETA_LIMITS
+    width = BANANA_RADIUS * np.radians(theta_stop - theta_start) / BANANA_THETA_BINS
+    return rectangle_solid_angle(
+        binned.coords["position"],
+        binned.coords["sample_position"],
+        sc.scalar(width, unit="m"),
+        sc.scalar(BANANA_HEIGHT / BANANA_Y_BINS, unit="m"),
+        shape="cylinder",
+    )
+
+
+def normalized_events(binned: sc.DataArray, pulses: sc.DataArray) -> sc.DataArray:
+    """Reduce the neutrons of the detector, per incident neutron and per steradian.
+
+    Each neutron is divided by the solid angle of its pixel, from :func:`pixel_solid_angle`,
+    then reduced with :func:`.events_to_q_and_energy`, and divided by the intensity of its
+    sub-pulse at the pre-sample monitor, its incoming flux.
+
+    Parameters
+    ----------
+    binned:
+        The neutrons by pixel, as :func:`.read_events`, in n/s.
+    pulses:
+        The sub-pulses of :func:`subpulse_timing`, with their intensity at the pre-sample
+        monitor, in n/s.
+
+    Returns
+    -------
+    :
+        The neutrons of :func:`.events_to_q_and_energy`, in 1/sr: per neutron of their
+        sub-pulse at the pre-sample monitor. Each keeps the ``solid_angle`` of its pixel, so
+        that times it gives the fraction of the incident neutrons it stands for.
+    """
+    solid_angle = pixel_solid_angle(binned)
+    binned = binned.copy()
+    binned.bins.coords["solid_angle"] = sc.bins_like(binned, solid_angle)
+    events = events_to_q_and_energy(binned / solid_angle, pulses)
+    flux = pulses.data[events.coords["subpulse"].values]  # the flux of each neutron's sub-pulse
+    events.data = events.data / sc.array(dims=events.dims, values=flux.values, unit=flux.unit)
+    return events
+
+
 def print_subpulse_table(pulses: sc.DataArray, events: sc.DataArray) -> None:
     """Print the incident energy, ki and time at the sample of each sub-pulse.
 
@@ -168,46 +238,49 @@ def print_subpulse_table(pulses: sc.DataArray, events: sc.DataArray) -> None:
     pulses:
         The sub-pulses of :func:`subpulse_timing`.
     events:
-        The neutrons of :func:`.events_to_q_and_energy`.
+        The neutrons of :func:`normalized_events`.
     """
-    print("  sub-pulse  t_sample [ms]  λi [Å]  Ei [meV]  ki [1/Å]  neutrons  intensity [n/s]")
-    counts = np.bincount(events.coords["subpulse"].values, minlength=pulses.sizes["subpulse"])
-    weights = np.bincount(
-        events.coords["subpulse"].values, events.values, minlength=pulses.sizes["subpulse"]
+    print(
+        "  sub-pulse  t_sample [ms]  λi [Å]  Ei [meV]  ki [1/Å]  flux [n/s]  neutrons"
+        "  on the detector"
     )
-    for i, (t, wavelength, ei, n, w) in enumerate(
+    subpulse = events.coords["subpulse"].values
+    n = pulses.sizes["subpulse"]
+    counts = np.bincount(subpulse, minlength=n)
+    # the fraction of the incident neutrons that reach the detector, in a window
+    fractions = np.bincount(
+        subpulse, events.values * events.coords["solid_angle"].values, minlength=n
+    )
+    for i, (t, wavelength, ei, flux, count, fraction) in enumerate(
         zip(
             pulses.coords["time_at_sample"].to(unit="ms").values,
             pulses.coords["incident_wavelength"].to(unit="Å").values,
             pulses.coords["incident_energy"].to(unit="meV").values,
+            pulses.values,
             counts,
-            weights,
+            fractions,
         )
     ):
         k = 2 * np.pi / wavelength
-        print(f"  {i:9d}  {t:13.3f}  {wavelength:6.4f}  {ei:8.3f}  {k:8.4f}  {n:8d}  {w:15.4g}")
+        print(
+            f"  {i:9d}  {t:13.3f}  {wavelength:6.4f}  {ei:8.3f}  {k:8.4f}  {flux:10.4g}"
+            f"  {count:8d}  {fraction:15.4g}"
+        )
 
 
-def _draw_plane(
-    ax: Axes, plane: sc.DataArray, cmap: Colormap, norm: Normalize, values: np.ndarray
-) -> QuadMesh:
-    """Draw a histogram in (Qx, Qz) on its bin edges."""
-    mesh = ax.pcolormesh(
-        plane.coords["Qx"].values, plane.coords["Qz"].values, values, cmap=cmap, norm=norm
-    )
-    ax.set(xlabel="Qx [1/Å]", ylabel="Qz [1/Å], along the beam", aspect="equal")
-    ax.grid(True, alpha=0.3)
-    return mesh
+def plot_plane(
+    events: sc.DataArray,
+    title: str,
+    step: float = Q_STEP,
+    qy_half_width: float = QY_HALF_WIDTH,
+) -> Figure:
+    """Draw the intensity in (Qx, Qz) of every sub-pulse, near the horizontal plane.
 
+    Only the neutrons with ``|Qy| < qy_half_width`` count, summed over Qy: the detector also
+    sees reflections well above and below the plane, which a sum over all Qy would project
+    onto it.
 
-def plot_plane(events: sc.DataArray, title: str, step: float = Q_STEP) -> Figure:
-    """Draw the intensity in (Qx, Qz) of every sub-pulse, summed over Qy, on two scales.
-
-    The left panel is linear, in turbo, up to ``LINEAR_PERCENTILE`` of the bins with neutrons,
-    with those above it in the color of the top: the direct beam near Q = 0 would leave the
-    rest dark. The right is logarithmic, ``LOG_DECADES`` deep below the highest bin, in viridis
-    with the empty bins in white, so that the weak bins show too. The axes have the same scale,
-    so that circles look round.
+    It is drawn on the log color scale of :func:`draw_plane`.
 
     Parameters
     ----------
@@ -217,40 +290,105 @@ def plot_plane(events: sc.DataArray, title: str, step: float = Q_STEP) -> Figure
         The title of the figure.
     step:
         The bin width in Qx and Qz, in 1/Å.
+    qy_half_width:
+        Half the width of the slice in Qy, in 1/Å.
 
     Returns
     -------
     :
         The figure.
     """
+    qy = events.coords["Qy"].to(unit="1/Å").values
+    (dim,) = events.dims
+    events = events[dim, np.flatnonzero(np.abs(qy) < qy_half_width)]
     edges = {}
     for name in ("Qx", "Qz"):
         values = events.coords[name].to(unit="1/Å").values
         start, stop = np.floor(values.min() * 10) / 10, np.ceil(values.max() * 10) / 10
         edges[name] = bin_edges(name, start, stop, step, unit="1/Å")
-    plane = events.hist(Qz=edges["Qz"], Qx=edges["Qx"])  # summed over Qy
-    vmax = plane.max().value
-    linear_vmax = np.percentile(plane.values[plane.values > 0], LINEAR_PERCENTILE)
-    label = f"Intensity [n/s per ({step:g} 1/Å)²]"
+    plane = events.hist(Qz=edges["Qz"], Qx=edges["Qx"])  # summed over the slice in Qy
+    return draw_plane(plane, f"{title}\n|Qy| < {qy_half_width:g} 1/Å")
 
-    fig, (linear_ax, log_ax) = plt.subplots(
-        1, 2, figsize=(16, 8), sharex=True, sharey=True, layout="constrained"
-    )
+
+def beyond_direct_beam_max(
+    plane: sc.DataArray, direct_beam_radius: float = DIRECT_BEAM_RADIUS
+) -> float:
+    """Return the highest bin of a (Qz, Qx) histogram beyond the direct beam.
+
+    Parameters
+    ----------
+    plane:
+        The histogram, with the bin edges ``Qx`` and ``Qz``, in 1/Å, and any dimensions before
+        them.
+    direct_beam_radius:
+        The |Q| of the direct beam, in 1/Å, left out.
+
+    Returns
+    -------
+    :
+        The highest value of the bins with ``|Q| > direct_beam_radius``.
+    """
+    qx, qz = (sc.midpoints(plane.coords[name]).to(unit="1/Å").values for name in ("Qx", "Qz"))
+    outside = np.hypot(*np.meshgrid(qz, qx, indexing="ij")) > direct_beam_radius
+    return float(plane.values[..., outside].max())
+
+
+def draw_plane(
+    plane: sc.DataArray,
+    title: str,
+    xlabel: str = "Qx [1/Å]",
+    ylabel: str = "Qz [1/Å], along the beam",
+    direct_beam_radius: float = DIRECT_BEAM_RADIUS,
+    vmax: float | None = None,
+) -> Figure:
+    """Draw a histogram in (Qx, Qz) on a log color scale.
+
+    The scale is turbo, ``LOG_DECADES`` deep below the highest bin beyond the direct beam,
+    ``|Q| > direct_beam_radius``, with the empty bins in white: the direct beam that passes the
+    beamstop, a few bins far above all others, would leave the rest at the bottom of the scale,
+    so it takes the color of the top instead. The axes have the same scale, so that circles look
+    round.
+
+    Parameters
+    ----------
+    plane:
+        The histogram, with the bin edges ``Qx`` and ``Qz``, in 1/Å, evenly spaced.
+    title:
+        The title of the figure.
+    xlabel, ylabel:
+        The labels of the axes.
+    direct_beam_radius:
+        The |Q| of the direct beam, in 1/Å, that the color scale leaves out.
+    vmax:
+        The top of the color scale. If ``None``, the highest bin beyond the direct beam.
+
+    Returns
+    -------
+    :
+        The figure.
+    """
+    step = float(np.diff(plane.coords["Qx"].values)[0])
+    if vmax is None:
+        vmax = beyond_direct_beam_max(plane, direct_beam_radius)
+
+    fig, ax = plt.subplots(figsize=(9, 8), layout="constrained")
     fig.suptitle(title)
-    linear = _draw_plane(
-        linear_ax, plane, plt.get_cmap("turbo"), Normalize(vmin=0, vmax=linear_vmax), plane.values
-    )
-    log = _draw_plane(
-        log_ax,
-        plane,
-        plt.get_cmap("viridis").with_extremes(bad="white"),
-        LogNorm(vmin=vmax / 10**LOG_DECADES, vmax=vmax, clip=True),
+    mesh = ax.pcolormesh(
+        plane.coords["Qx"].values,
+        plane.coords["Qz"].values,
         np.ma.masked_less_equal(plane.values, 0),  # empty bins in white
+        cmap=plt.get_cmap("turbo").with_extremes(bad="white"),
+        norm=LogNorm(vmin=vmax / 10**LOG_DECADES, vmax=vmax, clip=True),
     )
-    linear_ax.set_title(f"Linear scale, up to the {LINEAR_PERCENTILE}th percentile of the bins")
-    log_ax.set_title("Log scale")
-    fig.colorbar(linear, ax=linear_ax, shrink=0.8, label=label, extend="max")
-    fig.colorbar(log, ax=log_ax, shrink=0.8, label=label)
+    ax.set(xlabel=xlabel, ylabel=ylabel, aspect="equal")
+    ax.grid(True, alpha=0.3)
+    fig.colorbar(
+        mesh,
+        ax=ax,
+        shrink=0.8,
+        label=f"Intensity [{plane.unit} per ({step:g} 1/Å)²]",
+        extend="max",
+    )
     return fig
 
 
@@ -282,6 +420,25 @@ def simulate(ncount: float = 1e9, seed: int = 1) -> tuple[Path, Path]:
     return beam_file.parent, detector_file.parent
 
 
+def subpulse_timing_of_run(to_sample: str | Path | None = None) -> sc.DataArray:
+    """Find the sub-pulses of the run to the sample of :func:`simulate`, without running McStas.
+
+    Parameters
+    ----------
+    to_sample:
+        The folder of the first part. If ``None``, ``TO_SAMPLE`` in :func:`.default_output_dir`.
+
+    Returns
+    -------
+    :
+        The sub-pulses of :func:`subpulse_timing`.
+    """
+    to_sample = Path(to_sample or default_output_dir() / TO_SAMPLE)
+    instrument = TRexWithLa2Ni7()  # the default control parameters, as simulate runs
+    bins = {monitor: monitor_bins(getattr(instrument, monitor)) for monitor in MONITORS}
+    return subpulse_timing(ms.load_data(str(to_sample)), bins, instrument.positions())
+
+
 def reduce_runs(
     to_sample: str | Path | None = None, from_sample: str | Path | None = None
 ) -> tuple[sc.DataArray, sc.DataArray]:
@@ -299,15 +456,12 @@ def reduce_runs(
         The sub-pulses of :func:`subpulse_timing`, and the neutrons of
         :func:`.events_to_q_and_energy`.
     """
-    to_sample = Path(to_sample or default_output_dir() / TO_SAMPLE)
     from_sample = Path(from_sample or default_output_dir() / FROM_SAMPLE)
-    instrument = TRexWithLa2Ni7()  # the default control parameters, as simulate runs
     # the first part: the incident energy and the time at the sample of each sub-pulse
-    bins = {monitor: monitor_bins(getattr(instrument, monitor)) for monitor in MONITORS}
-    pulses = subpulse_timing(ms.load_data(str(to_sample)), bins, instrument.positions())
+    pulses = subpulse_timing_of_run(to_sample)
     # the second part has no source: the incident beam is given by its direction instead
     binned = read_events(from_sample, DETECTOR, "source", SAMPLE, beam_direction=BEAM_DIRECTION)
-    return pulses, events_to_q_and_energy(binned, pulses)
+    return pulses, normalized_events(binned, pulses)
 
 
 def analyze(
@@ -369,4 +523,6 @@ def main(out: Path | None = None, ncount: float = 1e9, seed: int = 1) -> Path:
 
 
 if __name__ == "__main__":
-    main(out=parse_out(__doc__))
+    # main(out=parse_out(__doc__))
+
+    analyze()
