@@ -36,9 +36,11 @@ import matplotlib.pyplot as plt
 import mcstasscript as ms
 import scipp as sc
 import tof
+from matplotlib.artist import Artist
 from matplotlib.colors import LogNorm
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
+from matplotlib.patches import Patch
 
 from mcdgs.diagnostics.cli import output_folder, parse_out
 from mcdgs.diagnostics.compare import MonitorComparison, plot_comparison, read_scaled_comparisons
@@ -76,7 +78,9 @@ class TRexToSample(TRex):
         # --8<-- [end:trex_to_sample]
 
 
-def plot_patches(comparison: MonitorComparison, title: str) -> Figure:
+def plot_patches(
+    comparison: MonitorComparison, title: str, windows: sc.DataArray | None = None
+) -> Figure:
     """Draw the center of mass of each patch of both models, in time and wavelength.
 
     Each patch is a point at its mean time and wavelength, with its width in each as gray error
@@ -84,12 +88,18 @@ def plot_patches(comparison: MonitorComparison, title: str) -> Figure:
     McStas has small filled circles, tof larger hollow squares with the color as their outline, so
     that where both have a patch the square frames the circle.
 
+    With ``windows``, each sub-pulse is also drawn at its incident wavelength: a black cross when
+    it reaches the sample, and its arrival window at the banana detector, from the opening to the
+    close, as a gray band across all wavelengths.
+
     Parameters
     ----------
     comparison:
         Both maps.
     title:
         The title of the figure.
+    windows:
+        The sub-pulses of :func:`subpulse_windows`, or ``None``.
 
     Returns
     -------
@@ -140,7 +150,7 @@ def plot_patches(comparison: MonitorComparison, title: str) -> Figure:
         zorder=3,
     )
     # the legend shows the markers only, not the color of one patch
-    handles = [
+    handles: list[Artist] = [
         Line2D(
             [],
             [],
@@ -163,6 +173,30 @@ def plot_patches(comparison: MonitorComparison, title: str) -> Figure:
             label=f"tof, {tof.time.size} patches",
         ),
     ]
+    if windows is not None:
+        wavelength = windows.coords["incident_wavelength"].to(unit="Å").values
+        ax.scatter(
+            windows.coords["time_at_sample"].to(unit="ms").values,
+            wavelength,
+            marker="x",
+            s=40,
+            color="black",
+            linewidths=1.2,
+            zorder=4,
+        )
+        for opens, closes in zip(
+            windows.coords["earliest_arrival"].to(unit="ms").values,
+            windows.coords["latest_arrival"].to(unit="ms").values,
+        ):
+            ax.axvspan(opens, closes, color="0.5", alpha=0.2, linewidth=0, zorder=0)
+        handles += [
+            Line2D([], [], linestyle="none", marker="x", color="black", label="At the sample"),
+            Patch(
+                facecolor="0.5",
+                alpha=0.2,
+                label="Window at the detector, E/Ei from \u22120.8 to 0.8",
+            ),
+        ]
     fig.colorbar(points, ax=ax, label="Intensity of the patch [n/s]")
     ax.set(title=title, xlabel="Time [ms]", ylabel="Wavelength [Å]")
     ax.grid(True, alpha=0.4)
@@ -344,9 +378,12 @@ def main(
         print(f"Saved {figure}")
         figures.append(figure)
 
+    windows = subpulse_windows(instrument, tof_result)
     figure = output_folder(out, folder) / f"{name}_patches.png"
     fig = plot_patches(
-        comparison, f"Center of mass of each patch\n{instrument.running_conditions()}"
+        comparison,
+        f"Center of mass of each patch\n{instrument.running_conditions()}",
+        windows=windows,
     )
     fig.savefig(figure, dpi=150)
     plt.close(fig)
@@ -354,7 +391,7 @@ def main(
     figures.append(figure)
 
     table = output_folder(out, folder) / f"{name}_windows.txt"
-    table.write_text(windows_table(subpulse_windows(instrument, tof_result)))
+    table.write_text(windows_table(windows))
     print(table.read_text(), end="")
     print(f"Saved {table}")
     figures.append(table)

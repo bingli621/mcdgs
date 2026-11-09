@@ -77,6 +77,12 @@ intensity, its width and its intensity, and `plot_patches` draws them: McStas as
 tof as hollow squares, colored by intensity on one log scale. Where both models have a patch, the
 square frames the circle. The width is drawn as error bars, smaller than the markers here.
 
+Each main sub-pulse of tof is also drawn: a black cross at its incident wavelength when it
+reaches the sample, and its arrival window at the banana detector as a gray band across all
+wavelengths, from the [table below](#arrival-windows-at-the-detector). The sample monitor is at
+the sample, so each cross falls on its patch. The bands lie between the sub-pulses, and the weak
+patch after each sub-pulse sits about 2 ms after the cross, at a slightly shorter wavelength.
+
 ## What reaches the sample
 
 Every neutron's departure time from the moderator follows from its time of arrival t and
