@@ -25,10 +25,10 @@ The reduction follows :mod:`mcdgs.reduction`:
    window of a sub-pulse, whatever their energy transfer within it, and converts them with
    ``QE_GRAPH`` to the momentum transfer (Qx, Qy, Qz).
 
-:func:`plot_plane` draws the intensity in (Qx, Qz) of every sub-pulse, summed over Qy and in a
-thin slice of Qy. Each sub-pulse has its own incident wavevector ki, so its elastic neutrons lie
-on its own circle, of radius ki through the origin, where the detector covers it. Run the module
-to do it::
+:func:`plot_plane` draws the intensity in (Qx, Qz) of every sub-pulse, summed over Qy, on a
+linear and on a log scale. Each sub-pulse has its own incident wavevector ki, so its elastic
+neutrons lie near its own circle, of radius ki through the origin, where the detector covers it.
+Run the module to do it::
 
     pixi run python -m mcdgs.diagnostics.trex_09_elastic_plane
 """
@@ -41,7 +41,7 @@ import numpy as np
 import scipp as sc
 from matplotlib.axes import Axes
 from matplotlib.collections import QuadMesh
-from matplotlib.colors import LogNorm
+from matplotlib.colors import Colormap, LogNorm, Normalize
 from matplotlib.figure import Figure
 from mcstasscript.data.data import McStasData
 
@@ -60,8 +60,10 @@ DETECTOR = "banana_detector"
 SAMPLE = "sample_pos"
 BEAM_DIRECTION = (0.0, 0.0, 1.0)  # the incident beam in the frame of sample_pos: along arm_mc
 Q_STEP = 0.02  # 1/Å, the bin width in Qx and Qz
-QY_HALF_WIDTH = 0.05  # 1/Å, half the width of the slice in Qy near the horizontal plane
 LOG_DECADES = 4  # the log color scale spans this many decades below the highest bin
+# the linear color scale ends at this percentile of the bins with neutrons: the direct beam that
+# passes the beamstop, near Q = 0, is a few bins far above all others
+LINEAR_PERCENTILE = 95
 SAMPLE_SPLIT = 100  # McStas SPLIT on the crystal: each neutron reaching it is repeated this often
 
 
@@ -177,53 +179,34 @@ def print_subpulse_table(pulses: sc.DataArray, events: sc.DataArray) -> None:
 
 
 def _draw_plane(
-    ax: Axes, events: sc.DataArray, edges: dict[str, sc.Variable], norm: LogNorm
+    ax: Axes, plane: sc.DataArray, cmap: Colormap, norm: Normalize, values: np.ndarray
 ) -> QuadMesh:
-    """Draw the intensity of the neutrons in (Qx, Qz), summed over Qy, on ``edges``."""
-    plane = events.hist(Qz=edges["Qz"], Qx=edges["Qx"])  # summed over Qy
+    """Draw a histogram in (Qx, Qz) on its bin edges."""
     mesh = ax.pcolormesh(
-        edges["Qx"].values,
-        edges["Qz"].values,
-        np.ma.masked_less_equal(plane.values, 0),  # empty bins in white
-        cmap=plt.get_cmap("viridis").with_extremes(bad="white"),
-        norm=norm,
+        plane.coords["Qx"].values, plane.coords["Qz"].values, values, cmap=cmap, norm=norm
     )
     ax.set(xlabel="Qx [1/Å]", ylabel="Qz [1/Å], along the beam", aspect="equal")
     ax.grid(True, alpha=0.3)
     return mesh
 
 
-def plot_plane(
-    events: sc.DataArray,
-    pulses: sc.DataArray,
-    title: str,
-    step: float = Q_STEP,
-    qy_half_width: float = QY_HALF_WIDTH,
-) -> Figure:
-    """Draw the intensity in (Qx, Qz) of every sub-pulse, summed over Qy and in a thin slice.
+def plot_plane(events: sc.DataArray, title: str, step: float = Q_STEP) -> Figure:
+    """Draw the intensity in (Qx, Qz) of every sub-pulse, summed over Qy, on two scales.
 
-    The left panel sums over all Qy. The detector spans 25° below the beam to 15° above, and a
-    neutron scattered out of the plane has less of kf in it, so each elastic circle spreads
-    inward into a band. The right panel keeps ``|Qy| < qy_half_width`` only, where the neutrons
-    of each sub-pulse lie on its own elastic circle, of radius ki through the origin, drawn in
-    red.
-
-    Both panels share one color scale, logarithmic, ``LOG_DECADES`` deep below the highest bin,
-    in viridis with the empty bins in white, and their axes have the same scale, so that circles
-    look round.
+    The left panel is linear, in turbo, up to ``LINEAR_PERCENTILE`` of the bins with neutrons,
+    with those above it in the color of the top: the direct beam near Q = 0 would leave the
+    rest dark. The right is logarithmic, ``LOG_DECADES`` deep below the highest bin, in viridis
+    with the empty bins in white, so that the weak bins show too. The axes have the same scale,
+    so that circles look round.
 
     Parameters
     ----------
     events:
         The neutrons of :func:`.events_to_q_and_energy`.
-    pulses:
-        The sub-pulses of :func:`subpulse_timing`, for the elastic circles.
     title:
         The title of the figure.
     step:
         The bin width in Qx and Qz, in 1/Å.
-    qy_half_width:
-        Half the width of the slice in Qy, in 1/Å.
 
     Returns
     -------
@@ -235,29 +218,29 @@ def plot_plane(
         values = events.coords[name].to(unit="1/Å").values
         start, stop = np.floor(values.min() * 10) / 10, np.ceil(values.max() * 10) / 10
         edges[name] = bin_edges(name, start, stop, step, unit="1/Å")
-    vmax = events.hist(Qz=edges["Qz"], Qx=edges["Qx"]).max().value
-    norm = LogNorm(vmin=vmax / 10**LOG_DECADES, vmax=vmax, clip=True)
-    qy = events.coords["Qy"].to(unit="1/Å").values
-    (dim,) = events.dims
-    in_slice = events[dim, np.flatnonzero(np.abs(qy) < qy_half_width)]
+    plane = events.hist(Qz=edges["Qz"], Qx=edges["Qx"])  # summed over Qy
+    vmax = plane.max().value
+    linear_vmax = np.percentile(plane.values[plane.values > 0], LINEAR_PERCENTILE)
+    label = f"Intensity [n/s per ({step:g} 1/Å)²]"
 
-    fig, (summed_ax, slice_ax) = plt.subplots(
-        1, 2, figsize=(16, 9), sharex=True, sharey=True, layout="constrained"
+    fig, (linear_ax, log_ax) = plt.subplots(
+        1, 2, figsize=(16, 8), sharex=True, sharey=True, layout="constrained"
     )
     fig.suptitle(title)
-    mesh = _draw_plane(summed_ax, events, edges, norm)
-    _draw_plane(slice_ax, in_slice, edges, norm)
-    summed_ax.set_title("Summed over Qy")
-    slice_ax.set_title(f"|Qy| < {qy_half_width:g} 1/Å, with the elastic circle of each sub-pulse")
-    angle = np.linspace(0.0, 2 * np.pi, 721)
-    for wavelength in pulses.coords["incident_wavelength"].to(unit="Å").values:
-        ki = 2 * np.pi / wavelength
-        # Q = ki - kf with |kf| = ki: a circle of radius ki, centered on ki along the beam
-        slice_ax.plot(ki * np.sin(angle), ki * (1 - np.cos(angle)), color="red", lw=0.4)
-    slice_ax.set(xlim=summed_ax.get_xlim(), ylim=summed_ax.get_ylim())
-    fig.colorbar(
-        mesh, ax=[summed_ax, slice_ax], shrink=0.8, label=f"Intensity [n/s per ({step:g} 1/Å)²]"
+    linear = _draw_plane(
+        linear_ax, plane, plt.get_cmap("turbo"), Normalize(vmin=0, vmax=linear_vmax), plane.values
     )
+    log = _draw_plane(
+        log_ax,
+        plane,
+        plt.get_cmap("viridis").with_extremes(bad="white"),
+        LogNorm(vmin=vmax / 10**LOG_DECADES, vmax=vmax, clip=True),
+        np.ma.masked_less_equal(plane.values, 0),  # empty bins in white
+    )
+    linear_ax.set_title(f"Linear scale, up to the {LINEAR_PERCENTILE}th percentile of the bins")
+    log_ax.set_title("Log scale")
+    fig.colorbar(linear, ax=linear_ax, shrink=0.8, label=label, extend="max")
+    fig.colorbar(log, ax=log_ax, shrink=0.8, label=label)
     return fig
 
 
@@ -305,7 +288,6 @@ def main(out: Path | None = None, ncount: float = 1e9, seed: int = 1) -> Path:
 
     fig = plot_plane(
         events,
-        pulses,
         f"T-Rex, La2Ni7: (Qx, Qz) of {pulses.sizes['subpulse']} sub-pulses\n"
         f"{instrument.running_conditions()}",
     )
