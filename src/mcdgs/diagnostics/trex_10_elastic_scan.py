@@ -14,8 +14,8 @@ times, fewer than in :mod:`.trex_09_elastic_plane`, since every angle lists its 
 neutron and per steradian, with the sub-pulses of its run to the sample, turns the momentum
 transfer into the frame of the crystal, as it stands at ``omega`` = 0, and keeps the neutrons
 near the horizontal plane, ``|Qy| < QY_HALF_WIDTH``, in one (Qx, Qz) map per angle.
-:func:`analyze` draws their sum on the log color scale of :func:`.draw_plane`, and
-:func:`animate` the scan as a GIF that adds one angle per frame. :func:`main` is :func:`simulate`, then
+:func:`analyze` draws them with :func:`animate`, as a GIF that adds one angle per frame, on
+the log color scale of :func:`.draw_plane`. :func:`main` is :func:`simulate`, then
 :func:`analyze`. Run the module for both::
 
     pixi run python -m mcdgs.diagnostics.trex_10_elastic_scan
@@ -311,51 +311,37 @@ def analyze(
     out: Path | None = None,
     scan: str | Path | None = None,
     to_sample: str | Path | None = None,
-) -> tuple[Path, Path]:
-    """Reduce a scan and save its maps: summed over the angles, and one frame per angle.
+) -> Path:
+    """Reduce a scan and save it as ``trex_elastic_scan.gif``, from :func:`animate`.
 
-    The sum is ``trex_elastic_scan.png``; ``trex_elastic_scan.gif``, from :func:`animate`,
-    builds it up one angle per frame. It runs no McStas, so it can run again on the same scan.
+    The GIF adds one angle per frame, so its last frame is the whole scan. It runs no McStas,
+    so it can run again on the same scan.
 
     Parameters
     ----------
     out:
-        Folder of the figures. If ``None``, the scan folder.
+        Folder of the GIF. If ``None``, the scan folder.
     scan, to_sample:
         As :func:`reduce_angles`.
 
     Returns
     -------
     :
-        The paths of the figure and the GIF.
+        The path of the GIF.
     """
     scan = Path(scan or default_output_dir() / SCAN)
     maps = crop(reduce_angles(scan, to_sample))
     hkl = " ".join(str(i) for i in IN_PLANE)
-    conditions = TRexWithRotatingLa2Ni7().running_conditions()
-    where = f"|Qy| < {QY_HALF_WIDTH:g} 1/Å, in the frame of the crystal at omega = 0"
-    folder = output_folder(out, scan)
-
-    fig = plane.draw_plane(
-        maps.sum("omega"),
-        f"T-Rex, La2Ni7 ({hkl}) in plane: rotation scan of {maps.sizes['omega']} angles, "
-        f"summed\n{conditions}\n{where}",
-        xlabel=f"Qx [1/Å], along ({hkl})",
-        ylabel="Qz [1/Å], along (0 0 1)",
+    title = (
+        f"T-Rex, La2Ni7 ({hkl}) in plane\n{TRexWithRotatingLa2Ni7().running_conditions()}\n"
+        f"|Qy| < {QY_HALF_WIDTH:g} 1/Å, in the frame of the crystal at omega = 0"
     )
-    figure = folder / f"{NAME}.png"
-    fig.savefig(figure, dpi=150)
-    plt.close(fig)
-    print(f"Saved {figure}")
-
-    gif = animate(
-        maps, folder / f"{NAME}.gif", f"T-Rex, La2Ni7 ({hkl}) in plane\n{conditions}\n{where}"
-    )
+    gif = animate(maps, output_folder(out, scan) / f"{NAME}.gif", title)
     print(f"Saved {gif}")
-    return figure, gif
+    return gif
 
 
-def main(out: Path | None = None) -> tuple[Path, Path]:
+def main(out: Path | None = None) -> Path:
     """Run the scan with :func:`simulate`, then reduce and draw it with :func:`analyze`.
 
     The beam file must exist: run :mod:`.trex_09_elastic_plane` first.
@@ -363,12 +349,12 @@ def main(out: Path | None = None) -> tuple[Path, Path]:
     Parameters
     ----------
     out:
-        Folder of the figures, as :func:`analyze`.
+        Folder of the GIF, as :func:`analyze`.
 
     Returns
     -------
     :
-        The paths of the figure and the GIF.
+        The path of the GIF.
     """
     return analyze(out, simulate())
 
