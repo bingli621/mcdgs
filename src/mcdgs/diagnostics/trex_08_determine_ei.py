@@ -17,8 +17,9 @@ The incident energy of each sub-pulse follows from its flight between the monito
 from its flight from the source to the pre-sample monitor alone, leaving the source at
 ``t0_offset``, the time the choppers are phased to.
 :func:`subpulse_flights` finds the sub-pulses at each monitor with :func:`.find_patches` and pairs
-them; :func:`.incident_flight`, of :mod:`mcdgs.reduction.incident_energy`, turns the start and
-end of each flight, and the times there, into the flight path, the time of flight, the incident
+them with :func:`.subpulse_flight`, both of :mod:`mcdgs.reduction.patches`.
+:func:`.incident_flight`, of :mod:`mcdgs.reduction.incident_energy`, turns the start and end of
+each flight, and the times there, into the flight path, the time of flight, the incident
 wavelength and the incident energy, through a graph of scippneutron's kernels. The mean
 wavelength of each sub-pulse at the pre-sample monitor, which the monitors record, gives the
 incident energy it should have.
@@ -36,16 +37,14 @@ import matplotlib.pyplot as plt
 import mcstasscript as ms
 import scipp as sc
 from matplotlib.figure import Figure
-from numpy.typing import NDArray
 from scippneutron.conversion import tof as tof_kernels
 
-from mcdgs.core.components import Single_crystal
 from mcdgs.diagnostics.cli import output_folder, parse_out
 from mcdgs.diagnostics.compare import MonitorComparison, read_scaled_comparisons
-from mcdgs.diagnostics.trex_07_neutrons_on_sample import find_patches
 from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
 from mcdgs.mcstas.simulation import Simulation
 from mcdgs.reduction.incident_energy import EI_GRAPH, incident_flight
+from mcdgs.reduction.patches import MIN_FRACTION, find_patches, subpulse_flight
 from mcdgs.samples import la2ni7
 from mcdgs.tof.builder import build_tof
 from mcdgs.tof.reader import monitor_bins
@@ -55,7 +54,6 @@ MONITOR_LABELS = {
     "pre_sample_monitor": "Pre-sample monitor",
     "beamstop_monitor": "Beamstop monitor",
 }
-MIN_FRACTION = 0.02  # a patch weaker than this fraction of the strongest is not a sub-pulse
 
 
 class TRexToBeamstopMonitor(TRex):
@@ -64,20 +62,18 @@ class TRexToBeamstopMonitor(TRex):
     The beamstop and the banana detector, which only see what the sample scatters or lets
     through, are left out.
 
+    The crystal is that of :func:`.la2ni7`.
+
     Parameters
     ----------
-    sample:
-        The crystal. If ``None``, :func:`.la2ni7`.
     params:
         Control parameters.
     """
 
     name = "trex_to_beamstop_monitor"  # the McStas instrument name
 
-    def __init__(
-        self, sample: Single_crystal | None = None, params: Params = DEFAULT_PARAMS
-    ) -> None:
-        super().__init__(sample=la2ni7(name="sample") if sample is None else sample, params=params)
+    def __init__(self, params: Params = DEFAULT_PARAMS) -> None:
+        super().__init__(sample=la2ni7(name="sample"), params=params)
         # after the sample: the beamstop monitor is the last one that counts
         del self.beamstop
         del self.banana_detector
@@ -94,8 +90,9 @@ def subpulse_flights(
     """Pair the sub-pulses of one model at both monitors, and compute their incident energy.
 
     The sub-pulses are the patches of :func:`.find_patches` with at least ``min_fraction`` of
-    the intensity of the strongest. The flight between the monitors is shorter than the time
-    between sub-pulses, so the n-th sub-pulse at one is the n-th at the other.
+    the intensity of the strongest, paired by :func:`.subpulse_flight`: the flight between the
+    monitors is shorter than the time between sub-pulses, so the n-th sub-pulse at one is the
+    n-th at the other.
 
     The incident energy comes from two flights, each through :func:`.incident_flight`: from the
     pre-sample to the beamstop monitor, and from the source to the pre-sample monitor alone,
@@ -129,51 +126,36 @@ def subpulse_flights(
         If the monitors do not have as many sub-pulses, or one arrives at the beamstop monitor
         first.
     """
-    found = []
-    for comparison in (pre_sample, beamstop):
-        intensity: NDArray = getattr(comparison, f"{model}_intensity")
-        patches = find_patches(intensity, comparison.bins)
-        keep = patches.intensity >= min_fraction * patches.intensity.max()
-        found.append((patches, keep))
-    (first, keep_first), (second, keep_second) = found
-    if keep_first.sum() != keep_second.sum():
-        raise ValueError(
-            f"{model}: {keep_first.sum()} sub-pulses at the pre-sample monitor, "
-            f"{keep_second.sum()} at the beamstop monitor"
-        )
-    time_at_pre_sample = sc.array(dims=["subpulse"], values=first.time[keep_first], unit="ms")
-    time_at_beamstop = sc.array(dims=["subpulse"], values=second.time[keep_second], unit="ms")
+    pre_sample_patches, beamstop_patches = (
+        find_patches(getattr(comparison, f"{model}_intensity"), comparison.bins)
+        for comparison in (pre_sample, beamstop)
+    )
     pre_sample_position = sc.vector(positions["pre_sample_monitor"], unit="m")
-    # --8<-- [start:two_flights]
-    between_monitors = incident_flight(
-        pre_sample_position,
-        time_at_pre_sample,
-        sc.vector(positions["beamstop_monitor"], unit="m"),
-        time_at_beamstop,
+    try:
+        # --8<-- [start:two_flights]
+        flights = subpulse_flight(
+            pre_sample_patches,
+            pre_sample_position,
+            beamstop_patches,
+            sc.vector(positions["beamstop_monitor"], unit="m"),
+            min_fraction=min_fraction,
+        )
+        from_source = incident_flight(
+            sc.vector(positions["source"], unit="m"),
+            time_on_source.to(unit="ms"),
+            pre_sample_position,
+            flights.coords["time_at_start"],
+        )
+        # --8<-- [end:two_flights]
+    except ValueError as error:
+        raise ValueError(f"{model}: {error}") from error
+    flights.coords["time_at_pre_sample_monitor"] = flights.coords.pop("time_at_start")
+    flights.coords["time_at_beamstop_monitor"] = flights.coords.pop("time_at_end")
+    flights.coords["reference_energy"] = tof_kernels.energy_from_wavelength(
+        wavelength=flights.coords.pop("wavelength_at_start")
     )
-    from_source = incident_flight(
-        sc.vector(positions["source"], unit="m"),
-        time_on_source.to(unit="ms"),
-        pre_sample_position,
-        time_at_pre_sample,
-    )
-    # --8<-- [end:two_flights]
-    flights = sc.DataArray(
-        sc.array(dims=["subpulse"], values=first.intensity[keep_first], unit="1/s"),  # n/s
-        coords={
-            "time_at_pre_sample_monitor": time_at_pre_sample,
-            "time_at_beamstop_monitor": time_at_beamstop,
-            **between_monitors,
-            **{f"one_monitor_{name}": value for name, value in from_source.items()},
-            "reference_energy": tof_kernels.energy_from_wavelength(
-                wavelength=sc.array(
-                    dims=["subpulse"], values=first.wavelength[keep_first], unit="Å"
-                )
-            ),
-        },
-    )
-    if (flights.coords["tof"] <= sc.scalar(0.0, unit="ms")).any().value:
-        raise ValueError(f"{model}: a sub-pulse reaches the beamstop monitor first")
+    for name, value in from_source.items():
+        flights.coords[f"one_monitor_{name}"] = value
     return flights
 
 

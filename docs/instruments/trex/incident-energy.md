@@ -56,7 +56,8 @@ sub-pulses, from −0.18 to +0.20 % of the reference.
 
 ### Finding the sub-pulses
 
-`subpulse_flights` finds the sub-pulses at each monitor with `find_patches` of
+`subpulse_flights` finds the sub-pulses at each monitor with `find_patches`, of the reduction
+package, [`mcdgs.reduction.patches`](../../reference/reduction.md), as in
 [Neutrons on sample](neutrons-on-sample.md#the-patches): a patch is a run of time bins with
 neutrons, and its time is the mean time of its neutrons, weighted by the intensity. Patches with
 less than 2 % of the intensity of the strongest are left out: these are the weak patches between
@@ -64,7 +65,7 @@ the sub-pulses.
 
 The flight between the monitors, at most 2.2 ms, is shorter than the 4 ms between sub-pulses, so
 the n-th sub-pulse at the pre-sample monitor is the n-th at the beamstop monitor. If the two
-monitors do not have as many sub-pulses, `subpulse_flights` stops with an error rather than pair
+monitors do not have as many sub-pulses, `subpulse_flight` stops with an error rather than pair
 them wrongly.
 
 ### The scippneutron graph
@@ -106,7 +107,9 @@ graph for given positions and times, and returns `Ltotal`, `tof`, `incident_wave
 
 ### Two flights
 
-`subpulse_flights` follows the graph twice for each sub-pulse, through `incident_flight`:
+`subpulse_flights` follows the graph twice for each sub-pulse, through `incident_flight`: once
+in `subpulse_flight`, which pairs the sub-pulses at the two monitors and flies them between
+these, and once from the source:
 
 <!-- fmt:off -->
 ```python

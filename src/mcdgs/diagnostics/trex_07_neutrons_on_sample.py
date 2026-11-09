@@ -14,7 +14,7 @@ McStas, and the shape in time and wavelength that of each model.
 The choppers cut the beam into sub-pulses, a bin or two wide and about 4 ms apart.
 :func:`.plot_comparison` draws both models twice, with the points of the wavelength spectrum and
 the time profile joined by lines: first all on linear scales, then all on log scales, the maps
-``LOG_DECADES`` deep, so that the weak bins show too. :func:`find_patches` finds the patches of
+``LOG_DECADES`` deep, so that the weak bins show too. :func:`.find_patches` finds the patches of
 each model, the sub-pulses and the weak ones between them, and :func:`plot_patches` draws the
 center of mass of each in time and wavelength, with its width as error bars.
 
@@ -25,28 +25,23 @@ Run the module to do it::
     pixi run python -m mcdgs.diagnostics.trex_07_neutrons_on_sample
 """
 
-from collections.abc import Mapping
-from dataclasses import dataclass
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 import mcstasscript as ms
-import numpy as np
-import scipp as sc
 from matplotlib.colors import LogNorm
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
-from numpy.typing import NDArray
 
 from mcdgs.diagnostics.cli import output_folder, parse_out
 from mcdgs.diagnostics.compare import MonitorComparison, plot_comparison, read_scaled_comparisons
 from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
 from mcdgs.mcstas.simulation import Simulation
+from mcdgs.reduction.patches import find_patches
 from mcdgs.tof.builder import build_tof
 from mcdgs.tof.reader import monitor_bins
 
 LOG_DECADES = 3  # the log color scale of the maps spans this many decades below the highest bin
-PATCH_GAP = 1.0  # ms: a longer gap in time starts a new patch; they are at least 2 ms apart
 
 
 # --8<-- [start:trex_to_sample]
@@ -71,88 +66,11 @@ class TRexToSample(TRex):
         # --8<-- [end:trex_to_sample]
 
 
-@dataclass(frozen=True)
-class Patches:
-    """The center of mass of each patch of a time and wavelength map, and its width.
-
-    Each field has one value per patch, in time order. A width is the RMS of the patch about its
-    center, with the spread within a bin, its width over √12, added in quadrature: a patch one
-    bin wide is that wide, not a point.
-
-    Parameters
-    ----------
-    time, time_width:
-        The mean time of arrival and its width, in ms.
-    wavelength, wavelength_width:
-        The mean wavelength and its width, in Å.
-    intensity:
-        The intensity of the patch, in n/s.
-    """
-
-    time: NDArray
-    time_width: NDArray
-    wavelength: NDArray
-    wavelength_width: NDArray
-    intensity: NDArray
-
-
-def _mean_and_width(weights: NDArray, edges: NDArray) -> tuple[float, float]:
-    """Return the weighted mean of the bin centers and the width, with the spread within a bin."""
-    centers = (edges[:-1] + edges[1:]) / 2
-    mean = float(np.average(centers, weights=weights))
-    variance = np.average((centers - mean) ** 2, weights=weights) + np.diff(edges)[0] ** 2 / 12
-    return mean, float(np.sqrt(variance))
-
-
-def find_patches(
-    intensity: NDArray, bins: Mapping[str, sc.Variable], gap: float = PATCH_GAP
-) -> Patches:
-    """Find the patches of a time and wavelength map: the runs of time bins with neutrons.
-
-    Parameters
-    ----------
-    intensity:
-        The map, with the shape (time bins, wavelength bins).
-    bins:
-        Its bin edges, ``"toa"`` and ``"wavelength"``, evenly spaced.
-    gap:
-        The longest gap in time within a patch, in ms; a longer one starts a new patch.
-
-    Returns
-    -------
-    :
-        The center of mass of each patch, its width and its intensity.
-
-    Examples
-    --------
-    >>> bins = {
-    ...     "toa": sc.linspace("toa", 0.0, 6.0, 7, unit="ms"),
-    ...     "wavelength": sc.linspace("wavelength", 1.0, 3.0, 3, unit="Å"),
-    ... }
-    >>> intensity = np.array([[1, 0], [1, 0], [0, 0], [0, 0], [0, 2], [0, 0]])
-    >>> patches = find_patches(intensity, bins, gap=1.0)
-    >>> patches.time.tolist(), patches.wavelength.tolist(), patches.intensity.tolist()
-    ([1.0, 4.5], [1.5, 2.5], [2.0, 2.0])
-    """
-    times = bins["toa"].to(unit="ms").values
-    wavelengths = bins["wavelength"].to(unit="Å").values
-    filled = np.flatnonzero(intensity.sum(axis=1) > 0)
-    new_patch = np.flatnonzero(np.diff(times[filled]) > gap + np.diff(times)[0]) + 1
-    found = []
-    for run in np.split(filled, new_patch) if filled.size else []:
-        patch = intensity[run[0] : run[-1] + 1]
-        time = _mean_and_width(patch.sum(axis=1), times[run[0] : run[-1] + 2])
-        wavelength = _mean_and_width(patch.sum(axis=0), wavelengths)
-        found.append((*time, *wavelength, float(patch.sum())))
-    columns = np.array(found, dtype=float).reshape(-1, 5).T
-    return Patches(*columns)
-
-
 def plot_patches(comparison: MonitorComparison, title: str) -> Figure:
     """Draw the center of mass of each patch of both models, in time and wavelength.
 
     Each patch is a point at its mean time and wavelength, with its width in each as gray error
-    bars, from :func:`find_patches`. Its color is its intensity, on one log scale for both models:
+    bars, from :func:`.find_patches`. Its color is its intensity, on one log scale for both models:
     McStas has small filled circles, tof larger hollow squares with the color as their outline, so
     that where both have a patch the square frames the circle.
 

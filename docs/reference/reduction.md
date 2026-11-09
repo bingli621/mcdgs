@@ -6,7 +6,11 @@ From simulated data to physical quantities, with the kernels of
 
 ::: mcdgs.reduction.incident_energy
 
+::: mcdgs.reduction.patches
+
 ::: mcdgs.reduction.inelastic
+
+::: mcdgs.reduction.frame
 
 ::: mcdgs.reduction.solid_angle
 

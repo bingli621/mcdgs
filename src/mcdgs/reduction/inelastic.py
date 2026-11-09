@@ -9,7 +9,8 @@ momentum transfer ``ki - kf``.
 A pulse of a repetition-rate multiplication instrument holds several sub-pulses, each with its
 own incident energy. :func:`arrival_window` gives, per pixel and sub-pulse, when the neutrons of
 an energy-transfer range reach the detector, and :func:`assign_subpulse` gives each neutron the
-sub-pulse of the window it arrives in.
+sub-pulse of the window it arrives in. :func:`events_to_q_and_energy` does both for neutrons
+binned by pixel, keeps those inside a window and converts them with ``QE_GRAPH``.
 """
 
 from typing import cast
@@ -25,6 +26,7 @@ __all__ = [
     "QE_GRAPH",
     "arrival_window",
     "assign_subpulse",
+    "events_to_q_and_energy",
     "final_wavelength",
     "time_at_sample",
 ]
@@ -268,3 +270,70 @@ def assign_subpulse(
         "subpulse": sc.array(dims=[dim], values=subpulse),
         "inside": sc.array(dims=[dim], values=inside),
     }
+
+
+def events_to_q_and_energy(
+    binned: sc.DataArray,
+    pulses: sc.DataArray,
+    energy_transfer_ratio: tuple[float, float] = DEFAULT_ENERGY_TRANSFER_RATIO,
+) -> sc.DataArray:
+    """Keep the neutrons inside the arrival window of a sub-pulse, with their Q and E.
+
+    Each pixel and sub-pulse has the arrival window of :func:`arrival_window`. A neutron inside
+    the window of a sub-pulse, as :func:`assign_subpulse` finds, gets the incident energy of that
+    sub-pulse and its time at the sample, whatever its energy transfer within the window, and
+    ``QE_GRAPH`` converts it.
+
+    Parameters
+    ----------
+    binned:
+        The neutrons, binned by pixel, each with its ``time_at_detector``. The pixels have their
+        ``pixel_id`` and ``position``, and the data its ``sample_position`` and
+        ``source_position``, a point on the incident beam, in the frame of the components of
+        ``Q``, such as that of :func:`.beam_frame`.
+    pulses:
+        The sub-pulses in time order, along one dimension, with their ``incident_energy`` and
+        ``time_at_sample``, in the unit of ``time_at_detector``.
+    energy_transfer_ratio:
+        The smallest and the largest ``E / Ei`` of the arrival windows, as
+        :func:`arrival_window`.
+
+    Returns
+    -------
+    :
+        The neutrons inside a window, along one dimension, with ``subpulse``, the index of their
+        sub-pulse, ``incident_energy``, ``time_at_sample``, ``energy_transfer``, ``Q``, ``Qx``,
+        ``Qy`` and ``Qz``.
+    """
+    L2 = sc.norm(binned.coords["position"] - binned.coords["sample_position"])
+    window = arrival_window(
+        pulses.coords["time_at_sample"],
+        L2,
+        pulses.coords["incident_energy"],
+        energy_transfer_ratio=energy_transfer_ratio,
+    )
+    # every neutron gets the id and the position of its pixel, then they are one list
+    binned = binned.copy()
+    for name in ("pixel_id", "position"):
+        binned.bins.coords[name] = sc.bins_like(binned, binned.coords[name])
+    events = binned.bins.concat().value
+    (dim,) = events.dims
+    assigned = assign_subpulse(
+        events.coords["pixel_id"],
+        events.coords["time_at_detector"],
+        binned.coords["pixel_id"],
+        window["earliest_arrival"],
+        window["latest_arrival"],
+    )
+    inside = assigned["inside"].values
+    events = events[dim, np.flatnonzero(inside)].copy()
+    subpulse = assigned["subpulse"].values[inside]
+    events.coords["sample_position"] = binned.coords["sample_position"]
+    events.coords["source_position"] = binned.coords["source_position"]
+    events.coords["subpulse"] = sc.array(dims=[dim], values=subpulse)
+    for name in ("incident_energy", "time_at_sample"):
+        coord = pulses.coords[name]
+        events.coords[name] = sc.array(dims=[dim], values=coord.values[subpulse], unit=coord.unit)
+    return events.transform_coords(
+        ["energy_transfer", "Q", "Qx", "Qy", "Qz"], graph=QE_GRAPH, keep_intermediate=False
+    )

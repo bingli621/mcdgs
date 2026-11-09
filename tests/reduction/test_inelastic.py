@@ -1,8 +1,15 @@
+import numpy as np
 import pytest
 import scipp as sc
 from scippneutron.conversion.tof import energy_from_wavelength
 
-from mcdgs.reduction.inelastic import QE_GRAPH, arrival_window, assign_subpulse, time_at_sample
+from mcdgs.reduction.inelastic import (
+    QE_GRAPH,
+    arrival_window,
+    assign_subpulse,
+    events_to_q_and_energy,
+    time_at_sample,
+)
 
 ORIGIN = sc.vector([0.0, 0.0, 0.0], unit="m")
 SPEED_PER_ANGSTROM = 3956.034  # m/s times Å: the speed of a neutron of 1 Å
@@ -138,3 +145,50 @@ def test_a_pixel_without_a_window_raises():
             earliest,
             latest,
         )
+
+
+def _detector_events() -> tuple[sc.DataArray, sc.DataArray]:
+    """Two sub-pulses, of 2 and 1.9 Å, and three neutrons at two pixels 3 m from the sample."""
+    pulses = sc.DataArray(
+        sc.ones(dims=["subpulse"], shape=[2], unit="1/s"),
+        coords={
+            "time_at_sample": sc.array(dims=["subpulse"], values=[0.0, 4.0], unit="ms"),
+            "incident_energy": sc.concat([_energy(2.0), _energy(1.9)], "subpulse"),
+        },
+    )
+    events = sc.DataArray(
+        sc.ones(dims=["event"], shape=[3], unit="1/s"),
+        coords={
+            "pixel_id": sc.array(dims=["event"], values=[0, 0, 1]),
+            "time_at_detector": sc.array(
+                # elastic from the first sub-pulse, between the windows, elastic from the second
+                dims=["event"],
+                values=[_time(3.0, 2.0), 3.7, 4.0 + _time(3.0, 1.9)],
+                unit="ms",
+            ),
+        },
+    )
+    binned = events.group(sc.array(dims=["pixel_id"], values=[0, 1]))
+    binned.coords["position"] = sc.vectors(
+        dims=["pixel_id"], values=[[3.0, 0.0, 0.0], [-3.0, 0.0, 0.0]], unit="m"
+    )
+    binned.coords["sample_position"] = ORIGIN
+    binned.coords["source_position"] = sc.vector([0.0, 0.0, -160.0], unit="m")
+    return binned, pulses
+
+
+def test_the_neutrons_in_a_window_get_its_sub_pulse_and_their_q_and_energy():
+    binned, pulses = _detector_events()
+    events = events_to_q_and_energy(binned, pulses)
+    assert events.coords["subpulse"].values.tolist() == [0, 1]  # the one between is dropped
+    assert np.allclose(events.coords["energy_transfer"].to(unit="meV").values, 0.0, atol=1e-6)
+    # scattered by 90°, to the left and to the right: Q = ki - kf
+    k = [2 * np.pi / 2.0, 2 * np.pi / 1.9]
+    assert events.coords["Qx"].to(unit="1/Å").values == pytest.approx([-k[0], k[1]], rel=1e-6)
+    assert events.coords["Qz"].to(unit="1/Å").values == pytest.approx(k, rel=1e-6)
+
+
+def test_a_narrower_window_drops_more():
+    binned, pulses = _detector_events()
+    events = events_to_q_and_energy(binned, pulses, energy_transfer_ratio=(0.1, 0.5))
+    assert events.sizes == {"event": 0}  # elastic neutrons are outside
