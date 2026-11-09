@@ -50,3 +50,11 @@ def test_read_events_gives_each_neutron_its_time_in_ms_and_its_weight_in_n_per_s
         SPLIT, "detector", "source", "sample_pos", beam_direction=[0, 0, 1]
     )
     assert np.allclose(binned.bins.sum().values, pixels.values)
+
+
+def test_read_events_puts_the_missing_source_upstream_along_the_beam():
+    with pytest.raises(ValueError, match="beam_direction"):
+        read_events(SPLIT, "detector", "source", "sample_pos")
+    binned = read_events(SPLIT, "detector", "source", "sample_pos", beam_direction=[0, 0, 3])
+    upstream = binned.coords["sample_position"].value - binned.coords["source_position"].value
+    assert np.allclose(upstream, [0, 0, 1])

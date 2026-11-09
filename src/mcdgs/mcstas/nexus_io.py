@@ -43,7 +43,46 @@ def numeric_parameters(parameters: Mapping[str, Any]) -> dict[str, float]:
     return numeric
 
 
-def read_events(folder: str | Path, detector: str, source: str, sample: str) -> sc.DataArray:
+def _export_events(
+    data: mcstastox.Read,
+    folder: str | Path,
+    detector: str,
+    source: str,
+    sample: str,
+    beam_direction: ArrayLike | None,
+) -> sc.DataArray:
+    """Export the events of ``detector``, by pixel, with mcstastox, from an open file.
+
+    Without ``source`` in the file, the source is put 1 m upstream of ``sample`` along
+    ``beam_direction``, as :func:`read_pixels` describes.
+
+    Raises
+    ------
+    ValueError
+        If the file has no ``source`` and ``beam_direction`` is ``None``.
+    """
+    try:
+        return data.export_scipp(source, sample, component_name=detector)["events"]
+    except ValueError as error:  # no source in the file, e.g. a run from a beam file
+        if beam_direction is None:
+            raise ValueError(
+                f"{folder}: no component {source!r}; give beam_direction to read it"
+            ) from error
+        sample_pos = data.get_global_component_coordinates(sample)
+        upstream = np.asarray(beam_direction, float)
+        upstream = upstream / np.linalg.norm(upstream)
+        grouped = data.export_scipp(sample, sample, component_name=detector)["events"]
+        grouped.coords["source_position"] = sc.vector(sample_pos - upstream, unit="m")
+        return grouped
+
+
+def read_events(
+    folder: str | Path,
+    detector: str,
+    source: str,
+    sample: str,
+    beam_direction: ArrayLike | None = None,
+) -> sc.DataArray:
     """Read the neutrons of a detector of a McStas NeXus file, by pixel.
 
     Parameters
@@ -58,16 +97,24 @@ def read_events(folder: str | Path, detector: str, source: str, sample: str) -> 
         direction of the beam there, where a guide bends it.
     sample:
         Name of the component at the sample position.
+    beam_direction:
+        Direction of the beam at the sample, for a file without ``source``, as in
+        :func:`read_pixels`. If ``None``, a file without ``source`` raises.
 
     Returns
     -------
     :
         The neutrons, binned by ``pixel_id``, each with its weight in n/s and its time
-        ``time_at_detector``, in ms. The coords are those mcstastox gives, in the lab frame,
+        ``time_at_detector``, in ms. The coords are those mcstastox gives, in the frame of the file,
         including ``position``, ``sample_position`` and ``source_position``.
+
+    Raises
+    ------
+    ValueError
+        If the file has no ``source`` and ``beam_direction`` is ``None``.
     """
     with mcstastox.Read(str(folder)) as data:
-        binned = data.export_scipp(source, sample, component_name=detector)["events"]
+        binned = _export_events(data, folder, detector, source, sample, beam_direction)
     binned.bins.coords["time_at_detector"] = binned.bins.coords.pop("t").to(unit="ms")
     binned.bins.unit = "1/s"  # McStas weights are n/s
     return binned
@@ -121,18 +168,7 @@ def read_pixels(
     for entry in range(1, n_entries + 1):
         with mcstastox.Read(str(folder), entry_number=entry) as data:
             params = numeric_parameters(data.get_instrument_parameters())
-            try:
-                grouped = data.export_scipp(source, sample, component_name=detector)["events"]
-            except ValueError as error:  # no source in the file, e.g. a run from a beam file
-                if beam_direction is None:
-                    raise ValueError(
-                        f"{folder}: no component {source!r}; give beam_direction to read it"
-                    ) from error
-                sample_pos = data.get_global_component_coordinates(sample)
-                upstream = np.asarray(beam_direction, float)
-                upstream = upstream / np.linalg.norm(upstream)
-                grouped = data.export_scipp(sample, sample, component_name=detector)["events"]
-                grouped.coords["source_position"] = sc.vector(sample_pos - upstream, unit="m")
+            grouped = _export_events(data, folder, detector, source, sample, beam_direction)
 
         points.append((params, grouped.bins.sum()))  # events are grouped by pixel id
     return points

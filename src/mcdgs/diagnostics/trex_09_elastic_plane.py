@@ -5,15 +5,21 @@
 it. Its control parameters are those of :class:`.TRex`. Few neutrons reach a 5 mm crystal, so
 McStas repeats each one that does ``SAMPLE_SPLIT`` times, with its weight divided among them.
 
+:func:`main` runs it in two parts, with :class:`.Simulation`: from the source to ``sample_pos``,
+which dumps the beam there into a beam file, then from that beam through the crystal to the
+detector. The second part can run again from the same beam, without the long first part.
+
 The reduction follows :mod:`mcdgs.reduction`:
 
-1. :func:`subpulse_timing` finds the sub-pulses at the pre-sample and beamstop monitors of McStas
-   with :func:`.find_patches`, as :mod:`.trex_08_determine_ei` does, and gives each its incident
-   energy, from its flight between the monitors with :func:`.subpulse_flight`, and the time it
-   reaches the sample, with :func:`.time_at_sample`.
-2. :func:`read_events_in_beam_frame` reads the neutrons of the banana detector, by pixel, with
-   :func:`.read_events`, in the beam frame of :func:`.beam_frame`: z along the beam between the
-   pre-sample monitor and the sample, y up.
+1. :func:`subpulse_timing` finds the sub-pulses at the pre-sample and beamstop monitors of the
+   first part with :func:`.find_patches`, as :mod:`.trex_08_determine_ei` does: both come before
+   ``sample_pos`` in beam order. It gives each sub-pulse its incident energy, from its flight
+   between the monitors with :func:`.subpulse_flight`, and the time it reaches the sample, with
+   :func:`.time_at_sample`.
+2. :func:`.read_events` reads the neutrons of the banana detector of the second part, by pixel.
+   That part runs in the frame of ``sample_pos``, which is the beam frame: the origin is the
+   sample, z the axis of ``arm_mc``, straight along the beam from the pre-sample monitor to the
+   sample, y up and x to the left of the beam.
 3. :func:`.events_to_q_and_energy` gives each pixel and sub-pulse the arrival window of
    :func:`.arrival_window`, keeps the neutrons that :func:`.assign_subpulse` finds inside the
    window of a sub-pulse, whatever their energy transfer within it, and converts them with
@@ -44,7 +50,6 @@ from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
 from mcdgs.mcstas.nexus_io import read_events
 from mcdgs.mcstas.simulation import Simulation
 from mcdgs.reduction.binning import bin_edges
-from mcdgs.reduction.frame import beam_frame
 from mcdgs.reduction.inelastic import events_to_q_and_energy, time_at_sample
 from mcdgs.reduction.patches import MIN_FRACTION, find_patches, subpulse_flight
 from mcdgs.samples import la2ni7
@@ -53,6 +58,7 @@ from mcdgs.tof.reader import monitor_bins
 MONITORS = ("pre_sample_monitor", "beamstop_monitor")  # in beam order
 DETECTOR = "banana_detector"
 SAMPLE = "sample_pos"
+BEAM_DIRECTION = (0.0, 0.0, 1.0)  # the incident beam in the frame of sample_pos: along arm_mc
 Q_STEP = 0.02  # 1/Å, the bin width in Qx and Qz
 QY_HALF_WIDTH = 0.05  # 1/Å, half the width of the slice in Qy near the horizontal plane
 LOG_DECADES = 4  # the log color scale spans this many decades below the highest bin
@@ -140,31 +146,6 @@ def subpulse_timing(
         pulses.coords["incident_energy"],
     )
     return pulses
-
-
-def read_events_in_beam_frame(folder: str | Path) -> sc.DataArray:
-    """Read the neutrons of the banana detector of a McStas run, in the beam frame.
-
-    Parameters
-    ----------
-    folder:
-        Run folder with the ``mccode.h5`` to read.
-
-    Returns
-    -------
-    :
-        The neutrons of :func:`.read_events`, with the pre-sample monitor as the source, and
-        their positions in the frame of :func:`.beam_frame`.
-    """
-    # source_position only sets the direction of the incident beam, from it to the sample: the
-    # pre-sample monitor, 0.3 m before the sample, gives it where the curved guide has bent it
-    binned = read_events(folder, DETECTOR, MONITORS[0], SAMPLE)
-    sample_position = binned.coords["sample_position"]
-    upstream = binned.coords["source_position"]
-    binned.coords["position"] = beam_frame(binned.coords["position"], sample_position, upstream)
-    binned.coords["source_position"] = beam_frame(upstream, sample_position, upstream)
-    binned.coords["sample_position"] = sc.vector([0.0, 0.0, 0.0], unit="m")
-    return binned
 
 
 def print_subpulse_table(pulses: sc.DataArray, events: sc.DataArray) -> None:
@@ -283,17 +264,21 @@ def plot_plane(
 def main(out: Path | None = None, ncount: float = 1e9, seed: int = 1) -> Path:
     """Run :class:`TRexWithLa2Ni7` in McStas, reduce its neutrons and save the (Qx, Qz) plane.
 
+    The first part runs from the source to ``sample_pos`` into the folder
+    ``trex_elastic_plane_run_to_sample``, with the monitors of the incident energy and the beam
+    file; the second from that beam to the detector, into ``trex_elastic_plane_run_from_sample``.
     The figure is ``trex_elastic_plane.png``, from :func:`plot_plane`.
 
     Parameters
     ----------
     out:
-        Folder of the figure. If ``None``, the folder of the McStas run, next to its
+        Folder of the figure. If ``None``, the folder of the second part, next to its
         ``mccode.h5``.
     ncount:
-        Number of McStas neutrons.
+        Number of McStas neutrons of the first part. The second part runs every neutron of the
+        beam file.
     seed:
-        Seed of the random numbers.
+        Seed of the random numbers of the first part; the second part takes ``seed + 1``.
 
     Returns
     -------
@@ -302,13 +287,20 @@ def main(out: Path | None = None, ncount: float = 1e9, seed: int = 1) -> Path:
     """
     instrument = TRexWithLa2Ni7()  # the default control parameters
     name = "trex_elastic_plane"
+    simulation = Simulation(instrument)
 
-    folder = Simulation(instrument).run(name, ncount=ncount, seed=seed).parent
-    mcstas_data = ms.load_data(str(folder))
+    # source -> sample_pos: the incident energy and the time at the sample of each sub-pulse
+    beam_file = simulation.run_to_sample(f"{name}_run_to_sample", ncount=ncount, seed=seed)
     bins = {monitor: monitor_bins(getattr(instrument, monitor)) for monitor in MONITORS}
-    pulses = subpulse_timing(mcstas_data, bins, instrument.positions())
+    pulses = subpulse_timing(ms.load_data(str(beam_file.parent)), bins, instrument.positions())
 
-    events = events_to_q_and_energy(read_events_in_beam_frame(folder), pulses)
+    # sample_pos -> detector, from the beam file, in the frame of sample_pos: the beam frame
+    folder = simulation.run_from_sample(
+        f"{name}_run_from_sample", beam_file=beam_file, seed=seed + 1
+    ).parent
+    # no source in this part: the incident beam is given by its direction instead
+    binned = read_events(folder, DETECTOR, "source", SAMPLE, beam_direction=BEAM_DIRECTION)
+    events = events_to_q_and_energy(binned, pulses)
     print_subpulse_table(pulses, events)
 
     fig = plot_plane(

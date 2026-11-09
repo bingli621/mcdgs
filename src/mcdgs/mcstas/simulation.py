@@ -411,6 +411,7 @@ class Simulation:
         self,
         folder_name: str | None = None,
         ncount: float = 1e8,
+        seed: int | None = None,
         mpi: int | str = "auto",
         **instr_params: float,
     ) -> Path:
@@ -428,6 +429,8 @@ class Simulation:
             Run folder name. If ``None``, ``<time>_run_to_sample``.
         ncount:
             Number of neutrons.
+        seed:
+            Random seed. If ``None``, McStas picks one.
         mpi:
             Number of MPI processes, or ``"auto"``.
         **instr_params:
@@ -444,7 +447,9 @@ class Simulation:
             If the instrument has no ``sample_pos``, before anything runs.
         """
         self._check_sample_pos()  # before anything
-        output_path, inst = self._prepare(folder_name, "run_to_sample", ncount=ncount, mpi=mpi)
+        output_path, inst = self._prepare(
+            folder_name, "run_to_sample", ncount=ncount, mpi=mpi, seed=seed
+        )
         inst.set_parameters(**instr_params)  # the rest keep the instrument's values
         inst.run_to(
             SAMPLE_POS,
