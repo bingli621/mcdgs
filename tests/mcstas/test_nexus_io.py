@@ -58,3 +58,12 @@ def test_read_events_puts_the_missing_source_upstream_along_the_beam():
     binned = read_events(SPLIT, "detector", "source", "sample_pos", beam_direction=[0, 0, 3])
     upstream = binned.coords["sample_position"].value - binned.coords["source_position"].value
     assert np.allclose(upstream, [0, 0, 1])
+
+
+def test_read_events_reads_each_scan_point_as_read_pixels_does():
+    points = read_pixels(SPLIT, "detector", "source", "sample_pos", beam_direction=[0, 0, 1])
+    for entry, (_, pixels) in enumerate(points, start=1):
+        binned = read_events(
+            SPLIT, "detector", "source", "sample_pos", beam_direction=[0, 0, 1], entry=entry
+        )
+        assert np.allclose(binned.bins.sum().values, pixels.values)

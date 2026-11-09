@@ -82,13 +82,14 @@ def read_events(
     source: str,
     sample: str,
     beam_direction: ArrayLike | None = None,
+    entry: int = 1,
 ) -> sc.DataArray:
     """Read the neutrons of a detector of a McStas NeXus file, by pixel.
 
     Parameters
     ----------
     folder:
-        Run folder with the ``mccode.h5`` to read. Of a scan file, the first scan point.
+        Run folder with the ``mccode.h5`` to read.
     detector:
         Name of the detector component, which must record an event list.
     source:
@@ -100,6 +101,8 @@ def read_events(
     beam_direction:
         Direction of the beam at the sample, for a file without ``source``, as in
         :func:`read_pixels`. If ``None``, a file without ``source`` raises.
+    entry:
+        The entry to read, from 1: of a scan file, the scan point.
 
     Returns
     -------
@@ -113,7 +116,7 @@ def read_events(
     ValueError
         If the file has no ``source`` and ``beam_direction`` is ``None``.
     """
-    with mcstastox.Read(str(folder)) as data:
+    with mcstastox.Read(str(folder), entry_number=entry) as data:
         binned = _export_events(data, folder, detector, source, sample, beam_direction)
     binned.bins.coords["time_at_detector"] = binned.bins.coords.pop("t").to(unit="ms")
     binned.bins.unit = "1/s"  # McStas weights are n/s
