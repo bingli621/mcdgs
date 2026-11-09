@@ -5,3 +5,9 @@ From simulated data to physical quantities, with the kernels of
 [Incident energy](../instruments/trex/incident-energy.md) for how T-Rex uses it.
 
 ::: mcdgs.reduction.incident_energy
+
+::: mcdgs.reduction.inelastic
+
+::: mcdgs.reduction.solid_angle
+
+::: mcdgs.reduction.binning
