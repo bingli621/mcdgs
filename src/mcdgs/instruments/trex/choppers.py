@@ -10,6 +10,11 @@ than shift the slit edges, the disks stay as they are and turn later, by the ang
 to the beam, which is the same. The narrow slits are centered on ``beam_angle``, so ``"RR"``
 turns them by 0.
 
+Each disk has a beam window as wide as the exit of the guide in front of it, on the source
+side: the beam that reaches the disk. NXdisk_chopper hangs the window from the height of the
+rim at its edges, so the slit height holds across the whole beam, and no neutron passes the
+corners of the window outside the disk unchopped.
+
 The flight path to a disk is its distance from the moderator along the beam axis: the position
 of its gap in the Table of Optics plus the disk's place in the gap. The path through the bender
 is taken to be that through guide 4a.
@@ -17,13 +22,23 @@ is taken to be that through guide 4a.
 
 from typing import Literal, NamedTuple, get_args
 
-from mcdgs.core.components import (
-    NXdisk_chopper,
-)
+from mcdgs.core.components import Guide_gravity, NXdisk_chopper
 from mcdgs.core.utils import speed_from_wavelength
 
-from .guides.curve import ARM_BWC1_Z, ARM_BWC2_Z, BWC1_GAP_LENGTH, BWC2_GAP_LENGTH
-from .guides.straight import ARM_MC_Z, ARM_PSC_Z, MC_GAP_LENGTH, PSC_GAP_LENGTH
+from .guides.curve import (
+    ARM_BWC1_Z,
+    ARM_BWC2_Z,
+    BWC1_GAP_LENGTH,
+    BWC2_GAP_LENGTH,
+    guides_curve,
+)
+from .guides.straight import (
+    ARM_MC_Z,
+    ARM_PSC_Z,
+    MC_GAP_LENGTH,
+    PSC_GAP_LENGTH,
+    guides_straight,
+)
 
 Mode = Literal["FF", "RR"]  # high flux, high resolution
 
@@ -69,6 +84,16 @@ GAP_ARM = {
     "ps2": "arm_psc",
     "mc1": "arm_mc",
     "mc2": "arm_mc",
+}
+
+# the guide in front of each disk, on the source side: the beam window is as wide as its exit
+UPSTREAM_GUIDE = {
+    "bw1": "guide_13a",
+    "bw2": "guide_15a",
+    "ps1": "guide_32",
+    "ps2": "guide_32",
+    "mc1": "guide_49",
+    "mc2": "guide_49",
 }
 
 # m, distance of each disk from the entrance of its gap
@@ -196,6 +221,33 @@ def chopper_timings(
     return timings
 
 
+def window_width(name: str) -> float:
+    """Return the width of the beam window of a disk: the exit width of the guide in front.
+
+    Parameters
+    ----------
+    name:
+        Chopper name, such as ``"ps1"``: a key of :data:`UPSTREAM_GUIDE`.
+
+    Returns
+    -------
+    :
+        ``w2`` of the guide :data:`UPSTREAM_GUIDE` names, in m.
+
+    Examples
+    --------
+    >>> round(window_width("mc1"), 4)
+    0.0224
+    """
+    guides = {
+        guide_name: guide
+        for part in (*guides_curve(), *guides_straight())
+        for guide_name, guide in part.items()
+        if isinstance(guide, Guide_gravity)
+    }
+    return float(guides[UPSTREAM_GUIDE[name]].w2)
+
+
 def chopper(name: str) -> NXdisk_chopper:
     """Create a chopper.
 
@@ -208,13 +260,14 @@ def chopper(name: str) -> NXdisk_chopper:
     -------
     :
         A new chopper, relative to the arm of its gap, with its frequency and delay given by
-        the instrument parameters ``nu_<name>`` and ``delay_<name>``.
+        the instrument parameters ``nu_<name>`` and ``delay_<name>``, and the beam window of
+        :func:`window_width`.
     """
     return NXdisk_chopper(
         slit_edges=SLIT_EDGES[name],
         radius=0.35,
         yheight=SLIT_HEIGHT[name],
-        xwidth=0.0,  # 0.06
+        xwidth=window_width(name),
         nu=f"nu_{name}",
         delay=f"delay_{name}",
         beam_angle=BEAM_ANGLE[name],

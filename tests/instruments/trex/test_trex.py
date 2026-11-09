@@ -11,6 +11,7 @@ from mcdgs.instruments.trex.choppers import (
     DISK_DISTANCE,
     MODE_SLIT,
     SLIT_EDGES,
+    UPSTREAM_GUIDE,
     chopper_timings,
     slit_angle,
 )
@@ -146,6 +147,26 @@ def test_each_chopper_is_in_the_gap_of_its_arm(name, arm, z):
     chopper = getattr(TRex(), name)
     assert chopper.relative == arm
     assert chopper.at == pytest.approx([0, 0, z], abs=1e-12)
+
+
+@pytest.mark.parametrize(
+    ("name", "width"),
+    [  # column G of the sheet, at the exit of the guide in front of each disk
+        ("bw1", 0.06),  # cell G64
+        ("bw2", 0.06),  # cell G72
+        ("ps1", 0.06),  # cell G112
+        ("ps2", 0.06),
+        ("mc1", 0.022433235171385018),  # cell G139
+        ("mc2", 0.022433235171385018),
+    ],
+)
+def test_each_chopper_window_is_as_wide_as_the_exit_of_the_guide_in_front(name, width):
+    trex = TRex()
+    names = list(trex.components)
+    arm = names.index(getattr(trex, name).relative)
+    in_front = [n for n in names[:arm] if isinstance(trex.components[n], Guide_gravity)][-1]
+    assert in_front == UPSTREAM_GUIDE[name]
+    assert getattr(trex, name).xwidth == pytest.approx(width, abs=1e-15)
 
 
 @pytest.mark.parametrize(

@@ -122,6 +122,17 @@ The disks are 0.35 m in radius. The slits are 0.095 m high on the pulse-shaping 
 0.045 m on the monochromatic choppers; the 0.085 m of the bandwidth choppers is not known from
 the sheet yet.
 
+The beam crosses each disk through a window as wide as the exit of the guide in front of it, on
+the source side: 60 mm for the bandwidth and pulse-shaping choppers, 22.4 mm for the
+monochromatic choppers, after the taper of the straight guide. In McStas, this is `xwidth` of
+`NXdisk_chopper`. At the sides of the window the rim of the disk is lower than on the beam
+axis, by 1.3 mm for a 60 mm window. So `NXdisk_chopper` hangs the window from the rim at its
+sides, and the slit height holds across the whole window. Without the window, the slits hang
+from the rim on the axis. The upper corners of the beam then lie outside the disk, and those
+neutrons pass unchopped, as they did through the bandwidth choppers, whose slits are hardly
+higher than the guide. The drawings above, the acceptance diagram and tof follow the beam axis
+only and do not use the window.
+
 ## Acceptance diagram
 
 The acceptance diagram follows the pulse, a rectangle in time and wavelength, through the

@@ -180,6 +180,9 @@ has no guide 46. The slit `slit_mc`, 20.5 mm × 34.5 mm, is 19 mm after guide 50
 The arms `arm_bwc1`, `arm_bwc2`, `arm_bm1`, `arm_psc` and `arm_mc` mark the gaps for bandwidth
 choppers 1 and 2, beam monitor 1, the pulse-shaping choppers and the monochromatic choppers. The
 choppers `bw1`, `bw2`, `ps1`, `ps2`, `mc1` and `mc2` come right after the arm of their gap.
+Each has a beam window as wide as the exit of the guide in front of it: guide 13a for `bw1`,
+15a for `bw2`, 32 for `ps1` and `ps2`, and 49 for `mc1` and `mc2` (see
+[Choppers](choppers.md#the-disks)).
 
 ## Monitors
 

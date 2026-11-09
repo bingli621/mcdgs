@@ -46,7 +46,7 @@ blue, the beamstop monitor in orange, McStas as solid lines and tof as dashed on
 sub-pulse reaches the beamstop monitor 1.1 to 2.2 ms after the pre-sample monitor, the slower
 ones later.
 
-In McStas, the beamstop monitor counts 2.229e7 n/s, 11 % less than the 2.509e7 n/s at the
+In McStas, the beamstop monitor counts 2.22e7 n/s, 11 % less than the 2.497e7 n/s at the
 pre-sample monitor: the beam spreads over the 3.3 m, and part of it misses the 0.1 m monitor.
 tof has no divergence and counts all of it. This loss hardly changes Ei: with a 1 m × 1 m beamstop
 monitor, which catches the whole beam, Ei moves by at most 0.3 %, within the scatter of the
@@ -154,8 +154,8 @@ values, in McStas:
 | Sub-pulse | At the pre-sample monitor | Between the monitors | λi | Ei between the monitors | Ei, pre-sample monitor alone | Ei from the mean λ |
 | --------- | ------------------------- | -------------------- | -- | ----------------------- | ---------------------------- | ------------------ |
 | 0 | 56.329 ms | 1.0979 ms | 1.317 Å | 47.191 meV (−0.18 %) | 46.822 meV (−0.96 %) | 47.275 meV |
-| 7 | 84.358 ms | 1.6673 ms | 1.999 Å | 20.464 meV (−0.02 %) | 20.451 meV (−0.08 %) | 20.468 meV |
-| 14 | 112.386 ms | 2.2322 ms | 2.677 Å | 11.417 meV (+0.23 %) | 11.405 meV (+0.13 %) | 11.391 meV |
+| 7 | 84.358 ms | 1.6673 ms | 1.999 Å | 20.463 meV (−0.02 %) | 20.451 meV (−0.08 %) | 20.467 meV |
+| 14 | 112.386 ms | 2.2323 ms | 2.677 Å | 11.416 meV (+0.23 %) | 11.405 meV (+0.13 %) | 11.390 meV |
 
 Over all sub-pulses, the difference from the reference is:
 

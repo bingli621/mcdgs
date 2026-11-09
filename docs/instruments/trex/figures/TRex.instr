@@ -15,7 +15,7 @@
 * 
 * %Identification
 * Written by: Python McStas Instrument Generator
-* Date: 21:25:45 on November 08, 2026
+* Date: 10:02:56 on November 09, 2026
 * Origin: ESS DMSC
 * %INSTRUMENT_SITE: Generated_instruments
 * 
@@ -394,7 +394,7 @@ ROTATED (0, 0.0048457905523189414, 0) RELATIVE guide_13a
 COMPONENT bw1 = NXdisk_chopper(
  slit_edges = bw1_slit_edges, n_edges = 2,
  radius = 0.35, yheight = 0.085,
- xwidth = 0.0, nu = nu_bw1,
+ xwidth = 0.06, nu = nu_bw1,
  delay = delay_bw1, park_angle = 0,
  beam_angle = 0, zero_angle = 0,
  jitter = 0, abs_out = 0,
@@ -473,7 +473,7 @@ ROTATED (0, 0.004824304635001552, 0) RELATIVE guide_15a
 COMPONENT bw2 = NXdisk_chopper(
  slit_edges = bw2_slit_edges, n_edges = 2,
  radius = 0.35, yheight = 0.085,
- xwidth = 0.0, nu = nu_bw2,
+ xwidth = 0.06, nu = nu_bw2,
  delay = delay_bw2, park_angle = 0,
  beam_angle = 0, zero_angle = 0,
  jitter = 0, abs_out = 0,
@@ -784,7 +784,7 @@ ROTATED (0, 0.0, 0) RELATIVE guide_32
 COMPONENT ps1 = NXdisk_chopper(
  slit_edges = ps1_slit_edges, n_edges = 8,
  radius = 0.35, yheight = 0.095,
- xwidth = 0.0, nu = nu_ps1,
+ xwidth = 0.06, nu = nu_ps1,
  delay = delay_ps1, park_angle = 0,
  beam_angle = 180, zero_angle = 0,
  jitter = 0, abs_out = 0,
@@ -795,7 +795,7 @@ ROTATED (0, 0, 0) RELATIVE arm_psc
 COMPONENT ps2 = NXdisk_chopper(
  slit_edges = ps2_slit_edges, n_edges = 8,
  radius = 0.35, yheight = 0.095,
- xwidth = 0.0, nu = nu_ps2,
+ xwidth = 0.06, nu = nu_ps2,
  delay = delay_ps2, park_angle = 0,
  beam_angle = 180, zero_angle = 0,
  jitter = 0, abs_out = 0,
@@ -1066,7 +1066,7 @@ ROTATED (0, 0.0, 0) RELATIVE guide_49
 COMPONENT mc1 = NXdisk_chopper(
  slit_edges = mc1_slit_edges, n_edges = 4,
  radius = 0.35, yheight = 0.045,
- xwidth = 0.0, nu = nu_mc1,
+ xwidth = 0.022433235171385017, nu = nu_mc1,
  delay = delay_mc1, park_angle = 0,
  beam_angle = 180, zero_angle = 0,
  jitter = 0, abs_out = 0,
@@ -1077,7 +1077,7 @@ ROTATED (0, 0, 0) RELATIVE arm_mc
 COMPONENT mc2 = NXdisk_chopper(
  slit_edges = mc2_slit_edges, n_edges = 4,
  radius = 0.35, yheight = 0.045,
- xwidth = 0.0, nu = nu_mc2,
+ xwidth = 0.022433235171385017, nu = nu_mc2,
  delay = delay_mc2, park_angle = 0,
  beam_angle = 0, zero_angle = 0,
  jitter = 0, abs_out = 0,

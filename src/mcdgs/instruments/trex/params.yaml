@@ -564,7 +564,7 @@ bw1:
   slit_edges: [-30.7, 30.7]
   radius: 0.35
   yheight: 0.085
-  xwidth: 0.0
+  xwidth: 0.06
   nu: nu_bw1
   delay: delay_bw1
   park_angle: 0
@@ -704,7 +704,7 @@ bw2:
   slit_edges: [-31.65, 31.65]
   radius: 0.35
   yheight: 0.085
-  xwidth: 0.0
+  xwidth: 0.06
   nu: nu_bw2
   delay: delay_bw2
   park_angle: 0
@@ -1262,7 +1262,7 @@ ps1:
   slit_edges: [-10, 10, 107.5, 142.5, 170, 190, 287.5, 322.5]
   radius: 0.35
   yheight: 0.095
-  xwidth: 0.0
+  xwidth: 0.06
   nu: nu_ps1
   delay: delay_ps1
   park_angle: 0
@@ -1280,7 +1280,7 @@ ps2:
   slit_edges: [-10, 10, 107.5, 142.5, 170, 190, 287.5, 322.5]
   radius: 0.35
   yheight: 0.095
-  xwidth: 0.0
+  xwidth: 0.06
   nu: nu_ps2
   delay: delay_ps2
   park_angle: 0
@@ -1768,7 +1768,7 @@ mc1:
   slit_edges: [178.75, 181.25, 362.8, 367.2]
   radius: 0.35
   yheight: 0.045
-  xwidth: 0.0
+  xwidth: 0.022433235171385017
   nu: nu_mc1
   delay: delay_mc1
   park_angle: 0
@@ -1786,7 +1786,7 @@ mc2:
   slit_edges: [-1.25, 1.25, 182.8, 187.2]
   radius: 0.35
   yheight: 0.045
-  xwidth: 0.0
+  xwidth: 0.022433235171385017
   nu: nu_mc2
   delay: delay_mc2
   park_angle: 0
