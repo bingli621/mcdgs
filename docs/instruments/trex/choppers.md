@@ -151,16 +151,20 @@ from mcdgs.tof.acceptance import acceptance_diagram
 
 ![The chopper acceptance diagram of T-Rex at the default parameters](figures/trex_acceptance.png)
 
-The pulse leaves the moderator from 0 to 3.5 ms, over the band of the source, 1.095 to 2.905 Å.
-Each chopper is drawn over the ones before it, in turbo from the source to the last chopper:
+The diagram starts from a rectangle 15 ms long, over the band of the source, 1.095 to 2.905 Å,
+much longer than the 2.86 ms proton pulse, so that it also shows what the choppers would let
+through from neutrons that leave the moderator late. Each chopper is drawn over the ones before
+it, in turbo from the source to the last chopper:
 
 - The bandwidth choppers `bw1` and `bw2` cut two corners of the rectangle: the short wavelengths
   that leave early, which would arrive before they open, and the long ones that leave late,
   which would arrive after they close.
 - The pulse-shaping choppers cut the band into slanted stripes, one per opening.
-- The monochromatic choppers keep a short piece of each stripe, from about 1 to 2.5 ms: these
-  sub-pulses, about 0.1 Å apart, are what reaches the sample. `mc2` lies over `mc1`, which
-  accepts almost the same.
+- The monochromatic choppers keep short pieces of the stripes, in rows about 4 ms apart. The
+  row from about 1 to 2.5 ms, within the pulse, gives the sub-pulses, about 0.1 Å apart, that
+  reach the sample. The row from about 4.5 to 6.5 ms catches the tail of the pulse: these are
+  the [weak patches](neutrons-on-sample.md#the-weak-patches) between the sub-pulses. The later
+  rows find hardly any neutrons to pass. `mc2` lies over `mc1`, which accepts almost the same.
 
 The title is `trex.running_conditions()`: the mode, `lambda0`, `rrm` (RRM) and the signed
 frequencies of the pulse-shaping (PS) and monochromatic (MC) choppers.
