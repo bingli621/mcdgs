@@ -41,6 +41,7 @@ from matplotlib.colors import LogNorm
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
+from scippneutron.conversion import tof as tof_kernels
 
 from mcdgs.diagnostics.cli import output_folder, parse_out
 from mcdgs.diagnostics.compare import MonitorComparison, plot_comparison, read_scaled_comparisons
@@ -90,7 +91,8 @@ def plot_patches(
 
     With ``windows``, each sub-pulse is also drawn at its incident wavelength: a black cross when
     it reaches the sample, and its arrival window at the banana detector, from the opening to the
-    close, as a gray band across all wavelengths.
+    close, as a gray band across all wavelengths, with a thin line when its neutrons arrive if
+    they keep their speed through the sample.
 
     Parameters
     ----------
@@ -189,6 +191,8 @@ def plot_patches(
             windows.coords["latest_arrival"].to(unit="ms").values,
         ):
             ax.axvspan(opens, closes, color="0.5", alpha=0.2, linewidth=0, zorder=0)
+        for elastic in windows.coords["elastic_arrival"].to(unit="ms").values:
+            ax.axvline(elastic, color="0.3", linewidth=0.6, zorder=0.5)
         handles += [
             Line2D([], [], linestyle="none", marker="x", color="black", label="At the sample"),
             Patch(
@@ -196,6 +200,7 @@ def plot_patches(
                 alpha=0.2,
                 label="Window at the detector, E/Ei from \u22120.8 to 0.8",
             ),
+            Line2D([], [], color="0.3", linewidth=0.6, label="Elastic arrival at the detector"),
         ]
     fig.colorbar(points, ax=ax, label="Intensity of the patch [n/s]")
     ax.set(title=title, xlabel="Time [ms]", ylabel="Wavelength [Å]")
@@ -230,8 +235,9 @@ def subpulse_windows(
     -------
     :
         The sub-pulses along ``subpulse``, with the coordinates of :func:`.subpulse_flight`,
-        ``time_at_sample``, and ``earliest_arrival`` and ``latest_arrival`` at the detector, in
-        ms. The data are tof neutrons at the pre-sample monitor, not n/s.
+        ``time_at_sample``, and ``earliest_arrival``, ``elastic_arrival``, of a neutron that
+        keeps its speed, and ``latest_arrival`` at the detector, in ms. The data are tof
+        neutrons at the pre-sample monitor, not n/s.
     """
     positions = {name: sc.vector(xyz, unit="m") for name, xyz in instrument.positions().items()}
     start, end = (
@@ -254,6 +260,12 @@ def subpulse_windows(
         energy_transfer_ratio=energy_transfer_ratio,
     )
     pulses.coords.update(window)
+    # a neutron that flies through the sample without changing its speed
+    at_sample = pulses.coords["time_at_sample"]
+    flight = tof_kernels.tof_from_wavelength(
+        wavelength=pulses.coords["incident_wavelength"], Ltotal=sc.scalar(BANANA_RADIUS, unit="m")
+    )
+    pulses.coords["elastic_arrival"] = at_sample + flight.to(unit=at_sample.unit)
     return pulses
 
 
@@ -261,7 +273,8 @@ def windows_table(windows: sc.DataArray) -> str:
     """Return the arrival windows of :func:`subpulse_windows` as a Markdown table.
 
     Each row is a sub-pulse: its incident wavelength and energy, when it reaches the sample,
-    and when its window at the detector opens and closes. The last column is the time from
+    and when its window at the detector opens, its elastic neutrons arrive and the window
+    closes. The last column is the time from
     the close of its window to the opening of the next: negative where the two overlap.
 
     Parameters
@@ -278,10 +291,21 @@ def windows_table(windows: sc.DataArray) -> str:
     energy = windows.coords["incident_energy"].to(unit="meV").values
     at_sample = windows.coords["time_at_sample"].to(unit="ms").values
     opens = windows.coords["earliest_arrival"].to(unit="ms").values
+    elastic = windows.coords["elastic_arrival"].to(unit="ms").values
     closes = windows.coords["latest_arrival"].to(unit="ms").values
+    header = [
+        "Sub-pulse",
+        "λi",
+        "Ei",
+        "At the sample",
+        "Window opens",
+        "Elastic",
+        "Window closes",
+        "To the next",
+    ]
     rows = [
-        "| Sub-pulse | λi | Ei | At the sample | Window opens | Window closes | To the next |",
-        "| --------- | -- | -- | ------------- | ------------ | ------------- | ----------- |",
+        "| " + " | ".join(header) + " |",
+        "| " + " | ".join("-" * len(name) for name in header) + " |",
     ]
     for i in range(windows.sizes["subpulse"]):
         gap = ""
@@ -290,7 +314,7 @@ def windows_table(windows: sc.DataArray) -> str:
             gap = f"{opens[i + 1] - closes[i]:.3f} ms".replace("-", "\u2212")
         rows.append(
             f"| {i} | {wavelength[i]:.4f} Å | {energy[i]:.3f} meV | {at_sample[i]:.3f} ms "
-            f"| {opens[i]:.3f} ms | {closes[i]:.3f} ms | {gap} |"
+            f"| {opens[i]:.3f} ms | {elastic[i]:.3f} ms | {closes[i]:.3f} ms | {gap} |"
         )
     return "\n".join(rows) + "\n"
 

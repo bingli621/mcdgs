@@ -79,9 +79,12 @@ square frames the circle. The width is drawn as error bars, smaller than the mar
 
 Each main sub-pulse of tof is also drawn: a black cross at its incident wavelength when it
 reaches the sample, and its arrival window at the banana detector as a gray band across all
-wavelengths, from the [table below](#arrival-windows-at-the-detector). The sample monitor is at
-the sample, so each cross falls on its patch. The bands lie between the sub-pulses, and the weak
-patch after each sub-pulse sits about 2 ms after the cross, at a slightly shorter wavelength.
+wavelengths, from the [table below](#arrival-windows-at-the-detector). A thin line in each band
+is when its neutrons arrive if they fly through the sample without changing speed, the elastic
+neutrons: nearer the opening than the close, since a neutron that gains energy shortens its
+flight less than one that loses as much lengthens it. The sample monitor is at the sample, so
+each cross falls on its patch. The bands lie between the sub-pulses, and the weak patch after
+each sub-pulse sits about 2 ms after the cross, at a slightly shorter wavelength.
 
 ## What reaches the sample
 
@@ -158,6 +161,8 @@ run with the same functions as the McStas data of La2Ni7, from the
 3. `time_at_sample` adds the flight from the pre-sample monitor to the sample.
 4. `arrival_window` gives when the neutrons of each reach the detector, with Ef = Ei − E:
    the window opens with the fastest, E = −0.8 Ei, and closes with the slowest, E = 0.8 Ei.
+   The elastic neutrons, E = 0, fly through the sample without changing speed, and arrive in
+   between.
 
 --8<-- "docs/instruments/trex/figures/trex_neutrons_on_sample_windows.txt"
 

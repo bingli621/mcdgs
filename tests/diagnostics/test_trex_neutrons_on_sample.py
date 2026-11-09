@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from mcdgs.diagnostics.trex_07_neutrons_on_sample import (
     TRexToSample,
@@ -17,6 +18,7 @@ def test_each_window_holds_the_elastic_arrival_and_ends_before_the_next_opens():
     speed = 3956.034 / windows.coords["incident_wavelength"].to(unit="Å").values  # m/s
     elastic = at_sample + 1e3 * 3.0 / speed  # 3 m to the banana detector
     assert np.all((opens < elastic) & (elastic < closes))
+    assert windows.coords["elastic_arrival"].to(unit="ms").values == pytest.approx(elastic)
     assert np.all(closes[:-1] < opens[1:])
     table = windows_table(windows).splitlines()
     assert table[0].startswith("| Sub-pulse | λi | Ei |")
