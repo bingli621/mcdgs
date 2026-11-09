@@ -11,8 +11,9 @@ scan of its rotation, `b_rot`, to show how it passes each band of wavelengths.
 With the bender in at its nominal rotation, the beam goes through the bender and the cold guide
 4b. `main` runs this path after the scan, with `diagnose_path` of
 [Extraction guides](extraction.md), which runs the path without the bender: what is said there of
-the axes, the monitors and the scale of tof holds here too. These figures have 1e7 McStas
-neutrons per run, 1e6 tof neutrons and seed 1.
+the axes, the monitors and the scale of tof holds here too. These figures have 1e6 McStas
+neutrons in the run with the diagnostics, 1e7 in the run of the diagram and the monitors, 1e6
+tof neutrons and seed 1.
 
 <!-- fmt:off -->
 ```python
@@ -140,7 +141,8 @@ This is `main` at its defaults: 1e6 McStas neutrons per angle, and seed 1. The s
 replacing the one of an earlier run, and the figure, `bender_scan.png`, next to the scan.
 `read_angles`, `read_spectra` and `transmission` read the two files again, without running McStas.
 
-Then `main` runs the path with the bender in at its nominal rotation, `path_ncount`, 1e7, McStas
-neutrons per run: its three figures go to `mcstas_output/trex_extraction_bender_in/`, with
-McStasScript's event lists, about 1.8 GB, and the run of the diagram to
+Then `main` runs the path with the bender in at its nominal rotation, with `path_ncount`, 1e7,
+McStas neutrons in the run of the diagram and the monitors: its three figures go to
+`mcstas_output/trex_extraction_bender_in/`, with McStasScript's event lists of the run with the
+diagnostics, about 180 MB at 1e6 neutrons, and the run of the diagram to
 `mcstas_output/trex_extraction_bender_in_intensity/`.

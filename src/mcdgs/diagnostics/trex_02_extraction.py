@@ -53,6 +53,10 @@ from mcdgs.mcstas.run_folders import default_output_dir, run_folder
 from mcdgs.tof.builder import build_tof
 from mcdgs.tof.reader import monitor_bins
 
+# McStas neutrons of the run with McStasScript's diagnostics, which lists every ray at each of its
+# three positions: about 180 MB at 1e6
+DIAGNOSTICS_NCOUNT = 1e6
+
 # n/s: the range of the intensity axis of McStasScript's diagram, from the source to the beam
 # monitor on both paths, about 1e11 to 1e12 n/s at the defaults
 DIAGRAM_INTENSITY_LIMITS = (5e10, 1.5e12)
@@ -191,13 +195,16 @@ def diagnose_path(
     neutrons: int = 1_000_000,
     seed: int = 1,
     transmission: float = 0.2,
+    diagnostics_ncount: float = DIAGNOSTICS_NCOUNT,
 ) -> list[Path]:
     """Run one path through guide 4 in McStas and tof, and save its three figures.
 
     McStas runs twice, once with McStasScript's diagnostics, the beam after the source, after
     guide 3 and at the exit of guide 4b, and once for its diagram of the intensity before each
-    component; tof runs once. tof is scaled to the total of McStas at the source monitor, where
-    both see the same beam, and by ``transmission`` on top of it at the beam monitor. The
+    component, which also gives the monitors; tof runs once. The diagnostics list every ray at
+    their three positions, so their run has fewer neutrons. tof is scaled to the total of
+    McStas at the source monitor, where both see the same beam, and by ``transmission`` on top
+    of it at the beam monitor. The
     figures, the diagnostics, the diagram and the comparison, are
     ``trex_extraction_bender_out_diagnose.png``, ``trex_extraction_bender_out_intensity.png``
     and ``trex_extraction_bender_out.png``, or ``..._in``.
@@ -209,7 +216,7 @@ def diagnose_path(
     out:
         Folder of the figures. If ``None``, the folder of the McStas run with the diagnostics.
     ncount:
-        Number of McStas neutrons, in each run.
+        Number of McStas neutrons of the run of the diagram and the monitors.
     neutrons:
         Number of tof neutrons.
     seed:
@@ -218,6 +225,8 @@ def diagnose_path(
         The factor on tof at the beam monitor, on top of the scale of the source monitor: the
         fraction of the beam the guides would let through, which tof does not model. 0.2 is
         an estimate, close to the 0.17 McStas has with the bender out at the defaults.
+    diagnostics_ncount:
+        Number of McStas neutrons of the run with the diagnostics.
 
     Returns
     -------
@@ -251,22 +260,27 @@ def diagnose_path(
     folder = run_folder(default_output_dir(), run_name, "diagnose")
     diag.set_parameters(bender_in=int(bender_in))
     diag.settings(
-        ncount=ncount, suppress_output=True, mpi="auto", seed=seed, output_path=str(folder)
+        ncount=diagnostics_ncount,
+        suppress_output=True,
+        mpi="auto",
+        seed=seed,
+        output_path=str(folder),
     )
-    diag.run()  # a whole McStas run: its folder also holds the beam monitor
+    diag.run()
     diag.plot()  # draws on a new figure, which it does not return
     figure_folder = output_folder(out, folder)
     figures = [_save(plt.gcf(), figure_folder / f"{run_name}_diagnose.png", dpi=100)]
 
     # McStasScript's diagram of the components, with the intensity and the rays before each:
-    # a McStas run of its own, in a folder of its own
+    # a McStas run of its own, in a folder of its own, which also holds the monitors
+    intensity_folder = run_folder(default_output_dir(), f"{run_name}_intensity", "diagram")
     mcstas_instr.set_parameters(bender_in=int(bender_in))
     mcstas_instr.settings(
         ncount=ncount,
         suppress_output=True,
         mpi="auto",
         seed=seed,
-        output_path=str(run_folder(default_output_dir(), f"{run_name}_intensity", "diagram")),
+        output_path=str(intensity_folder),
     )
     # --8<-- [start:diagram]
     # show_diagram ends in plt.show(), which in a window waits for it to close, and the figure
@@ -281,7 +295,7 @@ def diagnose_path(
     # --8<-- [start:scale_tof]
     # tof's counts are scaled to the total of McStas at the source monitor, in n/s, and by the
     # transmission on top of it at the beam monitor
-    mcstas_data = ms.load_data(str(folder))
+    mcstas_data = ms.load_data(str(intensity_folder))
     comparisons = read_scaled_comparisons(
         mcstas_data,
         tof_result,

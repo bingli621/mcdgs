@@ -43,8 +43,9 @@ ports.
 the guides, McStasScript's diagram of the intensity before each component, and McStas and tof
 side by side at the beam monitor. The path with the bender is on
 [Bender](bender-scan.md#bender-in-at-the-nominal-rotation), which runs `diagnose_path` with
-the bender in. The figures are `main` at its defaults: 1e7 McStas neutrons per run, 1e6 tof
-neutrons and seed 1.
+the bender in. The figures are `main` at its defaults: 1e6 McStas neutrons in the run with the
+diagnostics, 1e7 in the run of the diagram and the monitors, 1e6 tof neutrons and seed 1. The
+diagnostics list every ray at their three positions, so their run has fewer neutrons.
 
 ## Beam along the guides
 
@@ -67,8 +68,9 @@ After the source the two moderators are side by side: the thermal one at x < 0 w
 width of the guide, and the spectrum still has both peaks. Through guide 4a both peaks reach the
 exit of guide 4.
 
-The maps have 100 × 100 bins, so at 1e7 neutrons each bin holds a few hundred rays and the maps
-are still a little grainy. The spectra, on one axis, are smooth.
+The maps have 100 × 100 bins, so at 1e6 neutrons each bin holds a few tens of rays and the maps
+are grainy, but show the same structure. The spectra, on one axis, are smoother, with the two
+peaks clear at every position; the beam monitor, at 1e7 neutrons, has the spectrum in detail.
 
 ## Intensity along the guides
 
@@ -152,8 +154,9 @@ pixi run python -m mcdgs.diagnostics.trex_02_extraction
 The view from above goes to `mcstas_input/trex_extraction/`, next to the instrument file, and
 the three figures of the path to the folder of its run with the diagnostics,
 `mcstas_output/trex_extraction_bender_out/`. That folder also holds McStasScript's event lists of
-the three diagnostics positions, about 1.8 GB at 1e7 neutrons. The run of the diagram has a
-folder of its own, `mcstas_output/trex_extraction_bender_out_intensity/`. The two McStas runs
+the three diagnostics positions, about 180 MB at 1e6 neutrons. The run of the diagram has a
+folder of its own, `mcstas_output/trex_extraction_bender_out_intensity/`, which also holds the
+monitors that McStas and tof are compared at. The two McStas runs
 take about a minute on 8 cores. Call `main` with
 other numbers for finer or faster figures:
 
