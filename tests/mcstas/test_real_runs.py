@@ -160,6 +160,18 @@ def test_trex_with_the_masked_source_gives_the_intensity_on_the_sample(tmp_path)
     assert intensity == pytest.approx(2.7e7, rel=0.2)
 
 
+def test_a_split_run_compiles_with_the_masked_source(tmp_path):
+    # the run from the sample leaves out the source, and the type of its chopper train with it
+    small = _Small()
+    disk = {"speed": 14, "delay": 0.002758, "beam": 0, "edges": [-10, 10], "path": 1.0, "aperture": 9}  # fmt: skip
+    small.source = Polygon_ESS_butterfly(
+        Lmin=2, Lmax=4, dist=2, focus_xw=0.05, focus_yh=0.05, choppers=[disk]
+    )
+    sim = Simulation(small, work_dir=tmp_path)
+    assert sim.run_to_sample(ncount=1e4, mpi=None).is_file()
+    assert sim.run_from_sample(seed=2, mpi=None).is_file()
+
+
 @pytest.mark.parametrize("mode", ["FF", "RR"])
 def test_trex_runs_through_with_its_choppers_turning(tmp_path, mode):
     # compiling alone let through an abort at INITIALIZE: the slit edges of the choppers

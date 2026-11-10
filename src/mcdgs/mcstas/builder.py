@@ -115,6 +115,10 @@ def _declare_chopper_train(
     the array, since a disk's ``speed`` and ``delay`` may be instrument parameters, and points
     the pointer at it: McStas runs it before the INITIALIZE of the components.
 
+    Both are C code inside ``#ifdef CHOPPER_LIB_VERSION``, which the SHARE of the source
+    defines, before DECLARE: a run from ``sample_pos`` leaves the source out, and with it the
+    type ``chopper_parameters``, so the code drops out with it.
+
     Parameters
     ----------
     mcstas_instr:
@@ -125,25 +129,32 @@ def _declare_chopper_train(
     Returns
     -------
     :
-        The pointer, or without a disk 0, the null pointer: McStasScript refuses ``NULL``, a
-        name it does not know.
+        The name of the pointer, or without a disk 0, the null pointer: McStasScript refuses
+        ``NULL``, a name it does not know.
     """
     if not component.choppers:
         return 0
     train = f"{component.name}_choppers"
-    mcstas_instr.add_declare_var("chopper_parameters", train, array=len(component.choppers))
+    pointer = f"{train}_pointer"
+    declare = [f"chopper_parameters {train}[{len(component.choppers)}];"]
+    initialize = []
     for i, disk in enumerate(component.choppers):
-        edges = mcstas_instr.add_declare_var(
-            "double", f"{train}_edges_{i}", array=len(disk["edges"]), value=disk["edges"]
-        )
-        mcstas_instr.append_initialize(
+        edges = f"{train}_edges_{i}"
+        values = ", ".join(str(edge) for edge in disk["edges"])
+        declare.append(f"double {edges}[{len(disk['edges'])}] = {{{values}}};")
+        initialize.append(
             f"{train}[{i}] = (chopper_parameters){{.speed = {disk['speed']}, "
             f".delay = {disk['delay']}, .beam = {disk['beam']}, "
-            f".edge_count = {len(disk['edges'])}, .edges = {edges.name}, "
+            f".edge_count = {len(disk['edges'])}, .edges = {edges}, "
             f".path = {disk['path']}, .aperture = {disk['aperture']}}};"
         )
-    pointer = mcstas_instr.add_declare_var("double *", f"{train}_pointer")
-    mcstas_instr.append_initialize(f"{pointer.name} = (double *) {train};")
+    declare.append(f"double * {pointer};")
+    initialize.append(f"{pointer} = (double *) {train};")
+    for append, lines in (
+        (mcstas_instr.append_declare, declare),
+        (mcstas_instr.append_initialize, initialize),
+    ):
+        append("\n".join(["#ifdef CHOPPER_LIB_VERSION", *lines, "#endif"]))
     return pointer
 
 

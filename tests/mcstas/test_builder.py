@@ -164,11 +164,17 @@ TRAIN = [
 
 def test_the_chopper_train_is_declared_and_filled_in_initialize(tmp_path):
     text = _written_instr(_masked(TRAIN), tmp_path)
-    assert "chopper_parameters source_choppers[2];" in text
-    assert "double source_choppers_edges_0[2] = {-10,10};" in text
-    assert "double source_choppers_edges_1[4] = {-1,1,90,100};" in text
-    assert "double * source_choppers_pointer;" in text
+    declare = text[text.index("DECLARE") : text.index("INITIALIZE")]
+    assert (
+        "#ifdef CHOPPER_LIB_VERSION\n"
+        "chopper_parameters source_choppers[2];\n"
+        "double source_choppers_edges_0[2] = {-10, 10};\n"
+        "double source_choppers_edges_1[4] = {-1, 1, 90, 100};\n"
+        "double * source_choppers_pointer;\n"
+        "#endif"
+    ) in declare
     initialize = text[text.index("INITIALIZE") : text.index("TRACE")]
+    assert initialize.count("#ifdef CHOPPER_LIB_VERSION") == initialize.count("#endif") == 1
     assert (
         "source_choppers[0] = (chopper_parameters){.speed = omega, .delay = 0.01, .beam = 180, "
         ".edge_count = 2, .edges = source_choppers_edges_0, .path = 5.0, .aperture = 2.5};"
