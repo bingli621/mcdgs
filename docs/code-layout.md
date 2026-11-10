@@ -61,7 +61,7 @@ classDiagram
     }
     class diagnostics {
         <<package>>
-        trex_00_overview to trex_08_determine_ei
+        trex_00_overview to trex_11_elastic_scan
     }
     instruments ..> core
     samples ..> core

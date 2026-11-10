@@ -1,7 +1,7 @@
 # Rotation scan
 
 `TRexWithRotatingLa2Ni7`, in
-[`mcdgs.diagnostics.trex_10_elastic_scan`](https://github.com/bingli621/mcdgs/blob/main/src/mcdgs/diagnostics/trex_10_elastic_scan.py),
+[`mcdgs.diagnostics.trex_11_elastic_scan`](https://github.com/bingli621/mcdgs/blob/main/src/mcdgs/diagnostics/trex_11_elastic_scan.py),
 turns the La2Ni7 crystal about the vertical, one angle at a time, and maps the horizontal plane
 of its reciprocal space. Each angle is reduced as on [Elastic plane](elastic-plane.md); turned
 into the frame of the crystal, the angles add up to one map.
@@ -81,12 +81,12 @@ again, with the other files of the T-Rex pages. The scan starts from the beam fi
 [Elastic plane](elastic-plane.md), so run that first. Then:
 
 ```bash
-pixi run python -m mcdgs.diagnostics.trex_10_elastic_scan
+pixi run python -m mcdgs.diagnostics.trex_11_elastic_scan
 ```
 
 `main` runs the 31 angles, then saves the GIF in the scan folder, or in the folder given with
 `--out`. To reduce the scan again without McStas:
 
 ```bash
-pixi run python -c "from mcdgs.diagnostics.trex_10_elastic_scan import analyze; analyze()"
+pixi run python -c "from mcdgs.diagnostics.trex_11_elastic_scan import analyze; analyze()"
 ```

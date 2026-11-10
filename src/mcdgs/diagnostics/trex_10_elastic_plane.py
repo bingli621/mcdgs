@@ -12,7 +12,7 @@ detector. The second part can run again from the same beam, without the long fir
 The reduction follows :mod:`mcdgs.reduction`:
 
 1. :func:`subpulse_timing` finds the sub-pulses at the pre-sample and beamstop monitors of the
-   first part with :func:`.find_patches`, as :mod:`.trex_08_determine_ei` does: both come before
+   first part with :func:`.find_patches`, as :mod:`.trex_09_determine_ei` does: both come before
    ``sample_pos`` in beam order. It gives each sub-pulse its incident energy, from its flight
    between the monitors with :func:`.subpulse_flight`, and the time it reaches the sample, with
    :func:`.time_at_sample`.
@@ -35,13 +35,13 @@ its own incident wavevector ki, so its elastic neutrons lie near its own circle,
 through the origin, where the detector covers it.
 Run the module to do it::
 
-    pixi run python -m mcdgs.diagnostics.trex_09_elastic_plane
+    pixi run python -m mcdgs.diagnostics.trex_10_elastic_plane
 
 :func:`main` is :func:`simulate`, which runs McStas, then :func:`analyze`, which reduces and
 draws. Reduce the runs again without McStas with :func:`analyze`, or :func:`reduce_runs` for the
 sub-pulses and the neutrons alone::
 
-    pixi run python -c "from mcdgs.diagnostics.trex_09_elastic_plane import analyze; analyze()"
+    pixi run python -c "from mcdgs.diagnostics.trex_10_elastic_plane import analyze; analyze()"
 """
 
 from pathlib import Path

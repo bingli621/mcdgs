@@ -1,7 +1,7 @@
 # Incident energy
 
 `TRexToBeamstopMonitor`, in
-[`mcdgs.diagnostics.trex_08_determine_ei`](https://github.com/bingli621/mcdgs/blob/main/src/mcdgs/diagnostics/trex_08_determine_ei.py),
+[`mcdgs.diagnostics.trex_09_determine_ei`](https://github.com/bingli621/mcdgs/blob/main/src/mcdgs/diagnostics/trex_09_determine_ei.py),
 finds the incident energy Ei of each sub-pulse of T-Rex from when it reaches two monitors: the
 pre-sample monitor, just before the sample, and the beamstop monitor, 3.3 m further on. Ei follows
 from the length of the flight and the time it takes. The calculation is a graph of
@@ -113,7 +113,7 @@ these, and once from the source:
 
 <!-- fmt:off -->
 ```python
---8<-- "src/mcdgs/diagnostics/trex_08_determine_ei.py:two_flights"
+--8<-- "src/mcdgs/diagnostics/trex_09_determine_ei.py:two_flights"
 ```
 <!-- fmt:on -->
 
@@ -207,7 +207,7 @@ The figures need McStas, so they are not made with the site: `pixi run docs-diag
 them again, with the other files of the T-Rex pages. To make them yourself, run:
 
 ```bash
-pixi run python -m mcdgs.diagnostics.trex_08_determine_ei
+pixi run python -m mcdgs.diagnostics.trex_09_determine_ei
 ```
 
 At its defaults, `main` runs 1e8 McStas neutrons and 1e7 tof neutrons, with seed 1, prints the

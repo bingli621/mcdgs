@@ -32,9 +32,11 @@ documentation. See [Source](../instruments/trex/source.md),
 
 ::: mcdgs.diagnostics.trex_07_neutrons_on_sample
 
-::: mcdgs.diagnostics.trex_08_determine_ei
+::: mcdgs.diagnostics.trex_08_masked_source
 
-::: mcdgs.diagnostics.trex_09_elastic_plane
+::: mcdgs.diagnostics.trex_09_determine_ei
 
-::: mcdgs.diagnostics.trex_10_elastic_scan
+::: mcdgs.diagnostics.trex_10_elastic_plane
+
+::: mcdgs.diagnostics.trex_11_elastic_scan
 

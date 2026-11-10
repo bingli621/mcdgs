@@ -1,7 +1,7 @@
 # Elastic plane
 
 `TRexWithLa2Ni7`, in
-[`mcdgs.diagnostics.trex_09_elastic_plane`](https://github.com/bingli621/mcdgs/blob/main/src/mcdgs/diagnostics/trex_09_elastic_plane.py),
+[`mcdgs.diagnostics.trex_10_elastic_plane`](https://github.com/bingli621/mcdgs/blob/main/src/mcdgs/diagnostics/trex_10_elastic_plane.py),
 puts the La2Ni7 crystal on `sample_pos` and reduces every neutron that reaches the banana
 detector to its momentum transfer Q. It uses the sub-pulses and incident energies of
 [Incident energy](incident-energy.md), and the [reduction package](../../reference/reduction.md)
@@ -113,7 +113,7 @@ The figure needs McStas, so it is not made with the site: `pixi run docs-diagnos
 again, with the other files of the T-Rex pages. To make it yourself, run:
 
 ```bash
-pixi run python -m mcdgs.diagnostics.trex_09_elastic_plane
+pixi run python -m mcdgs.diagnostics.trex_10_elastic_plane
 ```
 
 At its defaults, `main` runs both parts, 1e10 neutrons from the source with seed 1, prints the
@@ -121,5 +121,5 @@ sub-pulses and saves the figure next to the `mccode.h5` of the second part, or t
 given with `--out`. To reduce the runs again without McStas:
 
 ```bash
-pixi run python -c "from mcdgs.diagnostics.trex_09_elastic_plane import analyze; analyze()"
+pixi run python -c "from mcdgs.diagnostics.trex_10_elastic_plane import analyze; analyze()"
 ```

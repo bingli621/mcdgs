@@ -18,7 +18,7 @@ the time profile joined by lines: first all on linear scales, then all on log sc
 each model, the sub-pulses and the weak ones between them, and :func:`plot_patches` draws the
 center of mass of each in time and wavelength, with its width as error bars.
 
-:func:`subpulse_windows` reduces the tof run as :mod:`.trex_09_elastic_plane` reduces McStas:
+:func:`subpulse_windows` reduces the tof run as :mod:`.trex_10_elastic_plane` reduces McStas:
 the sub-pulses at the pre-sample and beamstop monitors give their incident energy and the time
 they reach the sample, and :func:`.arrival_window` when the neutrons of each reach the banana
 detector. :func:`windows_table` lists them.
@@ -67,12 +67,14 @@ class TRexToSample(TRex):
     ----------
     params:
         Control parameters.
+    source_masked:
+        As in :class:`.TRex`.
     """
 
     name = "trex_to_sample"  # the McStas instrument name
 
-    def __init__(self, params: Params = DEFAULT_PARAMS) -> None:
-        super().__init__(params=params)
+    def __init__(self, params: Params = DEFAULT_PARAMS, source_masked: bool = False) -> None:
+        super().__init__(params=params, source_masked=source_masked)
         # after the sample monitor
         del self.beamstop
         del self.banana_detector
@@ -216,7 +218,7 @@ def subpulse_windows(
 ) -> sc.DataArray:
     """Give each sub-pulse of a tof run its arrival window at the banana detector.
 
-    As :mod:`.trex_09_elastic_plane` does with McStas: :func:`.find_patches` finds the
+    As :mod:`.trex_10_elastic_plane` does with McStas: :func:`.find_patches` finds the
     sub-pulses at both monitors, in the first pulse, :func:`.subpulse_flight` gives their
     incident energy from the flight between them, :func:`.time_at_sample` the time they reach
     the sample, and :func:`.arrival_window` when their neutrons reach the detector,

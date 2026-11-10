@@ -28,7 +28,7 @@ incident energy it should have.
 :func:`plot_incident_energies` the incident energy of each sub-pulse, and :func:`save_graph` the
 graph. Run the module to do it::
 
-    pixi run python -m mcdgs.diagnostics.trex_08_determine_ei
+    pixi run python -m mcdgs.diagnostics.trex_09_determine_ei
 """
 
 from pathlib import Path

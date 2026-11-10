@@ -6,11 +6,11 @@
 through the horizontal plane of the instrument, so every angle sees more of it.
 
 :func:`simulate` runs only the part from ``sample_pos`` to the detector, once per angle of
-``OMEGAS``, from the beam file of :mod:`.trex_09_elastic_plane`: the beam before the sample does
+``OMEGAS``, from the beam file of :mod:`.trex_10_elastic_plane`: the beam before the sample does
 not depend on the crystal. The crystal repeats each neutron that reaches it ``SCAN_SPLIT``
-times, fewer than in :mod:`.trex_09_elastic_plane`, since every angle lists its own neutrons.
+times, fewer than in :mod:`.trex_10_elastic_plane`, since every angle lists its own neutrons.
 
-:func:`reduce_angles` reduces each angle as :mod:`.trex_09_elastic_plane` does, per incident
+:func:`reduce_angles` reduces each angle as :mod:`.trex_10_elastic_plane` does, per incident
 neutron and per steradian, with the sub-pulses of its run to the sample, turns the momentum
 transfer into the frame of the crystal, as it stands at ``omega`` = 0, and keeps the neutrons
 near the horizontal plane, ``|Qy| < QY_HALF_WIDTH``, in one (Qx, Qz) map per angle.
@@ -18,11 +18,11 @@ near the horizontal plane, ``|Qy| < QY_HALF_WIDTH``, in one (Qx, Qz) map per ang
 the log color scale of :func:`.draw_plane`. :func:`main` is :func:`simulate`, then
 :func:`analyze`. Run the module for both::
 
-    pixi run python -m mcdgs.diagnostics.trex_10_elastic_scan
+    pixi run python -m mcdgs.diagnostics.trex_11_elastic_scan
 
 or reduce the scan again without McStas::
 
-    pixi run python -c "from mcdgs.diagnostics.trex_10_elastic_scan import analyze; analyze()"
+    pixi run python -c "from mcdgs.diagnostics.trex_11_elastic_scan import analyze; analyze()"
 """
 
 from pathlib import Path
@@ -36,7 +36,7 @@ from matplotlib.artist import Artist
 
 from mcdgs.core.components import Single_crystal
 from mcdgs.core.geometry import rotation
-from mcdgs.diagnostics import trex_09_elastic_plane as plane
+from mcdgs.diagnostics import trex_10_elastic_plane as plane
 from mcdgs.diagnostics.cli import output_folder, parse_out
 from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
 from mcdgs.mcstas.nexus_io import numeric_parameters, read_events
@@ -102,7 +102,7 @@ def simulate(
     omegas:
         The angles of the crystal, in deg.
     beam_file:
-        The beam at ``sample_pos``. If ``None``, that of :mod:`.trex_09_elastic_plane`, in its
+        The beam at ``sample_pos``. If ``None``, that of :mod:`.trex_10_elastic_plane`, in its
         run to the sample.
     seed:
         Seed of the random numbers; angle ``n`` takes ``seed + n + 1``.
@@ -171,7 +171,7 @@ def reduce_angles(
 ) -> sc.DataArray:
     """Reduce every angle of a scan into its own (Qx, Qz) map, in the crystal's frame.
 
-    The sub-pulses come from the run to the sample of :mod:`.trex_09_elastic_plane`, the same
+    The sub-pulses come from the run to the sample of :mod:`.trex_10_elastic_plane`, the same
     for every angle. Each angle is read and reduced on its own, so the scan never needs all its
     neutrons in memory at once.
 
@@ -180,7 +180,7 @@ def reduce_angles(
     scan:
         The scan folder of :func:`simulate`. If ``None``, ``SCAN`` in :func:`.default_output_dir`.
     to_sample:
-        The run to the sample. If ``None``, that of :mod:`.trex_09_elastic_plane`.
+        The run to the sample. If ``None``, that of :mod:`.trex_10_elastic_plane`.
     step:
         The bin width in Qx and Qz, in 1/Å.
     qy_half_width:
@@ -344,7 +344,7 @@ def analyze(
 def main(out: Path | None = None) -> Path:
     """Run the scan with :func:`simulate`, then reduce and draw it with :func:`analyze`.
 
-    The beam file must exist: run :mod:`.trex_09_elastic_plane` first.
+    The beam file must exist: run :mod:`.trex_10_elastic_plane` first.
 
     Parameters
     ----------
