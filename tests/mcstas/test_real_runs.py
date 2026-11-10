@@ -147,6 +147,19 @@ def test_polygon_ess_butterfly_gives_the_intensity_of_the_choppers_alone(tmp_pat
     assert _detected(masked, tmp_path / "masked").value == pytest.approx(plain.value, rel=0.03)
 
 
+def test_trex_with_the_masked_source_gives_the_intensity_on_the_sample(tmp_path):
+    # the masked source gives the sample all the intensity of the plain one, from fewer rays:
+    # at the defaults, 2.64e7 +- 5 % from 2e5 rays, and 2.72e7 +- 17 % from 2e6
+    masked = TRex(source_masked=True)
+    h5_file = Simulation(masked, work_dir=tmp_path).run(ncount=2e5, seed=1, mpi=None)
+    region = json.loads((h5_file.parent / "source.json").read_text())
+    assert 0 < region["acceptance"] < 0.02  # 42 polygons, about 1 %
+    with h5py.File(h5_file) as f:
+        (name,) = [k for k in f["entry1/data"] if k.startswith("sample_monitor")]
+        intensity = f[f"entry1/data/{name}/data"][...].sum()
+    assert intensity == pytest.approx(2.7e7, rel=0.2)
+
+
 @pytest.mark.parametrize("mode", ["FF", "RR"])
 def test_trex_runs_through_with_its_choppers_turning(tmp_path, mode):
     # compiling alone let through an abort at INITIALIZE: the slit edges of the choppers

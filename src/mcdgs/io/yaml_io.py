@@ -93,8 +93,8 @@ def load(path: str | Path, **kwargs: Any) -> Instrument:
     path:
         The parameters file.
     **kwargs:
-        Passed to the class to create the default instrument; for T-Rex, ``sample`` and
-        ``params``.
+        Passed to the class to create the default instrument; for T-Rex, ``sample``,
+        ``params`` and ``source_masked``.
 
     Returns
     -------

@@ -7,7 +7,9 @@ from mcdgs.core.base import Instrument
 from mcdgs.core.components import (
     Arm,
     Component,
+    ESS_butterfly,
     Guide_gravity,
+    Polygon_ESS_butterfly,
     Progress_bar,
     Single_crystal,
 )
@@ -33,7 +35,7 @@ from .monitors import (
     sample_monitor,
     source_monitor,
 )
-from .sources import source, wavelength_band
+from .sources import masked_source, source, wavelength_band
 
 
 @dataclass(frozen=True)
@@ -91,6 +93,9 @@ class TRex(Instrument):
         ``sample.relative`` says otherwise; ``sample`` itself is not changed.
     params:
         Control parameters.
+    source_masked:
+        True uses :func:`.sources.masked_source`, the source masked by the six choppers, for
+        many more neutrons through them per ray; False uses :func:`.sources.source`.
     """
 
     params_class = Params
@@ -103,7 +108,10 @@ class TRex(Instrument):
             ...
 
     def __init__(
-        self, sample: Single_crystal | None = None, params: Params = DEFAULT_PARAMS
+        self,
+        sample: Single_crystal | None = None,
+        params: Params = DEFAULT_PARAMS,
+        source_masked: bool = False,
     ) -> None:
         super().__init__(params)
 
@@ -112,7 +120,7 @@ class TRex(Instrument):
 
         self.origin = Progress_bar(at=[0, 0, 0])
         lambda_min, lambda_max = wavelength_band(self.params.lambda0)
-        self.source = source(lambda_min, lambda_max)
+        self.source = self._make_source(source_masked, lambda_min, lambda_max)
         self.source_monitor = source_monitor()  # the entrance of guide 1, the widest band
         self.add_components(guides_extraction())
         # bispectral switch: guide 4a (thermal) or bender and guide 4b (cold)
@@ -155,7 +163,8 @@ class TRex(Instrument):
 
         A new ``lambda0`` also creates the source and the time and wavelength monitors again
         (the beam, pre-sample, sample and beamstop monitors), with the band of
-        :func:`.sources.wavelength_band`.
+        :func:`.sources.wavelength_band`. A masked source stays masked: the source decides,
+        so that it also holds for an instrument a parameters file made.
 
         Parameters
         ----------
@@ -170,11 +179,32 @@ class TRex(Instrument):
         super().update_params(**values)
         if "lambda0" in values:
             lambda_min, lambda_max = wavelength_band(self.params.lambda0)
-            self.source = source(lambda_min, lambda_max)
+            masked = isinstance(self.source, Polygon_ESS_butterfly)
+            self.source = self._make_source(masked, lambda_min, lambda_max)
             self.beam_monitor = beam_monitor(lambda_limits=(lambda_min, lambda_max))
             self.pre_sample_monitor = pre_sample_monitor(lambda_limits=(lambda_min, lambda_max))
             self.beamstop_monitor = beamstop_monitor(lambda_limits=(lambda_min, lambda_max))
             self.sample_monitor = sample_monitor(lambda_limits=(lambda_min, lambda_max))
+
+    @staticmethod
+    def _make_source(
+        masked: bool, lambda_min: float, lambda_max: float
+    ) -> ESS_butterfly | Polygon_ESS_butterfly:
+        """Create the source, masked by the choppers or not.
+
+        Parameters
+        ----------
+        masked:
+            True for :func:`.sources.masked_source`, False for :func:`.sources.source`.
+        lambda_min, lambda_max:
+            Wavelength band, in Å.
+
+        Returns
+        -------
+        :
+            A new source.
+        """
+        return (masked_source if masked else source)(lambda_min, lambda_max)
 
     def running_conditions(self) -> str:
         """Describe the settings of T-Rex in one line, such as the title of a figure.

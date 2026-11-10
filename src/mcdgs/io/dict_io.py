@@ -146,8 +146,8 @@ def from_overrides(overrides: dict[str, Any], **kwargs: Any) -> Instrument:
         Names the instrument class and holds only what differs, e.g.
         ``{"instrument": "TRex", "params": {"lambda0": 4.0}}``.
     **kwargs:
-        Passed to the class to create the default instrument; for T-Rex, ``sample`` and
-        ``params``.
+        Passed to the class to create the default instrument; for T-Rex, ``sample``,
+        ``params`` and ``source_masked``.
 
     Returns
     -------

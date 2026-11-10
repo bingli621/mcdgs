@@ -62,6 +62,23 @@ def test_save_then_load_gives_the_instrument_back(tmp_path):
     assert load(tmp_path / "trex.yaml") == trex  # the sample comes from the file
 
 
+def test_a_masked_source_is_saved_and_loaded_and_stays_masked(tmp_path):
+    trex = TRex(source_masked=True)
+    save(trex, tmp_path / "trex.yaml")
+    loaded = load(tmp_path / "trex.yaml")
+    assert loaded == trex
+    assert read_yaml(tmp_path / "trex.yaml")["source"]["component"] == "Polygon_ESS_butterfly"
+    loaded.update_params(lambda0=4.0)  # TRex() made it unmasked: the source decides
+    assert loaded.source == TRex(params=loaded.params, source_masked=True).source
+
+
+def test_a_file_of_overrides_keeps_the_masked_source_of_the_code(tmp_path):
+    write_yaml({"instrument": "TRex", "params": {"lambda0": 4.0}}, tmp_path / "over.yaml")
+    trex = load(tmp_path / "over.yaml", source_masked=True)
+    assert trex.params.lambda0 == 4.0
+    assert trex.source == TRex(source_masked=True).source  # the band of the code, as unmasked
+
+
 def test_an_entry_is_written_on_one_line_however_long(tmp_path):
     save(TRex(), tmp_path / "trex.yaml")
     text = (tmp_path / "trex.yaml").read_text(encoding="utf-8")

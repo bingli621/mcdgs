@@ -87,8 +87,10 @@ def test_polygon_ess_butterfly_gives_the_same_tof_source():
     assert sc.identical(first.data, second.data)
 
 
-def test_trex_gets_its_own_pulse():
-    assert build_tof(TRex(), neutrons=1000, seed=1).source.facility == "ess-trex"
+@pytest.mark.parametrize("masked", [False, True])
+def test_trex_gets_its_own_pulse(masked):
+    trex = TRex(source_masked=masked)
+    assert build_tof(trex, neutrons=1000, seed=1).source.facility == "ess-trex"
 
 
 def test_monitors_become_detectors_and_the_rest_is_left_out():

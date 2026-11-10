@@ -4,7 +4,13 @@ from itertools import pairwise
 import numpy as np
 import pytest
 
-from mcdgs.core.components import Arm, Guide_gravity, NXdisk_chopper
+from mcdgs.core.components import (
+    Arm,
+    ESS_butterfly,
+    Guide_gravity,
+    NXdisk_chopper,
+    Polygon_ESS_butterfly,
+)
 from mcdgs.core.geometry import place_absolute
 from mcdgs.instruments.trex.choppers import (
     BEAM_ANGLE,
@@ -20,7 +26,12 @@ from mcdgs.instruments.trex.choppers import (
 from mcdgs.instruments.trex.guides.extraction import half_taper_angle
 from mcdgs.instruments.trex.guides.sections import split_after
 from mcdgs.instruments.trex.model import TRex
-from mcdgs.instruments.trex.sources import PATH_SPREAD_FRACTION, masked_source, source
+from mcdgs.instruments.trex.sources import (
+    PATH_SPREAD_FRACTION,
+    masked_source,
+    source,
+    wavelength_band,
+)
 from mcdgs.samples import aluminum
 
 
@@ -143,6 +154,28 @@ def test_the_aperture_is_that_of_chopper_lib():
     # wider than the width over the radius of the beam crossing, 12.7 deg: the inner corners
     # stand furthest round the disk
     assert aperture(disk) > math.degrees(0.1 / (0.5 - 0.1 / 2))
+
+
+def test_by_default_the_source_is_not_masked():
+    assert type(TRex().source) is ESS_butterfly
+
+
+def test_a_masked_source_is_masked_by_the_choppers_and_the_rest_is_the_same():
+    plain, masked = TRex(), TRex(source_masked=True)
+    assert masked.source == masked_source(*wavelength_band(2.0))
+    assert list(masked.components) == list(plain.components)
+    assert {n: c for n, c in masked.components.items() if n != "source"} == {
+        n: c for n, c in plain.components.items() if n != "source"
+    }
+    assert masked.instr_params == plain.instr_params
+
+
+@pytest.mark.parametrize("masked", [False, True])
+def test_a_new_lambda0_keeps_the_source_masked_or_not(masked):
+    trex = TRex(source_masked=masked)
+    trex.update_params(lambda0=4.0)
+    assert isinstance(trex.source, Polygon_ESS_butterfly) == masked
+    assert trex.source == TRex(params=trex.params, source_masked=masked).source
 
 
 def test_the_band_of_the_source_is_centered_on_lambda0():
