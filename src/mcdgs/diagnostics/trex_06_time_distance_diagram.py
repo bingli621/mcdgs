@@ -13,11 +13,9 @@ It needs only mcdgs and tof. Run the module for them::
 
 from pathlib import Path
 
-import matplotlib.pyplot as plt
-
 from mcdgs.core.components import NXdisk_chopper
 from mcdgs.core.utils import evaluate
-from mcdgs.diagnostics.cli import output_folder, parse_out
+from mcdgs.diagnostics.cli import markdown_table, output_folder, parse_out, save_figure, save_text
 from mcdgs.instruments.trex.model import TRex
 from mcdgs.mcstas.run_folders import default_output_dir
 from mcdgs.tof.builder import beamline
@@ -68,38 +66,41 @@ def parameters_table(
     lmin = float(evaluate(source.Lmin, params))
     lmax = float(evaluate(source.Lmax, params))
     run = [
-        "| tof run | Value |",
-        "| ------- | ----- |",
-        f"| Source | ESS pulse of beam port {source.sector}{source.beamline} at {source.frequency:g} Hz |",
-        f"| Band of the source | {lmin:.3f} to {lmax:.3f} Å |",
-        f"| `neutrons`, per pulse | {neutrons:,} |",
-        f"| `n_pulses` | {n_pulses} |",
-        f"| `seed` | {seed} |",
-        f"| `visible_rays`, per pulse | {visible_rays:,} |",
-        f"| `blocked_rays`, per pulse | {blocked_rays:,} |",
+        (
+            "Source",
+            f"ESS pulse of beam port {source.sector}{source.beamline} at {source.frequency:g} Hz",
+        ),
+        ("Band of the source", f"{lmin:.3f} to {lmax:.3f} Å"),
+        ("`neutrons`, per pulse", f"{neutrons:,}"),
+        ("`n_pulses`", n_pulses),
+        ("`seed`", seed),
+        ("`visible_rays`, per pulse", f"{visible_rays:,}"),
+        ("`blocked_rays`, per pulse", f"{blocked_rays:,}"),
     ]
     p = trex.params
     control = [
-        "| Control parameter | Value |",
-        "| ----------------- | ----- |",
-        f'| `mode` | `"{p.mode}"` |',
-        f"| `lambda0` | {p.lambda0:g} Å |",
-        f"| `rrm` | {p.rrm} |",
-        f"| `t0_offset` | {p.t0_offset * 1e3:g} ms |",
+        ("`mode`", f'`"{p.mode}"`'),
+        ("`lambda0`", f"{p.lambda0:g} Å"),
+        ("`rrm`", p.rrm),
+        ("`t0_offset`", f"{p.t0_offset * 1e3:g} ms"),
     ]
     choppers = [
-        "| Chopper | Distance from the source | Frequency | Delay |",
-        "| ------- | ------------------------ | --------- | ----- |",
+        (
+            f"`{name}`",
+            f"{distance:.3f} m",
+            f"{float(evaluate(component.nu, params)):g} Hz",
+            f"{float(evaluate(component.delay, params)) * 1e3:.3f} ms",
+        )
+        for name, component, distance in after_source
+        if isinstance(component, NXdisk_chopper)
     ]
-    for name, component, distance in after_source:
-        if isinstance(component, NXdisk_chopper):
-            nu = float(evaluate(component.nu, params))
-            delay = float(evaluate(component.delay, params))
-            frequency = f"{nu:g}".replace("-", "\u2212")  # a minus sign, as in the docs
-            choppers.append(
-                f"| `{name}` | {distance:.3f} m | {frequency} Hz | {delay * 1e3:.3f} ms |"
-            )
-    return "\n\n".join("\n".join(table) for table in (run, control, choppers)) + "\n"
+    return "\n".join(
+        [
+            markdown_table(["tof run", "Value"], run),
+            markdown_table(["Control parameter", "Value"], control),
+            markdown_table(["Chopper", "Distance from the source", "Frequency", "Delay"], choppers),
+        ]
+    )
 
 
 def main(out: Path | None = None, neutrons: int = 1_000_000, seed: int = 1) -> list[Path]:
@@ -108,7 +109,8 @@ def main(out: Path | None = None, neutrons: int = 1_000_000, seed: int = 1) -> l
     Parameters
     ----------
     out:
-        Folder to write to. If ``None``, ``mcstas_output/trex_time_distance``, beside the McStas runs.
+        Folder to write to. If ``None``, ``mcstas_output/trex_time_distance``, beside the McStas
+        runs.
     neutrons:
         Number of tof neutrons per pulse.
     seed:
@@ -120,7 +122,6 @@ def main(out: Path | None = None, neutrons: int = 1_000_000, seed: int = 1) -> l
         The paths of the diagram and of the table of its parameters.
     """
     folder = output_folder(out, default_output_dir() / "trex_time_distance")
-    path = folder / "trex_time_distance.png"
 
     # --8<-- [start:time_distance]
     trex = TRex()  # the default control parameters
@@ -132,23 +133,18 @@ def main(out: Path | None = None, neutrons: int = 1_000_000, seed: int = 1) -> l
         visible_rays=VISIBLE_RAYS,
         blocked_rays=BLOCKED_RAYS,
     )
-    figure.savefig(path, dpi=150)
+    path = save_figure(figure, folder / "trex_time_distance.png")
     # --8<-- [end:time_distance]
-    plt.close(figure)
 
-    table = folder / "trex_time_distance_params.txt"
-    table.write_text(
-        parameters_table(
-            trex,
-            neutrons=neutrons,
-            seed=seed,
-            n_pulses=N_PULSES,
-            visible_rays=VISIBLE_RAYS,
-            blocked_rays=BLOCKED_RAYS,
-        )
+    table = parameters_table(
+        trex,
+        neutrons=neutrons,
+        seed=seed,
+        n_pulses=N_PULSES,
+        visible_rays=VISIBLE_RAYS,
+        blocked_rays=BLOCKED_RAYS,
     )
-    print(f"Written to {folder}")
-    return [path, table]
+    return [path, save_text(table, folder / "trex_time_distance_params.txt")]
 
 
 if __name__ == "__main__":

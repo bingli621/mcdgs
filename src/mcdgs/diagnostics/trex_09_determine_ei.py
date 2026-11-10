@@ -39,7 +39,7 @@ import scipp as sc
 from matplotlib.figure import Figure
 from scippneutron.conversion import tof as tof_kernels
 
-from mcdgs.diagnostics.cli import output_folder, parse_out
+from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
 from mcdgs.diagnostics.compare import MonitorComparison, read_scaled_comparisons
 from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
 from mcdgs.mcstas.simulation import Simulation
@@ -394,23 +394,16 @@ def main(
     print_incident_energies(flights)
 
     conditions = instrument.running_conditions()
-    figures = []
-    for suffix, fig in (
-        ("", plot_time_profiles(comparisons, f"T-Rex direct beam\n{conditions}")),
-        (
-            "_values",
-            plot_incident_energies(flights, f"T-Rex incident energy per sub-pulse\n{conditions}"),
-        ),
-    ):
-        figure = output_folder(out, folder) / f"{name}{suffix}.png"
-        fig.savefig(figure, dpi=150)
-        plt.close(fig)
-        print(f"Saved {figure}")
-        figures.append(figure)
-    figure = save_graph(output_folder(out, folder) / f"{name}_graph")
-    print(f"Saved {figure}")
-    figures.append(figure)
-    return figures
+    folder = output_folder(out, folder)
+    profiles = plot_time_profiles(comparisons, f"T-Rex direct beam\n{conditions}")
+    energies = plot_incident_energies(flights, f"T-Rex incident energy per sub-pulse\n{conditions}")
+    files = [
+        save_figure(profiles, folder / f"{name}.png"),
+        save_figure(energies, folder / f"{name}_values.png"),
+        save_graph(folder / f"{name}_graph"),
+    ]
+    print(f"Saved {files[-1]}")
+    return files
 
 
 if __name__ == "__main__":

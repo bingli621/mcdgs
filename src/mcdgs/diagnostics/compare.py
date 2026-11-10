@@ -1,7 +1,8 @@
 """McStas and tof at one monitor, side by side.
 
 :func:`read_comparison` reads one time and wavelength map from both runs, in n/s, and
-:func:`plot_comparison` draws it. :func:`read_mcstas_map` reads the map of one McStas run. One
+:func:`plot_comparison` draws it, and :func:`print_means` prints the mean time and wavelength of
+each model. :func:`read_mcstas_map` reads the map of one McStas run. One
 run of each model can feed several monitors: :func:`read_scaled_comparisons` reads them all, tof
 scaled at the first and, at the others, with the transmission on top of it.
 
@@ -248,6 +249,25 @@ def read_scaled_comparisons(
     return {first: at_first} | {
         name: after_first(name, edges, transmission) for name, edges in rest
     }
+
+
+def print_means(comparison: MonitorComparison) -> None:
+    """Print the mean time and wavelength of each model, weighted by its intensity.
+
+    Parameters
+    ----------
+    comparison:
+        Both maps.
+    """
+    times = sc.midpoints(comparison.bins["toa"]).to(unit="ms").values
+    wavelengths = sc.midpoints(comparison.bins["wavelength"]).to(unit="Å").values
+    for label, intensity in (
+        ("McStas", comparison.mcstas_intensity),
+        ("tof", comparison.tof_intensity),
+    ):
+        mean_time = np.average(times, weights=intensity.sum(axis=1))
+        mean_wavelength = np.average(wavelengths, weights=intensity.sum(axis=0))
+        print(f"{label:>6}: mean time {mean_time:.3f} ms, mean wavelength {mean_wavelength:.3f} Å")
 
 
 def plot_comparison(

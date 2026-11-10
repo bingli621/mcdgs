@@ -33,15 +33,16 @@ The reduction follows :mod:`mcdgs.reduction`:
 Qy near the horizontal plane, ``|Qy| < QY_HALF_WIDTH``, on a log color scale. Each sub-pulse has
 its own incident wavevector ki, so its elastic neutrons lie near its own circle, of radius ki
 through the origin, where the detector covers it.
-Run the module to do it::
-
-    pixi run python -m mcdgs.diagnostics.trex_10_elastic_plane
 
 :func:`main` is :func:`simulate`, which runs McStas, then :func:`analyze`, which reduces and
-draws. Reduce the runs again without McStas with :func:`analyze`, or :func:`reduce_runs` for the
-sub-pulses and the neutrons alone::
+draws. Run it to do both::
 
-    pixi run python -c "from mcdgs.diagnostics.trex_10_elastic_plane import analyze; analyze()"
+    pixi run python -c "from mcdgs.diagnostics.trex_10_elastic_plane import main; main()"
+
+Running the module only reduces the runs again, without McStas, with :func:`analyze`;
+:func:`reduce_runs` gives the sub-pulses and the neutrons alone::
+
+    pixi run python -m mcdgs.diagnostics.trex_10_elastic_plane
 """
 
 from pathlib import Path
@@ -54,7 +55,8 @@ from matplotlib.colors import LogNorm
 from matplotlib.figure import Figure
 from mcstasscript.data.data import McStasData
 
-from mcdgs.diagnostics.cli import output_folder
+from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
+from mcdgs.diagnostics.compare import read_mcstas_map
 from mcdgs.instruments.trex.detectors import (
     BANANA_HEIGHT,
     BANANA_RADIUS,
@@ -147,10 +149,7 @@ def subpulse_timing(
         first.
     """
     pre_sample, beamstop = (
-        # McStasScript has the map as (wavelength, time), the y axis first
-        find_patches(
-            np.asarray(ms.name_search(name, mcstas_data).Intensity, dtype=float).T, bins[name]
-        )
+        find_patches(read_mcstas_map(name, mcstas_data, bins[name])[0], bins[name])
         for name in MONITORS
     )
     pre_sample_position = sc.vector(positions["pre_sample_monitor"], unit="m")
@@ -501,11 +500,7 @@ def analyze(
         f"T-Rex, La2Ni7: (Qx, Qz) of {pulses.sizes['subpulse']} sub-pulses\n"
         f"{TRexWithLa2Ni7().running_conditions()}",
     )
-    figure = output_folder(out, from_sample) / f"{NAME}.png"
-    fig.savefig(figure, dpi=150)
-    plt.close(fig)
-    print(f"Saved {figure}")
-    return figure
+    return save_figure(fig, output_folder(out, from_sample) / f"{NAME}.png")
 
 
 def main(out: Path | None = None, ncount: float = 1e9, seed: int = 1) -> Path:
@@ -528,6 +523,4 @@ def main(out: Path | None = None, ncount: float = 1e9, seed: int = 1) -> Path:
 
 
 if __name__ == "__main__":
-    # main(out=parse_out(__doc__))
-
-    analyze()
+    analyze(out=parse_out(__doc__))  # McStas runs only with main, about ten minutes

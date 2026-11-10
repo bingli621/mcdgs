@@ -37,7 +37,7 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from numpy.typing import NDArray
 
-from mcdgs.diagnostics.cli import output_folder, parse_out
+from mcdgs.diagnostics.cli import markdown_table, output_folder, parse_out, save_figure, save_text
 from mcdgs.diagnostics.compare import read_mcstas_map
 from mcdgs.diagnostics.trex_07_neutrons_on_sample import TRexToSample
 from mcdgs.instruments.trex.monitors import sample_monitor
@@ -148,23 +148,28 @@ def summary_table(plain: SourceRun, masked: SourceRun, ncount: float) -> str:
     """
     header = ["Source", "Rays", "At the sample", "Relative error", "Time", "Figure of merit"]
     rows = [
-        "| " + " | ".join(header) + " |",
-        "| " + " | ".join("-" * len(name) for name in header) + " |",
-    ]
-    for run in (plain, masked):
-        acceptance = "" if run.acceptance is None else f", acceptance {run.acceptance:.4g}"
-        rows.append(
-            f"| `{run.component}`{acceptance} | {ncount:.0e} | {run.total:.4g} n/s "
-            f"| {run.relative_error:.2%} | {run.seconds:.0f} s "
-            f"| {run.figure_of_merit:.3g} /s |"
+        (
+            f"`{run.component}`"
+            + ("" if run.acceptance is None else f", acceptance {run.acceptance:.4g}"),
+            f"{ncount:.0e}",
+            f"{run.total:.4g} n/s",
+            f"{run.relative_error:.2%}",
+            f"{run.seconds:.0f} s",
+            f"{run.figure_of_merit:.3g} /s",
         )
+        for run in (plain, masked)
+    ]
     rows.append(
-        f"| Masked over plain | | {masked.total / plain.total:.4f} "
-        f"| {masked.relative_error / plain.relative_error:.3g} "
-        f"| {masked.seconds / plain.seconds:.3g} "
-        f"| {masked.figure_of_merit / plain.figure_of_merit:.3g} |"
+        (
+            "Masked over plain",
+            "",
+            f"{masked.total / plain.total:.4f}",
+            f"{masked.relative_error / plain.relative_error:.3g}",
+            f"{masked.seconds / plain.seconds:.3g}",
+            f"{masked.figure_of_merit / plain.figure_of_merit:.3g}",
+        )
     )
-    return "\n".join(rows) + "\n"
+    return markdown_table(header, rows)
 
 
 def _profiles(
@@ -420,41 +425,26 @@ def main(
     bins = monitor_bins(plain_instrument.sample_monitor)
     peaks = find_peaks(masked, bins)
     conditions = f"ncount = {int(ncount):,} each\n{plain_instrument.running_conditions()}"
-    figures = [
-        (
-            f"{name}{suffix}.png",
+    files = [
+        save_figure(
             plot_sources(
                 bins,
                 (plain, masked),
                 f"T-Rex flux at the sample monitor, {conditions}",
                 log_y=log_y,
             ),
+            folder / f"{name}{suffix}.png",
         )
         for suffix, log_y in (("", False), ("_log", True))
     ]
-    figures.append(
-        (
-            f"{name}_peaks.png",
-            plot_peaks(
-                bins,
-                (plain, masked),
-                f"The {len(peaks)} sub-pulses at the sample monitor, {conditions}",
-                peaks,
-            ),
-        )
+    fig = plot_peaks(
+        bins,
+        (plain, masked),
+        f"The {len(peaks)} sub-pulses at the sample monitor, {conditions}",
+        peaks,
     )
-    files = []
-    for file_name, fig in figures:
-        figure = folder / file_name
-        fig.savefig(figure, dpi=150)
-        plt.close(fig)
-        print(f"Saved {figure}")
-        files.append(figure)
-
-    table_file = folder / f"{name}.txt"
-    table_file.write_text(table)
-    print(f"Saved {table_file}")
-    files.append(table_file)
+    files.append(save_figure(fig, folder / f"{name}_peaks.png"))
+    files.append(save_text(table, folder / f"{name}.txt"))
     return files
 
 

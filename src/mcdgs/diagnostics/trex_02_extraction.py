@@ -36,7 +36,7 @@ from mcdgs.core.components import (
     Progress_bar,
 )
 from mcdgs.core.params import InstrParam, param
-from mcdgs.diagnostics.cli import output_folder, parse_out
+from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
 from mcdgs.diagnostics.compare import plot_comparison, read_scaled_comparisons
 from mcdgs.instruments.trex.guides.bispectral import (
     BENDER_ROTATION,
@@ -119,8 +119,7 @@ class Extraction(Instrument):
         self.origin = Progress_bar(at=[0, 0, 0])
         self.source = source()  # the widest band, as the beam monitor's default limits
         self.source_monitor = source_monitor()
-        for name, component in guides_extraction().items():
-            setattr(self, name, component)
+        self.add_components(guides_extraction())
         self.arm_guide_4 = arm_guide_4()
         self.guide_4a = guide_4a(when="bender_in==0")
         self.bender = bender(when="bender_in==1")
@@ -177,15 +176,7 @@ def draw_top_view(mcstas_instr: McStas_instr, path: Path) -> Path:
             width=1600,  # pixels at 100 dpi: 16 x 4 in
             height=400,
         )
-    return _save(plt.gcf(), path, dpi=150)
-
-
-def _save(fig: Figure, path: Path, dpi: int) -> Path:
-    """Save a figure, close it and return its path."""
-    fig.savefig(path, dpi=dpi)
-    plt.close(fig)
-    print(f"Saved {path}")
-    return path
+    return save_figure(plt.gcf(), path)
 
 
 def diagnose_path(
@@ -204,8 +195,7 @@ def diagnose_path(
     component, which also gives the monitors; tof runs once. The diagnostics list every ray at
     their three positions, so their run has fewer neutrons. tof is scaled to the total of
     McStas at the source monitor, where both see the same beam, and by ``transmission`` on top
-    of it at the beam monitor. The
-    figures, the diagnostics, the diagram and the comparison, are
+    of it at the beam monitor. The figures, the diagnostics, the diagram and the comparison, are
     ``trex_extraction_bender_out_diagnose.png``, ``trex_extraction_bender_out_intensity.png``
     and ``trex_extraction_bender_out.png``, or ``..._in``.
 
@@ -269,7 +259,7 @@ def diagnose_path(
     diag.run()
     diag.plot()  # draws on a new figure, which it does not return
     figure_folder = output_folder(out, folder)
-    figures = [_save(plt.gcf(), figure_folder / f"{run_name}_diagnose.png", dpi=100)]
+    figures = [save_figure(plt.gcf(), figure_folder / f"{run_name}_diagnose.png", dpi=100)]
 
     # McStasScript's diagram of the components, with the intensity and the rays before each:
     # a McStas run of its own, in a folder of its own, which also holds the monitors
@@ -290,7 +280,7 @@ def diagnose_path(
     diagram = plt.gcf()
     _zoom_intensity(diagram, DIAGRAM_INTENSITY_LIMITS)
     # --8<-- [end:diagram]
-    figures.append(_save(diagram, figure_folder / f"{run_name}_intensity.png", dpi=100))
+    figures.append(save_figure(diagram, figure_folder / f"{run_name}_intensity.png", dpi=100))
 
     # --8<-- [start:scale_tof]
     # tof's counts are scaled to the total of McStas at the source monitor, in n/s, and by the
@@ -313,7 +303,7 @@ def diagnose_path(
         f"{comparison.scale:.4g} n/s per tof neutron"
     )
     fig = plot_comparison(comparison, f"T-Rex flux at the beam monitor after guide 4, {path}")
-    figures.append(_save(fig, figure_folder / f"{run_name}.png", dpi=150))
+    figures.append(save_figure(fig, figure_folder / f"{run_name}.png"))
     return figures
 
 

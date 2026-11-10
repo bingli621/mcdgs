@@ -34,17 +34,13 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-import matplotlib.pyplot as plt
 import mcstasscript as ms
-import numpy as np
-import scipp as sc
-from numpy.typing import NDArray
 
 from mcdgs.core.base import Instrument
 from mcdgs.core.components import ESS_butterfly, Monitor_nD
 from mcdgs.core.params import InstrParam, param
-from mcdgs.diagnostics.cli import output_folder, parse_out
-from mcdgs.diagnostics.compare import plot_comparison, read_comparison
+from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
+from mcdgs.diagnostics.compare import plot_comparison, print_means, read_comparison
 from mcdgs.instruments.trex.monitors import source_monitor
 from mcdgs.instruments.trex.sources import source, wavelength_band
 from mcdgs.mcstas.simulation import Simulation
@@ -123,11 +119,6 @@ class TRexSource(Instrument):
         # --8<-- [end:trex_source]
 
 
-def _mean(intensity: NDArray, centers: NDArray, axis: int) -> float:
-    """Return the mean of a bin center, weighted by the intensity summed over the other axis."""
-    return float(np.average(centers, weights=intensity.sum(axis=1 - axis)))
-
-
 def main(
     out: Path | None = None,
     ncount: float = 1e6,
@@ -176,27 +167,14 @@ def main(
     # --8<-- [end:run_tof]
 
     # print the mean time and wavelength of each model, and the total tof is scaled to
-    time_centers = sc.midpoints(bins["toa"]).to(unit="ms").values
-    wavelength_centers = sc.midpoints(bins["wavelength"]).values  # Å
-    for label, intensity in (
-        ("McStas", comparison.mcstas_intensity),
-        ("tof", comparison.tof_intensity),
-    ):
-        print(
-            f"{label:>6}: mean time {_mean(intensity, time_centers, 0):.3f} ms, "
-            f"mean wavelength {_mean(intensity, wavelength_centers, 1):.3f} Å"
-        )
+    print_means(comparison)
     print(
         f"McStas total {comparison.mcstas_intensity.sum():.4g} n/s, "
         f"{comparison.scale:.4g} n/s per tof neutron"
     )
 
-    figure = output_folder(out, folder) / f"{name}.png"
     fig = plot_comparison(comparison, "T-Rex flux at the entrance of guide 1")
-    fig.savefig(figure, dpi=150)
-    plt.close(fig)
-    print(f"Saved {figure}")
-    return figure
+    return save_figure(fig, output_folder(out, folder) / f"{name}.png")
 
 
 if __name__ == "__main__":

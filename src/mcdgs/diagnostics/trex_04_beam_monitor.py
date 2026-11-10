@@ -28,7 +28,6 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
-import matplotlib.pyplot as plt
 import mcstasscript as ms
 import numpy as np
 import scipp as sc
@@ -38,8 +37,8 @@ from mcdgs.core.base import Instrument
 from mcdgs.core.components import Arm, ESS_butterfly, Guide_gravity, Monitor_nD, Progress_bar
 from mcdgs.core.components.source import ESS_SOURCE_FREQUENCY
 from mcdgs.core.params import InstrParam
-from mcdgs.diagnostics.cli import output_folder, parse_out
-from mcdgs.diagnostics.compare import plot_comparison, read_scaled_comparisons
+from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
+from mcdgs.diagnostics.compare import plot_comparison, print_means, read_scaled_comparisons
 from mcdgs.instruments.trex.guides.bispectral import arm_guide_4, guide_4a
 from mcdgs.instruments.trex.guides.extraction import guides_extraction
 from mcdgs.instruments.trex.monitors import beam_monitor, source_monitor
@@ -48,7 +47,8 @@ from mcdgs.mcstas.simulation import Simulation
 from mcdgs.tof.builder import build_tof
 from mcdgs.tof.reader import monitor_bins
 
-# 1/Å: C of the example efficiency ε = C λ, 1e-4 at 2 Å, within the 1e-5 to 1e-3 of beam monitors
+# 1/Å: C of the example efficiency ε = C λ, 1e-4 at 2 Å, within the 1e-5 to 1e-3 of beam
+# monitors
 EFFICIENCY_PER_ANGSTROM = 5e-5
 DEAD_TIME = 100e-9  # s: the dead time of the example monitor
 
@@ -87,8 +87,7 @@ class TRexBeamMonitor(Instrument):
         self.origin = Progress_bar(at=[0, 0, 0])
         self.source = source()  # the widest band, as the beam monitor's default limits
         self.source_monitor = source_monitor()
-        for name, component in guides_extraction().items():
-            setattr(self, name, component)
+        self.add_components(guides_extraction())
         # the bender out: guide 4a, the thermal guide, always on the beam
         self.arm_guide_4 = arm_guide_4()
         self.guide_4a = guide_4a()
@@ -99,11 +98,6 @@ class TRexBeamMonitor(Instrument):
         """McStas instrument parameters: there are none."""
         return []
         # --8<-- [end:trex_beam_monitor]
-
-
-def _mean(intensity: NDArray, centers: NDArray, axis: int) -> float:
-    """Return the mean of a bin center, weighted by the intensity summed over the other axis."""
-    return float(np.average(centers, weights=intensity.sum(axis=1 - axis)))
 
 
 @dataclass(frozen=True)
@@ -248,16 +242,7 @@ def main(
     # --8<-- [end:transmission]
 
     # print the mean time and wavelength of each model, and the scale and transmission of tof
-    time_centers = sc.midpoints(bins["toa"]).to(unit="ms").values
-    wavelength_centers = sc.midpoints(bins["wavelength"]).values  # Å
-    for label, intensity in (
-        ("McStas", comparison.mcstas_intensity),
-        ("tof", comparison.tof_intensity),
-    ):
-        print(
-            f"{label:>6}: mean time {_mean(intensity, time_centers, 0):.3f} ms, "
-            f"mean wavelength {_mean(intensity, wavelength_centers, 1):.3f} Å"
-        )
+    print_means(comparison)
     mcstas_total = comparison.mcstas_intensity.sum()
     print(
         f"McStas total {mcstas_total:.4g} n/s, "
@@ -267,12 +252,8 @@ def main(
     monitor = instrument.beam_monitor
     _print_rates(comparison.mcstas_intensity, bins, area=monitor.xwidth * monitor.yheight * 1e4)
 
-    figure = output_folder(out, folder) / f"{name}.png"
     fig = plot_comparison(comparison, "T-Rex flux at the beam monitor after guide 4a")
-    fig.savefig(figure, dpi=150)
-    plt.close(fig)
-    print(f"Saved {figure}")
-    return figure
+    return save_figure(fig, output_folder(out, folder) / f"{name}.png")
 
 
 if __name__ == "__main__":

@@ -25,7 +25,7 @@ from unittest.mock import patch
 import matplotlib.pyplot as plt
 from mcstasscript.interface.instr import McStas_instr
 
-from mcdgs.diagnostics.cli import output_folder, parse_out
+from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure, save_text
 from mcdgs.instruments.trex.model import TRex
 from mcdgs.mcstas.builder import build_mcstas, default_input_dir
 
@@ -33,10 +33,7 @@ from mcdgs.mcstas.builder import build_mcstas, default_input_dir
 def _save_view(path: Path, dpi: int) -> Path:
     """Give the view that show_instrument drew equal axes, save it and close it."""
     plt.gca().set_aspect("equal")
-    plt.gcf().savefig(path, dpi=dpi)
-    plt.close("all")
-    print(f"Saved {path}")
-    return path
+    return save_figure(plt.gcf(), path, dpi=dpi)
 
 
 def write_printout(trex: TRex, folder: Path) -> Path:
@@ -54,10 +51,7 @@ def write_printout(trex: TRex, folder: Path) -> Path:
     :
         The path of the file.
     """
-    path = folder / "trex_print.txt"
-    path.write_text(f"{trex}\n")
-    print(f"Written {path}")
-    return path
+    return save_text(f"{trex}\n", folder / "trex_print.txt")
 
 
 def along_beam_range(trex: TRex) -> tuple[int, int]:
@@ -183,7 +177,7 @@ def main(out: Path | None = None) -> list[Path]:
     folder = output_folder(out, input_dir)
     if folder.resolve() != input_dir.resolve():
         instr_file = Path(shutil.copyfile(instr_file, folder / instr_file.name))
-    print(f"Written {instr_file}")
+    print(f"Saved {instr_file}")
     return [
         write_printout(trex, folder),
         instr_file,

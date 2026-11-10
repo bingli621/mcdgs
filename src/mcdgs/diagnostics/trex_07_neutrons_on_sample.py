@@ -43,7 +43,7 @@ from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 from scippneutron.conversion import tof as tof_kernels
 
-from mcdgs.diagnostics.cli import output_folder, parse_out
+from mcdgs.diagnostics.cli import markdown_table, output_folder, parse_out, save_figure, save_text
 from mcdgs.diagnostics.compare import MonitorComparison, plot_comparison, read_scaled_comparisons
 from mcdgs.instruments.trex.detectors import BANANA_RADIUS
 from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
@@ -276,8 +276,8 @@ def windows_table(windows: sc.DataArray) -> str:
 
     Each row is a sub-pulse: its incident wavelength and energy, when it reaches the sample,
     and when its window at the detector opens, its elastic neutrons arrive and the window
-    closes. The last column is the time from
-    the close of its window to the opening of the next: negative where the two overlap.
+    closes. The last column is the time from the close of its window to the opening of the
+    next: negative where the two overlap.
 
     Parameters
     ----------
@@ -305,20 +305,21 @@ def windows_table(windows: sc.DataArray) -> str:
         "Window closes",
         "To the next",
     ]
+    to_next = [f"{after - close:.3f} ms" for close, after in zip(closes, opens[1:])] + [""]
     rows = [
-        "| " + " | ".join(header) + " |",
-        "| " + " | ".join("-" * len(name) for name in header) + " |",
-    ]
-    for i in range(windows.sizes["subpulse"]):
-        gap = ""
-        if i + 1 < len(opens):
-            # a minus sign, as in the docs
-            gap = f"{opens[i + 1] - closes[i]:.3f} ms".replace("-", "\u2212")
-        rows.append(
-            f"| {i} | {wavelength[i]:.4f} Å | {energy[i]:.3f} meV | {at_sample[i]:.3f} ms "
-            f"| {opens[i]:.3f} ms | {elastic[i]:.3f} ms | {closes[i]:.3f} ms | {gap} |"
+        (
+            i,
+            f"{wavelength[i]:.4f} Å",
+            f"{energy[i]:.3f} meV",
+            f"{at_sample[i]:.3f} ms",
+            f"{opens[i]:.3f} ms",
+            f"{elastic[i]:.3f} ms",
+            f"{closes[i]:.3f} ms",
+            to_next[i],
         )
-    return "\n".join(rows) + "\n"
+        for i in range(windows.sizes["subpulse"])
+    ]
+    return markdown_table(header, rows)
 
 
 def main(
@@ -394,34 +395,30 @@ def main(
         f"{comparison.scale:.4g} n/s each, transmission {transmission:.4g}"
     )
 
-    title = f"T-Rex flux at the sample monitor\n{instrument.running_conditions()}"
-    figures = []
-    for suffix, log_decades, log_y in (("", None, False), ("_log", LOG_DECADES, True)):
-        figure = output_folder(out, folder) / f"{name}{suffix}.png"
-        fig = plot_comparison(comparison, title, log_decades=log_decades, connect=True, log_y=log_y)
-        fig.savefig(figure, dpi=150)
-        plt.close(fig)
-        print(f"Saved {figure}")
-        figures.append(figure)
+    folder = output_folder(out, folder)
+    conditions = instrument.running_conditions()
+    files = [
+        save_figure(
+            plot_comparison(
+                comparison,
+                f"T-Rex flux at the sample monitor\n{conditions}",
+                log_decades=log_decades,
+                connect=True,
+                log_y=log_y,
+            ),
+            folder / f"{name}{suffix}.png",
+        )
+        for suffix, log_decades, log_y in (("", None, False), ("_log", LOG_DECADES, True))
+    ]
 
     windows = subpulse_windows(instrument, tof_result)
-    figure = output_folder(out, folder) / f"{name}_patches.png"
-    fig = plot_patches(
-        comparison,
-        f"Center of mass of each patch\n{instrument.running_conditions()}",
-        windows=windows,
-    )
-    fig.savefig(figure, dpi=150)
-    plt.close(fig)
-    print(f"Saved {figure}")
-    figures.append(figure)
+    fig = plot_patches(comparison, f"Center of mass of each patch\n{conditions}", windows=windows)
+    files.append(save_figure(fig, folder / f"{name}_patches.png"))
 
-    table = output_folder(out, folder) / f"{name}_windows.txt"
-    table.write_text(windows_table(windows))
-    print(table.read_text(), end="")
-    print(f"Saved {table}")
-    figures.append(table)
-    return figures
+    table = windows_table(windows)
+    print(table, end="")
+    files.append(save_text(table, folder / f"{name}_windows.txt"))
+    return files
 
 
 if __name__ == "__main__":

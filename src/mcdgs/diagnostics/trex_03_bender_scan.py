@@ -20,7 +20,7 @@ from matplotlib.figure import Figure
 from mcstastox.LoadFile import Data
 from numpy.typing import NDArray
 
-from mcdgs.diagnostics.cli import output_folder, parse_out
+from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
 from mcdgs.diagnostics.trex_02_extraction import Extraction, diagnose_path
 from mcdgs.instruments.trex.guides.bispectral import BENDER_ROTATION
 from mcdgs.mcstas.simulation import Simulation
@@ -88,8 +88,9 @@ def read_spectra(h5_file: Path) -> tuple[NDArray, NDArray, NDArray]:
     The map of the beam monitor is summed over time, then over each band of
     :data:`BAND_WIDTH`, centered on a multiple of it. A wavelength bin goes to the band whose
     center is nearest to its own, and to the band above when it is centered on the edge of two,
-    so a band's edges are those of its bins, within half a bin of the band's. Only the bands the axis of the monitor covers whole are kept. The bins are
-    independent, so their errors add in quadrature.
+    so a band's edges are those of its bins, within half a bin of the band's. Only the bands
+    the axis of the monitor covers whole are kept. The bins are independent, so their errors add
+    in quadrature.
 
     Parameters
     ----------
@@ -179,10 +180,10 @@ def run_bender_scan(
     scan_file = simulation.scan(
         "b_rot", angles, "bender_scan", ncount=ncount, seed=seed, bender_in=1
     )
-    print(f"Wrote {scan_file}")
+    print(f"Saved {scan_file}")
     bender_out_file = simulation.run("bender_out", ncount=ncount, seed=seed, bender_in=0)
     # --8<-- [end:run_scan]
-    print(f"Wrote {bender_out_file}")
+    print(f"Saved {bender_out_file}")
     return scan_file, bender_out_file
 
 
@@ -267,11 +268,8 @@ def main(
         comparison with the bender in.
     """
     scan_file, bender_out_file = run_bender_scan(ncount=ncount, seed=seed)
-    figure = output_folder(out, scan_file.parent) / "bender_scan.png"
     fig = plot_bender_scan(scan_file, bender_out_file)
-    fig.savefig(figure, dpi=150)
-    plt.close(fig)
-    print(f"Saved {figure}")
+    figure = save_figure(fig, output_folder(out, scan_file.parent) / "bender_scan.png")
     # --8<-- [start:bender_in]
     path = diagnose_path(
         True, out, ncount=path_ncount, neutrons=neutrons, seed=seed, transmission=transmission

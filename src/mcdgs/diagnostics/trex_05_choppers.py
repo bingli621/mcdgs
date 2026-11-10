@@ -13,9 +13,7 @@ It needs only mcdgs and scippneutron. Run the module for them::
 
 from pathlib import Path
 
-import matplotlib.pyplot as plt
-
-from mcdgs.diagnostics.cli import output_folder, parse_out
+from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure, save_text
 from mcdgs.instruments.trex.model import TRex
 from mcdgs.mcstas.run_folders import default_output_dir
 from mcdgs.tof.acceptance import acceptance_diagram
@@ -41,19 +39,14 @@ def main(out: Path | None = None) -> list[Path]:
     # --8<-- [start:draw_choppers]
     trex = TRex()  # the default control parameters
     for name, chopper in get_choppers(trex).items():
-        path = folder / f"chopper_{name}.svg"
-        path.write_text(chopper.make_svg(image_size=300))
-        # --8<-- [end:draw_choppers]
-        paths.append(path)
+        svg = chopper.make_svg(image_size=300)
+        paths.append(save_text(svg, folder / f"chopper_{name}.svg"))
+    # --8<-- [end:draw_choppers]
 
     # --8<-- [start:acceptance]
     figure = acceptance_diagram(trex, time_max=0.015)
-    figure.savefig(folder / "trex_acceptance.png", dpi=150)
+    paths.append(save_figure(figure, folder / "trex_acceptance.png"))
     # --8<-- [end:acceptance]
-    plt.close(figure)
-    paths.append(folder / "trex_acceptance.png")
-
-    print(f"Written to {folder}")
     return paths
 
 
