@@ -2,6 +2,7 @@
 
 import shutil
 from dataclasses import dataclass
+from pathlib import Path
 
 import h5py
 import numpy as np
@@ -96,3 +97,18 @@ def test_trex_runs_through_with_its_choppers_turning(tmp_path, mode):
     trex.update_params(mode=mode)
     h5_file = Simulation(trex, work_dir=tmp_path).run(ncount=1e3, seed=1, mpi=None)
     assert h5_file.is_file()
+
+
+def test_train_mcpl_split_runs_end_to_end(tmp_path):
+    component = (
+        Path(__file__).parents[2]
+        / "src/mcdgs/instruments/trex/tof_train_components/MCPL_output.comp"
+    )
+    if not component.is_file():
+        pytest.skip("experimental MCPL_output component not yet available")
+    sim = Simulation(TRex(), work_dir=tmp_path, tof_train=True)
+    beam = sim.run_to_sample(ncount=10000, seed=1, mpi=None)
+    assert beam.is_file()
+    assert sim.run_from_sample(seed=2, mpi=None).is_file()
+    assert sim.scan_from_sample("b_rot", [0], seed=3, n_jobs=1).is_file()
+    assert sim.tof_train is True

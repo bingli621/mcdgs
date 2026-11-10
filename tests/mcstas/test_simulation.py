@@ -57,6 +57,25 @@ def test_the_beam_file_found_is_the_one_given_else_the_simulations(tmp_path, mon
     assert sim.find_beam_file("b/beam.mcpl.gz") == tmp_path.resolve() / "b" / "beam.mcpl.gz"
 
 
+@pytest.mark.parametrize("scan", [False, True])
+@pytest.mark.parametrize("implicit_beam", [False, True])
+def test_downstream_named_output_cannot_delete_input_beam(tmp_path, scan, implicit_beam):
+    output = tmp_path / "output"
+    beam = output / "previous" / "nested" / "beam.mcpl.gz"
+    beam.parent.mkdir(parents=True)
+    beam.write_bytes(b"keep beam")
+    sim = Simulation(TRex(), output_dir=output, work_dir=tmp_path)
+    sim.beam_file = beam
+    kwargs = {"folder_name": "previous", "beam_file": None if implicit_beam else beam}
+    with pytest.raises(ValueError, match="output folder contains the input beam"):
+        if scan:
+            sim.scan_from_sample("b_rot", [0], **kwargs)
+        else:
+            sim.run_from_sample(**kwargs)
+    assert beam.read_bytes() == b"keep beam"
+    assert not sim.input_dir.exists()
+
+
 def test_the_folders_are_in_the_work_folder(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     trex = TRex()
@@ -145,3 +164,55 @@ def test_a_simulation_finds_and_cleans_its_own_runs(tmp_path, finished_run):
     assert sim.latest_run("*_run_to_sample") == beam
     assert sim.clean_runs(keep=1) == [scans[0]]
     assert sim.list_runs() == ["3_scan_b_rot", "1_run_to_sample"]
+
+
+@pytest.mark.parametrize("scan", [False, True])
+def test_mcpl_downstream_build_is_ordinary_and_preserves_train_opt_in(tmp_path, monkeypatch, scan):
+    sim = Simulation(TRex(), work_dir=tmp_path, tof_train=True)
+    captured = []
+
+    def inspect(inst):
+        inst.write_full_instrument()
+        captured.append((Path(inst.input_path) / f"{inst.name}.instr").read_text())
+
+    monkeypatch.setattr(simulation.McStas_instr, "backengine", inspect)
+    monkeypatch.setattr(
+        simulation,
+        "_run_points_in_parallel",
+        lambda inst, output_path, points, **kwargs: inspect(inst) or output_path / "mccode.h5",
+    )
+    if scan:
+        sim.scan_from_sample("b_rot", [0], beam_file="beam.mcpl")
+    else:
+        sim.run_from_sample(beam_file="beam.mcpl")
+    assert sim.tof_train is True
+    assert "MCPL_input" in captured[0]
+    assert "tof_train" not in captured[0]
+    assert "N_trains" not in captured[0]
+    assert "NXdisk_chopper" not in captured[0]
+
+
+def test_train_run_to_selects_mcpl_override_when_available(tmp_path, monkeypatch):
+    component = (
+        Path(__file__).parents[2] / "src/mcdgs/instruments/trex/"
+        "tof_train_components/MCPL_output.comp"
+    )
+    if not component.is_file():
+        pytest.skip("experimental MCPL_output component not yet available")
+    sim = Simulation(TRex(), work_dir=tmp_path, tof_train=True)
+    captured = []
+
+    def inspect(inst):
+        assert (
+            Path(inst.component_reader.component_path["MCPL_output"]).resolve()
+            == component.resolve()
+        )
+        inst.write_full_instrument()
+        captured.append((Path(inst.input_path) / f"{inst.name}.instr").read_text())
+
+    monkeypatch.setattr(simulation.McStas_instr, "backengine", inspect)
+    beam = sim.run_to_sample(ncount=123)
+    assert beam == sim.beam_file
+    assert "MCPL_output" in captured[0]
+    assert "weight_mode=1" in captured[0].replace(" ", "")
+    assert str(component.parent) in captured[0]
