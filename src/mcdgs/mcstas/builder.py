@@ -11,6 +11,9 @@ McStas positions are relative to earlier components. Each component is:
   and passed by that name. McStas 3.10.2 sizes a vector written in place by its first instance,
   so the edges of a second chopper with more slits would overflow.
 
+The chopper train of a ``Polygon_ESS_butterfly`` is an array of chopper-lib's
+``chopper_parameters``, which McStas takes as a ``vector``: see :func:`_declare_chopper_train`.
+
 A field McStas does not know is left out, since the component only computes from it. A computed
 parameter McStas does not know raises.
 
@@ -24,7 +27,7 @@ from typing import Any
 from mcstasscript.interface import instr
 
 from mcdgs.core.base import Instrument
-from mcdgs.core.components import Component
+from mcdgs.core.components import Component, Polygon_ESS_butterfly
 from mcdgs.core.params import InstrParam
 
 
@@ -101,6 +104,49 @@ def _formatted_value(value: Any, mcstas_type: str) -> Any:
     return value
 
 
+def _declare_chopper_train(
+    mcstas_instr: instr.McStas_instr, component: Polygon_ESS_butterfly
+) -> Any:
+    """Declare the chopper train of a ``Polygon_ESS_butterfly``, and return what McStas takes.
+
+    McStas takes the train as a ``vector``, a ``double *``: the address of an array of
+    chopper-lib's ``chopper_parameters``. DECLARE holds the edges of each disk, the array
+    ``<component>_choppers`` and the pointer ``<component>_choppers_pointer``. INITIALIZE fills
+    the array, since a disk's ``speed`` and ``delay`` may be instrument parameters, and points
+    the pointer at it: McStas runs it before the INITIALIZE of the components.
+
+    Parameters
+    ----------
+    mcstas_instr:
+        The McStasScript instrument, to declare the arrays in.
+    component:
+        The source.
+
+    Returns
+    -------
+    :
+        The pointer, or without a disk 0, the null pointer: McStasScript refuses ``NULL``, a
+        name it does not know.
+    """
+    if not component.choppers:
+        return 0
+    train = f"{component.name}_choppers"
+    mcstas_instr.add_declare_var("chopper_parameters", train, array=len(component.choppers))
+    for i, disk in enumerate(component.choppers):
+        edges = mcstas_instr.add_declare_var(
+            "double", f"{train}_edges_{i}", array=len(disk["edges"]), value=disk["edges"]
+        )
+        mcstas_instr.append_initialize(
+            f"{train}[{i}] = (chopper_parameters){{.speed = {disk['speed']}, "
+            f".delay = {disk['delay']}, .beam = {disk['beam']}, "
+            f".edge_count = {len(disk['edges'])}, .edges = {edges.name}, "
+            f".path = {disk['path']}, .aperture = {disk['aperture']}}};"
+        )
+    pointer = mcstas_instr.add_declare_var("double *", f"{train}_pointer")
+    mcstas_instr.append_initialize(f"{pointer.name} = (double *) {train};")
+    return pointer
+
+
 def _formatted_parameters(
     mcstas_instr: instr.McStas_instr,
     mcstas_comp: Any,
@@ -112,7 +158,8 @@ def _formatted_parameters(
     Each entry of ``params`` (from ``component.mcstas_parameters``) must be one of:
 
     - a McStas parameter: kept, formatted by :func:`_formatted_value`, or, if it is a list,
-      declared as the array ``<component>_<parameter>`` and passed by that name;
+      declared as the array ``<component>_<parameter>`` and passed by that name (the chopper
+      train of a ``Polygon_ESS_butterfly``, by :func:`_declare_chopper_train`);
     - a field McStas does not take: left out, as the component only computes from it (e.g. the
       crystal's ``lattice_params``, put into its ``ax`` ... ``cz``).
 
@@ -149,7 +196,9 @@ def _formatted_parameters(
     for name, value in params.items():
         if name not in mcstas_names:  # a field the component computes from: not for McStas
             continue
-        if isinstance(value, list):  # a vector: declared, not written in place
+        if isinstance(component, Polygon_ESS_butterfly) and name == "choppers":
+            values[name] = _declare_chopper_train(mcstas_instr, component)
+        elif isinstance(value, list):  # a vector: declared, not written in place
             values[name] = mcstas_instr.add_declare_var(
                 "double", f"{component.name}_{name}", array=len(value), value=value
             )

@@ -6,7 +6,13 @@ from pathlib import Path
 import pytest
 
 from mcdgs.core.base import Instrument
-from mcdgs.core.components import Arm, ESS_butterfly, Monitor_nD, Progress_bar
+from mcdgs.core.components import (
+    Arm,
+    ESS_butterfly,
+    Monitor_nD,
+    Polygon_ESS_butterfly,
+    Progress_bar,
+)
 from mcdgs.core.params import InstrParam
 from mcdgs.instruments.trex.model import TRex
 from mcdgs.mcstas.builder import build_mcstas, default_input_dir
@@ -141,6 +147,49 @@ def test_each_chopper_has_an_array_of_its_own_size(tmp_path):
         assert f"double {name}_slit_edges[{n_edges}] = {{" in text
         assert f"slit_edges = {name}_slit_edges, n_edges = {n_edges}" in text
     assert "slit_edges = {" not in text
+
+
+def _masked(choppers):
+    """_Beamline with a Polygon_ESS_butterfly of ``choppers`` as its source."""
+    beamline = _Beamline()
+    beamline.source = Polygon_ESS_butterfly(Lmin=1, Lmax=3, choppers=choppers)
+    return beamline
+
+
+TRAIN = [
+    {"speed": "omega", "delay": 0.01, "beam": 180, "edges": [-10, 10], "path": 5.0, "aperture": 2.5},
+    {"speed": 14, "delay": "omega*1e-3", "beam": 0, "edges": [-1, 1, 90, 100], "path": 30.0, "aperture": 0},
+]  # fmt: skip
+
+
+def test_the_chopper_train_is_declared_and_filled_in_initialize(tmp_path):
+    text = _written_instr(_masked(TRAIN), tmp_path)
+    assert "chopper_parameters source_choppers[2];" in text
+    assert "double source_choppers_edges_0[2] = {-10,10};" in text
+    assert "double source_choppers_edges_1[4] = {-1,1,90,100};" in text
+    assert "double * source_choppers_pointer;" in text
+    initialize = text[text.index("INITIALIZE") : text.index("TRACE")]
+    assert (
+        "source_choppers[0] = (chopper_parameters){.speed = omega, .delay = 0.01, .beam = 180, "
+        ".edge_count = 2, .edges = source_choppers_edges_0, .path = 5.0, .aperture = 2.5};"
+    ) in initialize
+    assert (
+        "source_choppers[1] = (chopper_parameters){.speed = 14, .delay = omega*1e-3, .beam = 0, "
+        ".edge_count = 4, .edges = source_choppers_edges_1, .path = 30.0, .aperture = 0};"
+    ) in initialize
+    assert "source_choppers_pointer = (double *) source_choppers;" in initialize
+    assert "choppers = source_choppers_pointer, chopper_count = 2" in text
+
+
+def test_without_a_disk_the_chopper_train_is_the_null_pointer(tmp_path):
+    text = _written_instr(_masked([]), tmp_path)
+    assert "source_choppers" not in text
+    assert "choppers = 0, chopper_count = 0" in text
+
+
+def test_the_region_file_is_named_after_the_source(tmp_path):
+    source = build_mcstas(_masked(TRAIN), input_path=tmp_path).get_component("source")
+    assert source.filename == '"source"'
 
 
 def test_a_cif_file_reaches_mcstas_as_its_full_path(tmp_path):

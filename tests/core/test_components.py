@@ -168,7 +168,7 @@ def test_polygon_ess_butterfly_has_the_parameters_of_ess_butterfly_and_its_own()
         "verify_acceptance",
     }
     assert parameters["chopper_count"] == 1
-    assert parameters["filename"] is None  # McStas's NULL: the component's name
+    assert parameters["filename"] == "source"  # unset: the component's name, not McStas's NULL
 
 
 def test_polygon_ess_butterfly_has_the_defaults_of_ess_butterfly():

@@ -1,5 +1,6 @@
 """Real McStas runs of a small instrument and of T-Rex: compiled and simulated, nothing faked."""
 
+import json
 import shutil
 from dataclasses import dataclass
 
@@ -8,7 +9,14 @@ import numpy as np
 import pytest
 
 from mcdgs.core.base import Instrument
-from mcdgs.core.components import Arm, ESS_butterfly, Monitor_nD, Progress_bar
+from mcdgs.core.components import (
+    Arm,
+    ESS_butterfly,
+    Monitor_nD,
+    NXdisk_chopper,
+    Polygon_ESS_butterfly,
+    Progress_bar,
+)
 from mcdgs.core.params import InstrParam, param
 from mcdgs.instruments.trex.model import TRex
 from mcdgs.mcstas.nexus_io import read_pixels
@@ -87,6 +95,56 @@ def test_a_split_run_gives_the_intensity_and_geometry_of_a_direct_run(sim):
     points = read_pixels(h5_file.parent, "detector", "source", "sample_pos", [0, 0, 1])
     assert [params["width"] for params, _ in points] == [0.1, 0.05]
     assert points[1][1].sum().value < points[0][1].sum().value
+
+
+def _detected(instrument, tmp_path, seed=1, ncount=1e5):
+    """The intensity on the detector of a run of ``instrument``."""
+    h5_file = Simulation(instrument, work_dir=tmp_path).scan(
+        "width", [0.1], ncount=ncount, seed=seed
+    )
+    return read_pixels(h5_file.parent, "detector", "source", "sample_pos")[0][1].sum()
+
+
+def test_polygon_ess_butterfly_without_a_disk_is_ess_butterfly(tmp_path):
+    plain = _Small()
+    masked = _Small()
+    masked.source = Polygon_ESS_butterfly(
+        Lmin=2, Lmax=4, dist=2, focus_xw=0.05, focus_yh=0.05, save_polygons=0
+    )
+    # the same rays, from the same seed: nothing is outside the region, so nothing is drawn again
+    assert _detected(masked, tmp_path / "masked").value == pytest.approx(
+        _detected(plain, tmp_path / "plain").value, rel=1e-12
+    )
+
+
+def _chopped(source):
+    """_Small with ``source`` and, 1 m from it, a disk turning at 14 Hz, open around 6 ms."""
+    small = _Small()
+    small.source = source
+    # a 3 Å neutron leaving at 2 ms flies 1 m in 0.758 ms, so the slit is centered on it
+    small.chopper = NXdisk_chopper(
+        slit_edges=[-10, 10], radius=0.35, yheight=0.05, nu=14, delay=0.002758, at=[0, 0, 1]
+    )
+    return small
+
+
+def test_polygon_ess_butterfly_gives_the_intensity_of_the_choppers_alone(tmp_path):
+    # aperture: the 5 cm by 5 cm window of the disk, from chopper-lib's formula
+    reach = np.sqrt(0.35**2 - 0.025**2)
+    aperture = float(2 * np.degrees(np.arctan2(0.025, reach - 0.05)))
+    disk = {"speed": 14, "delay": 0.002758, "beam": 0, "edges": [-10, 10], "path": 1.0, "aperture": aperture}  # fmt: skip
+    shape = {"Lmin": 2, "Lmax": 4, "dist": 2, "focus_xw": 0.05, "focus_yh": 0.05}
+    masked = _chopped(Polygon_ESS_butterfly(**shape, choppers=[disk]))
+
+    h5_file = Simulation(masked, work_dir=tmp_path / "region").run(ncount=1e3, seed=1, mpi=None)
+    region = json.loads((h5_file.parent / "source.json").read_text())  # named after the source
+    # the disk passes a little over half of the 8.6 ms the source emits in, at each wavelength
+    assert 0.5 < region["acceptance"] < 0.6
+
+    # as much intensity from a quarter of the rays: over seeds, the two differ by 0.6 %,
+    # each by about as much
+    plain = _detected(_chopped(ESS_butterfly(**shape)), tmp_path / "plain", ncount=4e5)
+    assert _detected(masked, tmp_path / "masked").value == pytest.approx(plain.value, rel=0.03)
 
 
 @pytest.mark.parametrize("mode", ["FF", "RR"])

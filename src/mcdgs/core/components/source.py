@@ -280,12 +280,19 @@ tfocus_time, tfocus_width:
         time focusing, ``use_region`` 0 or a ``noise_fraction``. Then ``resample`` is 0 here,
         and the field stays as it is, and a line printed says why.
 
+        An unset ``filename`` is the component's name: McStas names the file after the
+        component only for an empty one, and McStas's ``"NULL"`` would name it ``NULL.json``.
+
         Returns
         -------
         :
-            The fields, plus ``chopper_count``.
+            The fields, with ``filename`` set and ``resample`` as McStas takes it, plus
+            ``chopper_count``.
         """
-        parameters = super().mcstas_parameters() | {"chopper_count": len(self.choppers)}
+        parameters = super().mcstas_parameters() | {
+            "chopper_count": len(self.choppers),
+            "filename": self.name if self.filename is None else self.filename,
+        }
         refused = [
             reason
             for reason, applies in (
