@@ -7,7 +7,7 @@ times and wavelengths it accepts, and the last one what the whole cascade lets t
 Copley, https://doi.org/10.1016/S0168-9002(03)01731-5).
 
 It takes the same choppers at the same distances as :func:`.build_tof`, through
-:func:`.disk_chopper`. The pulse is a rectangle: from 0 to the ESS pulse length, over the
+:func:`.get_choppers`. The pulse is a rectangle: from 0 to the source's pulse length, over the
 source's band, ``Lmin`` to ``Lmax``, and repeated for the source's ``n_pulses``, unless given.
 Unlike tof it has no neutrons, so it is exact and fast, but it does not show the shape of the
 pulse.
@@ -24,11 +24,9 @@ from scippneutron.chopper.disk_chopper import DiskChopper
 from scippneutron.tof.chopper_cascade import Chopper, FrameSequence
 
 from mcdgs.core.base import Instrument
-from mcdgs.core.components import NXdisk_chopper
-from mcdgs.core.components.source import ESS_SOURCE_LENGTH
 from mcdgs.core.utils import evaluate, speed_from_wavelength
 
-from .builder import beamline, disk_chopper
+from .builder import beamline, get_choppers, source_pulses
 
 
 def chopper_cascade(
@@ -49,8 +47,8 @@ def chopper_cascade(
     wavelength_min, wavelength_max:
         Band of the pulse, in Å. ``None`` takes the source's ``Lmin`` or ``Lmax``.
     time_min, time_max:
-        Times at the source the pulse starts and ends, in s. ``None`` takes 0 or the ESS pulse
-        length.
+        Times at the source the pulse starts and ends, in s. ``None`` takes 0 or the source's
+        ``pulse_length``.
     n_pulses:
         Number of pulses, one source period apart. ``None`` takes the source's ``n_pulses``, at
         least 1.
@@ -68,30 +66,23 @@ def chopper_cascade(
         one; if a chopper is parked; if the pulse ends before it starts; or if ``n_pulses`` is
         below 1.
     """
-    source, after_source = beamline(instrument)
+    source, _ = beamline(instrument)
     params = instrument.numeric_instr_params()
     l_min = float(evaluate(source.Lmin, params) if wavelength_min is None else wavelength_min)
     l_max = float(evaluate(source.Lmax, params) if wavelength_max is None else wavelength_max)
     frequency = sc.scalar(float(source.frequency), unit="Hz")
     t_min = 0.0 if time_min is None else float(time_min)
-    t_max = ESS_SOURCE_LENGTH if time_max is None else float(time_max)
+    t_max = source.pulse_length if time_max is None else float(time_max)
     if t_max <= t_min:
         raise ValueError(f"the pulse ends at {t_max} s, not after it starts at {t_min} s")
-    if n_pulses is None:
-        n_pulses = max(source.n_pulses, 1)  # McStas takes 0 as 1
-    elif n_pulses < 1:
-        raise ValueError(f"n_pulses = {n_pulses}: there must be at least one pulse")
+    n_pulses = source_pulses(source, n_pulses)
 
-    disks = [
-        (name, disk_chopper(component, distance, params), distance)
-        for name, component, distance in after_source
-        if isinstance(component, NXdisk_chopper)
-    ]
+    disks = get_choppers(instrument)
     # the slowest neutron of the last pulse passes the last chopper by this time, in s
-    last_distance = max((distance for _, _, distance in disks), default=0.0)
+    last_distance = max((sc.norm(d.axle_position).value for d in disks.values()), default=0.0)
     t_end = (n_pulses - 1) / frequency.value + t_max
     t_end += last_distance / speed_from_wavelength(l_max)
-    choppers = [_openings(disk, t_min, t_end) for _, disk, _ in disks]
+    choppers = [_openings(disk, t_min, t_end) for disk in disks.values()]
 
     pulse = FrameSequence.from_source_pulse(
         time_min=sc.scalar(t_min, unit="s"),
@@ -101,18 +92,17 @@ def chopper_cascade(
         npulses=n_pulses,
         pulse_period=1 / frequency,
     )
-    return pulse.chop(choppers), ["source"] + [name for name, _, _ in disks]
+    return pulse.chop(choppers), ["source", *disks]
 
 
 def _openings(disk: DiskChopper, t_start: float, t_end: float) -> Chopper:
     """Return the openings of a disk chopper from ``t_start`` to ``t_end``, as a cascade chopper.
 
     The openings of one rotation, repeated every rotation over the time from ``t_start`` to
-    ``t_end``.
-    :meth:`DiskChopper.time_offset_open` and :meth:`Chopper.from_disk_chopper` repeat them per
-    source period instead, so they need a frequency that is a whole multiple or fraction of the
-    source's; the pulse-shaping choppers of T-Rex, at 13.5 times 14 Hz, are not. Their opening
-    times also follow the delay, so they need not start within the first period.
+    ``t_end``. :meth:`DiskChopper.time_offset_open` and :meth:`Chopper.from_disk_chopper`
+    repeat them per source period instead, so they need a frequency that is a whole multiple or
+    fraction of the source's; the pulse-shaping choppers of T-Rex, at 13.5 times 14 Hz, are not.
+    Their opening times also follow the delay, so they need not start within the first period.
 
     Parameters
     ----------
@@ -170,8 +160,8 @@ def acceptance_diagram(
     wavelength_min, wavelength_max:
         Band of the pulse, in Å. ``None`` takes the source's ``Lmin`` or ``Lmax``.
     time_min, time_max:
-        Times at the source the pulse starts and ends, in s. ``None`` takes 0 or the ESS pulse
-        length.
+        Times at the source the pulse starts and ends, in s. ``None`` takes 0 or the source's
+        ``pulse_length``.
     n_pulses:
         Number of pulses, one source period apart. ``None`` takes the source's ``n_pulses``, at
         least 1.

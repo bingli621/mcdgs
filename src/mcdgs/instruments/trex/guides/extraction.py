@@ -18,6 +18,11 @@ import math
 
 from mcdgs.core.components import Arm, Component, Guide_gravity
 
+# the entrance of guide 1, row 13: the source focuses on it, and the source monitor is it
+GUIDE_1_IN_Z = 1.895927  # m, cell B13
+GUIDE_1_IN_WIDTH = 0.089955  # m, cell E13
+GUIDE_1_IN_HEIGHT = 0.029992  # m, cell F13
+
 
 def half_taper_angle(w1: float, w2: float, length: float) -> float:
     """Compute the horizontal rotation angle to make the right wall (-x) along z-axis.
@@ -87,24 +92,22 @@ def guides_extraction() -> dict[str, Component]:
         Components by name, in beam order.
     """
     # NBOA constants
-    guide_1_in_width = 0.089955  # m, cell E13
-    guide_1_in_z = 1.895927  # m, cell B13
     guide_2_in_z = 2.896327  # m, cell B15
     guide_3_in_z = 3.896727  # m, cell B17
     guide_3_out_width = 0.063838  # m, cell G17, the exit of guide 3
     guide_3_out_z = 5.375927  # m, cell C17, the exit of guide 3
     nboa_taper_angle = half_taper_angle(
-        guide_1_in_width, guide_3_out_width, guide_3_out_z - guide_1_in_z
+        GUIDE_1_IN_WIDTH, guide_3_out_width, guide_3_out_z - GUIDE_1_IN_Z
     )  # -0.2150 deg, half of cell N13
 
     return {
         "arm_nboa": Arm(
-            at=[entrance_x(guide_1_in_width, nboa_taper_angle), 0, guide_1_in_z],
+            at=[entrance_x(GUIDE_1_IN_WIDTH, nboa_taper_angle), 0, GUIDE_1_IN_Z],
             rotated=[0, nboa_taper_angle, 0],
         ),
         "guide_1": Guide_gravity(  # row 13
-            w1=guide_1_in_width,
-            h1=0.029992,  # cell F13
+            w1=GUIDE_1_IN_WIDTH,
+            h1=GUIDE_1_IN_HEIGHT,
             w2=0.082455,  # cell G13
             h2=0.034937,  # cell H13
             l=0.9994,  # cell D13
@@ -124,7 +127,7 @@ def guides_extraction() -> dict[str, Component]:
             mright=1.5,  # cell P15
             mtop=4,  # cell Q15
             mbottom=4,  # cell R15
-            at=[0, 0, z_along_arm(guide_2_in_z, guide_1_in_z, nboa_taper_angle)],
+            at=[0, 0, z_along_arm(guide_2_in_z, GUIDE_1_IN_Z, nboa_taper_angle)],
             relative="arm_nboa",
         ),
         "guide_3": Guide_gravity(  # row 17
@@ -137,7 +140,7 @@ def guides_extraction() -> dict[str, Component]:
             mright=1.5,  # cell P17
             mtop=4,  # cell Q17, the sheet has 4 to 3.5, marked "issue"
             mbottom=4,  # cell R17
-            at=[0, 0, z_along_arm(guide_3_in_z, guide_1_in_z, nboa_taper_angle)],
+            at=[0, 0, z_along_arm(guide_3_in_z, GUIDE_1_IN_Z, nboa_taper_angle)],
             relative="arm_nboa",
         ),
     }

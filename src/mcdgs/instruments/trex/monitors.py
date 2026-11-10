@@ -16,10 +16,16 @@ from mcdgs.core.utils import bins_from_limits
 
 from .detectors import BANANA_RADIUS
 from .guides.bispectral import GUIDE_4_TILT, GUIDE_4A_IN_Z
-from .guides.extraction import guides_extraction, z_along_arm
+from .guides.extraction import (
+    GUIDE_1_IN_HEIGHT,
+    GUIDE_1_IN_WIDTH,
+    GUIDE_1_IN_Z,
+    guides_extraction,
+    z_along_arm,
+)
 from .guides.straight import ARM_MC_Z, SAMPLE_Z
 
-SOURCE_MONITOR_Z = 1.895927  # m, cell B13, the entrance of guide 1
+SOURCE_MONITOR_Z = GUIDE_1_IN_Z  # m, the entrance of guide 1
 SOURCE_MONITOR_LAMBDA_RESOLUTION = 0.05  # Å, the width of a wavelength bin
 SOURCE_MONITOR_TIME_RESOLUTION = 5e-5  # s, the width of a time bin, 0.05 ms
 
@@ -101,10 +107,10 @@ def source_monitor(
 
     It is the entrance of guide 1: its opening, at the place and with the rotation of
     ``arm_nboa``, 2.0 mm off the axis of the source and turned by the taper of the extraction
-    guides, so it counts what enters guide 1. It records one 2D map of time against wavelength, and leaves
-    the neutrons unchanged. The wavelength axis is the widest band the source simulates,
-    ``L_MIN`` to ``L_MAX``; the time axis is :func:`.monitor_time_limits` at
-    ``SOURCE_MONITOR_Z``, for that band and a pulse of ``ESS_SOURCE_LENGTH``.
+    guides, so it counts what enters guide 1. It records one 2D map of time against wavelength,
+    and leaves the neutrons unchanged. Its axes are those of :func:`time_lambda_options` at
+    ``SOURCE_MONITOR_Z``, without limits: the widest band the source simulates, ``L_MIN`` to
+    ``L_MAX``, and the time window in which it reaches the monitor.
 
     Parameters
     ----------
@@ -119,18 +125,13 @@ def source_monitor(
     :
         A new monitor.
     """
-    lambda_limits = (L_MIN, L_MAX)
-    time_limits = monitor_time_limits(SOURCE_MONITOR_Z, lambda_limits, ESS_SOURCE_LENGTH)
-    t_start, t_stop, t_bins = bins_from_limits(time_limits, time_resolution)
-    l_start, l_stop, l_bins = bins_from_limits(lambda_limits, lambda_resolution)
     entrance = guides_extraction()["arm_nboa"]  # the entrance of guide 1
     return Monitor_nD(
-        xwidth=0.089955,  # m, cell E13, the entrance of guide 1
-        yheight=0.029992,  # m, cell F13, the entrance of guide 1
+        xwidth=GUIDE_1_IN_WIDTH,
+        yheight=GUIDE_1_IN_HEIGHT,
         restore_neutron=1,
-        options=(  # time in s, lambda in Å: one 2D map
-            f"time limits=[{t_start} {t_stop}] bins={t_bins} "
-            f"lambda limits=[{l_start} {l_stop}] bins={l_bins}"
+        options=time_lambda_options(
+            SOURCE_MONITOR_Z, None, None, lambda_resolution, time_resolution
         ),
         filename="source_monitor",  # the name of the monitor, in both models
         at=list(entrance.at),  # the arm is placed absolute, as the source: the same frame

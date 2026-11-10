@@ -50,6 +50,10 @@ Mode = Literal["FF", "RR"]  # high flux, high resolution
 PSC_DISK_SPACING = 0.1  # FIXME, not in Table of Optics v3.2, in m
 MC_DISK_SPACING = 0.01  # FIXME, not in Table of Optics v3.2, in m
 
+# the frequency of the pulse-shaping choppers over that of the monochromatic ones, see
+# chopper_timings
+PSC_FREQUENCY_RATIO = 0.75
+
 # deg, opening and closing edge of each slit from the disk's zero mark
 SLIT_EDGES = {
     "bw1": [-30.7, 30.7],
@@ -170,9 +174,8 @@ def chopper_timings(
     The bandwidth choppers turn at the source frequency, the monochromatic choppers at ``rrm``
     times it and the pulse-shaping choppers at ``PSC_FREQUENCY_RATIO`` of that. Both pairs are
     counter-rotating: ``ps2`` turns the other way, and ``mc1`` and ``mc2`` turn the same way on
-    opposite sides of the beam. Each disk
-    has the slit of ``mode`` on the beam when a neutron of wavelength ``lambda0``, leaving at
-    ``t0_offset``, reaches it.
+    opposite sides of the beam. Each disk has the slit of ``mode`` on the beam when a neutron of
+    wavelength ``lambda0``, leaving at ``t0_offset``, reaches it.
 
     PSC_FREQUENCY_RATIO is 3/4 because the ratio of the distances from the source to the
     monochromatic choppers and to the pulse-shaping choppers is 162/108 = 3/2, and the
@@ -204,8 +207,6 @@ def chopper_timings(
     """
     if mode not in get_args(Mode):
         raise ValueError(f"mode {mode!r} is not 'FF' or 'RR'")
-    PSC_FREQUENCY_RATIO = 0.75
-
     nu_mc = rrm * source_frequency
     nu_psc = PSC_FREQUENCY_RATIO * nu_mc
     nu = {

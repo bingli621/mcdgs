@@ -4,8 +4,8 @@ tof follows each neutron along a single flight path from the source, through the
 the detectors. It has no optics: guides, benders and slits transmit everything. So the builder
 takes only the components tof understands, by type:
 
-- the ``ESS_butterfly`` or ``Polygon_ESS_butterfly`` becomes the :class:`tof.Source`, which
-  must be the only source;
+- the ``ESS_butterfly``, or the ``Polygon_ESS_butterfly`` that extends it, becomes the
+  :class:`tof.Source`, which must be the only source;
 - each ``NXdisk_chopper`` becomes a :class:`tof.Chopper`, through scippneutron's
   :class:`DiskChopper` (:func:`disk_chopper`), as both follow NeXus;
 - each ``Monitor_nD`` becomes a :class:`tof.Detector`, which records the neutrons reaching it.
@@ -37,14 +37,39 @@ import tof
 from scippneutron.chopper.disk_chopper import DiskChopper
 
 from mcdgs.core.base import Instrument
-from mcdgs.core.components import (
-    Component,
-    ESS_butterfly,
-    Monitor_nD,
-    NXdisk_chopper,
-    Polygon_ESS_butterfly,
-)
+from mcdgs.core.components import Component, ESS_butterfly, Monitor_nD, NXdisk_chopper
 from mcdgs.core.utils import evaluate
+
+# tof's pulse of the ESS moderator by beam port, ``sector`` and ``beamline``; else ``"ess"``
+TOF_SOURCES = {"W7": "ess-trex", "W3": "ess-cspec"}
+
+
+def source_pulses(source: ESS_butterfly, n_pulses: int | None = None) -> int:
+    """Return the number of pulses of a source, as McStas takes it.
+
+    Parameters
+    ----------
+    source:
+        The moderator.
+    n_pulses:
+        The number of pulses. If ``None``, the moderator's ``n_pulses``, at least 1: McStas
+        takes 0 as 1.
+
+    Returns
+    -------
+    :
+        The number of pulses.
+
+    Raises
+    ------
+    ValueError
+        If ``n_pulses`` is below 1.
+    """
+    if n_pulses is None:
+        return max(source.n_pulses, 1)
+    if n_pulses < 1:
+        raise ValueError(f"n_pulses = {n_pulses}: there must be at least one pulse")
+    return n_pulses
 
 
 def disk_chopper(
@@ -140,7 +165,7 @@ def get_choppers(instrument: Instrument) -> dict[str, DiskChopper]:
 
 
 def _source(
-    component: ESS_butterfly | Polygon_ESS_butterfly,
+    component: ESS_butterfly,
     params: Mapping[str, float],
     neutrons: int,
     seed: int | None,
@@ -149,8 +174,8 @@ def _source(
     """Return the tof source of the ESS butterfly moderator.
 
     tof samples the pulse of the moderator's beam port, ``sector`` and ``beamline`` such as
-    ``"W7"``, if mcdgs knows it, else its standard ESS pulse, at the distance tof sampled it
-    at. ``cold_frac``, ``yheight``, the focusing and the performance factors are
+    ``"W7"``, if :data:`TOF_SOURCES` has it, else its standard ESS pulse, at the distance tof
+    sampled it at. ``cold_frac``, ``yheight``, the focusing and the performance factors are
     not used.
 
     Parameters
@@ -164,7 +189,7 @@ def _source(
     seed:
         Seed of the random numbers. If ``None``, every run differs.
     n_pulses:
-        Number of pulses. If ``None``, the moderator's ``n_pulses``, at least 1.
+        Number of pulses, as :func:`source_pulses`.
 
     Returns
     -------
@@ -172,62 +197,15 @@ def _source(
         The source, from ``Lmin`` to ``Lmax``, with ``n_pulses`` pulses at the moderator's
         frequency.
     """
-    tof_sources = {"W7": "ess-trex", "W3": "ess-cspec"}  # tof's pulse by beam port
     return tof.Source(
-        facility=tof_sources.get(f"{component.sector}{component.beamline}", "ess"),
+        facility=TOF_SOURCES.get(f"{component.sector}{component.beamline}", "ess"),
         neutrons=neutrons,
-        pulses=max(component.n_pulses, 1) if n_pulses is None else n_pulses,  # McStas takes 0 as 1
+        pulses=source_pulses(component, n_pulses),
         frequency=sc.scalar(float(component.frequency), unit="Hz"),
         wmin=sc.scalar(float(evaluate(component.Lmin, params)), unit="angstrom"),
         wmax=sc.scalar(float(evaluate(component.Lmax, params)), unit="angstrom"),
         seed=seed,
     )
-
-
-def _chopper(
-    component: NXdisk_chopper, distance: float, params: Mapping[str, float]
-) -> tof.Chopper:
-    """Return the tof chopper of a disk chopper, through :func:`disk_chopper`.
-
-    tof's own conversion, :meth:`tof.Chopper.from_diskchopper`, turns the signed frequency into
-    a direction and the phase into tof's sense.
-
-    Parameters
-    ----------
-    component:
-        The disk chopper.
-    distance:
-        Its distance from the source, in m.
-    params:
-        Instrument parameter values, for ``nu``, ``delay`` and ``beam_angle`` given as
-        expressions.
-
-    Returns
-    -------
-    :
-        The tof chopper, named after the component.
-    """
-    return tof.Chopper.from_diskchopper(
-        disk_chopper(component, distance, params), name=component.name
-    )
-
-
-def _detector(component: Monitor_nD, distance: float) -> tof.Detector:
-    """Return the tof detector of a monitor.
-
-    Parameters
-    ----------
-    component:
-        The monitor.
-    distance:
-        Distance from the source at which the neutrons reach it, in m.
-
-    Returns
-    -------
-    :
-        The detector, named after the monitor.
-    """
-    return tof.Detector(distance=sc.scalar(distance, unit="m"), name=component.name)
 
 
 def build_tof(
@@ -248,31 +226,32 @@ def build_tof(
     seed:
         Seed of the random numbers of the source. If ``None``, every build differs.
     n_pulses:
-        Number of pulses of the source. If ``None``, the moderator's ``n_pulses``, at least 1.
+        Number of pulses of the source, as :func:`source_pulses`.
 
     Returns
     -------
     :
         The tof model: the source, then the choppers and the detectors (one per ``Monitor_nD``)
-        in beam order.
+        in beam order, each named after its component.
 
     Raises
     ------
     ValueError
         If the instrument has no ``ESS_butterfly`` or ``Polygon_ESS_butterfly``, or more than
-        one.
+        one; if a chopper is parked; or if ``n_pulses`` is below 1.
     """
     source, after_source = beamline(instrument)
     params = instrument.numeric_instr_params()
-    model = tof.Model(
-        source=_source(source, params, neutrons, seed, n_pulses),
-    )
-    for _, component, distance in after_source:
+    model = tof.Model(source=_source(source, params, neutrons, seed, n_pulses))
+    for name, component, distance in after_source:
         match component:
-            case NXdisk_chopper() as chopper:
-                model.add(_chopper(chopper, distance, params))
-            case Monitor_nD() as monitor:
-                model.add(_detector(monitor, distance + (monitor.curved_radius or 0)))
+            case NXdisk_chopper():
+                # tof's conversion turns the signed frequency into a direction, and the phase
+                disk = disk_chopper(component, distance, params)
+                model.add(tof.Chopper.from_diskchopper(disk, name=name))
+            case Monitor_nD():  # a curved one is centered on the sample: its radius further on
+                reached = distance + (component.curved_radius or 0)
+                model.add(tof.Detector(distance=sc.scalar(reached, unit="m"), name=name))
             case _:
                 pass  # not something tof understands
     return model
@@ -280,7 +259,7 @@ def build_tof(
 
 def beamline(
     instrument: Instrument,
-) -> tuple[ESS_butterfly | Polygon_ESS_butterfly, list[tuple[str, Component, float]]]:
+) -> tuple[ESS_butterfly, list[tuple[str, Component, float]]]:
     """Return the source of an instrument and the components after it, with their distances.
 
     Parameters
@@ -301,11 +280,7 @@ def beamline(
         one.
     """
     components = instrument.components
-    sources = {
-        name: c
-        for name, c in components.items()
-        if isinstance(c, ESS_butterfly | Polygon_ESS_butterfly)
-    }
+    sources = {name: c for name, c in components.items() if isinstance(c, ESS_butterfly)}
     if len(sources) != 1:
         raise ValueError(
             f"{instrument.name}: tof needs one ESS_butterfly or Polygon_ESS_butterfly, "

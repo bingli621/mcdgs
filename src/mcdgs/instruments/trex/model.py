@@ -1,14 +1,14 @@
 """The T-Rex instrument and its control parameters."""
 
 from dataclasses import dataclass, replace
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 from mcdgs.core.base import Instrument
 from mcdgs.core.components import (
     Arm,
-    Component,
     ESS_butterfly,
     Guide_gravity,
+    Monitor_nD,
     Polygon_ESS_butterfly,
     Progress_bar,
     Single_crystal,
@@ -47,24 +47,22 @@ class Params:
 
     Parameters
     ----------
+    t0_offset:
+        Time from the start of the pulse at which the neutrons the choppers are phased to leave
+        the moderator, in s.
     lambda0:
         Central wavelength, in Å.
     rrm:
         Repetition rate multiplication factor.
     mode:
         ``"FF"`` puts the wide slits of the pulse-shaping and monochromatic choppers on the beam,
-        for high flux;
-        ``"RR"`` the narrow ones, for high resolution.
-    t0_offset:
-        Time from the start of the pulse at which the neutrons the choppers are phased to leave
-        the moderator, in s.
+        for high flux; ``"RR"`` the narrow ones, for high resolution.
     omega:
         Goniometer rotation about +y, in deg.
     bender_in:
         True uses the bender and the cold guide 4b, False uses the thermal guide 4a.
     b_rot:
         Rotation of the bender about +y, in deg.
-
     """
 
     t0_offset: float = param(
@@ -81,6 +79,45 @@ class Params:
 
 
 DEFAULT_PARAMS = Params()  # frozen, so one shared default is safe
+
+
+class Band(NamedTuple):
+    """The components of T-Rex that follow the band of ``lambda0``, by name.
+
+    Each takes the band of :func:`.sources.wavelength_band`: the source simulates it, and the
+    time and wavelength monitors span it.
+    """
+
+    source: ESS_butterfly
+    beam_monitor: Monitor_nD
+    pre_sample_monitor: Monitor_nD
+    beamstop_monitor: Monitor_nD
+    sample_monitor: Monitor_nD
+
+    @classmethod
+    def of(cls, lambda0: float, masked: bool) -> "Band":
+        """Create the components for a central wavelength.
+
+        Parameters
+        ----------
+        lambda0:
+            Central wavelength, in Å.
+        masked:
+            True for :func:`.sources.masked_source`, False for :func:`.sources.source`.
+
+        Returns
+        -------
+        :
+            New components.
+        """
+        band = wavelength_band(lambda0)
+        return cls(
+            source=(masked_source if masked else source)(*band),
+            beam_monitor=beam_monitor(lambda_limits=band),
+            pre_sample_monitor=pre_sample_monitor(lambda_limits=band),
+            beamstop_monitor=beamstop_monitor(lambda_limits=band),
+            sample_monitor=sample_monitor(lambda_limits=band),
+        )
 
 
 class TRex(Instrument):
@@ -118,9 +155,10 @@ class TRex(Instrument):
         to_bwc1, to_bwc2, to_end_of_curve = guides_curve()
         to_psc, to_mc, to_slit = guides_straight()
 
+        band = Band.of(self.params.lambda0, source_masked)
+
         self.origin = Progress_bar(at=[0, 0, 0])
-        lambda_min, lambda_max = wavelength_band(self.params.lambda0)
-        self.source = self._make_source(source_masked, lambda_min, lambda_max)
+        self.source = band.source
         self.source_monitor = source_monitor()  # the entrance of guide 1, the widest band
         self.add_components(guides_extraction())
         # bispectral switch: guide 4a (thermal) or bender and guide 4b (cold)
@@ -128,7 +166,7 @@ class TRex(Instrument):
         self.guide_4a = guide_4a(when="bender_in==0")
         self.bender = bender(when="bender_in==1")
         self.guide_4b = guide_4b(when="bender_in==1")
-        self.beam_monitor = beam_monitor(lambda_limits=(lambda_min, lambda_max))
+        self.beam_monitor = band.beam_monitor
         # curved guides
         self.add_components(to_bwc1)
         self.bw1 = chopper("bw1")
@@ -144,13 +182,13 @@ class TRex(Instrument):
         self.mc2 = chopper("mc2")
         self.add_components(to_slit)
         self.slit_mc = slit_mc()
-        self.pre_sample_monitor = pre_sample_monitor(lambda_limits=(lambda_min, lambda_max))
+        self.pre_sample_monitor = band.pre_sample_monitor
         # before the sample in order, 3 m after it in space: it counts the beam as if there were
         # no sample, and gives the sample each neutron back unchanged
-        self.beamstop_monitor = beamstop_monitor(lambda_limits=(lambda_min, lambda_max))
-        #  sample position
+        self.beamstop_monitor = band.beamstop_monitor
+        # sample position
         self.sample_pos = sample_pos()
-        self.sample_monitor = sample_monitor(lambda_limits=(lambda_min, lambda_max))
+        self.sample_monitor = band.sample_monitor
         self.sample = None
         if sample is not None:
             self.sample = replace(sample, relative=sample.relative or "sample_pos")
@@ -161,10 +199,10 @@ class TRex(Instrument):
     def update_params(self, **values: Any) -> None:
         """Change control parameters.
 
-        A new ``lambda0`` also creates the source and the time and wavelength monitors again
-        (the beam, pre-sample, sample and beamstop monitors), with the band of
-        :func:`.sources.wavelength_band`. A masked source stays masked: the source decides,
-        so that it also holds for an instrument a parameters file made.
+        A new ``lambda0`` also creates the components of :class:`Band` again, the source and
+        the beam, pre-sample, beamstop and sample monitors, with its band. A masked source
+        stays masked: the source decides, so that it also holds for an instrument a parameters
+        file made.
 
         Parameters
         ----------
@@ -178,33 +216,9 @@ class TRex(Instrument):
         """
         super().update_params(**values)
         if "lambda0" in values:
-            lambda_min, lambda_max = wavelength_band(self.params.lambda0)
             masked = isinstance(self.source, Polygon_ESS_butterfly)
-            self.source = self._make_source(masked, lambda_min, lambda_max)
-            self.beam_monitor = beam_monitor(lambda_limits=(lambda_min, lambda_max))
-            self.pre_sample_monitor = pre_sample_monitor(lambda_limits=(lambda_min, lambda_max))
-            self.beamstop_monitor = beamstop_monitor(lambda_limits=(lambda_min, lambda_max))
-            self.sample_monitor = sample_monitor(lambda_limits=(lambda_min, lambda_max))
-
-    @staticmethod
-    def _make_source(
-        masked: bool, lambda_min: float, lambda_max: float
-    ) -> ESS_butterfly | Polygon_ESS_butterfly:
-        """Create the source, masked by the choppers or not.
-
-        Parameters
-        ----------
-        masked:
-            True for :func:`.sources.masked_source`, False for :func:`.sources.source`.
-        lambda_min, lambda_max:
-            Wavelength band, in Å.
-
-        Returns
-        -------
-        :
-            A new source.
-        """
-        return (masked_source if masked else source)(lambda_min, lambda_max)
+            band = Band.of(self.params.lambda0, masked)
+            self.add_components(band._asdict())  # each in its place
 
     def running_conditions(self) -> str:
         """Describe the settings of T-Rex in one line, such as the title of a figure.
@@ -228,23 +242,13 @@ class TRex(Instrument):
             parts.append(f"{group.upper()} {frequencies} Hz")
         return " · ".join(parts)
 
-    def add_components(self, components: dict[str, Component]) -> None:
-        """Set components as attributes under their names, keeping their order.
-
-        Parameters
-        ----------
-        components:
-            Components by name, in beam order.
-        """
-        for name, component in components.items():
-            setattr(self, name, component)
-
     @property
     def instr_params(self) -> list[InstrParam]:
         """McStas instrument parameters.
 
         The choice of guide 4, the rotation of the bender and of the goniometer, and the
-        frequency and delay of each chopper, computed from ``lambda0``, ``rrm``, ``mode`` and ``t0_offset``.
+        frequency and delay of each chopper, computed from ``lambda0``, ``rrm``, ``mode`` and
+        ``t0_offset``.
         """
         timings = chopper_timings(
             self.params.lambda0,

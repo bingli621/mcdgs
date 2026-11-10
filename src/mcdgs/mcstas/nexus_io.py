@@ -7,7 +7,7 @@
 Nothing here knows an instrument: the components to read are named by the caller.
 
 A scan file holds one entry per scan point (entry1, entry2, ...). Reading it needs a mcstastox
-with ``entry_number`` support, which pixi.toml and pyproject.toml pin.
+with ``entry_number`` support, which pyproject.toml pins.
 """
 
 from collections.abc import Iterable, Mapping
