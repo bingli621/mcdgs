@@ -12,8 +12,9 @@ An instrument is two things:
 
 The io/ and mcstas/ layers rely only on what this base class provides: ``name``, ``params``,
 ``update_params``, ``components``, ``instr_params``, ``positions``, equality and the summary
-(``repr``). ``running_conditions`` and ``chopper_frequencies`` describe the settings of a run in
-one line, such as the title of a figure.
+(``repr``). ``add_components`` sets several components at once, in order.
+``running_conditions`` and ``chopper_frequencies`` describe the settings of a run in one line,
+such as the title of a figure.
 """
 
 from dataclasses import asdict, fields, replace
@@ -123,6 +124,17 @@ class Instrument:
         """
         return {n: v for n, v in vars(self).items() if isinstance(v, Component)}
 
+    def add_components(self, components: dict[str, Component]) -> None:
+        """Set components as attributes under their names, keeping their order.
+
+        Parameters
+        ----------
+        components:
+            Components by name, in beam order, such as the pieces of a guide.
+        """
+        for name, component in components.items():
+            setattr(self, name, component)
+
     def positions(self) -> dict[str, list[float]]:
         """Compute the position of every component in the lab frame.
 
@@ -132,13 +144,8 @@ class Instrument:
             ``[x, y, z]`` in m by component name, at the current angles. Values are rounded to
             1 nm so that rotation noise reads ``0.0``, never ``-0.0``.
         """
-        at_rotated_dict = place_absolute(
-            self.components, self.numeric_instr_params()
-        )  # name -> (position, rotation)
-        return {
-            name: (position.round(9) + 0.0).tolist()
-            for name, (position, _rotation) in at_rotated_dict.items()
-        }
+        placed = place_absolute(self.components, self.numeric_instr_params())
+        return {name: (position.round(9) + 0.0).tolist() for name, (position, _) in placed.items()}
 
     def chopper_frequencies(self, prefix: str = "") -> dict[str, float]:
         """Return the signed frequency of the disk choppers whose names start with ``prefix``.

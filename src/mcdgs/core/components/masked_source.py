@@ -7,8 +7,7 @@ through. :class:`ChopperTrainParameters` describes one disk of the train, as cho
 from dataclasses import dataclass, field
 from typing import Any, TypedDict
 
-from .base import Component
-from .source import ESS_SOURCE_FREQUENCY, ESS_SOURCE_LENGTH
+from .source import ESS_butterfly
 
 
 class ChopperTrainParameters(TypedDict):
@@ -44,8 +43,11 @@ class ChopperTrainParameters(TypedDict):
 
 
 @dataclass(kw_only=True, repr=False)  # repr: Component's
-class Polygon_ESS_butterfly(Component):
+class Polygon_ESS_butterfly(ESS_butterfly):
     """The ESS butterfly source masked by a chopper train, as McStas ``Polygon_ESS_butterfly``.
+
+    It extends :class:`.ESS_butterfly` as the McStas component extends it: it has all of its
+    parameters, defaults, ``frequency`` and ``pulse_length``, and checks ``sector`` the same way.
 
     Before the run, it computes the exact region of (inverse velocity, emission time) that the
     disks of ``choppers`` let through, a union of convex polygons. It then emits only inside
@@ -56,10 +58,6 @@ class Polygon_ESS_butterfly(Component):
 
     Parameters
     ----------
-    Lmin, Lmax, sector, beamline, acc_power, yheight, cold_frac, dist, focus_xw, focus_yh, \
-n_pulses, c_performance, t_performance, target_index, tmax_multiplier, tfocus_dist, \
-tfocus_time, tfocus_width:
-        As in :class:`.ESS_butterfly`.
     choppers:
         The disks of the chopper train, in any order, as :class:`ChopperTrainParameters`.
         McStas's ``chopper_count`` is computed from it. Without a disk, the region is all the
@@ -87,9 +85,7 @@ tfocus_time, tfocus_width:
 
     Notes
     -----
-    ``Lmin`` and ``Lmax`` are required, as in McStas. ``sector``, ``beamline``
-    and ``acc_power`` default to ``"W"``, 7 and 2 MW, as in :class:`.ESS_butterfly`; every other
-    default is McStas's.
+    Every default of its own is McStas's.
 
     Examples
     --------
@@ -112,25 +108,7 @@ tfocus_time, tfocus_width:
     1
     """
 
-    Lmin: float | str
-    Lmax: float | str
     choppers: list[ChopperTrainParameters] = field(default_factory=list)
-    sector: str = "W"
-    beamline: int = 7
-    acc_power: float = 2
-    yheight: float = 0.03
-    cold_frac: float = 0.5
-    dist: float = 0
-    focus_xw: float = 0
-    focus_yh: float = 0
-    n_pulses: int = 1
-    c_performance: float = 1
-    t_performance: float = 1
-    target_index: int = 0
-    tmax_multiplier: float = 3
-    tfocus_dist: float = 0
-    tfocus_time: float = 0
-    tfocus_width: float = 0
     filename: str | None = None
     path_spread_fraction: float = 0
     noise_fraction: float = 0
@@ -140,18 +118,10 @@ tfocus_time, tfocus_width:
     save_polygons: int = 1
     verify_acceptance: int = 1
 
-    @property
-    def frequency(self) -> float:
-        """Pulse frequency in Hz, as :attr:`.ESS_butterfly.frequency`."""
-        return ESS_SOURCE_FREQUENCY
-
-    @property
-    def pulse_length(self) -> float:
-        """Pulse length in s, as :attr:`.ESS_butterfly.pulse_length`."""
-        return ESS_SOURCE_LENGTH
-
     def mcstas_parameters(self) -> dict[str, Any]:
         """Return the McStas parameters, with ``resample`` 0 where McStas refuses 1.
+
+        ``sector`` is checked as in :meth:`.ESS_butterfly.mcstas_parameters`.
 
         McStas stops the run in INITIALIZE, after the compilation, if ``resample`` is 1 with
         time focusing, ``use_region`` 0 or a ``noise_fraction``. Then ``resample`` is 0 here,
@@ -165,6 +135,11 @@ tfocus_time, tfocus_width:
         :
             The fields, with ``filename`` set and ``resample`` as McStas takes it, plus
             ``chopper_count``.
+
+        Raises
+        ------
+        ValueError
+            If ``sector`` is not N, S, E or W.
         """
         parameters = super().mcstas_parameters() | {
             "chopper_count": len(self.choppers),

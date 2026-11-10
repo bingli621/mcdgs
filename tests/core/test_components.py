@@ -29,8 +29,14 @@ def test_the_component_name_is_the_class_name():
 def test_every_component_class_is_one_mcstas_component():
     import mcdgs.instruments.trex.model  # noqa: F401  (defines its components: none subclassed)
 
-    assert all(c.__bases__ == (Component,) for c in COMPONENTS.values())
-    assert {c.__name__: c.__subclasses__() for c in COMPONENTS.values() if c.__subclasses__()} == {}
+    # only the class of a McStas component that extends another subclasses that one
+    extends = {Polygon_ESS_butterfly: ESS_butterfly}
+    assert all(c.__bases__ == (extends.get(c, Component),) for c in COMPONENTS.values())
+    assert {
+        c.__name__: [s.__name__ for s in c.__subclasses__()]
+        for c in COMPONENTS.values()
+        if c.__subclasses__()
+    } == {"ESS_butterfly": ["Polygon_ESS_butterfly"]}
 
 
 def test_by_default_a_component_is_at_the_absolute_origin_with_no_instance_keyword():

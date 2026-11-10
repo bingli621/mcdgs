@@ -218,9 +218,10 @@ def test_a_computed_value_mcstas_does_not_know_raises(tmp_path, monkeypatch):
         build_mcstas(_Beamline(), input_path=tmp_path)
 
 
-def test_a_wrong_sector_stops_the_build(tmp_path):
+@pytest.mark.parametrize("source_class", [ESS_butterfly, Polygon_ESS_butterfly])
+def test_a_wrong_sector_stops_the_build(tmp_path, source_class):
     trex = TRex()
-    trex.source = ESS_butterfly(Lmin=0.1, Lmax=10, sector="Q")
+    trex.source = source_class(Lmin=0.1, Lmax=10, sector="Q")
     with pytest.raises(ValueError, match="source: sector 'Q'"):
         build_mcstas(trex, input_path=tmp_path)
 

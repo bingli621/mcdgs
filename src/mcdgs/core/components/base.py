@@ -11,9 +11,11 @@ class Component:
     """Base class of a McStas component.
 
     A subclass is named after the McStas component it stands for (``Slit``, ``NXdisk_chopper``,
-    ...). Its fields are its McStas parameters, plus the instance keywords below. It is not
-    subclassed further: a component class is one McStas component, so its name says what to
-    build. A value an instrument needs that McStas does not take belongs to the instrument.
+    ...). Its fields are its McStas parameters, plus the instance keywords below. A component
+    class is one McStas component, so its name says what to build. It is subclassed further only
+    by the class of a McStas component that extends it, with all of its parameters, as
+    ``Polygon_ESS_butterfly`` extends ``ESS_butterfly``. A value an instrument needs that McStas
+    does not take belongs to the instrument.
 
     Parameters
     ----------
