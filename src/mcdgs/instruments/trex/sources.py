@@ -1,10 +1,16 @@
-"""The source of T-Rex."""
+"""The source of T-Rex: :func:`source`, or :func:`masked_source`, masked by the choppers.
 
-from mcdgs.core.components import (
-    ESS_butterfly,
-)
+Both have the same values, from :func:`_source`: they focus on the entrance of guide 1, with the
+same band.
+"""
+
+from typing import Any
+
+from mcdgs.core.components import ESS_butterfly, Polygon_ESS_butterfly
 from mcdgs.core.components.source import ESS_SOURCE_FREQUENCY, ESS_SOURCE_LENGTH, L_MAX, L_MIN
 from mcdgs.core.utils import speed_from_wavelength
+
+from .choppers import chopper_train
 
 SAMPLE_Z = 163.8  # m
 
@@ -45,28 +51,78 @@ def wavelength_band(lambda0: float) -> tuple[float, float]:
     return (l_min, l_max)
 
 
+# extra flight path a neutron may have, as a fraction of each disk's path: the guides are not a
+# straight line. FIXME, not in Table of Optics v3.2: Polygon_ESS_butterfly's "realistic figure"
+PATH_SPREAD_FRACTION = 1e-4
+
+
+def _source(l_min: float, l_max: float) -> dict[str, Any]:
+    """Return the values both sources share.
+
+    Parameters
+    ----------
+    l_min, l_max:
+        Wavelength band, in Å.
+
+    Returns
+    -------
+    :
+        The McStas parameters of ``ESS_butterfly``, by name.
+    """
+    return {
+        "sector": "W",
+        "beamline": 7,
+        "yheight": 0.03,
+        "cold_frac": 0.3,
+        # the focusing rectangle is the entrance of guide 1, in its plane: seen from every point
+        # of the moderator it then covers the whole opening, so the flux into guide 1 is right
+        "dist": 1.895927,  # m, cell B13, the entrance of guide 1
+        # centered on the axis, it reaches the fixed wall of guide 1 at x = -0.047 m
+        # on both sides, so it covers the entrance 2.0 mm off the axis
+        "focus_xw": 0.094,
+        "focus_yh": 0.029992,  # m, cell F13, the height of the entrance of guide 1
+        "Lmin": l_min,
+        "Lmax": l_max,
+        "n_pulses": 1,
+        "acc_power": 2,
+    }
+
+
 def source(l_min: float = L_MIN, l_max: float = L_MAX) -> ESS_butterfly:
     """Create the source component for T-Rex.
+
+    Parameters
+    ----------
+    l_min, l_max:
+        Wavelength band, in Å.
 
     Returns
     -------
     :
         A new source.
     """
-    return ESS_butterfly(
-        sector="W",
-        beamline=7,
-        yheight=0.03,
-        cold_frac=0.3,
-        # the focusing rectangle is the entrance of guide 1, in its plane: seen from every point
-        # of the moderator it then covers the whole opening, so the flux into guide 1 is right
-        dist=1.895927,  # m, cell B13, the entrance of guide 1
-        # centered on the axis, it reaches the fixed wall of guide 1 at x = -0.047 m
-        # on both sides, so it covers the entrance 2.0 mm off the axis
-        focus_xw=0.094,
-        focus_yh=0.029992,  # m, cell F13, the height of the entrance of guide 1
-        Lmin=l_min,
-        Lmax=l_max,
-        n_pulses=1,
-        acc_power=2,
+    return ESS_butterfly(**_source(l_min, l_max))
+
+
+def masked_source(l_min: float = L_MIN, l_max: float = L_MAX) -> Polygon_ESS_butterfly:
+    """Create the source of T-Rex masked by its six choppers.
+
+    It is :func:`source` emitting only where the disks of :func:`.choppers.chopper_train` let
+    neutrons through, with :data:`PATH_SPREAD_FRACTION`. Every ray then reaches the choppers
+    in a window they are open in, with its weight multiplied by the acceptance.
+
+    Parameters
+    ----------
+    l_min, l_max:
+        Wavelength band, in Å.
+
+    Returns
+    -------
+    :
+        A new source.
+    """
+    return Polygon_ESS_butterfly(
+        **_source(l_min, l_max),
+        choppers=chopper_train(),
+        path_spread_fraction=PATH_SPREAD_FRACTION,
     )

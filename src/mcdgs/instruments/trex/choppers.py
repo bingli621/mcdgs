@@ -18,11 +18,15 @@ corners of the window outside the disk unchopped.
 The flight path to a disk is its distance from the moderator along the beam axis: the position
 of its gap in the Table of Optics plus the disk's place in the gap. The path through the bender
 is taken to be that through guide 4a.
+
+:func:`chopper_train` describes the six disks to chopper-lib, for the masked source.
 """
 
+import math
 from typing import Literal, NamedTuple, get_args
 
 from mcdgs.core.components import Guide_gravity, NXdisk_chopper
+from mcdgs.core.components.choppers import ChopperTrainParameters
 from mcdgs.core.utils import speed_from_wavelength
 
 from .guides.curve import (
@@ -277,3 +281,59 @@ def chopper(name: str) -> NXdisk_chopper:
         at=[0, 0, DISK_Z[name]],
         relative=GAP_ARM[name],
     )
+
+
+def aperture(disk: NXdisk_chopper) -> float:
+    """Return the angular width of the beam on a disk, about its spindle, as chopper-lib takes it.
+
+    The inner corners of the beam window, nearest the spindle, are the furthest round the disk.
+    NXdisk_chopper hangs the window from the height of the rim at its edges,
+    ``sqrt(radius**2 - (xwidth/2)**2)``, so those corners are ``yheight`` inside it.
+
+    Parameters
+    ----------
+    disk:
+        The disk, with its beam window.
+
+    Returns
+    -------
+    :
+        ``2 atan2(xwidth / 2, sqrt(radius**2 - (xwidth / 2)**2) - yheight)``, in deg.
+
+    Examples
+    --------
+    >>> round(aperture(chopper("mc1")), 4)
+    4.2148
+    """
+    half_width = disk.xwidth / 2
+    reach = math.sqrt(disk.radius**2 - half_width**2) - disk.yheight
+    return math.degrees(2 * math.atan2(half_width, reach))
+
+
+def chopper_train() -> list[ChopperTrainParameters]:
+    """Describe the six disks to chopper-lib, as the masked source takes them.
+
+    Each disk is the one :func:`chopper` creates: the same edges, beam angle and window, and the
+    same instrument parameters ``nu_<name>`` and ``delay_<name>``. Its path is
+    :data:`DISK_DISTANCE`. Both McStas components put the disk angle ``a`` on the beam axis at
+    ``delay + (beam_angle - a) / (360 nu)``, so the delay is the same.
+
+    Returns
+    -------
+    :
+        One entry per disk, in beam order.
+    """
+    train: list[ChopperTrainParameters] = []
+    for name, path in DISK_DISTANCE.items():
+        disk = chopper(name)
+        train.append(
+            {
+                "speed": disk.nu,
+                "delay": disk.delay,
+                "beam": BEAM_ANGLE[name],
+                "edges": list(disk.slit_edges),
+                "path": path,
+                "aperture": aperture(disk),
+            }
+        )
+    return train

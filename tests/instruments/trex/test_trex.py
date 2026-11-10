@@ -12,12 +12,15 @@ from mcdgs.instruments.trex.choppers import (
     MODE_SLIT,
     SLIT_EDGES,
     UPSTREAM_GUIDE,
+    aperture,
     chopper_timings,
+    chopper_train,
     slit_angle,
 )
 from mcdgs.instruments.trex.guides.extraction import half_taper_angle
 from mcdgs.instruments.trex.guides.sections import split_after
 from mcdgs.instruments.trex.model import TRex
+from mcdgs.instruments.trex.sources import PATH_SPREAD_FRACTION, masked_source, source
 from mcdgs.samples import aluminum
 
 
@@ -101,6 +104,45 @@ def test_the_source_focuses_on_the_whole_entrance_of_guide_1():
     walls = (x - half_width, x + half_width)
     assert walls == pytest.approx((-0.047, 0.042954), abs=1e-6)
     assert source.focus_xw / 2 == pytest.approx(max(abs(wall) for wall in walls))
+
+
+def test_the_masked_source_is_the_source_masked_by_the_six_choppers():
+    plain, masked = source(1.0, 3.0), masked_source(1.0, 3.0)
+    masked_parameters = masked.mcstas_parameters()
+    assert {k: masked_parameters[k] for k in plain.mcstas_parameters()} == plain.mcstas_parameters()
+    assert masked.choppers == chopper_train()
+    assert masked.path_spread_fraction == PATH_SPREAD_FRACTION
+    assert masked.resample == 1
+
+
+def test_the_chopper_train_is_the_choppers_of_trex():
+    trex = TRex()
+    train = chopper_train()
+    assert [disk["path"] for disk in train] == list(DISK_DISTANCE.values())
+    for disk, name in zip(train, DISK_DISTANCE, strict=True):
+        chopper = getattr(trex, name)
+        assert (disk["speed"], disk["delay"]) == (f"nu_{name}", f"delay_{name}")
+        assert (disk["speed"], disk["delay"]) == (chopper.nu, chopper.delay)
+        assert (disk["beam"], disk["edges"]) == (chopper.beam_angle, chopper.slit_edges)
+        assert disk["aperture"] == aperture(chopper)
+
+
+def test_the_chopper_train_does_not_share_the_edges_of_the_choppers():
+    train = chopper_train()
+    train[0]["edges"].append(90)
+    assert chopper_train()[0]["edges"] == SLIT_EDGES["bw1"]
+
+
+def test_the_aperture_is_that_of_chopper_lib():
+    # chopper-lib's example: a 100 mm window on a 0.5 m disk with 100 mm openings. Its README
+    # gives 14.4 deg, its formula, in Polygon_ESS_butterfly_image.instr, 14.34 deg
+    disk = NXdisk_chopper(slit_edges=[-10, 10], radius=0.5, yheight=0.1, xwidth=0.1)
+    reach = math.sqrt(0.5**2 - 0.05**2)
+    assert aperture(disk) == pytest.approx(2 * math.degrees(math.atan2(0.05, reach - 0.1)))
+    assert aperture(disk) == pytest.approx(14.339, abs=1e-3)
+    # wider than the width over the radius of the beam crossing, 12.7 deg: the inner corners
+    # stand furthest round the disk
+    assert aperture(disk) > math.degrees(0.1 / (0.5 - 0.1 / 2))
 
 
 def test_the_band_of_the_source_is_centered_on_lambda0():

@@ -5,9 +5,10 @@ through.
 """
 
 from dataclasses import dataclass, field
-from typing import Any, TypedDict
+from typing import Any
 
 from .base import Component
+from .choppers import ChopperTrainParameters
 
 ESS_SOURCE_FREQUENCY = 14  # Hz, the pulse frequency
 ESS_SOURCE_LENGTH = 3.5e-3  # s, the pulse length
@@ -134,38 +135,6 @@ class ESS_butterfly(Component):
         return super().mcstas_parameters()
 
 
-class ChopperParameters(TypedDict):
-    """One disk of the chopper train of a :class:`Polygon_ESS_butterfly`.
-
-    It is chopper-lib's ``chopper_parameters``, as a plain dict, so that a parameters file holds
-    it as it is.
-
-    Attributes
-    ----------
-    speed:
-        Signed rotation frequency in Hz, or the instrument parameter that provides it.
-    delay:
-        Time at which the disk point at ``beam`` is on the beam, in s, or the instrument
-        parameter that provides it.
-    beam:
-        Where the beam crosses the disk from its zero mark, in deg.
-    edges:
-        Opening and closing edge of each slit from the disk's zero mark, in pairs, increasing,
-        in deg.
-    path:
-        Flight path from the moderator to the disk, in m.
-    aperture:
-        Angular width of the beam on the disk, about its spindle, in deg. 0 is a pencil beam.
-    """
-
-    speed: float | str
-    delay: float | str
-    beam: float
-    edges: list[float]
-    path: float
-    aperture: float
-
-
 @dataclass(kw_only=True, repr=False)  # repr: Component's
 class Polygon_ESS_butterfly(Component):
     """The ESS butterfly source masked by a chopper train, as McStas ``Polygon_ESS_butterfly``.
@@ -184,9 +153,9 @@ n_pulses, c_performance, t_performance, target_index, tmax_multiplier, tfocus_di
 tfocus_time, tfocus_width:
         As in :class:`ESS_butterfly`.
     choppers:
-        The disks of the chopper train, in any order. McStas's ``chopper_count`` is computed
-        from it. Without a disk, the region is all the source samples, so the source is
-        ``ESS_butterfly``.
+        The disks of the chopper train, in any order, as :class:`.ChopperTrainParameters`.
+        McStas's ``chopper_count`` is computed from it. Without a disk, the region is all the
+        source samples, so the source is ``ESS_butterfly``.
     filename:
         Base name of the output file. If ``None``, the name of the component.
     path_spread_fraction:
@@ -237,7 +206,7 @@ tfocus_time, tfocus_width:
 
     Lmin: float | str
     Lmax: float | str
-    choppers: list[ChopperParameters] = field(default_factory=list)
+    choppers: list[ChopperTrainParameters] = field(default_factory=list)
     sector: str = "W"
     beamline: int = 7
     acc_power: float = 2
