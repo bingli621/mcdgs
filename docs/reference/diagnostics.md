@@ -8,6 +8,7 @@ documentation. See [Source](../instruments/trex/source.md),
 [Beam monitor](../instruments/trex/beam-monitor.md), [Choppers](../instruments/trex/choppers.md),
 [Time-distance diagram](../instruments/trex/time-distance.md),
 [Neutrons on sample](../instruments/trex/neutrons-on-sample.md),
+[Masked source](../instruments/trex/masked-source.md),
 [Incident energy](../instruments/trex/incident-energy.md),
 [Elastic plane](../instruments/trex/elastic-plane.md) and
 [Rotation scan](../instruments/trex/elastic-scan.md) for what they show for T-Rex.
