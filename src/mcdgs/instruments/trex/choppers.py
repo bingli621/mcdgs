@@ -26,7 +26,7 @@ import math
 from typing import Literal, NamedTuple, get_args
 
 from mcdgs.core.components import Guide_gravity, NXdisk_chopper
-from mcdgs.core.components.choppers import ChopperTrainParameters
+from mcdgs.core.components.masked_source import ChopperTrainParameters
 from mcdgs.core.utils import speed_from_wavelength
 
 from .guides.curve import (

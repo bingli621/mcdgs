@@ -13,10 +13,11 @@ class. A parameters file names a component's class by it.
 from .base import Component
 from .choppers import NXdisk_chopper
 from .crystal import Single_crystal
+from .masked_source import Polygon_ESS_butterfly
 from .misc import Arm, Progress_bar
 from .monitors import Monitor_nD
 from .optics import Beamstop, Guide_gravity, Pol_bender, Slit
-from .source import ESS_butterfly, Polygon_ESS_butterfly
+from .source import ESS_butterfly
 
 __all__ = [
     "COMPONENTS",

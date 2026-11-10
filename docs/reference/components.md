@@ -8,6 +8,8 @@ each one does.
 
 ::: mcdgs.core.components.source
 
+::: mcdgs.core.components.masked_source
+
 ::: mcdgs.core.components.optics
 
 ::: mcdgs.core.components.choppers

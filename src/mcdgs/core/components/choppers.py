@@ -1,7 +1,7 @@
-"""Choppers: NXdisk_chopper, and the disks of a chopper train as chopper-lib takes them."""
+"""Choppers: NXdisk_chopper."""
 
 from dataclasses import dataclass
-from typing import Any, TypedDict
+from typing import Any
 
 from .base import Component
 
@@ -75,35 +75,3 @@ class NXdisk_chopper(Component):
             The fields, plus ``n_edges``.
         """
         return super().mcstas_parameters() | {"n_edges": len(self.slit_edges)}
-
-
-class ChopperTrainParameters(TypedDict):
-    """One disk of the chopper train of a :class:`.Polygon_ESS_butterfly`.
-
-    It is chopper-lib's ``chopper_parameters``, as a plain dict, so that a parameters file holds
-    it as it is.
-
-    Attributes
-    ----------
-    speed:
-        Signed rotation frequency in Hz, or the instrument parameter that provides it.
-    delay:
-        Time at which the disk point at ``beam`` is on the beam, in s, or the instrument
-        parameter that provides it.
-    beam:
-        Where the beam crosses the disk from its zero mark, in deg.
-    edges:
-        Opening and closing edge of each slit from the disk's zero mark, in pairs, increasing,
-        in deg.
-    path:
-        Flight path from the moderator to the disk, in m.
-    aperture:
-        Angular width of the beam on the disk, about its spindle, in deg. 0 is a pencil beam.
-    """
-
-    speed: float | str
-    delay: float | str
-    beam: float
-    edges: list[float]
-    path: float
-    aperture: float
