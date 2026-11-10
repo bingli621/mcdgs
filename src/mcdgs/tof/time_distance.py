@@ -58,7 +58,8 @@ def time_distance_diagram(
     Raises
     ------
     ValueError
-        If the instrument has no ``ESS_butterfly`` or more than one, or a chopper is parked.
+        If the instrument has no ``ESS_butterfly`` or ``Polygon_ESS_butterfly``, or more than
+        one; or if a chopper is parked.
     """
     result = build_tof(instrument, neutrons=neutrons, seed=seed, n_pulses=n_pulses).run()
     plot = result.plot(

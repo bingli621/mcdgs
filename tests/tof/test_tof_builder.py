@@ -11,6 +11,7 @@ from mcdgs.core.components import (
     ESS_butterfly,
     Guide_gravity,
     Monitor_nD,
+    Polygon_ESS_butterfly,
     Progress_bar,
 )
 from mcdgs.core.params import InstrParam
@@ -71,6 +72,21 @@ def test_source_is_the_pulse_of_the_beam_port(sector, beamline, facility):
     assert build_tof(instrument, neutrons=1000, seed=1).source.facility == facility
 
 
+def test_polygon_ess_butterfly_gives_the_same_tof_source():
+    masked = _Beamline()
+    masked.source = Polygon_ESS_butterfly(
+        Lmin="lmin",
+        Lmax=6.0,
+        n_pulses=2,
+        choppers=[
+            {"speed": 14, "delay": 0.01, "beam": 0, "edges": [-10, 10], "path": 5, "aperture": 0}
+        ],
+    )
+    first, second = (build_tof(b, neutrons=1000, seed=7).source for b in (_Beamline(), masked))
+    assert (first.facility, first.pulses) == (second.facility, second.pulses)
+    assert sc.identical(first.data, second.data)
+
+
 def test_trex_gets_its_own_pulse():
     assert build_tof(TRex(), neutrons=1000, seed=1).source.facility == "ess-trex"
 
@@ -117,7 +133,7 @@ def test_the_instrument_needs_one_source(n_sources):
         beamline.source = None
     else:
         beamline.second_source = ESS_butterfly(Lmin=1, Lmax=2)
-    with pytest.raises(ValueError, match="tof needs one ESS_butterfly"):
+    with pytest.raises(ValueError, match="tof needs one ESS_butterfly or Polygon_ESS_butterfly"):
         build_tof(beamline)
 
 

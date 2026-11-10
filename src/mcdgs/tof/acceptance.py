@@ -64,8 +64,9 @@ def chopper_cascade(
     Raises
     ------
     ValueError
-        If the instrument has no ``ESS_butterfly`` or more than one, a chopper is parked, the
-        pulse ends before it starts, or ``n_pulses`` is below 1.
+        If the instrument has no ``ESS_butterfly`` or ``Polygon_ESS_butterfly``, or more than
+        one; if a chopper is parked; if the pulse ends before it starts; or if ``n_pulses`` is
+        below 1.
     """
     source, after_source = beamline(instrument)
     params = instrument.numeric_instr_params()
@@ -183,8 +184,9 @@ def acceptance_diagram(
     Raises
     ------
     ValueError
-        If the instrument has no ``ESS_butterfly`` or more than one, a chopper is parked, the
-        pulse ends before it starts, or ``n_pulses`` is below 1.
+        If the instrument has no ``ESS_butterfly`` or ``Polygon_ESS_butterfly``, or more than
+        one; if a chopper is parked; if the pulse ends before it starts; or if ``n_pulses`` is
+        below 1.
     """
     frames, names = chopper_cascade(
         instrument,

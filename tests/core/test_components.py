@@ -11,6 +11,7 @@ from mcdgs.core.components import (
     Monitor_nD,
     NXdisk_chopper,
     Pol_bender,
+    Polygon_ESS_butterfly,
     Progress_bar,
 )
 
@@ -134,6 +135,83 @@ def test_ess_butterfly_needs_a_sector_letter(sector):
     source = ess_butterfly(sector=sector)
     with pytest.raises(ValueError, match="is not 'N', 'S', 'E' or 'W'"):
         source.mcstas_parameters()
+
+
+def polygon_ess_butterfly(**values):
+    """A Polygon_ESS_butterfly with one disk, with ``values`` replacing its defaults."""
+    disk = {
+        "speed": "nu_ps1",
+        "delay": "delay_ps1",
+        "beam": 180,
+        "edges": [-10, 10, 107.5, 142.5],
+        "path": 107.95,
+        "aperture": 3.2,
+    }
+    return Polygon_ESS_butterfly(
+        **{"name": "source", "Lmin": 1, "Lmax": 3, "choppers": [disk]} | values
+    )
+
+
+def test_polygon_ess_butterfly_has_the_parameters_of_ess_butterfly_and_its_own():
+    parameters = polygon_ess_butterfly().mcstas_parameters()
+    assert ess_butterfly().mcstas_parameters().keys() < parameters.keys()
+    assert parameters.keys() - ess_butterfly().mcstas_parameters().keys() == {
+        "choppers",
+        "chopper_count",
+        "filename",
+        "path_spread_fraction",
+        "noise_fraction",
+        "emission_depth",
+        "use_region",
+        "resample",
+        "save_polygons",
+        "verify_acceptance",
+    }
+    assert parameters["chopper_count"] == 1
+    assert parameters["filename"] is None  # McStas's NULL: the component's name
+
+
+def test_polygon_ess_butterfly_has_the_defaults_of_ess_butterfly():
+    masked, plain = polygon_ess_butterfly(), ESS_butterfly(name="source", Lmin=1, Lmax=3)
+    assert {
+        k: v for k, v in masked.mcstas_parameters().items() if k in plain.mcstas_parameters()
+    } == (plain.mcstas_parameters())
+    assert (masked.frequency, masked.pulse_length) == (plain.frequency, plain.pulse_length)
+
+
+def test_polygon_ess_butterfly_without_choppers_is_ess_butterfly():
+    source = Polygon_ESS_butterfly(Lmin=1, Lmax=3)
+    assert source.choppers == []
+    assert source.mcstas_parameters()["chopper_count"] == 0
+
+
+@pytest.mark.parametrize(
+    ("values", "reason"),
+    [
+        ({"tfocus_width": 1e-4}, "time focusing"),
+        ({"use_region": 0}, "use_region=0"),
+        ({"noise_fraction": 0.1}, "noise_fraction=0.1"),
+    ],
+)
+def test_polygon_ess_butterfly_runs_without_resample_where_mcstas_refuses_it(
+    values, reason, capsys
+):
+    source = polygon_ess_butterfly(**values)
+    parameters = source.mcstas_parameters()
+    assert f"resample=1 does not go with {reason};" in capsys.readouterr().out
+    assert parameters["resample"] == 0
+    assert source.resample == 1  # the field stays as it is
+
+
+def test_without_resample_polygon_ess_butterfly_takes_time_focusing_silently(capsys):
+    source = polygon_ess_butterfly(resample=0, tfocus_width=1e-4, noise_fraction=0.1)
+    assert source.mcstas_parameters()["resample"] == 0
+    assert capsys.readouterr().out == ""
+
+
+def test_polygon_ess_butterfly_names_every_reason_it_runs_without_resample(capsys):
+    polygon_ess_butterfly(use_region=0, noise_fraction=0.1).mcstas_parameters()
+    assert "with use_region=0, noise_fraction=0.1;" in capsys.readouterr().out
 
 
 def test_arm_has_no_mcstas_parameters():

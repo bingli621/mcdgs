@@ -4,7 +4,8 @@ tof follows each neutron along a single flight path from the source, through the
 the detectors. It has no optics: guides, benders and slits transmit everything. So the builder
 takes only the components tof understands, by type:
 
-- the ``ESS_butterfly`` becomes the :class:`tof.Source`, which must be the only source;
+- the ``ESS_butterfly`` or ``Polygon_ESS_butterfly`` becomes the :class:`tof.Source`, which
+  must be the only source;
 - each ``NXdisk_chopper`` becomes a :class:`tof.Chopper`, through scippneutron's
   :class:`DiskChopper` (:func:`disk_chopper`), as both follow NeXus;
 - each ``Monitor_nD`` becomes a :class:`tof.Detector`, which records the neutrons reaching it.
@@ -36,7 +37,13 @@ import tof
 from scippneutron.chopper.disk_chopper import DiskChopper
 
 from mcdgs.core.base import Instrument
-from mcdgs.core.components import Component, ESS_butterfly, Monitor_nD, NXdisk_chopper
+from mcdgs.core.components import (
+    Component,
+    ESS_butterfly,
+    Monitor_nD,
+    NXdisk_chopper,
+    Polygon_ESS_butterfly,
+)
 from mcdgs.core.utils import evaluate
 
 
@@ -120,7 +127,8 @@ def get_choppers(instrument: Instrument) -> dict[str, DiskChopper]:
     Raises
     ------
     ValueError
-        If the instrument has no ``ESS_butterfly`` or more than one, or a chopper is parked.
+        If the instrument has no ``ESS_butterfly`` or ``Polygon_ESS_butterfly``, or more than
+        one; or if a chopper is parked.
     """
     _, after_source = beamline(instrument)
     params = instrument.numeric_instr_params()
@@ -132,7 +140,7 @@ def get_choppers(instrument: Instrument) -> dict[str, DiskChopper]:
 
 
 def _source(
-    component: ESS_butterfly,
+    component: ESS_butterfly | Polygon_ESS_butterfly,
     params: Mapping[str, float],
     neutrons: int,
     seed: int | None,
@@ -251,7 +259,8 @@ def build_tof(
     Raises
     ------
     ValueError
-        If the instrument has no ``ESS_butterfly`` or more than one.
+        If the instrument has no ``ESS_butterfly`` or ``Polygon_ESS_butterfly``, or more than
+        one.
     """
     source, after_source = beamline(instrument)
     params = instrument.numeric_instr_params()
@@ -271,7 +280,7 @@ def build_tof(
 
 def beamline(
     instrument: Instrument,
-) -> tuple[ESS_butterfly, list[tuple[str, Component, float]]]:
+) -> tuple[ESS_butterfly | Polygon_ESS_butterfly, list[tuple[str, Component, float]]]:
     """Return the source of an instrument and the components after it, with their distances.
 
     Parameters
@@ -282,18 +291,26 @@ def beamline(
     Returns
     -------
     :
-        The ``ESS_butterfly``, and each component after it in beam order: its name, itself and
+        The source, and each component after it in beam order: its name, itself and
         its distance from the source, in m.
 
     Raises
     ------
     ValueError
-        If the instrument has no ``ESS_butterfly`` or more than one.
+        If the instrument has no ``ESS_butterfly`` or ``Polygon_ESS_butterfly``, or more than
+        one.
     """
     components = instrument.components
-    sources = {name: c for name, c in components.items() if isinstance(c, ESS_butterfly)}
+    sources = {
+        name: c
+        for name, c in components.items()
+        if isinstance(c, ESS_butterfly | Polygon_ESS_butterfly)
+    }
     if len(sources) != 1:
-        raise ValueError(f"{instrument.name}: tof needs one ESS_butterfly, found {list(sources)}")
+        raise ValueError(
+            f"{instrument.name}: tof needs one ESS_butterfly or Polygon_ESS_butterfly, "
+            f"found {list(sources)}"
+        )
     ((source_name, source),) = sources.items()
     after_source = list(components)[list(components).index(source_name) + 1 :]
 
