@@ -165,6 +165,9 @@ class Simulation:
     work_dir:
         Work folder for the defaults above, fixed when the simulation is created. If ``None``,
         the current folder.
+    tof_train:
+        Opt into experimental TOF train component overrides for source runs. Runs from an
+        MCPL beam file always use ordinary components, without changing this setting.
 
     Attributes
     ----------
@@ -197,10 +200,13 @@ class Simulation:
         output_dir: str | Path | None = None,
         input_dir: str | Path | None = None,
         work_dir: str | Path | None = None,
+        *,
+        tof_train: bool = False,
     ) -> None:
         self.instrument = instrument
         self.output_dir = Path(output_dir or default_output_dir(work_dir))
         self.input_dir = Path(input_dir or default_input_dir(instrument, work_dir))
+        self.tof_train = tof_train
         self.beam_file = latest_beam(self.output_dir)
 
     def list_runs(self) -> list[str]:
@@ -216,7 +222,13 @@ class Simulation:
         return clean_runs(self.output_dir, keep)
 
     def _prepare(
-        self, folder_name: str | None, mode: str, **settings: object
+        self,
+        folder_name: str | None,
+        mode: str,
+        *,
+        from_mcpl: bool = False,
+        train_mcpl_output: bool = False,
+        **settings: object,
     ) -> tuple[Path, McStas_instr]:
         """Pick the run folder and build the instrument with the settings every run shares.
 
@@ -235,8 +247,22 @@ class Simulation:
             The run folder, and the McStasScript instrument writing into it. A scan's points
             write into folders of their own instead (:func:`_run_points_in_parallel`).
         """
+        inst = build_mcstas(
+            self.instrument, input_path=self.input_dir, tof_train=self.tof_train and not from_mcpl
+        )
+        if train_mcpl_output:
+            component_dir = (
+                Path(__file__).resolve().parents[1] / "instruments/trex/tof_train_components"
+            )
+            override = component_dir / "MCPL_output.comp"
+            if not override.is_file():
+                raise FileNotFoundError(f"TOF train MCPL output override missing: {override}")
+            if (self.input_dir / override.name).exists():
+                raise FileExistsError(f"TOF train MCPL output may be shadowed in {self.input_dir}")
+            resolved = inst.component_reader.component_path.get("MCPL_output")
+            if resolved is None or Path(resolved).resolve() != override.resolve():
+                raise RuntimeError(f"TOF train MCPL output override was not loaded: {resolved}")
         output_path = run_folder(self.output_dir, folder_name, mode)
-        inst = build_mcstas(self.instrument, input_path=self.input_dir)
         inst.settings(
             NeXus=True,
             increment_folder_name=False,
@@ -282,6 +308,13 @@ class Simulation:
         if beam_file is None:
             raise FileNotFoundError(f"no beam file in {self.output_dir}: run run_to_sample first")
         return Path(beam_file).resolve()
+
+    def _check_beam_output(self, beam_file: Path, folder_name: str | None) -> None:
+        """Prevent a named output folder from deleting its input beam file."""
+        if folder_name is not None and beam_file.is_relative_to(
+            (self.output_dir / folder_name).resolve()
+        ):
+            raise ValueError(f"output folder contains the input beam file: {beam_file}")
 
     def get_scan_points(
         self, variable: str, values: ArrayLike, instr_params: Mapping[str, float]
@@ -448,7 +481,12 @@ class Simulation:
         """
         self._check_sample_pos()  # before anything
         output_path, inst = self._prepare(
-            folder_name, "run_to_sample", ncount=ncount, mpi=mpi, seed=seed
+            folder_name,
+            "run_to_sample",
+            ncount=ncount,
+            mpi=mpi,
+            seed=seed,
+            train_mcpl_output=self.tof_train,
         )
         inst.set_parameters(**instr_params)  # the rest keep the instrument's values
         inst.run_to(
@@ -505,7 +543,10 @@ class Simulation:
         """
         self._check_sample_pos()  # before anything
         beam_file = self.find_beam_file(beam_file)
-        output_path, inst = self._prepare(folder_name, "run_from_sample", mpi=mpi, seed=seed)
+        self._check_beam_output(beam_file, folder_name)
+        output_path, inst = self._prepare(
+            folder_name, "run_from_sample", from_mcpl=True, mpi=mpi, seed=seed
+        )
         inst.run_from(SAMPLE_POS, filename=f'"{beam_file}"')
         inst.set_parameters(**instr_params)  # the rest keep the instrument's values
         inst.backengine()
@@ -561,9 +602,11 @@ class Simulation:
         points = self.get_scan_points(variable, values, instr_params)  # checked before anything
         self._check_sample_pos()
         beam_file = self.find_beam_file(beam_file)
+        self._check_beam_output(beam_file, folder_name)
         output_path, inst = self._prepare(
             folder_name,
             f"scan_{variable}_from_sample",
+            from_mcpl=True,
             mpi=None,  # no MPI: the points run in parallel instead
         )
         inst.run_from(SAMPLE_POS, filename=f'"{beam_file}"')
