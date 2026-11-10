@@ -14,14 +14,15 @@ from the length of the flight and the time it takes. The calculation is a graph 
     a time error δt gives an error of 2 δt / t in Ei. In bins of 0.05 ms, as the other monitors
     of T-Rex have, the mean time of a sub-pulse is off by up to half a bin, and Ei by up to 1 %.
     The pre-sample and beamstop monitors therefore have bins of 5 µs, which bring the error down
-    to 0.2 %. See [Why the time bins matter](#why-the-time-bins-matter).
+    to 0.1 %. See [Why the time bins matter](#why-the-time-bins-matter).
 
 ## The setup
 
 `TRexToBeamstopMonitor` is `TRex` with the La2Ni7 crystal of `la2ni7` on `sample_pos`, without
 the beamstop and the banana detector after it: the beamstop monitor is the last monitor that
 counts. Its control parameters are those of `TRex`, here the defaults: mode `"FF"`,
-`lambda0` = 2 Å and `rrm` = 18.
+`lambda0` = 2 Å and `rrm` = 18. It has the [masked source](masked-source.md), which spends the
+rays where the choppers let neutrons through, so every sub-pulse is well filled.
 
 The beamstop monitor sits 2.999 m after the sample, on the face of the beamstop, but it comes
 before the sample in beam order. It counts the direct beam as if there were no sample, and then
@@ -33,9 +34,13 @@ whatever the sample does.
 | `pre_sample_monitor` | 163.5 m, between `slit_mc` and the sample | 0.1 m × 0.1 m | 45.3 to 123.6 ms | 15659 of 5 µs | 1.095 to 2.915 Å, in 91 bins of 0.02 Å |
 | `beamstop_monitor` | 166.8 m, 2.999 m after `sample_pos` | 0.1 m × 0.1 m | 46.2 to 126.0 ms | 15961 of 5 µs | 1.095 to 2.915 Å, in 91 bins of 0.02 Å |
 
-tof is scaled to McStas as on [Neutrons on sample](neutrons-on-sample.md#scale-and-transmission),
-with `read_scaled_comparisons`: the scale is set at the source monitor, and a transmission of
-0.0159 on top of it, tuned at the pre-sample monitor, holds at the beamstop monitor too.
+tof is scaled to McStas with `read_scaled_comparisons`, as on
+[Neutrons on sample](neutrons-on-sample.md#scale-and-transmission): a scale set at the source
+monitor, and a factor on top of it, tuned so that tof has the total of McStas at the pre-sample
+monitor, and kept at the beamstop monitor. With the masked source, the source monitor sees only
+the neutrons the choppers will let through, so that factor, 0.833 here, is no longer the
+transmission of the guides: it only brings tof to the intensity of McStas. Ei does not depend on
+it.
 
 ## The direct beam at both monitors
 
@@ -46,11 +51,11 @@ blue, the beamstop monitor in orange, McStas as solid lines and tof as dashed on
 sub-pulse reaches the beamstop monitor 1.1 to 2.2 ms after the pre-sample monitor, the slower
 ones later.
 
-In McStas, the beamstop monitor counts 2.22e7 n/s, 11 % less than the 2.497e7 n/s at the
+In McStas, the beamstop monitor counts 2.268e7 n/s, 10 % less than the 2.534e7 n/s at the
 pre-sample monitor: the beam spreads over the 3.3 m, and part of it misses the 0.1 m monitor.
-tof has no divergence and counts all of it. This loss hardly changes Ei: with a 1 m × 1 m beamstop
-monitor, which catches the whole beam, Ei moves by at most 0.3 %, within the scatter of the
-sub-pulses, from −0.18 to +0.20 % of the reference.
+tof has no divergence and counts all of it. This loss hardly changes Ei: with the plain source, a
+1 m × 1 m beamstop monitor, which catches the whole beam, moved Ei by at most 0.3 %, within the
+scatter of the sub-pulses then.
 
 ## How Ei is calculated
 
@@ -156,19 +161,21 @@ values, in McStas:
 
 | Sub-pulse | At the pre-sample monitor | Between the monitors | λi | Ei between the monitors | Ei, pre-sample monitor alone | Ei from the mean λ |
 | --------- | ------------------------- | -------------------- | -- | ----------------------- | ---------------------------- | ------------------ |
-| 0 | 56.329 ms | 1.0979 ms | 1.317 Å | 47.191 meV (−0.18 %) | 46.822 meV (−0.96 %) | 47.275 meV |
-| 7 | 84.358 ms | 1.6673 ms | 1.999 Å | 20.463 meV (−0.02 %) | 20.451 meV (−0.08 %) | 20.467 meV |
-| 14 | 112.386 ms | 2.2323 ms | 2.677 Å | 11.416 meV (+0.23 %) | 11.405 meV (+0.13 %) | 11.390 meV |
+| 0 | 56.327 ms | 1.0983 ms | 1.317 Å | 47.163 meV (−0.14 %) | 46.824 meV (−0.86 %) | 47.231 meV |
+| 7 | 84.359 ms | 1.6678 ms | 2.000 Å | 20.453 meV (−0.11 %) | 20.451 meV (−0.11 %) | 20.474 meV |
+| 14 | 112.390 ms | 2.2371 ms | 2.683 Å | 11.367 meV (−0.07 %) | 11.404 meV (+0.26 %) | 11.374 meV |
 
 Over all sub-pulses, the difference from the reference is:
 
 | Method | McStas | tof |
 | ------ | ------ | --- |
-| Between the monitors | −0.22 to +0.23 % | −0.07 to +0.08 % |
-| Pre-sample monitor alone | −0.96 to +0.18 % | −0.41 to +0.15 % |
+| Between the monitors | −0.14 to +0.10 % | −0.07 to +0.08 % |
+| Pre-sample monitor alone | −0.86 to +0.26 % | −0.41 to +0.15 % |
 
-Both methods agree with the reference to about 0.2 %. The pre-sample monitor alone is worst for
-the fastest sub-pulse, −0.96 % in McStas: it assumes that every sub-pulse leaves the moderator at
+Between the monitors, both models agree with the reference to about 0.1 %, and with each other:
+in the bottom panel the points of McStas lie on those of tof, sub-pulse by sub-pulse. What is
+left, about ±0.1 % in both, comes from the method, not from the statistics of the run. The
+pre-sample monitor alone is worst for the fastest sub-pulse, −0.86 % in McStas: it assumes that every sub-pulse leaves the moderator at
 1.7 ms, and an error in that time weighs most where the flight is shortest. The flight between the
 monitors needs no such assumption, which is why two monitors are the usual way to measure Ei.
 
@@ -190,13 +197,13 @@ source:
 
 A sub-pulse is only about 0.02 to 0.03 ms wide, one or two bins of 0.05 ms. Its mean time is a
 mean of bin centers, so it can be off by up to 25 µs, half a bin. With the time bins of the other
-monitors, 0.05 ms, the flight between the monitors gave Ei to only about 1 %; in 5 µs bins it
-gives it to 0.2 %:
+monitors, 0.05 ms, the flight between the monitors gives Ei to only about 1 %; in 5 µs bins it
+gives it to 0.1 %:
 
 | Time bins of both monitors | Between the monitors, McStas | Between the monitors, tof | Pre-sample monitor alone, McStas |
 | -------------------------- | ---------------------------- | ------------------------- | -------------------------------- |
-| 0.05 ms | −0.90 to +1.07 % | −0.03 to +0.14 % | −0.98 to +0.19 % |
-| 0.005 ms, the default | −0.22 to +0.23 % | −0.07 to +0.08 % | −0.96 to +0.18 % |
+| 0.05 ms | −0.86 to +1.14 % | −0.03 to +0.14 % | −0.88 to +0.27 % |
+| 0.005 ms, the default | −0.14 to +0.10 % | −0.07 to +0.08 % | −0.86 to +0.26 % |
 
 The pre-sample monitor alone hardly changes: over 83 ms, the bins are fine enough either way.
 The cost is ten times more time bins in each of the two maps, about 16,000 by 91 wavelengths.
@@ -210,7 +217,7 @@ them again, with the other files of the T-Rex pages. To make them yourself, run:
 pixi run python -m mcdgs.diagnostics.trex_09_determine_ei
 ```
 
-At its defaults, `main` runs 1e8 McStas neutrons and 1e7 tof neutrons, with seed 1, prints the
+At its defaults, `main` runs 1e8 McStas rays from the masked source and 1e7 tof neutrons, with seed 1, prints the
 table of each model, and saves the two figures and the graph next to the `mccode.h5` of the McStas
 run, or to the folder given with `--out`. `sc.show_graph` needs graphviz, which the default pixi
 environment has.

@@ -68,12 +68,15 @@ class TRexToBeamstopMonitor(TRex):
     ----------
     params:
         Control parameters.
+    source_masked:
+        As in :class:`.TRex`. True by default: the masked source of
+        :func:`.sources.masked_source` spends the rays where the choppers let neutrons through.
     """
 
     name = "trex_to_beamstop_monitor"  # the McStas instrument name
 
-    def __init__(self, params: Params = DEFAULT_PARAMS) -> None:
-        super().__init__(sample=la2ni7(name="sample"), params=params)
+    def __init__(self, params: Params = DEFAULT_PARAMS, source_masked: bool = True) -> None:
+        super().__init__(sample=la2ni7(name="sample"), params=params, source_masked=source_masked)
         # after the sample: the beamstop monitor is the last one that counts
         del self.beamstop
         del self.banana_detector

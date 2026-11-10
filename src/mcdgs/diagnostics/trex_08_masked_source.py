@@ -245,14 +245,11 @@ def plot_sources(
     bins: Mapping[str, sc.Variable],
     runs: tuple[SourceRun, SourceRun],
     title: str,
-    peaks: list[float],
-    half_width: float = PEAK_HALF_WIDTH,
     log_y: bool = False,
 ) -> Figure:
     """Draw the wavelength spectrum and the time profile of both sources.
 
-    Each is summed over the other axis, with its error bars and the points joined by lines. The
-    window of each zoom of :func:`plot_peaks` is shaded on the profile.
+    Each is summed over the other axis, with its error bars and the points joined by lines.
 
     Parameters
     ----------
@@ -262,10 +259,6 @@ def plot_sources(
         The runs of both sources, plain then masked.
     title:
         The title of the figure.
-    peaks:
-        The times of the sub-pulses, from :func:`find_peaks`, in ms.
-    half_width:
-        The zooms show this much on each side of each peak, in ms.
     log_y:
         True puts the intensity on a log axis, ``LOG_DECADES`` deep, where the empty bins are
         left out. False, a linear one from 0.
@@ -299,15 +292,6 @@ def plot_sources(
                 linewidth=0.8,
                 elinewidth=0.8,
             )
-    for i, peak in enumerate(peaks):
-        profile_ax.axvspan(
-            peak - half_width,
-            peak + half_width,
-            color="0.5",
-            alpha=0.3,
-            linewidth=0,
-            label="Zoomed on" if i == 0 else None,
-        )
     spectrum_ax.set(xlabel="Wavelength [Å]", ylabel=f"Intensity [n/s per {wavelength_bin:.2g} Å]")
     profile_ax.set(xlabel="Time [ms]", ylabel=f"Intensity [n/s per {time_bin:.2g} ms]")
     for ax, highest in (
@@ -443,7 +427,6 @@ def main(
                 bins,
                 (plain, masked),
                 f"T-Rex flux at the sample monitor, {conditions}",
-                peaks,
                 log_y=log_y,
             ),
         )

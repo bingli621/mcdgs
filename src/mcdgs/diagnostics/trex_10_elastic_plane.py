@@ -96,13 +96,16 @@ class TRexWithLa2Ni7(TRex):
     ----------
     params:
         Control parameters.
+    source_masked:
+        As in :class:`.TRex`. True by default: the masked source of
+        :func:`.sources.masked_source` spends the rays where the choppers let neutrons through.
     """
 
     name = "trex_la2ni7"  # the McStas instrument name
 
-    def __init__(self, params: Params = DEFAULT_PARAMS) -> None:
+    def __init__(self, params: Params = DEFAULT_PARAMS, source_masked: bool = True) -> None:
         sample = la2ni7(name="sample", split=SAMPLE_SPLIT)
-        super().__init__(sample=sample, params=params)
+        super().__init__(sample=sample, params=params, source_masked=source_masked)
 
 
 def subpulse_timing(
@@ -392,7 +395,7 @@ def draw_plane(
     return fig
 
 
-def simulate(ncount: float = 1e10, seed: int = 1) -> tuple[Path, Path]:
+def simulate(ncount: float = 1e9, seed: int = 1) -> tuple[Path, Path]:
     """Run :class:`TRexWithLa2Ni7` in McStas, in two parts split at ``sample_pos``.
 
     The first part runs from the source to ``sample_pos`` into ``TO_SAMPLE``, with the monitors
@@ -403,8 +406,10 @@ def simulate(ncount: float = 1e10, seed: int = 1) -> tuple[Path, Path]:
     Parameters
     ----------
     ncount:
-        Number of McStas neutrons of the first part. The second part runs every neutron of the
-        beam file.
+        Number of McStas rays of the first part. With the masked source nearly every ray reaches
+        the sample: 1e8 rays leave about as many neutrons in the beam file as 1e10 of the plain
+        source, and 1e9 about ten times as many. The second part, and every angle of
+        :mod:`.trex_11_elastic_scan`, runs every neutron of the beam file.
     seed:
         Seed of the random numbers of the first part; the second part takes ``seed + 1``.
 
@@ -503,7 +508,7 @@ def analyze(
     return figure
 
 
-def main(out: Path | None = None, ncount: float = 1e10, seed: int = 1) -> Path:
+def main(out: Path | None = None, ncount: float = 1e9, seed: int = 1) -> Path:
     """Run McStas with :func:`simulate`, then reduce and draw it with :func:`analyze`.
 
     Parameters

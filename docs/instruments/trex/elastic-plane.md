@@ -12,7 +12,8 @@ own arc.
 
 `TRexWithLa2Ni7` is `TRex` with the crystal of `la2ni7` on `sample_pos`, with the beamstop and
 the banana detector. Its control parameters are the defaults: mode `"FF"`, `lambda0` = 2 Å and
-`rrm` = 18.
+`rrm` = 18. It has the [masked source](masked-source.md), which emits only the neutrons the
+choppers let through.
 
 | | |
 | - | - |
@@ -28,9 +29,11 @@ The guides and choppers take nearly all the time of a run, and they do not depen
 So `simulate` runs McStas in two parts, with `run_to_sample` and `run_from_sample` of
 [`Simulation`](../../how-to/run-a-simulation.md):
 
-1. **From the source to `sample_pos`**, with 1e10 neutrons: about 10 minutes on 18 cores. Its
-   folder holds the pre-sample and beamstop monitors, which come before `sample_pos` in beam
-   order, and the beam at `sample_pos`, a beam file of 566,050 neutrons.
+1. **From the source to `sample_pos`**, here with 1e8 rays: under half a minute. Its folder
+   holds the pre-sample and beamstop monitors, which come before `sample_pos` in beam order, and
+   the beam at `sample_pos`, a beam file of 496,089 neutrons. With the masked source nearly
+   every ray reaches the sample: the plain source took 1e10 rays, and about 10 minutes on
+   18 cores, for as many.
 2. **From that beam through the crystal to the detector**: about one second. It can run again,
    with another crystal or orientation, from the same beam.
 
@@ -96,12 +99,12 @@ the direct beam past the beamstop, and the neutrons the crystal scatters:
 
 | Sub-pulse | λi | Ei | Flux | Direct beam | Scattered |
 | --------- | -- | -- | ---- | ----------- | --------- |
-| 0 | 1.317 Å | 47.17 meV | 8.3e5 n/s | 0 | 0.15 % |
-| 1 | 1.418 Å | 40.72 meV | 2.0e6 n/s | 0 | 0.33 % |
-| 3 | 1.613 Å | 31.46 meV | 2.2e6 n/s | 0.22 % | 0.58 % |
-| 7 | 2.000 Å | 20.45 meV | 1.7e6 n/s | 8.8 % | 0.37 % |
-| 10 | 2.290 Å | 15.59 meV | 1.7e6 n/s | 19.6 % | 0.33 % |
-| 14 | 2.683 Å | 11.36 meV | 4.5e5 n/s | 35.6 % | 0.03 % |
+| 0 | 1.317 Å | 47.16 meV | 8.1e5 n/s | 0 | 0.12 % |
+| 1 | 1.418 Å | 40.70 meV | 2.0e6 n/s | 0 | 0.35 % |
+| 3 | 1.613 Å | 31.46 meV | 2.2e6 n/s | 0.24 % | 0.55 % |
+| 7 | 2.000 Å | 20.45 meV | 1.7e6 n/s | 8.9 % | 0.35 % |
+| 10 | 2.290 Å | 15.59 meV | 1.7e6 n/s | 19.7 % | 0.34 % |
+| 14 | 2.683 Å | 11.37 meV | 4.6e5 n/s | 36.3 % | 0.03 % |
 
 The direct beam past the beamstop grows with the wavelength: the guides pass the long
 wavelengths at larger angles, so their beam spreads more over the 3 m to the beamstop. The
@@ -109,17 +112,18 @@ crystal scatters 0.03 to 0.6 % of each sub-pulse into the detector.
 
 ## Making the figures
 
-The figure needs McStas, so it is not made with the site: `pixi run docs-diagnostics` makes it
-again, with the other files of the T-Rex pages. To make it yourself, run:
+The figure needs McStas, so it is not made with the site. To run McStas and make it, run:
+
+```bash
+pixi run python -c "from mcdgs.diagnostics.trex_10_elastic_plane import main; main()"
+```
+
+At its defaults, `main` runs both parts, 1e9 rays from the masked source with seed 1, about ten
+times the neutrons at the sample of the figure here, from 1e8 rays. It prints the sub-pulses and
+saves the figure next to the `mccode.h5` of the second part, or to the folder given as `out`.
+Running the module, as `pixi run docs-diagnostics` does, only reduces the runs again, without
+McStas:
 
 ```bash
 pixi run python -m mcdgs.diagnostics.trex_10_elastic_plane
-```
-
-At its defaults, `main` runs both parts, 1e10 neutrons from the source with seed 1, prints the
-sub-pulses and saves the figure next to the `mccode.h5` of the second part, or to the folder
-given with `--out`. To reduce the runs again without McStas:
-
-```bash
-pixi run python -c "from mcdgs.diagnostics.trex_10_elastic_plane import analyze; analyze()"
 ```

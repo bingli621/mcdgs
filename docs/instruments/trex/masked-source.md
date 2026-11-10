@@ -98,8 +98,6 @@ sources, with error bars. The same 15 sub-pulses arrive with both, 4.01 ms apart
 spectrum each is about 0.04 Å across, with a flat top. The masked source draws that shape
 smoothly, while the plain source scatters about it by up to half its height.
 
-The gray bands on the time profile are the windows of the zooms below.
-
 ### On a log scale
 
 ![The same, on a log intensity axis](figures/trex_masked_source_log.png)
