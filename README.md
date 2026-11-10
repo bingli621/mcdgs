@@ -35,7 +35,8 @@ src/mcdgs/
   mcstas/        build the McStasScript instrument, run simulations, read NeXus output
   tof/           the chopper cascade of an instrument: a tof model, scippneutron's disk
                  choppers and the acceptance diagram
-  reduction/     data reduction with scippneutron: the incident energy of a straight flight
+  reduction/     data reduction with scippneutron: the incident energy of the sub-pulses,
+                 the energy and momentum transfer of each neutron, the pixel solid angle
   diagnostics/   setups that study one part of an instrument, one module each, numbered per
                  instrument (trex_01_source, ...); each module with a main makes the files of
                  one page of the documentation
@@ -49,8 +50,9 @@ mcstas_output/   simulation results, a folder per run (git-ignored)
 
 Dependencies point inwards: `core` imports nothing from the other layers; `instruments` and
 `samples` build on it; `io`, `mcstas`, `tof` and `reduction` are adapters that work with any
-instrument. `diagnostics` builds on `instruments` and reads McStas and tof results, and nothing in
-`mcdgs` imports it.
+instrument. `io` imports `instruments` only so that a file can name any of them, and `reduction`
+imports nothing else from `mcdgs`. `diagnostics` builds on all of them, and nothing in `mcdgs`
+imports it.
 
 ## License
 
