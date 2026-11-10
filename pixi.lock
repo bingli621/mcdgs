@@ -405,7 +405,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/mcpl-core-2.2.8-pyh3697e0e_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/mcpl-python-2.2.8-pyh3697e0e_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/mcstas-data-3.10.2-h332efcf_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/mcstasscript-0.0.96-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/mcstasscript-0.0.97-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/mdit-py-plugins-0.6.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/mdurl-0.1.2-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/mistune-3.4.0-pyh5ded981_0.conda
@@ -622,7 +622,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/mcpl-core-2.2.8-pyh3697e0e_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/mcpl-python-2.2.8-pyh3697e0e_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/mcstas-data-3.10.2-h332efcf_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/mcstasscript-0.0.96-pyhd8ed1ab_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/mcstasscript-0.0.97-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/mdit-py-plugins-0.6.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/mdurl-0.1.2-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/mistune-3.4.0-pyh5ded981_0.conda
@@ -7860,9 +7860,9 @@ packages:
   run_exports: {}
   size: 48558322
   timestamp: 1793640530691
-- conda: https://conda.anaconda.org/conda-forge/noarch/mcstasscript-0.0.96-pyhd8ed1ab_0.conda
-  sha256: 673c3feb096170189be241ff62cf6efcdfc4571b9ee81bc24cc8e7e34b12c667
-  md5: 4b0b3f81445139f70a6b843886bd8f26
+- conda: https://conda.anaconda.org/conda-forge/noarch/mcstasscript-0.0.97-pyhd8ed1ab_0.conda
+  sha256: b25a04d1789e86cfea11f77741c9fba3d7f5d5350110b96283db26e2a543fabf
+  md5: 457344519384e9754f73b9a1743b0208
   depends:
   - h5py
   - ipympl
@@ -7877,8 +7877,8 @@ packages:
   purls:
   - pkg:pypi/mcstasscript?source=hash-mapping
   run_exports: {}
-  size: 4108616
-  timestamp: 1792663378016
+  size: 4083602
+  timestamp: 1794313815110
 - conda: https://conda.anaconda.org/conda-forge/noarch/mdit-py-plugins-0.6.1-pyhd8ed1ab_0.conda
   sha256: 49db23cbfb1c1d414a14d7540195208b994ebd747beba0f15c903f3a0a2dc446
   md5: ad6821df7a98510117db06e9a833281f
