@@ -54,7 +54,7 @@ delay = `t0_offset` + L × `lambda0` / 3956 m·Å/s − θ / (360° × ν),
 with L the flight path to the disk, ν its signed frequency and θ the angle the disk turns from
 its zero mark to put the slit of the mode on the beam. In `"RR"` θ is 0: a narrow slit is
 centered at `beam_angle` from the zero mark, so it is on the beam at the delay. In `"FF"` it is
-55° on the pulse-shaping choppers and 175° on the monochromatic choppers, the angle to their wide
+55° on the pulse-shaping choppers, 175° on `mc1` and 185° on `mc2`, the angle to their wide
 slits; the bandwidth choppers have one slit, at θ = 0 in both modes.
 
 | Chopper | Flight path L | λ0 arrives at | θ in `"FF"` | Delay |
@@ -64,7 +64,7 @@ slits; the bandwidth choppers have one slit, at θ = 0 in both modes.
 | `ps1` | 107.95 m | 56.275 ms | 55° | 55.467 ms |
 | `ps2` | 108.05 m | 56.325 ms | 55° | 57.134 ms |
 | `mc1` | 162.0275 m | 83.614 ms | 175° | 81.685 ms |
-| `mc2` | 162.0375 m | 83.619 ms | 175° | 81.690 ms |
+| `mc2` | 162.0375 m | 83.619 ms | 185° | 81.580 ms |
 
 The frequency of `ps2` is negative, so θ / (360° × ν) is too, and its delay comes after the
 arrival rather than before it. [Chopper timing](details.md#chopper-timing) gives where the flight
@@ -162,9 +162,12 @@ it, in turbo from the source to the last chopper:
 - The pulse-shaping choppers cut the band into slanted stripes, one per opening.
 - The monochromatic choppers keep short pieces of the stripes, in rows about 4 ms apart. The
   row from about 1 to 2.5 ms, within the pulse, gives the sub-pulses, about 0.1 Å apart, that
-  reach the sample. The row from about 4.5 to 6.5 ms catches the tail of the pulse: these are
-  the [weak patches](neutrons-on-sample.md#the-weak-patches) between the sub-pulses. The later
-  rows find hardly any neutrons to pass. `mc2` lies over `mc1`, which accepts almost the same.
+  reach the sample: there `mc2` lies over `mc1`, which accepts almost the same. In the row from
+  about 5 to 6.5 ms, the tail of the pulse, only `mc1` is drawn: its narrow slit is open, and
+  that of `mc2` is not, so nothing passes
+  (see [Between the sub-pulses](neutrons-on-sample.md#between-the-sub-pulses)). The later rows,
+  with both disks from about 9 ms and `mc1` alone from about 13 ms, find hardly any neutrons
+  to pass.
 
 The title is `trex.running_conditions()`: the mode, `lambda0`, `rrm` (RRM) and the signed
 frequencies of the pulse-shaping (PS) and monochromatic (MC) choppers.

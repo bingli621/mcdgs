@@ -28,9 +28,9 @@ it onto the Ewald spheres of the sub-pulses.
 `simulate` runs only the part from `sample_pos` to the detector, with `scan_from_sample` of
 [`Simulation`](../../how-to/run-a-simulation.md), once per angle and in parallel. Each angle
 starts from the beam file of [Elastic plane](elastic-plane.md#two-runs-split-at-the-sample), the
-4,965,069 neutrons at `sample_pos` from 1e9 rays of the masked source: the beam before the
-sample does not depend on the crystal. The 31 angles take about a minute on 18 cores, and
-about 3.2 GB, in one file with one entry per angle.
+6,629,716 neutrons at `sample_pos` from 1e9 rays of the masked source: the beam before the
+sample does not depend on the crystal. The 31 angles take about a minute and a half on
+18 cores, and about 4.5 GB, in one file with one entry per angle.
 
 ## The reduction
 
@@ -76,8 +76,7 @@ just inside the slice. Between the peaks is the incoherent scattering of the cry
 follows the detector around as the crystal turns. An elastic neutron has its Q on the circle of
 its sub-pulse, of radius ki through the origin, and the smallest ki is 2.34 Å⁻¹. The empty
 region near the origin lies inside that circle at every angle of the scan, so no elastic neutron
-reaches it; the arcs within it are those of the weak patches, as on
-[Elastic plane](elastic-plane.md#the-plane).
+reaches it.
 
 ## Making the figures
 

@@ -203,7 +203,7 @@ def find_peaks(
     """Find the sub-pulses in the time profile of a run.
 
     A sub-pulse is a run of time bins above ``threshold`` of the highest bin, with no gap
-    longer than ``gap`` between them: the weak patches between the sub-pulses stay below it.
+    longer than ``gap`` between them: any weak patch between the sub-pulses stays below it.
 
     Parameters
     ----------

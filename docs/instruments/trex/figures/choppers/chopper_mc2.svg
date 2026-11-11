@@ -4,15 +4,15 @@
     height="300"
     viewBox="0 0 300 300"
     xmlns="http://www.w3.org/2000/svg">
-<path d="M152.430 38.652 L152.117 52.968 A97.055 97.055 0 0 0 147.883 52.968 L147.570 38.652 A111.375 111.375 0 1 0 155.441 261.242 L154.741 246.939 A97.055 97.055 0 0 0 162.164 246.290 L163.959 260.497 A111.375 111.375 0 0 0 152.430 38.652" fill="#e0e0e0" stroke="#a0a0a0" stroke-width="2"/>
+<path d="M152.430 38.652 L152.117 52.968 A97.055 97.055 0 0 0 147.883 52.968 L147.570 38.652 A111.375 111.375 0 0 0 136.041 260.497 L137.836 246.290 A97.055 97.055 0 0 0 145.259 246.939 L144.559 261.242 A111.375 111.375 0 1 0 152.430 38.652" fill="#e0e0e0" stroke="#a0a0a0" stroke-width="2"/>
 <path d="M150 150 L152.117 52.968" stroke="#707070" stroke-width="2" stroke-dasharray="5,5"/>
 <text x="152.42963282072424" y="38.65150423397512" text-anchor="start" font-family="sans-serif" dominant-baseline="ideographic" fill="#707070">begin0</text>
 <path d="M150 150 L147.883 52.968" stroke="#707070" stroke-width="2" stroke-dasharray="5,5"/>
 <text x="147.57036717927576" y="38.65150423397512" text-anchor="end" font-family="sans-serif" dominant-baseline="ideographic" fill="#707070">end0</text>
-<path d="M150 150 L154.741 246.939" stroke="#707070" stroke-width="2" stroke-dasharray="5,5"/>
-<text x="155.44064311098643" y="261.24203354640224" text-anchor="start" font-family="sans-serif" dominant-baseline="ideographic" fill="#707070">begin1</text>
-<path d="M150 150 L162.164 246.290" stroke="#707070" stroke-width="2" stroke-dasharray="5,5"/>
-<text x="163.95898888822433" y="260.4967748588999" text-anchor="start" font-family="sans-serif" dominant-baseline="ideographic" fill="#707070">end1</text>
+<path d="M150 150 L137.836 246.290" stroke="#707070" stroke-width="2" stroke-dasharray="5,5"/>
+<text x="136.04101111177562" y="260.4967748588999" text-anchor="end" font-family="sans-serif" dominant-baseline="ideographic" fill="#707070">begin1</text>
+<path d="M150 150 L145.259 246.939" stroke="#707070" stroke-width="2" stroke-dasharray="5,5"/>
+<text x="144.55935688901354" y="261.2420335464022" text-anchor="end" font-family="sans-serif" dominant-baseline="ideographic" fill="#707070">end1</text>
 <path d="M150 150 L150.0 38.625" stroke="#0065ac" stroke-width="2" stroke-dasharray="5,5"/>
 <text x="150.0" y="27.625" text-anchor="middle" dominant-baseline="middle" font-family="sans-serif" fill="#0065ac">TDC</text>
 <g id="rotation-arrow" transform="matrix(0.75,0,0,0.75,0,20)">

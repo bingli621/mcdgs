@@ -31,9 +31,9 @@ So `simulate` runs McStas in two parts, with `run_to_sample` and `run_from_sampl
 
 1. **From the source to `sample_pos`**, here with 1e9 rays: about a minute and a half on
    18 cores. Its folder holds the pre-sample and beamstop monitors, which come before
-   `sample_pos` in beam order, and the beam at `sample_pos`, a beam file of 4,965,069 neutrons.
+   `sample_pos` in beam order, and the beam at `sample_pos`, a beam file of 6,629,716 neutrons.
    With the masked source nearly every ray reaches the sample: 1e10 rays of the plain source
-   took about 10 minutes, for a tenth as many.
+   took about 10 minutes, for less than a tenth as many.
 2. **From that beam through the crystal to the detector**: under ten seconds. It can run again,
    with another crystal or orientation, from the same beam.
 
@@ -85,11 +85,9 @@ the top.
   (−1 −1 l) and (−2 −1 l), at Qy = −0.22 and +0.39 Å⁻¹ in this orientation. Along each, a
   reflection lights up where the Ewald sphere of one sub-pulse crosses it: with 15 wavelengths,
   many l of each row are reached.
-- **The inner arcs.** The [weak patches](neutrons-on-sample.md#the-weak-patches) arrive 2.0 ms
-  after their sub-pulse. Above about 2.1 Å, that is within the window of the sub-pulse before
-  them, so the reduction gives them its Ei. Their elastic neutrons then look as if they had lost
-  about 0.8 of their energy: kf ≈ 0.46 ki, a circle of about half the radius. They are about
-  1e-4 of the intensity.
+- **Nothing inside the arcs.** No neutron arrives
+  [between the sub-pulses](neutrons-on-sample.md#between-the-sub-pulses), so every neutron on
+  the detector belongs to the window of its own sub-pulse.
 
 ## The sub-pulses
 
@@ -99,12 +97,12 @@ the direct beam past the beamstop, and the neutrons the crystal scatters:
 
 | Sub-pulse | λi | Ei | Flux | Direct beam | Scattered |
 | --------- | -- | -- | ---- | ----------- | --------- |
-| 0 | 1.317 Å | 47.17 meV | 8.2e5 n/s | 0 | 0.14 % |
+| 0 | 1.317 Å | 47.17 meV | 8.2e5 n/s | 0 | 0.13 % |
 | 1 | 1.418 Å | 40.71 meV | 2.0e6 n/s | 0 | 0.34 % |
-| 3 | 1.613 Å | 31.46 meV | 2.2e6 n/s | 0.23 % | 0.54 % |
-| 7 | 2.000 Å | 20.45 meV | 1.7e6 n/s | 8.8 % | 0.35 % |
+| 3 | 1.613 Å | 31.46 meV | 2.2e6 n/s | 0.24 % | 0.53 % |
+| 7 | 2.000 Å | 20.45 meV | 1.7e6 n/s | 8.9 % | 0.35 % |
 | 10 | 2.290 Å | 15.59 meV | 1.7e6 n/s | 19.8 % | 0.35 % |
-| 14 | 2.683 Å | 11.36 meV | 4.5e5 n/s | 36.3 % | 0.03 % |
+| 14 | 2.683 Å | 11.36 meV | 4.5e5 n/s | 36.0 % | 0.03 % |
 
 The direct beam past the beamstop grows with the wavelength: the guides pass the long
 wavelengths at larger angles, so their beam spreads more over the 3 m to the beamstop. The

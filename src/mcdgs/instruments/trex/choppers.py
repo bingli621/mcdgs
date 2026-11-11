@@ -54,14 +54,16 @@ MC_DISK_SPACING = 0.01  # FIXME, not in Table of Optics v3.2, in m
 # chopper_timings
 PSC_FREQUENCY_RATIO = 0.75
 
-# deg, opening and closing edge of each slit from the disk's zero mark
+# deg, opening and closing edge of each slit from the disk's zero mark. The wide slit of mc2 is
+# centered on 175, not on the 185 of mctrex: its narrow slit then comes by the beam 175 deg of
+# turn after the wide one, and that of mc1 185 deg after, so the two are never open together
 SLIT_EDGES = {
     "bw1": [-30.7, 30.7],
     "bw2": [-31.65, 31.65],
     "ps1": [-10, 10, 107.5, 142.5, 170, 190, 287.5, 322.5],
     "ps2": [-10, 10, 107.5, 142.5, 170, 190, 287.5, 322.5],
     "mc1": [178.75, 181.25, 362.8, 367.2],
-    "mc2": [-1.25, 1.25, 182.8, 187.2],
+    "mc2": [-1.25, 1.25, 172.8, 177.2],
 }
 
 # deg, where the beam crosses each disk from its zero mark: 0 puts the axle below the guide,

@@ -261,8 +261,8 @@ The disks of the pulse-shaping and monochromatic choppers have two kinds of slit
 neutron of wavelength `lambda0` arrives. In `"RR"` the narrow slit is centered on the beam then,
 so the delay is the arrival time. In `"FF"` the disk is phased to the wide slit instead: it has
 turned past its zero mark by the angle from the center of the wide slit to the beam, 55° for the
-pulse-shaping choppers and 175° for the monochromatic choppers. The model keeps the disks as they
-are and changes the delay, which is the same as shifting the slit edges.
+pulse-shaping choppers, 175° for `mc1` and 185° for `mc2`. The model keeps the disks as they are
+and changes the delay, which is the same as shifting the slit edges.
 [Choppers](choppers.md#delays) gives the delay of each disk at the default parameters.
 
 [Choppers](choppers.md) draws each disk and the acceptance diagram of the cascade, and

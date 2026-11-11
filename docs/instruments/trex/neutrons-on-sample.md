@@ -36,11 +36,11 @@ tuned so that both models have the same total there:
 
 ```text
 T = McStas total at the sample monitor / (tof neutrons at the sample monitor × scale)
-  = 2.497e7 n/s / (40,498 × 3.889e4 n/s) = 0.0159
+  = 2.496e7 n/s / (40,494 × 3.889e4 n/s) = 0.0159
 ```
 
-In McStas, 2.497e7 n/s reach the sample, 6.42e-5 of the beam that enters guide 1. In tof, whose
-choppers are the only thing in the way, 40,498 of 1e7 neutrons do, 4.05e-3. The guides from
+In McStas, 2.496e7 n/s reach the sample, 6.42e-5 of the beam that enters guide 1. In tof, whose
+choppers are the only thing in the way, 40,494 of 1e7 neutrons do, 4.05e-3. The guides from
 guide 1 to the sample thus pass 1.6 % of what the choppers let through.
 
 Each tof neutron at the sample stands for 3.889e4 × 0.0159 = 620 n/s, so tof cannot show
@@ -64,8 +64,8 @@ sub-pulses, each a short streak on the maps and a spike in the time profile.
 
 The same, on log scales: the maps three decades deep, in viridis with the empty bins in white,
 and the spectrum and the profile on a log intensity axis. It shows what is too weak for the
-linear figure: a second row of weak patches between the sub-pulses, and the sub-pulses at both
-ends of the band.
+linear figure, the sub-pulses at both ends of the band, and that nothing arrives between the
+sub-pulses.
 
 ### The patches
 
@@ -83,23 +83,21 @@ wavelengths, from the [table below](#arrival-windows-at-the-detector). A thin li
 is when its neutrons arrive if they fly through the sample without changing speed, the elastic
 neutrons: nearer the opening than the close, since a neutron that gains energy shortens its
 flight less than one that loses as much lengthens it. The sample monitor is at the sample, so
-each cross falls on its patch. The bands lie between the sub-pulses, and the weak patch after
-each sub-pulse sits about 2 ms after the cross, at a slightly shorter wavelength.
+each cross falls on its patch. The bands lie between the sub-pulses.
 
 ## What reaches the sample
 
 Every neutron's departure time from the moderator follows from its time of arrival t and
-wavelength λ: t − λ L / (3956 m·Å/s), with L = 163.8 m. The patches fall into three kinds:
+wavelength λ: t − λ L / (3956 m·Å/s), with L = 163.8 m. The patches fall into two kinds:
 
 | Kind | McStas | tof | Wavelength | Intensity of each | Left the moderator |
 | ---- | ------ | --- | ---------- | ----------------- | ------------------ |
 | Main sub-pulses | 13 | 13 | 1.42 to 2.58 Å | 1.4e6 to 2.4e6 n/s | at about 1.7 ms |
 | Sub-pulses at the band edges | 2 | 2, of 2 and 7 neutrons | 1.32 Å, 2.68 Å | 4.9e5 and 7.5e5 n/s | at about 1.7 ms |
-| Weak patches | 14 | 3, of 1 or 2 neutrons | 1.11 to 2.35 Å | 17 to 290 n/s | at about 5.1 ms |
 
 ### The main sub-pulses
 
-They hold 95 % of the beam at the sample, 2.37e7 of the 2.497e7 n/s, or 1.7e6 neutrons per pulse
+They hold 95 % of the beam at the sample, 2.37e7 of the 2.496e7 n/s, or 1.7e6 neutrons per pulse
 at 14 Hz.
 
 - **4.01 ms and 0.097 Å apart.** The monochromatic choppers open every 1/252 Hz = 3.97 ms, so the
@@ -133,18 +131,17 @@ each end, down to 1.3e3 n/s at 1.13 and 2.89 Å. They passed the upper corners o
 lay outside the bandwidth disks, unchopped. The window closes these corners, and the four
 sub-pulses are gone.
 
-### The weak patches
+### Between the sub-pulses
 
-Between each pair of main sub-pulses there is a weak patch, 2.0 ms later and 0.034 Å shorter in
-wavelength, with about 1e-4 of the intensity. Each monochromatic chopper has a second slit about
-185° from the first, so it opens again half a turn, 2.0 ms, after the main opening. The neutrons
-that pass it then left the moderator at about 5.1 ms, in the tail of the pulse, after the
-2.86 ms proton pulse. Few neutrons leave that late, so these patches are weak.
+Nothing arrives between the sub-pulses: both models have 15 patches, all of them sub-pulses.
 
-tof passes the same patches, but its run has too few neutrons for them: at 620 n/s per neutron,
-a patch of 100 to 300 n/s gets less than one. It finds three, of one or two neutrons, at the
-times and wavelengths of McStas, and shows nothing of their intensity. In the log figure they
-look stronger than in McStas only because one neutron is the least tof can show.
+Each monochromatic chopper has a second slit, the narrow one of `"RR"`, which comes by the beam
+about half a turn, 2 ms, after the wide slit that passes a sub-pulse. Neutrons that passed the
+narrow slits of both disks would have left the moderator late, in the tail of the pulse, and
+would arrive as weak patches between the sub-pulses. The two narrow slits are never on the beam
+together, though: that of `mc1` comes by 185° of turn after its wide slit, and that of `mc2`
+175° after, 0.11 ms earlier, while a narrow slit of 2.5° takes 0.03 ms to pass a point of the
+beam. What passes one disk is stopped by the other.
 
 ## Arrival windows at the detector
 
@@ -171,10 +168,7 @@ wavelength and 2.9 ms for the longest, since slower neutrons spread more over th
 windows do not overlap: the last column, from the close of one to the opening of the next, stays
 positive, though it shrinks with the wavelength. So every neutron the detector counts within a
 window belongs to one sub-pulse, of the main sub-pulses: tof has too few neutrons in those at
-the band edges for them to count. The [weak patches](#the-weak-patches) are not separated,
-though. Their elastic neutrons arrive 2.0 ms after those of the sub-pulse before them, which is
-after its window closes below about 2.1 Å, but before it closes above. There they pass for
-neutrons of that sub-pulse that lost about 0.8 of their energy.
+the band edges for them to count.
 
 ## Making the figures
 
@@ -187,4 +181,4 @@ pixi run python -m mcdgs.diagnostics.trex_07_neutrons_on_sample
 
 At its defaults, `main` runs 1e8 McStas neutrons and 1e7 tof neutrons, with seed 1, and saves the
 figures next to the `mccode.h5` of the McStas run, or to the folder given with `--out`. With fewer
-neutrons, the weak patches and the outer sub-pulses at the band edges fade into the noise.
+neutrons, the sub-pulses at the band edges fade into the noise.

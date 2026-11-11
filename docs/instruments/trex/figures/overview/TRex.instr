@@ -15,7 +15,7 @@
 * 
 * %Identification
 * Written by: Python McStas Instrument Generator
-* Date: 10:02:56 on November 09, 2026
+* Date: 15:14:20 on November 11, 2026
 * Origin: ESS DMSC
 * %INSTRUMENT_SITE: Generated_instruments
 * 
@@ -62,7 +62,7 @@ delay_ps2 = 0.05713376319781174, // delay of chopper ps2
 nu_mc1 = 252, // rotation frequency of chopper mc1
 delay_mc1 = 0.08168509645589636, // delay of chopper mc1
 nu_mc2 = 252, // rotation frequency of chopper mc2
-delay_mc2 = 0.0816901520241673 // delay of chopper mc2
+delay_mc2 = 0.08157992274727134 // delay of chopper mc2
 )
 
 DECLARE 
@@ -80,7 +80,7 @@ double bw2_slit_edges[2] = {-31.65,31.65};
 double ps1_slit_edges[8] = {-10,10,107.5,142.5,170,190,287.5,322.5};
 double ps2_slit_edges[8] = {-10,10,107.5,142.5,170,190,287.5,322.5};
 double mc1_slit_edges[4] = {178.75,181.25,362.8,367.2};
-double mc2_slit_edges[4] = {-1.25,1.25,182.8,187.2};
+double mc2_slit_edges[4] = {-1.25,1.25,172.8,177.2};
 %}
 
 INITIALIZE 

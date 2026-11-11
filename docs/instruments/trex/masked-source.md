@@ -26,7 +26,7 @@ coordinates are sampled uniformly and independently, this leaves the intensity u
 only the rays are spent differently.
 
 For T-Rex at its defaults (`lambda0` = 2 Å, `rrm` = 18, mode `"FF"`), the region is 42 polygons.
-Its acceptance is 0.0114: 1.1 % of the sampled plane can reach the sample.
+Its acceptance is 0.0069: 0.7 % of the sampled plane can reach the sample.
 
 ### The chopper train
 
@@ -79,13 +79,13 @@ monitor has finer bins than that of T-Rex, to show the shape of each sub-pulse:
 --8<-- "docs/instruments/trex/figures/masked-source/trex_masked_source.txt"
 
 - **The same intensity.** Both sources give the sample 2.5e7 n/s. The plain source has the total
-  of [Neutrons on sample](neutrons-on-sample.md#scale-and-transmission), 2.497e7 n/s, since it is
-  the same run. The masked source gives 1.5 % more, 0.6 times the error of the plain source.
-- **A tenth of the error.** From the same 1e8 rays, the plain source has an error of 2.4 % and the
-  masked source 0.24 %. The plain source would need about 1e10 rays to do as well.
+  of [Neutrons on sample](neutrons-on-sample.md#scale-and-transmission), 2.496e7 n/s, since it is
+  the same run. The masked source gives 2.0 % more, 0.8 times the error of the plain source.
+- **A twelfth of the error.** From the same 1e8 rays, the plain source has an error of 2.4 % and
+  the masked source 0.19 %. The plain source would need about 1.6e10 rays to do as well.
 - **No dearer per ray.** Both runs take about as long, 12 to 15 s here, which varies from run to
-  run. The figure of merit, one over the relative error squared times the time, is about 75 to 105
-  times higher with the masked source.
+  run. The figure of merit, one over the relative error squared times the time, is 137 times
+  higher with the masked source in this run.
 
 ## The figures
 
@@ -102,12 +102,10 @@ smoothly, while the plain source scatters about it by up to half its height.
 
 ![The same, on a log intensity axis](figures/masked-source/trex_masked_source_log.png)
 
-The same, on a log intensity axis six decades deep. It shows the weak patches of
-[Neutrons on sample](neutrons-on-sample.md#the-weak-patches), three to four decades below the
-sub-pulses: the masked source has them too, at the same times, wavelengths and intensities. They
-are neutrons that left the moderator late, in the tail of the pulse, and pass the second slit of
-the monochromatic choppers: the region includes them, since it holds every neutron the disks
-pass.
+The same, on a log intensity axis six decades deep. With either source, nothing arrives
+[between the sub-pulses](neutrons-on-sample.md#between-the-sub-pulses). The masked source also
+shows one more sub-pulse beyond each end of the band, at 1.21 and 2.79 Å, about two decades
+below the others: the plain source has too few rays there to show them.
 
 ### Every sub-pulse
 

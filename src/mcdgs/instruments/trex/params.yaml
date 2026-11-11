@@ -23,7 +23,7 @@ instr_params:
   nu_mc1: {value: 252, unit: Hz, comment: rotation frequency of chopper mc1}
   delay_mc1: {value: 0.08168509645589636, unit: s, comment: delay of chopper mc1}
   nu_mc2: {value: 252, unit: Hz, comment: rotation frequency of chopper mc2}
-  delay_mc2: {value: 0.0816901520241673, unit: s, comment: delay of chopper mc2}
+  delay_mc2: {value: 0.08157992274727134, unit: s, comment: delay of chopper mc2}
 origin:
   component: Progress_bar
   percent: 10
@@ -1783,7 +1783,7 @@ mc1:
   position: [0.816773471, 0.0, 162.024793805]
 mc2:
   component: NXdisk_chopper
-  slit_edges: [-1.25, 1.25, 182.8, 187.2]
+  slit_edges: [-1.25, 1.25, 172.8, 177.2]
   radius: 0.35
   yheight: 0.045
   xwidth: 0.022433235171385017

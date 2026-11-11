@@ -15,7 +15,7 @@ The choppers cut the beam into sub-pulses, a bin or two wide and about 4 ms apar
 :func:`.plot_comparison` draws both models twice, with the points of the wavelength spectrum and
 the time profile joined by lines: first all on linear scales, then all on log scales, the maps
 ``LOG_DECADES`` deep, so that the weak bins show too. :func:`.find_patches` finds the patches of
-each model, the sub-pulses and the weak ones between them, and :func:`plot_patches` draws the
+each model, the sub-pulses and any weak ones between them, and :func:`plot_patches` draws the
 center of mass of each in time and wavelength, with its width as error bars.
 
 :func:`subpulse_windows` reduces the tof run as :mod:`.trex_10_elastic_plane` reduces McStas:

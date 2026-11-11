@@ -51,7 +51,7 @@ blue, the beamstop monitor in orange, McStas as solid lines and tof as dashed on
 sub-pulse reaches the beamstop monitor 1.1 to 2.2 ms after the pre-sample monitor, the slower
 ones later.
 
-In McStas, the beamstop monitor counts 2.268e7 n/s, 10 % less than the 2.534e7 n/s at the
+In McStas, the beamstop monitor counts 2.277e7 n/s, 11 % less than the 2.546e7 n/s at the
 pre-sample monitor: the beam spreads over the 3.3 m, and part of it misses the 0.1 m monitor.
 tof has no divergence and counts all of it. This loss hardly changes Ei: with the plain source, a
 1 m × 1 m beamstop monitor, which catches the whole beam, moved Ei by at most 0.3 %, within the
@@ -65,8 +65,8 @@ scatter of the sub-pulses then.
 package, [`mcdgs.reduction.patches`](../../reference/reduction.md), as in
 [Neutrons on sample](neutrons-on-sample.md#the-patches): a patch is a run of time bins with
 neutrons, and its time is the mean time of its neutrons, weighted by the intensity. Patches with
-less than 2 % of the intensity of the strongest are left out: these are the weak patches between
-the sub-pulses.
+less than 2 % of the intensity of the strongest are left out, so that a weak patch between the
+sub-pulses, should a setting have one, does not count as a sub-pulse.
 
 The flight between the monitors, at most 2.2 ms, is shorter than the 4 ms between sub-pulses, so
 the n-th sub-pulse at the pre-sample monitor is the n-th at the beamstop monitor. If the two
@@ -161,21 +161,21 @@ values, in McStas:
 
 | Sub-pulse | At the pre-sample monitor | Between the monitors | λi | Ei between the monitors | Ei, pre-sample monitor alone | Ei from the mean λ |
 | --------- | ------------------------- | -------------------- | -- | ----------------------- | ---------------------------- | ------------------ |
-| 0 | 56.327 ms | 1.0983 ms | 1.317 Å | 47.163 meV (−0.14 %) | 46.824 meV (−0.86 %) | 47.231 meV |
-| 7 | 84.359 ms | 1.6678 ms | 2.000 Å | 20.453 meV (−0.11 %) | 20.451 meV (−0.11 %) | 20.474 meV |
-| 14 | 112.390 ms | 2.2371 ms | 2.683 Å | 11.367 meV (−0.07 %) | 11.404 meV (+0.26 %) | 11.374 meV |
+| 0 | 56.327 ms | 1.0983 ms | 1.317 Å | 47.158 meV (−0.16 %) | 46.824 meV (−0.87 %) | 47.234 meV |
+| 7 | 84.358 ms | 1.6678 ms | 2.000 Å | 20.452 meV (−0.11 %) | 20.451 meV (−0.11 %) | 20.474 meV |
+| 14 | 112.390 ms | 2.2373 ms | 2.683 Å | 11.365 meV (−0.10 %) | 11.404 meV (+0.24 %) | 11.377 meV |
 
 Over all sub-pulses, the difference from the reference is:
 
 | Method | McStas | tof |
 | ------ | ------ | --- |
-| Between the monitors | −0.14 to +0.10 % | −0.07 to +0.08 % |
-| Pre-sample monitor alone | −0.86 to +0.26 % | −0.41 to +0.15 % |
+| Between the monitors | −0.16 to +0.10 % | −0.07 to +0.08 % |
+| Pre-sample monitor alone | −0.87 to +0.24 % | −0.41 to +0.15 % |
 
 Between the monitors, both models agree with the reference to about 0.1 %, and with each other:
 in the bottom panel the points of McStas lie on those of tof, sub-pulse by sub-pulse. What is
 left, about ±0.1 % in both, comes from the method, not from the statistics of the run. The
-pre-sample monitor alone is worst for the fastest sub-pulse, −0.86 % in McStas: it assumes that every sub-pulse leaves the moderator at
+pre-sample monitor alone is worst for the fastest sub-pulse, −0.87 % in McStas: it assumes that every sub-pulse leaves the moderator at
 1.7 ms, and an error in that time weighs most where the flight is shortest. The flight between the
 monitors needs no such assumption, which is why two monitors are the usual way to measure Ei.
 
@@ -203,7 +203,7 @@ gives it to 0.1 %:
 | Time bins of both monitors | Between the monitors, McStas | Between the monitors, tof | Pre-sample monitor alone, McStas |
 | -------------------------- | ---------------------------- | ------------------------- | -------------------------------- |
 | 0.05 ms | −0.86 to +1.14 % | −0.03 to +0.14 % | −0.88 to +0.27 % |
-| 0.005 ms, the default | −0.14 to +0.10 % | −0.07 to +0.08 % | −0.86 to +0.26 % |
+| 0.005 ms, the default | −0.16 to +0.10 % | −0.07 to +0.08 % | −0.87 to +0.24 % |
 
 The pre-sample monitor alone hardly changes: over 83 ms, the bins are fine enough either way.
 The cost is ten times more time bins in each of the two maps, about 16,000 by 91 wavelengths.

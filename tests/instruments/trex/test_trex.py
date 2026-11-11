@@ -275,8 +275,9 @@ def test_in_rr_each_zero_mark_passes_the_beam_when_the_central_wavelength_arrive
 
 @pytest.mark.parametrize(
     ("mode", "angles"),
-    [  # FF: the shifts of the slit edges in trex_primary.txt's HF mode
-        ("FF", {"bw1": 0, "bw2": 0, "ps1": 55, "ps2": 55, "mc1": 175, "mc2": 175}),
+    [  # FF: the shifts of the slit edges in trex_primary.txt's HF mode, but for mc2: its wide
+        # slit is centered on 175 deg here, not on 185 deg, so it turns 185 deg to the beam
+        ("FF", {"bw1": 0, "bw2": 0, "ps1": 55, "ps2": 55, "mc1": 175, "mc2": 185}),
         ("RR", {"bw1": 0, "bw2": 0, "ps1": 0, "ps2": 0, "mc1": 0, "mc2": 0}),
     ],
 )

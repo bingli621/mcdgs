@@ -28,7 +28,7 @@ delay_ps2  0.0571338  s       delay of chopper ps2
 nu_mc1     252        Hz      rotation frequency of chopper mc1
 delay_mc1  0.0816851  s       delay of chopper mc1
 nu_mc2     252        Hz      rotation frequency of chopper mc2
-delay_mc2  0.0816902  s       delay of chopper mc2
+delay_mc2  0.0815799  s       delay of chopper mc2
 
 Components, in the order of the beam (m, deg):
 name                component       at                         rotated             relative            position
