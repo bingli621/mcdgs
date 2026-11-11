@@ -6,7 +6,7 @@ draws it: from above and along the beam. Both figures have the same scale on the
 
 ## Seen from above
 
-![T-Rex seen from above, z along the beam and x across it](figures/overview_top.png)
+![T-Rex seen from above, z along the beam and x across it](figures/overview/overview_top.png)
 
 z is along the beam and x across it (projection `zx`). The circle at the origin is the drawing
 of the source. The guides follow it in alternating colors up to `sample_pos`, 163.8 m along the
@@ -21,7 +21,7 @@ that run.
 
 ## From detector to source
 
-![T-Rex seen against the beam, x across it and y up](figures/overview_along_beam.png)
+![T-Rex seen against the beam, x across it and y up](figures/overview/overview_along_beam.png)
 
 x is across the beam and y up (projection `xy`), with the components drawn on top of each other
 and the view limited to x from −0.5 to 1.5 m and y from −1 to 1 m. It leaves out the source and

@@ -26,14 +26,14 @@ tof neutrons and seed 1.
 The rows are the beam after the source, after guide 3 and at the exit of guide 4b; the columns
 the beam profile, wavelength against x, and the spectrum.
 
-![Beam after the source, guide 3 and guide 4 with the bender in](figures/trex_extraction_bender_in_diagnose.png)
+![Beam after the source, guide 3 and guide 4 with the bender in](figures/extraction/trex_extraction_bender_in_diagnose.png)
 
 The top two rows are those without the bender. At the exit of guide 4b the thermal peak is mostly
 gone and the cold peak stays.
 
 ### Intensity along the guides
 
-![The components and the intensity before each, with the bender in](figures/trex_extraction_bender_in_intensity.png)
+![The components and the intensity before each, with the bender in](figures/extraction/trex_extraction_bender_in_intensity.png)
 
 | Lost in | Share | Intensity after it |
 | ------- | ----- | ------------------ |
@@ -53,7 +53,7 @@ the bender.
 1.03e11 n/s reach the monitor, against 1.47e11 n/s without the bender. tof is scaled as without
 the bender, with a `transmission` of 0.2.
 
-![McStas and tof at the beam monitor with the bender in](figures/trex_extraction_bender_in.png)
+![McStas and tof at the beam monitor with the bender in](figures/extraction/trex_extraction_bender_in.png)
 
 At the cold peak, 2.6 Å, McStas and tof agree, as without the bender, and above about 4 Å McStas
 is above tof. McStas has almost nothing below about 1.5 Å, and its time profile peaks about
@@ -101,7 +101,7 @@ relative errors of the two add in quadrature:
 ```
 <!-- fmt:on -->
 
-![Intensity at the beam monitor against the rotation of the bender, per wavelength band, over the intensity with the bender out](figures/bender_scan.png)
+![Intensity at the beam monitor against the rotation of the bender, per wavelength band, over the intensity with the bender out](figures/bender-scan/bender_scan.png)
 
 Each curve is one band, named in the legend by its center and half width. The first ten bands
 are solid lines and the next ones dash-dotted, in the same colors again. The dashed line at 1 is

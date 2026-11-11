@@ -20,8 +20,8 @@ pixi run docs-diagnostics       # remake the files of the site, then commit them
 
 The files the site includes, such as the table of the chopper modes, the McStas drawings of
 T-Rex and the figures of its diagnostics, are committed: the site does not make them.
-`docs-diagnostics` runs every diagnostics module and writes their files to
-`docs/instruments/trex/figures/`.
+`docs-diagnostics` runs every diagnostics module and writes the files of each to its own
+folder in `docs/instruments/trex/figures/`, such as `figures/source/`.
 
 ## Layout
 

@@ -5,12 +5,12 @@ This is the McStas instrument file the model generates, at the default
 `delay_<name>`, are the defaults of its instrument parameters.
 [`mcdgs.diagnostics.trex_00_overview`](../../reference/diagnostics.md) writes it to
 `mcstas_input/TRex/` and copies it here; `pixi run docs-diagnostics` runs it. The tests
-check that this copy matches the current code. [Download it](figures/TRex.instr), or expand it here:
+check that this copy matches the current code. [Download it](figures/overview/TRex.instr), or expand it here:
 
 ??? abstract "TRex.instr"
 
     ```c
-    --8<-- "docs/instruments/trex/figures/TRex.instr"
+    --8<-- "docs/instruments/trex/figures/overview/TRex.instr"
     ```
 
 ## How the components are placed
@@ -23,8 +23,8 @@ bispectral switch.
 [`mcdgs.diagnostics.trex_00_overview`](../../reference/diagnostics.md) draws it with the
 instrument file.
 
-![The legend of show_diagram(): the colors of the kinds of McStas component, the blue and red arrows, and the dashed box of a WHEN](figures/trex_diagram_legend.png)
+![The legend of show_diagram(): the colors of the kinds of McStas component, the blue and red arrows, and the dashed box of a WHEN](figures/overview/trex_diagram_legend.png)
 
 ??? abstract "show_diagram()"
 
-    ![McStasScript's diagram of the components of T-Rex and what each is placed relative to](figures/trex_diagram.png)
+    ![McStasScript's diagram of the components of T-Rex and what each is placed relative to](figures/overview/trex_diagram.png)

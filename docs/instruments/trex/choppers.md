@@ -101,15 +101,15 @@ In Jupyter, `get_choppers(trex)["ps1"]` shows the same drawing with a table of t
 
 | `bw1` | `bw2` |
 | :---: | :---: |
-| ![The disk of bw1](figures/chopper_bw1.svg) | ![The disk of bw2](figures/chopper_bw2.svg) |
+| ![The disk of bw1](figures/choppers/chopper_bw1.svg) | ![The disk of bw2](figures/choppers/chopper_bw2.svg) |
 
 | `ps1` | `ps2` |
 | :---: | :---: |
-| ![The disk of ps1](figures/chopper_ps1.svg) | ![The disk of ps2](figures/chopper_ps2.svg) |
+| ![The disk of ps1](figures/choppers/chopper_ps1.svg) | ![The disk of ps2](figures/choppers/chopper_ps2.svg) |
 
 | `mc1` | `mc2` |
 | :---: | :---: |
-| ![The disk of mc1](figures/chopper_mc1.svg) | ![The disk of mc2](figures/chopper_mc2.svg) |
+| ![The disk of mc1](figures/choppers/chopper_mc1.svg) | ![The disk of mc2](figures/choppers/chopper_mc2.svg) |
 
 Each disk is seen from the source, with its zero mark at the top (`TDC`, blue). The slits are
 cut out of the gray disk, with their edges labeled `begin` and `end`; the red line is where the
@@ -149,7 +149,7 @@ from mcdgs.tof.acceptance import acceptance_diagram
 ```
 <!-- fmt:on -->
 
-![The chopper acceptance diagram of T-Rex at the default parameters](figures/trex_acceptance.png)
+![The chopper acceptance diagram of T-Rex at the default parameters](figures/choppers/trex_acceptance.png)
 
 The diagram starts from a rectangle 15 ms long, over the band of the source, 1.095 to 2.905 Å,
 much longer than the 2.86 ms proton pulse, so that it also shows what the choppers would let

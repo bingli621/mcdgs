@@ -21,7 +21,7 @@ has a McStas `WHEN` on `bender_in`, and a run uses either guide 4a or the bender
 ```
 <!-- fmt:on -->
 
-![Extraction seen from above, z along the beam from the source to the entrance of guide 5, x across it](figures/trex_extraction_top.png)
+![Extraction seen from above, z along the beam from the source to the entrance of guide 5, x across it](figures/extraction/trex_extraction_top.png)
 
 The view is from above, as McStas draws it: z along the beam, from the source to the entrance of
 guide 5 at 5.916 m, and x across it, ±0.15 m. The two axes have different scales, so the
@@ -61,7 +61,7 @@ exit of guide 4 that of guide 4, ±30.1 mm.
 ```
 <!-- fmt:on -->
 
-![Beam after the source, guide 3 and guide 4 with the bender out](figures/trex_extraction_bender_out_diagnose.png)
+![Beam after the source, guide 3 and guide 4 with the bender out](figures/extraction/trex_extraction_bender_out_diagnose.png)
 
 After the source the two moderators are side by side: the thermal one at x < 0 with its peak near
 1.2 Å, the cold one at x > 0 with its peak near 2.6 Å. After guide 3 the two are mixed across the
@@ -88,7 +88,7 @@ on the axes it drew, and its `plt.show()` is held back so the figure can be save
 ```
 <!-- fmt:on -->
 
-![The components and the intensity before each, with the bender out](figures/trex_extraction_bender_out_intensity.png)
+![The components and the intensity before each, with the bender out](figures/extraction/trex_extraction_bender_out_intensity.png)
 
 | Lost in | Share | Intensity after it |
 | ------- | ----- | ------------------ |
@@ -135,7 +135,7 @@ monitor is passed on to the beam monitor:
 
 1.47e11 n/s reach the monitor:
 
-![McStas and tof at the beam monitor with the bender out](figures/trex_extraction_bender_out.png)
+![McStas and tof at the beam monitor with the bender out](figures/extraction/trex_extraction_bender_out.png)
 
 At the cold peak, 2.6 Å, McStas and tof agree: the guides pass about 0.2 of it. Above about 4 Å
 McStas is above tof, since the guides pass a long wavelength at a larger angle, so more of it

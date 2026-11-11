@@ -76,7 +76,7 @@ monitor has finer bins than that of T-Rex, to show the shape of each sub-pulse:
 
 ## The result
 
---8<-- "docs/instruments/trex/figures/trex_masked_source.txt"
+--8<-- "docs/instruments/trex/figures/masked-source/trex_masked_source.txt"
 
 - **The same intensity.** Both sources give the sample 2.5e7 n/s. The plain source has the total
   of [Neutrons on sample](neutrons-on-sample.md#scale-and-transmission), 2.497e7 n/s, since it is
@@ -91,7 +91,7 @@ monitor has finer bins than that of T-Rex, to show the shape of each sub-pulse:
 
 ### Spectrum and time profile
 
-![The wavelength spectrum and the time profile at the sample monitor, of both sources](figures/trex_masked_source.png)
+![The wavelength spectrum and the time profile at the sample monitor, of both sources](figures/masked-source/trex_masked_source.png)
 
 The wavelength spectrum, summed over time, and the time profile, summed over wavelength, of both
 sources, with error bars. The same 15 sub-pulses arrive with both, 4.01 ms apart. In the
@@ -100,7 +100,7 @@ smoothly, while the plain source scatters about it by up to half its height.
 
 ### On a log scale
 
-![The same, on a log intensity axis](figures/trex_masked_source_log.png)
+![The same, on a log intensity axis](figures/masked-source/trex_masked_source_log.png)
 
 The same, on a log intensity axis six decades deep. It shows the weak patches of
 [Neutrons on sample](neutrons-on-sample.md#the-weak-patches), three to four decades below the
@@ -111,7 +111,7 @@ pass.
 
 ### Every sub-pulse
 
-![The time profile around each of the 15 sub-pulses, of both sources](figures/trex_masked_source_peaks.png)
+![The time profile around each of the 15 sub-pulses, of both sources](figures/masked-source/trex_masked_source_peaks.png)
 
 The time profile around each sub-pulse, 0.1 ms on each side. `find_peaks` finds them in the
 profile of the masked source: runs of bins above 1 % of the highest bin, a gap of more than

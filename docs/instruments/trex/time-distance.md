@@ -28,14 +28,14 @@ below.
 
 The diagram below is at the default control parameters, with these settings:
 
---8<-- "docs/instruments/trex/figures/trex_time_distance_params.txt"
+--8<-- "docs/instruments/trex/figures/time-distance/trex_time_distance_params.txt"
 
 The band of the source follows from `lambda0` and `rrm`. The frequencies and delays of the
 choppers follow from the control parameters, as [Choppers](choppers.md) explains.
 
 ## The diagram
 
-![The time-distance diagram of T-Rex, two pulses at the default parameters](figures/trex_time_distance.png)
+![The time-distance diagram of T-Rex, two pulses at the default parameters](figures/time-distance/trex_time_distance.png)
 
 - **Colored lines** are neutrons that reach the banana detector, colored by wavelength.
 - **Gray lines** are neutrons that a chopper stops. Each one ends at the chopper that stops it.

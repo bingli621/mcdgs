@@ -130,7 +130,7 @@ McStas totals, the scale and the transmission, and saves `trex_beam_monitor.png`
 spectrum and the time profile of both, with their error bars. The legend gives the scale and the
 transmission of tof.
 
-![McStas and tof at the beam monitor after guide 4a: time and wavelength maps, the wavelength spectrum and the time profile](figures/trex_beam_monitor.png)
+![McStas and tof at the beam monitor after guide 4a: time and wavelength maps, the wavelength spectrum and the time profile](figures/beam-monitor/trex_beam_monitor.png)
 
 This is `main` at its defaults: 1e7 McStas neutrons, 1e6 tof neutrons and seed 1.
 

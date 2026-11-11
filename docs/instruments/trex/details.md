@@ -38,7 +38,7 @@ is `-`. `position` is where it ends up in the lab frame. Lengths are in m and an
 ???+ abstract "print(trex)"
 
     ```text
-    --8<-- "docs/instruments/trex/figures/trex_print.txt"
+    --8<-- "docs/instruments/trex/figures/overview/trex_print.txt"
     ```
 
 [`mcdgs.diagnostics.trex_00_overview`](../../reference/diagnostics.md) makes the printout, and

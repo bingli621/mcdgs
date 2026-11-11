@@ -68,7 +68,7 @@ bottom, which are furthest from the sample. Together they cover 2.09 sr, close t
 
 ## The plane
 
-![The intensity in (Qx, Qz) of the 15 sub-pulses, near the horizontal plane, on a log scale](figures/trex_elastic_plane.png)
+![The intensity in (Qx, Qz) of the 15 sub-pulses, near the horizontal plane, on a log scale](figures/elastic-plane/trex_elastic_plane.png)
 
 `plot_plane` keeps the neutrons near the horizontal plane, |Qy| < 0.5 Å⁻¹, sums them over Qy
 and draws them in (Qx, Qz). The detector also sees reflections well above and below the plane,

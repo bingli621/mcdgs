@@ -44,7 +44,7 @@ it.
 
 ## The direct beam at both monitors
 
-![The intensity at the pre-sample and beamstop monitors against time, in McStas and tof](figures/trex_determine_ei.png)
+![The intensity at the pre-sample and beamstop monitors against time, in McStas and tof](figures/incident-energy/trex_determine_ei.png)
 
 The intensity of both monitors against time, summed over wavelength: the pre-sample monitor in
 blue, the beamstop monitor in orange, McStas as solid lines and tof as dashed ones. Each
@@ -92,7 +92,7 @@ start to an end and gives its incident energy:
 with an arrow from each coordinate to the kernel that takes it. A dashed arrow gives a coordinate
 another name.
 
-![The graph of EI_GRAPH, drawn by sc.show_graph: start_position and end_position become source_position and position, which give Ltotal; time_at_start and time_at_end give tof; tof and Ltotal give incident_wavelength, which gives incident_energy](figures/trex_determine_ei_graph.svg)
+![The graph of EI_GRAPH, drawn by sc.show_graph: start_position and end_position become source_position and position, which give Ltotal; time_at_start and time_at_end give tof; tof and Ltotal give incident_wavelength, which gives incident_energy](figures/incident-energy/trex_determine_ei_graph.svg)
 
 Apart from `time_of_flight`, its kernels are scippneutron's:
 
@@ -147,7 +147,7 @@ This reference is what each method is checked against.
 
 ## The incident energy of each sub-pulse
 
-![The incident energy of each sub-pulse against its time at the pre-sample monitor, between the monitors and from the pre-sample monitor alone, in McStas and tof](figures/trex_determine_ei_values.png)
+![The incident energy of each sub-pulse against its time at the pre-sample monitor, between the monitors and from the pre-sample monitor alone, in McStas and tof](figures/incident-energy/trex_determine_ei_values.png)
 
 The top panel has Ei of each sub-pulse against its time at the pre-sample monitor: between the
 monitors in blue, from the pre-sample monitor alone in orange, McStas as filled circles and tof as

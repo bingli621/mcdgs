@@ -52,7 +52,7 @@ anything weaker than that.
 
 ### On linear scales
 
-![McStas and tof at the sample monitor, on linear scales: time and wavelength maps, the wavelength spectrum and the time profile](figures/trex_neutrons_on_sample.png)
+![McStas and tof at the sample monitor, on linear scales: time and wavelength maps, the wavelength spectrum and the time profile](figures/neutrons-on-sample/trex_neutrons_on_sample.png)
 
 The maps of both models on one linear color scale, then the wavelength spectrum and the time
 profile of both, with error bars and the points joined by lines. The neutrons arrive as a row of
@@ -60,7 +60,7 @@ sub-pulses, each a short streak on the maps and a spike in the time profile.
 
 ### On log scales
 
-![McStas and tof at the sample monitor, on log scales](figures/trex_neutrons_on_sample_log.png)
+![McStas and tof at the sample monitor, on log scales](figures/neutrons-on-sample/trex_neutrons_on_sample_log.png)
 
 The same, on log scales: the maps three decades deep, in viridis with the empty bins in white,
 and the spectrum and the profile on a log intensity axis. It shows what is too weak for the
@@ -69,7 +69,7 @@ ends of the band.
 
 ### The patches
 
-![The center of mass of each patch at the sample monitor, in time and wavelength, colored by intensity](figures/trex_neutrons_on_sample_patches.png)
+![The center of mass of each patch at the sample monitor, in time and wavelength, colored by intensity](figures/neutrons-on-sample/trex_neutrons_on_sample_patches.png)
 
 A patch is a run of time bins with neutrons; a gap of more than 1 ms starts the next one.
 `find_patches` gives the center of mass of each, its mean time and wavelength weighted by the
@@ -164,7 +164,7 @@ run with the same functions as the McStas data of La2Ni7, from the
    The elastic neutrons, E = 0, fly through the sample without changing speed, and arrive in
    between.
 
---8<-- "docs/instruments/trex/figures/trex_neutrons_on_sample_windows.txt"
+--8<-- "docs/instruments/trex/figures/neutrons-on-sample/trex_neutrons_on_sample_windows.txt"
 
 The times are from the start of the pulse. Each window is about 1.6 ms long for the shortest
 wavelength and 2.9 ms for the longest, since slower neutrons spread more over the 3 m. The

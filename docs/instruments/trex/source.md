@@ -180,7 +180,7 @@ with `--out`. Run as a module, it makes three figures: `trex_source_1e6.png`, th
   wavelength, of both models on the same axes, with their error bars. The legend gives the
   McStas `ncount`, the number of tof neutrons and the n/s that each of them stands for.
 
-![McStas and tof at the entrance of guide 1: time and wavelength maps, the wavelength spectrum and the time profile](figures/trex_source_1e6.png)
+![McStas and tof at the entrance of guide 1: time and wavelength maps, the wavelength spectrum and the time profile](figures/source/trex_source_1e6.png)
 
 This is `main` at its defaults: 1e6 McStas neutrons, 1e6 tof neutrons and seed 1. The total at
 the entrance of guide 1 is 8.46e11 n/s, so each tof neutron stands for 8.46e5 n/s. Both models
@@ -197,7 +197,7 @@ up to about 8 ms at 10 Å.
 The same run with 1e5 neutrons in both models, McStas `ncount` = 100,000 and 100,000 tof
 neutrons, seed 1:
 
-![McStas and tof at the entrance of guide 1, with 1e5 neutrons in both models](figures/trex_source_1e5.png)
+![McStas and tof at the entrance of guide 1, with 1e5 neutrons in both models](figures/source/trex_source_1e5.png)
 
 | | 1e6 neutrons | 1e5 neutrons |
 | --- | --- | --- |
@@ -244,7 +244,7 @@ sample within one period of the source, a band of 1.81 Å around `lambda0`. At i
 `lambda0` = 2 Å, that is 1.095 to 2.905 Å. The same run with that band, 1e6 neutrons in both
 models and seed 1:
 
-![McStas and tof at the entrance of guide 1, with the band of lambda0 = 2 Å](figures/trex_source_lambda0_2.png)
+![McStas and tof at the entrance of guide 1, with the band of lambda0 = 2 Å](figures/source/trex_source_lambda0_2.png)
 
 | | Widest band | Band of `lambda0` = 2 Å |
 | --- | --- | --- |

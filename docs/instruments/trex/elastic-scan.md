@@ -44,7 +44,7 @@ that frame go into one (Qx, Qz) map per angle, and the maps of all angles add up
 
 ## The map
 
-![The horizontal plane of reciprocal space of La2Ni7, adding one angle per frame from omega = −30° to 30°](figures/trex_elastic_scan.gif)
+![The horizontal plane of reciprocal space of La2Ni7, adding one angle per frame from omega = −30° to 30°](figures/elastic-scan/trex_elastic_scan.gif)
 
 `animate` builds the map up one angle per frame, with the angles summed so far in the title;
 the last frame is the whole scan. Qx is along (2 1 0) and Qz along (0 0 1). The crystal frame is
