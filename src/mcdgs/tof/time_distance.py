@@ -18,7 +18,7 @@ def time_distance_diagram(
     neutrons: int = 1_000_000,
     *,
     seed: int | None = None,
-    n_pulses: int | None = None,
+    n_pulses: int = 1,
     visible_rays: int = 2000,
     blocked_rays: int = 5000,
     figsize: tuple[float, float] = (10, 6),
@@ -39,8 +39,7 @@ def time_distance_diagram(
         Seed of the random numbers, of the source and of the choice of rays. If ``None``, every
         run differs.
     n_pulses:
-        Number of pulses, one source period apart. ``None`` takes the source's ``n_pulses``, at
-        least 1.
+        Number of pulses, one source period apart.
     visible_rays:
         Most rays drawn, per pulse, of the neutrons that reach the last detector.
     blocked_rays:

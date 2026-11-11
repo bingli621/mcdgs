@@ -68,7 +68,6 @@ def test_cascade_takes_the_times_and_pulses_given():
     assert any(s.time.min().value > 1 / 14 for s in frames.frames[-1].subframes)
 
 
-@pytest.mark.parametrize("kwargs", [{"time_min": 0.002, "time_max": 0.001}, {"n_pulses": 0}])
-def test_cascade_refuses_an_empty_pulse(kwargs):
+def test_cascade_refuses_an_empty_pulse():
     with pytest.raises(ValueError):
-        chopper_cascade(TRex(), **kwargs)
+        chopper_cascade(TRex(), time_min=0.002, time_max=0.001)

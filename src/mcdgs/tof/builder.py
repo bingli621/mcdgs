@@ -44,34 +44,6 @@ from mcdgs.core.utils import evaluate
 TOF_SOURCES = {"W7": "ess-trex", "W3": "ess-cspec"}
 
 
-def source_pulses(source: ESS_butterfly, n_pulses: int | None = None) -> int:
-    """Return the number of pulses of a source, as McStas takes it.
-
-    Parameters
-    ----------
-    source:
-        The moderator.
-    n_pulses:
-        The number of pulses. If ``None``, the moderator's ``n_pulses``, at least 1: McStas
-        takes 0 as 1.
-
-    Returns
-    -------
-    :
-        The number of pulses.
-
-    Raises
-    ------
-    ValueError
-        If ``n_pulses`` is below 1.
-    """
-    if n_pulses is None:
-        return max(source.n_pulses, 1)
-    if n_pulses < 1:
-        raise ValueError(f"n_pulses = {n_pulses}: there must be at least one pulse")
-    return n_pulses
-
-
 def disk_chopper(
     component: NXdisk_chopper, distance: float, params: Mapping[str, float]
 ) -> DiskChopper:
@@ -164,56 +136,12 @@ def get_choppers(instrument: Instrument) -> dict[str, DiskChopper]:
     }
 
 
-def _source(
-    component: ESS_butterfly,
-    params: Mapping[str, float],
-    neutrons: int,
-    seed: int | None,
-    n_pulses: int | None = None,
-) -> tof.Source:
-    """Return the tof source of the ESS butterfly moderator.
-
-    tof samples the pulse of the moderator's beam port, ``sector`` and ``beamline`` such as
-    ``"W7"``, if :data:`TOF_SOURCES` has it, else its standard ESS pulse, at the distance tof
-    sampled it at. ``cold_frac``, ``yheight``, the focusing and the performance factors are
-    not used.
-
-    Parameters
-    ----------
-    component:
-        The moderator.
-    params:
-        Instrument parameter values, for ``Lmin`` and ``Lmax`` given as expressions.
-    neutrons:
-        Number of neutrons per pulse.
-    seed:
-        Seed of the random numbers. If ``None``, every run differs.
-    n_pulses:
-        Number of pulses, as :func:`source_pulses`.
-
-    Returns
-    -------
-    :
-        The source, from ``Lmin`` to ``Lmax``, with ``n_pulses`` pulses at the moderator's
-        frequency.
-    """
-    return tof.Source(
-        facility=TOF_SOURCES.get(f"{component.sector}{component.beamline}", "ess"),
-        neutrons=neutrons,
-        pulses=source_pulses(component, n_pulses),
-        frequency=sc.scalar(float(component.frequency), unit="Hz"),
-        wmin=sc.scalar(float(evaluate(component.Lmin, params)), unit="angstrom"),
-        wmax=sc.scalar(float(evaluate(component.Lmax, params)), unit="angstrom"),
-        seed=seed,
-    )
-
-
 def build_tof(
     instrument: Instrument,
     *,
     neutrons: int = 1_000_000,
     seed: int | None = None,
-    n_pulses: int | None = None,
+    n_pulses: int = 1,
 ) -> tof.Model:
     """Build the tof model of an instrument.
 
@@ -226,7 +154,7 @@ def build_tof(
     seed:
         Seed of the random numbers of the source. If ``None``, every build differs.
     n_pulses:
-        Number of pulses of the source, as :func:`source_pulses`.
+        Number of pulses of the source, one source period apart.
 
     Returns
     -------
@@ -238,11 +166,23 @@ def build_tof(
     ------
     ValueError
         If the instrument has no ``ESS_butterfly`` or ``Polygon_ESS_butterfly``, or more than
-        one; if a chopper is parked; or if ``n_pulses`` is below 1.
+        one; or if a chopper is parked.
     """
     source, after_source = beamline(instrument)
     params = instrument.numeric_instr_params()
-    model = tof.Model(source=_source(source, params, neutrons, seed, n_pulses))
+    # the pulse of the moderator's beam port, else tof's standard ESS pulse, where tof sampled
+    # it. cold_frac, yheight, the focusing and the performance factors are not used
+    model = tof.Model(
+        source=tof.Source(
+            facility=TOF_SOURCES.get(f"{source.sector}{source.beamline}", "ess"),
+            neutrons=neutrons,
+            pulses=n_pulses,
+            frequency=sc.scalar(float(source.frequency), unit="Hz"),
+            wmin=sc.scalar(float(evaluate(source.Lmin, params)), unit="angstrom"),
+            wmax=sc.scalar(float(evaluate(source.Lmax, params)), unit="angstrom"),
+            seed=seed,
+        )
+    )
     for name, component, distance in after_source:
         match component:
             case NXdisk_chopper():

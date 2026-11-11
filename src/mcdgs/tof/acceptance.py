@@ -8,7 +8,7 @@ Copley, https://doi.org/10.1016/S0168-9002(03)01731-5).
 
 It takes the same choppers at the same distances as :func:`.build_tof`, through
 :func:`.get_choppers`. The pulse is a rectangle: from 0 to the source's pulse length, over the
-source's band, ``Lmin`` to ``Lmax``, and repeated for the source's ``n_pulses``, unless given.
+source's band, ``Lmin`` to ``Lmax``, unless given, and repeated for ``n_pulses``, 1 by default.
 Unlike tof it has no neutrons, so it is exact and fast, but it does not show the shape of the
 pulse.
 """
@@ -26,7 +26,7 @@ from scippneutron.tof.chopper_cascade import Chopper, FrameSequence
 from mcdgs.core.base import Instrument
 from mcdgs.core.utils import evaluate, speed_from_wavelength
 
-from .builder import beamline, get_choppers, source_pulses
+from .builder import beamline, get_choppers
 
 
 def chopper_cascade(
@@ -36,7 +36,7 @@ def chopper_cascade(
     wavelength_max: float | None = None,
     time_min: float | None = None,
     time_max: float | None = None,
-    n_pulses: int | None = None,
+    n_pulses: int = 1,
 ) -> tuple[FrameSequence, list[str]]:
     """Follow the pulse of an instrument through its choppers.
 
@@ -50,8 +50,7 @@ def chopper_cascade(
         Times at the source the pulse starts and ends, in s. ``None`` takes 0 or the source's
         ``pulse_length``.
     n_pulses:
-        Number of pulses, one source period apart. ``None`` takes the source's ``n_pulses``, at
-        least 1.
+        Number of pulses, one source period apart.
 
     Returns
     -------
@@ -63,8 +62,7 @@ def chopper_cascade(
     ------
     ValueError
         If the instrument has no ``ESS_butterfly`` or ``Polygon_ESS_butterfly``, or more than
-        one; if a chopper is parked; if the pulse ends before it starts; or if ``n_pulses`` is
-        below 1.
+        one; if a chopper is parked; or if the pulse ends before it starts.
     """
     source, _ = beamline(instrument)
     params = instrument.numeric_instr_params()
@@ -75,7 +73,6 @@ def chopper_cascade(
     t_max = source.pulse_length if time_max is None else float(time_max)
     if t_max <= t_min:
         raise ValueError(f"the pulse ends at {t_max} s, not after it starts at {t_min} s")
-    n_pulses = source_pulses(source, n_pulses)
 
     disks = get_choppers(instrument)
     # the slowest neutron of the last pulse passes the last chopper by this time, in s
@@ -144,7 +141,7 @@ def acceptance_diagram(
     wavelength_max: float | None = None,
     time_min: float | None = None,
     time_max: float | None = None,
-    n_pulses: int | None = None,
+    n_pulses: int = 1,
 ) -> Figure:
     """Draw the chopper acceptance diagram of an instrument.
 
@@ -163,8 +160,7 @@ def acceptance_diagram(
         Times at the source the pulse starts and ends, in s. ``None`` takes 0 or the source's
         ``pulse_length``.
     n_pulses:
-        Number of pulses, one source period apart. ``None`` takes the source's ``n_pulses``, at
-        least 1.
+        Number of pulses, one source period apart.
 
     Returns
     -------
@@ -175,8 +171,7 @@ def acceptance_diagram(
     ------
     ValueError
         If the instrument has no ``ESS_butterfly`` or ``Polygon_ESS_butterfly``, or more than
-        one; if a chopper is parked; if the pulse ends before it starts; or if ``n_pulses`` is
-        below 1.
+        one; if a chopper is parked; or if the pulse ends before it starts.
     """
     frames, names = chopper_cascade(
         instrument,

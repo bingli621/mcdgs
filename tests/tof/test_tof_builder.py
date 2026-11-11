@@ -48,8 +48,9 @@ class _Beamline(Instrument):
         return [InstrParam("lmin", 1.0, "Å", "shortest wavelength")]
 
 
-def test_source_takes_the_band_and_pulses_of_the_moderator():
-    model = build_tof(_Beamline(), neutrons=1000, seed=1)
+def test_source_takes_the_band_of_the_moderator_and_the_pulses_given():
+    assert build_tof(_Beamline(), neutrons=1000, seed=1).source.pulses == 1  # not the source's 2
+    model = build_tof(_Beamline(), neutrons=1000, seed=1, n_pulses=2)
     source = model.source
     assert source.pulses == 2
     assert source.neutrons == 1000
