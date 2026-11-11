@@ -1,9 +1,11 @@
 """Ready-made samples, for any instrument.
 
-Each function returns a :class:`.Single_crystal` with its own lattice, orientation, size and
-mosaic, and its CIF file (if any) in this folder. Placement is up to the caller: ``at``, and
-``relative`` to a component of the instrument, e.g. the goniometer's ``"gonio_phi"``. Keyword
-arguments set the crystal's other parameters or change the defaults, e.g.
+:func:`aluminum` and :func:`la2ni7` return a :class:`.Single_crystal` with its own lattice,
+orientation, size and mosaic, and its CIF file (if any) in this folder: they scatter
+elastically. :func:`lead` returns a :class:`.Phonon_simple`, which scatters from one phonon
+branch. Placement is up to the caller: ``at``, and ``relative`` to a component of the
+instrument, e.g. the goniometer's ``"gonio_phi"``. Keyword arguments set the sample's other
+parameters or change the defaults, e.g.
 ``la2ni7(name="sample", mosaic=60, relative="gonio_phi")``.
 
 ``reflections`` names a CIF file relative to this folder (``CIF_DIR`` in
@@ -23,9 +25,9 @@ To add a sample:
 
 from typing import Any
 
-from mcdgs.core.components import Single_crystal
+from mcdgs.core.components import Phonon_simple, Single_crystal
 
-__all__ = ["aluminum", "la2ni7"]
+__all__ = ["aluminum", "la2ni7", "lead"]
 
 # a 5 mm cube, single scattering only (much faster)
 SMALL_CUBE = {"xwidth": 0.005, "yheight": 0.005, "zdepth": 0.005, "order": 1}
@@ -86,6 +88,57 @@ def la2ni7(**params: Any) -> Single_crystal:
             "reflections": "La2Ni7.cif",
             **SMALL_CUBE,
             "mosaic": 30.0,
+            **params,
+        }
+    )
+
+
+# lead: the velocity of sound along a cubic axis, from the elastic constants and the density
+LEAD_DENSITY = 11340.0  # kg/m³
+LEAD_C11 = 49.5e9  # Pa, longitudinal along [1 0 0]
+LEAD_C44 = 14.9e9  # Pa, transverse along [1 0 0]
+MEV_ANGSTROM = 151.93  # m/s, 1 meV Å / hbar: a velocity of sound of 1 meV Å
+
+
+def lead(**params: Any) -> Phonon_simple:
+    """Create an fcc lead crystal that scatters from one phonon branch.
+
+    A cylinder 10 mm across and 10 mm high, at 300 K, with the cubic axes along the lab axes.
+    The branch is the longitudinal one along a cubic axis: its velocity of sound is
+    ``sqrt(C11 / density)`` = 2089 m/s, or 13.75 meV Å, so it reaches 11.1 meV. For the
+    transverse branch, ``sqrt(C44 / density)`` = 1146 m/s, give ``c=7.54``.
+
+    The model has forces between nearest neighbors only, so it follows lead at small ``q`` and
+    is too high towards the zone boundary, where lead's longitudinal branch stays below about
+    9 meV.
+
+    No focusing window is set: it depends on the instrument. Give the direction of the
+    detector from the sample and a window that covers it, e.g.
+    ``lead(target_z=1, focus_aw=60, focus_ah=10)`` for one straight ahead.
+
+    Parameters
+    ----------
+    **params:
+        Further ``Phonon_simple`` parameters, or changes to the defaults (e.g. ``name``,
+        ``at``, ``relative``, ``T``, ``c``, the focusing window).
+
+    Returns
+    -------
+    :
+        The sample.
+    """
+    return Phonon_simple(
+        **{
+            "radius": 0.005,
+            "yheight": 0.01,
+            "sigma_abs": 0.171,  # barns, at 2200 m/s
+            "sigma_inc": 0.0030,  # barns
+            "a": 4.9508,  # Å, at room temperature
+            "b": 9.405,  # fm
+            "M": 207.2,  # amu
+            "c": (LEAD_C11 / LEAD_DENSITY) ** 0.5 / MEV_ANGSTROM,  # 13.75 meV Å
+            "DW": 1.0,
+            "T": 300.0,
             **params,
         }
     )

@@ -4,9 +4,9 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from mcdgs.core.components import Single_crystal
+from mcdgs.core.components import Phonon_simple, Single_crystal
 from mcdgs.core.components.crystal import CIF_DIR
-from mcdgs.samples import aluminum, la2ni7
+from mcdgs.samples import aluminum, la2ni7, lead
 
 ALUMINUM = {  # the parameters of aluminum()
     "xwidth": 0.005, "yheight": 0.005, "zdepth": 0.005, "order": 1, "mosaic": 5.0,
@@ -85,3 +85,26 @@ def test_size_mosaic_and_order_default_to_mcstas():
     assert (crystal.xwidth, crystal.yheight, crystal.zdepth, crystal.mosaic, crystal.order) == (
         0, 0, 0, -1, 0,
     )  # fmt: skip
+
+
+def test_lead_is_a_phonon_sample_placed_like_any_component():
+    sample = lead(name="sample", at=[0, 0, 0.1], rotated=[0, 5, 0], relative="arm")
+    assert type(sample) is Phonon_simple
+    assert sample.name == "sample"
+    assert (sample.at, sample.rotated, sample.relative) == ([0, 0, 0.1], [0, 5, 0], "arm")
+    assert (lead().at, lead().relative) == ([0, 0, 0], None)
+
+
+def test_lead_has_the_lattice_the_atom_and_the_longitudinal_sound_velocity_of_lead():
+    sample = lead()
+    assert (sample.a, sample.b, sample.M) == (4.9508, 9.405, 207.2)
+    assert (sample.sigma_abs, sample.sigma_inc) == (0.171, 0.0030)
+    assert sample.c == pytest.approx(13.75, abs=0.005)  # 2089 m/s, in meV Å
+    assert sample.branch_maximum == pytest.approx(11.11, abs=0.005)  # meV
+
+
+def test_the_focusing_window_of_lead_is_given_by_the_caller():
+    assert (lead().focus_r, lead().focus_aw, lead().focus_ah, lead().target_index) == (0, 0, 0, 0)
+    sample = lead(target_index=2, focus_aw=60, focus_ah=10, c=7.54, T=100)
+    assert (sample.target_index, sample.focus_aw, sample.focus_ah) == (2, 60, 10)
+    assert (sample.c, sample.T) == (7.54, 100)

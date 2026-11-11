@@ -10,6 +10,7 @@ from mcdgs.core.components import (
     Guide_gravity,
     Monitor_nD,
     NXdisk_chopper,
+    Phonon_simple,
     Pol_bender,
     Polygon_ESS_butterfly,
     Progress_bar,
@@ -338,3 +339,36 @@ def test_the_chopper_counts_its_edges():
 def test_the_chopper_requires_its_edges():
     with pytest.raises(TypeError):
         NXdisk_chopper()
+
+
+PHONON = {  # what Phonon_simple requires, as in McStas
+    "radius": 0.005, "yheight": 0.01, "sigma_abs": 0.171, "sigma_inc": 0.003,
+    "a": 4.9508, "b": 9.405, "M": 207.2, "c": 13.75, "DW": 1.0, "T": 300.0,
+}  # fmt: skip
+
+
+def test_the_phonon_sample_defaults_are_those_of_mcstas():
+    assert Phonon_simple(**PHONON).mcstas_parameters() == PHONON | {
+        "target_x": 0,
+        "target_y": 0,
+        "target_z": 0,
+        "target_index": 0,
+        "focus_r": 0,
+        "focus_xw": 0,
+        "focus_yh": 0,
+        "focus_aw": 0,
+        "focus_ah": 0,
+        "gap": 0,
+        "e_steps_low": 50,
+        "e_steps_high": 50,
+    }
+
+
+@pytest.mark.parametrize("missing", sorted(PHONON))
+def test_the_phonon_sample_requires_what_mcstas_requires(missing):
+    with pytest.raises(TypeError):
+        Phonon_simple(**{k: v for k, v in PHONON.items() if k != missing})
+
+
+def test_the_phonon_branch_ends_at_four_times_the_sound_velocity_over_the_lattice_constant():
+    assert Phonon_simple(**PHONON).branch_maximum == pytest.approx(4 * 13.75 / 4.9508)

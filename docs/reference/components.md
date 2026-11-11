@@ -18,4 +18,6 @@ each one does.
 
 ::: mcdgs.core.components.crystal
 
+::: mcdgs.core.components.phonon
+
 ::: mcdgs.core.components.misc

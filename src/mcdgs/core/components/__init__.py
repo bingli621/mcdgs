@@ -17,6 +17,7 @@ from .masked_source import Polygon_ESS_butterfly
 from .misc import Arm, Progress_bar
 from .monitors import Monitor_nD
 from .optics import Beamstop, Guide_gravity, Pol_bender, Slit
+from .phonon import Phonon_simple
 from .source import ESS_butterfly
 
 __all__ = [
@@ -28,6 +29,7 @@ __all__ = [
     "Guide_gravity",
     "Monitor_nD",
     "NXdisk_chopper",
+    "Phonon_simple",
     "Pol_bender",
     "Polygon_ESS_butterfly",
     "Progress_bar",
