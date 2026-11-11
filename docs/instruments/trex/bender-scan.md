@@ -26,14 +26,14 @@ tof neutrons and seed 1.
 The rows are the beam after the source, after guide 3 and at the exit of guide 4b; the columns
 the beam profile, wavelength against x, and the spectrum.
 
-![Beam after the source, guide 3 and guide 4 with the bender in](figures/extraction/trex_extraction_bender_in_diagnose.png)
+![Beam after the source, guide 3 and guide 4 with the bender in](figures/bender-scan/trex_extraction_bender_in_diagnose.png)
 
 The top two rows are those without the bender. At the exit of guide 4b the thermal peak is mostly
 gone and the cold peak stays.
 
 ### Intensity along the guides
 
-![The components and the intensity before each, with the bender in](figures/extraction/trex_extraction_bender_in_intensity.png)
+![The components and the intensity before each, with the bender in](figures/bender-scan/trex_extraction_bender_in_intensity.png)
 
 | Lost in | Share | Intensity after it |
 | ------- | ----- | ------------------ |
@@ -53,7 +53,7 @@ the bender.
 1.03e11 n/s reach the monitor, against 1.47e11 n/s without the bender. tof is scaled as without
 the bender, with a `transmission` of 0.2.
 
-![McStas and tof at the beam monitor with the bender in](figures/extraction/trex_extraction_bender_in.png)
+![McStas and tof at the beam monitor with the bender in](figures/bender-scan/trex_extraction_bender_in.png)
 
 At the cold peak, 2.6 Å, McStas and tof agree, as without the bender, and above about 4 Å McStas
 is above tof. McStas has almost nothing below about 1.5 Å, and its time profile peaks about
