@@ -14,9 +14,10 @@ times, fewer than in :mod:`.trex_10_elastic_plane`, since every angle lists its 
 neutron and per steradian, with the sub-pulses of its run to the sample, turns the momentum
 transfer into the frame of the crystal, as it stands at ``omega`` = 0, and keeps the neutrons
 near the horizontal plane, ``|Qy| < QY_HALF_WIDTH``, in one (Qx, Qz) map per angle.
-:func:`analyze` draws them with :func:`animate`, as a GIF that adds one angle per frame, on
-the log color scale of :func:`.draw_plane`. :func:`main` is :func:`simulate`, then
-:func:`analyze`. Run the module for both::
+:func:`analyze` draws them with :func:`animate`, as a GIF that adds one angle per frame, and
+the whole scan, its last frame, with :func:`plot_scan`, both on the log color scale of
+:func:`.draw_plane`. :func:`main` is :func:`simulate`, then :func:`analyze`. Run the module
+for both::
 
     pixi run python -m mcdgs.diagnostics.trex_11_elastic_scan
 
@@ -33,11 +34,12 @@ import numpy as np
 import scipp as sc
 from matplotlib.animation import FuncAnimation, PillowWriter
 from matplotlib.artist import Artist
+from matplotlib.figure import Figure
 
 from mcdgs.core.components import Single_crystal
 from mcdgs.core.geometry import rotation
 from mcdgs.diagnostics import trex_10_elastic_plane as plane
-from mcdgs.diagnostics.cli import output_folder, parse_out
+from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
 from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
 from mcdgs.mcstas.nexus_io import numeric_parameters, read_events
 from mcdgs.mcstas.run_folders import default_output_dir
@@ -257,12 +259,48 @@ def crop(plane: sc.DataArray) -> sc.DataArray:
     return plane["Qz", rows[0] : rows[-1] + 1]["Qx", columns[0] : columns[-1] + 1]
 
 
+def angles_summed(omegas: np.ndarray, n: int) -> str:
+    """Describe the first ``n`` angles of a scan, such as in the title of their sum.
+
+    Examples
+    --------
+    >>> angles_summed(np.array([-30.0, -28.0, -26.0]), 2)
+    'omega from -30.0° to -28.0°, 2 angles summed'
+    """
+    return f"omega from {omegas[0]:+.1f}° to {omegas[n - 1]:+.1f}°, {n} angles summed"
+
+
+def plot_scan(maps: sc.DataArray, title: str) -> Figure:
+    """Draw the whole scan: the sum of the maps of every angle, as :func:`.draw_plane`.
+
+    Parameters
+    ----------
+    maps:
+        The maps of :func:`reduce_angles`, along ``omega``, in the order of the scan.
+    title:
+        The title of the figure; the angles summed are added below it.
+
+    Returns
+    -------
+    :
+        The figure, Qx along ``IN_PLANE`` and Qz along (0 0 1).
+    """
+    hkl = " ".join(str(i) for i in IN_PLANE)
+    omegas = maps.coords["omega"].to(unit="deg").values
+    return plane.draw_plane(
+        maps.sum("omega"),
+        f"{title}\n{angles_summed(omegas, len(omegas))}",
+        xlabel=f"Qx [1/Å], along ({hkl})",
+        ylabel="Qz [1/Å], along (0 0 1)",
+    )
+
+
 def animate(maps: sc.DataArray, path: Path, title: str, fps: int = FRAMES_PER_SECOND) -> Path:
     """Save the scan as a GIF that adds one angle per frame, with the angles so far in its title.
 
     Frame ``n`` is the sum of the maps of the first ``n + 1`` angles, so the map fills in as the
-    crystal turns, and the last frame is the whole scan. Every frame has the color scale of
-    :func:`.draw_plane` of that last frame, so that the frames compare.
+    crystal turns, and the last frame is the whole scan, :func:`plot_scan`. Every frame has
+    its color scale, so that the frames compare.
 
     Parameters
     ----------
@@ -280,28 +318,15 @@ def animate(maps: sc.DataArray, path: Path, title: str, fps: int = FRAMES_PER_SE
     :
         ``path``.
     """
-    hkl = " ".join(str(i) for i in IN_PLANE)
     omegas = maps.coords["omega"].to(unit="deg").values
     values = maps.transpose(["omega", "Qz", "Qx"]).values
     summed = np.cumsum(values, axis=0)  # frame n: the angles up to n
-    total = maps.sum("omega")
-    vmax = plane.beyond_direct_beam_max(total)
-
-    def angles(n: int) -> str:
-        return f"omega from {omegas[0]:+.1f}° to {omegas[n]:+.1f}°, {n + 1} angles summed"
-
-    fig = plane.draw_plane(
-        total,
-        f"{title}\n{angles(0)}",
-        xlabel=f"Qx [1/Å], along ({hkl})",
-        ylabel="Qz [1/Å], along (0 0 1)",
-        vmax=vmax,
-    )
+    fig = plot_scan(maps, title)  # the axes and the color scale of the whole scan
     (mesh,) = fig.axes[0].collections
 
     def frame(n: int) -> list[Artist]:
         mesh.set_array(np.ma.masked_less_equal(summed[n], 0))
-        fig.suptitle(f"{title}\n{angles(n)}")
+        fig.suptitle(f"{title}\n{angles_summed(omegas, n + 1)}")
         return [mesh]
 
     animation = FuncAnimation(fig, frame, frames=len(omegas))
@@ -314,23 +339,24 @@ def analyze(
     out: Path | None = None,
     scan: str | Path | None = None,
     to_sample: str | Path | None = None,
-) -> Path:
-    """Reduce a scan and save it as ``trex_elastic_scan.gif``, from :func:`animate`.
+) -> list[Path]:
+    """Reduce a scan and save it as ``trex_elastic_scan.gif`` and ``trex_elastic_scan.png``.
 
-    The GIF adds one angle per frame, so its last frame is the whole scan. It runs no McStas,
-    so it can run again on the same scan.
+    The GIF, from :func:`animate`, adds one angle per frame; the figure, from
+    :func:`plot_scan`, is its last frame, the whole scan. It runs no McStas, so it can run
+    again on the same scan.
 
     Parameters
     ----------
     out:
-        Folder of the GIF. If ``None``, the scan folder.
+        Folder of the files. If ``None``, the scan folder.
     scan, to_sample:
         As :func:`reduce_angles`.
 
     Returns
     -------
     :
-        The path of the GIF.
+        The paths of the GIF and of the figure.
     """
     scan = Path(scan or default_output_dir() / SCAN)
     maps = crop(reduce_angles(scan, to_sample))
@@ -339,12 +365,13 @@ def analyze(
         f"T-Rex, La2Ni7 ({hkl}) in plane\n{TRexWithRotatingLa2Ni7().running_conditions()}\n"
         f"|Qy| < {QY_HALF_WIDTH:g} 1/Å, in the frame of the crystal at omega = 0"
     )
-    gif = animate(maps, output_folder(out, scan) / f"{NAME}.gif", title)
+    folder = output_folder(out, scan)
+    gif = animate(maps, folder / f"{NAME}.gif", title)
     print(f"Saved {gif}")
-    return gif
+    return [gif, save_figure(plot_scan(maps, title), folder / f"{NAME}.png")]
 
 
-def main(out: Path | None = None) -> Path:
+def main(out: Path | None = None) -> list[Path]:
     """Run the scan with :func:`simulate`, then reduce and draw it with :func:`analyze`.
 
     The beam file must exist: run :mod:`.trex_10_elastic_plane` first.
@@ -352,12 +379,12 @@ def main(out: Path | None = None) -> Path:
     Parameters
     ----------
     out:
-        Folder of the GIF, as :func:`analyze`.
+        Folder of the files, as :func:`analyze`.
 
     Returns
     -------
     :
-        The path of the GIF.
+        The paths of the GIF and of the figure.
     """
     return analyze(out, simulate())
 

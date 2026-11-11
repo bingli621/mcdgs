@@ -54,6 +54,10 @@ appears as that region passes it. The color scale is that of
 highest bin beyond the direct beam, here of the whole scan for every frame, so the map grows
 brighter as the angles add up.
 
+`plot_scan` draws the whole scan, the last frame of the GIF, as a figure of its own:
+
+![The horizontal plane of reciprocal space of La2Ni7, the 31 angles from omega = −30° to 30° summed](figures/elastic-scan/trex_elastic_scan.png)
+
 The Bragg peaks line up in rows along c*. Each row is the reflections (h k l) of one h and k,
 all l, whose in-plane part lies within the slice of Qy:
 
@@ -75,18 +79,18 @@ region near the origin lies inside that circle at every angle of the scan, so no
 reaches it; the arcs within it are those of the weak patches, as on
 [Elastic plane](elastic-plane.md#the-plane).
 
-## Making the GIF
+## Making the figures
 
-The GIF needs McStas, so it is not made with the site: `pixi run docs-diagnostics` makes it
-again, with the other files of the T-Rex pages. The scan starts from the beam file of
-[Elastic plane](elastic-plane.md), so run that first. Then:
+The GIF and the figure need McStas, so they are not made with the site: `pixi run
+docs-diagnostics` makes them again, with the other files of the T-Rex pages. The scan starts
+from the beam file of [Elastic plane](elastic-plane.md), so run that first. Then:
 
 ```bash
 pixi run python -m mcdgs.diagnostics.trex_11_elastic_scan
 ```
 
-`main` runs the 31 angles, then saves the GIF in the scan folder, or in the folder given with
-`--out`. To reduce the scan again without McStas:
+`main` runs the 31 angles, then saves the GIF and the figure in the scan folder, or in the
+folder given with `--out`. To reduce the scan again without McStas:
 
 ```bash
 pixi run python -c "from mcdgs.diagnostics.trex_11_elastic_scan import analyze; analyze()"
