@@ -17,27 +17,27 @@ documentation. See [Source](../instruments/trex/source.md),
 
 ::: mcdgs.diagnostics.cli
 
-::: mcdgs.diagnostics.trex_00_overview
+::: mcdgs.diagnostics.trex.overview
 
-::: mcdgs.diagnostics.trex_01_source
+::: mcdgs.diagnostics.trex.source
 
-::: mcdgs.diagnostics.trex_02_extraction
+::: mcdgs.diagnostics.trex.extraction
 
-::: mcdgs.diagnostics.trex_03_bender_scan
+::: mcdgs.diagnostics.trex.bender_scan
 
-::: mcdgs.diagnostics.trex_04_beam_monitor
+::: mcdgs.diagnostics.trex.beam_monitor
 
-::: mcdgs.diagnostics.trex_05_choppers
+::: mcdgs.diagnostics.trex.choppers
 
-::: mcdgs.diagnostics.trex_06_time_distance_diagram
+::: mcdgs.diagnostics.trex.time_distance
 
-::: mcdgs.diagnostics.trex_07_neutrons_on_sample
+::: mcdgs.diagnostics.trex.neutrons_on_sample
 
-::: mcdgs.diagnostics.trex_08_masked_source
+::: mcdgs.diagnostics.trex.masked_source
 
-::: mcdgs.diagnostics.trex_09_determine_ei
+::: mcdgs.diagnostics.trex.incident_energy
 
-::: mcdgs.diagnostics.trex_10_elastic_plane
+::: mcdgs.diagnostics.trex.elastic_plane
 
-::: mcdgs.diagnostics.trex_11_elastic_scan
+::: mcdgs.diagnostics.trex.elastic_scan
 

@@ -8,7 +8,7 @@
 
 It needs only mcdgs and scippneutron. Run the module for them::
 
-    pixi run python -m mcdgs.diagnostics.trex_05_choppers --out docs/instruments/trex/figures/choppers
+    pixi run python -m mcdgs.diagnostics.trex.choppers --out docs/instruments/trex/figures/choppers
 """
 
 from pathlib import Path

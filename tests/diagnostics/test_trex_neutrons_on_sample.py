@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from mcdgs.diagnostics.trex_07_neutrons_on_sample import (
+from mcdgs.diagnostics.trex.neutrons_on_sample import (
     TRexToSample,
     subpulse_windows,
     windows_table,

@@ -2,8 +2,8 @@ import matplotlib
 
 matplotlib.use("Agg")
 
-from mcdgs.diagnostics.trex_00_overview import write_printout
-from mcdgs.diagnostics.trex_05_choppers import main
+from mcdgs.diagnostics.trex.choppers import main
+from mcdgs.diagnostics.trex.overview import write_printout
 from mcdgs.instruments.trex.model import TRex
 
 

@@ -5,7 +5,7 @@ source, `ESS_butterfly`, spends the other 99 % of its rays on neutrons that a ch
 before the sample. The masked source, `Polygon_ESS_butterfly`, emits only the neutrons the
 choppers can let through, so nearly every ray it draws reaches the sample.
 
-[`mcdgs.diagnostics.trex_08_masked_source`](https://github.com/bingli621/mcdgs/blob/main/src/mcdgs/diagnostics/trex_08_masked_source.py)
+[`mcdgs.diagnostics.trex.masked_source`](https://github.com/bingli621/mcdgs/blob/main/src/mcdgs/diagnostics/trex/masked_source.py)
 runs T-Rex with each source, with the same number of rays, and compares what reaches the sample.
 Both give the same intensity, but the masked source's error is ten times smaller.
 
@@ -123,7 +123,7 @@ The figures need McStas, so they are not made with the site: `pixi run docs-diag
 them again, with the other files of the T-Rex pages. To make them yourself, run:
 
 ```bash
-pixi run python -m mcdgs.diagnostics.trex_08_masked_source
+pixi run python -m mcdgs.diagnostics.trex.masked_source
 ```
 
 At its defaults, `main` runs 1e8 rays with each source, with seed 1, and saves the figures and

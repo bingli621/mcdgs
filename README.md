@@ -37,9 +37,9 @@ src/mcdgs/
                  choppers and the acceptance diagram
   reduction/     data reduction with scippneutron: the incident energy of the sub-pulses,
                  the energy and momentum transfer of each neutron, the pixel solid angle
-  diagnostics/   setups that study one part of an instrument, one module each, numbered per
-                 instrument (trex_01_source, ...); each module with a main makes the files of
-                 one page of the documentation
+  diagnostics/   setups that study one part of an instrument, one module each, in a folder
+                 per instrument (trex/source.py, ...); each module with a main makes the
+                 files of one page of the documentation
 scripts/         build tooling of the documentation site, and the pixi activation that
                  registers the plugins of graphviz
 tests/

@@ -1,7 +1,7 @@
 # Extraction guides
 
 `Extraction`, in
-[`mcdgs.diagnostics.trex_02_extraction`](https://github.com/bingli621/mcdgs/blob/main/src/mcdgs/diagnostics/trex_02_extraction.py),
+[`mcdgs.diagnostics.trex.extraction`](https://github.com/bingli621/mcdgs/blob/main/src/mcdgs/diagnostics/trex/extraction.py),
 is T-Rex up to the beam monitor after guide 4: the source, the
 [extraction guides](details.md#extraction-guides) 1 to 3, and guide 4 with its
 [two paths](details.md#two-paths-through-guide-4), the thermal guide 4a with the bender out and
@@ -17,7 +17,7 @@ has a McStas `WHEN` on `bender_in`, and a run uses either guide 4a or the bender
 
 <!-- fmt:off -->
 ```python
---8<-- "src/mcdgs/diagnostics/trex_02_extraction.py:extraction"
+--8<-- "src/mcdgs/diagnostics/trex/extraction.py:extraction"
 ```
 <!-- fmt:on -->
 
@@ -57,7 +57,7 @@ exit of guide 4 that of guide 4, ±30.1 mm.
 
 <!-- fmt:off -->
 ```python
---8<-- "src/mcdgs/diagnostics/trex_02_extraction.py:diagnostics"
+--8<-- "src/mcdgs/diagnostics/trex/extraction.py:diagnostics"
 ```
 <!-- fmt:on -->
 
@@ -84,7 +84,7 @@ on the axes it drew, and its `plt.show()` is held back so the figure can be save
 
 <!-- fmt:off -->
 ```python
---8<-- "src/mcdgs/diagnostics/trex_02_extraction.py:diagram"
+--8<-- "src/mcdgs/diagnostics/trex/extraction.py:diagram"
 ```
 <!-- fmt:on -->
 
@@ -129,7 +129,7 @@ monitor is passed on to the beam monitor:
 
 <!-- fmt:off -->
 ```python
---8<-- "src/mcdgs/diagnostics/trex_02_extraction.py:scale_tof"
+--8<-- "src/mcdgs/diagnostics/trex/extraction.py:scale_tof"
 ```
 <!-- fmt:on -->
 
@@ -148,7 +148,7 @@ The figures need McStas, so they are not made with the site: `pixi run docs-diag
 them again, with the other files of the T-Rex pages. To make them yourself, run:
 
 ```bash
-pixi run python -m mcdgs.diagnostics.trex_02_extraction
+pixi run python -m mcdgs.diagnostics.trex.extraction
 ```
 
 The view from above goes to `mcstas_input/trex_extraction/`, next to the instrument file, and
@@ -161,5 +161,5 @@ take about a minute on 8 cores. Call `main` with
 other numbers for finer or faster figures:
 
 ```bash
-pixi run python -c "from mcdgs.diagnostics.trex_02_extraction import main; main(ncount=1e6)"
+pixi run python -c "from mcdgs.diagnostics.trex.extraction import main; main(ncount=1e6)"
 ```

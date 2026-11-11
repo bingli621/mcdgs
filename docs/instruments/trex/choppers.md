@@ -84,7 +84,7 @@ from mcdgs.instruments.trex.model import TRex
 from mcdgs.tof.builder import get_choppers
 
 folder = Path(".")  # where the pictures go
---8<-- "src/mcdgs/diagnostics/trex_05_choppers.py:draw_choppers"
+--8<-- "src/mcdgs/diagnostics/trex/choppers.py:draw_choppers"
 ```
 <!-- fmt:on -->
 
@@ -145,7 +145,7 @@ problem with direct geometry neutron chopper spectrometers](https://doi.org/10.1
 ```python
 from mcdgs.tof.acceptance import acceptance_diagram
 
---8<-- "src/mcdgs/diagnostics/trex_05_choppers.py:acceptance"
+--8<-- "src/mcdgs/diagnostics/trex/choppers.py:acceptance"
 ```
 <!-- fmt:on -->
 
@@ -181,5 +181,5 @@ acceptance_diagram(trex, time_min=0, time_max=0.005, n_pulses=2)  # two pulses, 
 Unlike [tof](../../how-to/simulate-the-choppers-with-tof.md), the diagram follows no neutrons:
 it is exact and fast, but the pulse is a rectangle, not the shape of the ESS pulse.
 
-[`mcdgs.diagnostics.trex_05_choppers`](../../reference/diagnostics.md) makes the pictures and
+[`mcdgs.diagnostics.trex.choppers`](../../reference/diagnostics.md) makes the pictures and
 the diagram, and `pixi run docs-diagnostics` runs it.

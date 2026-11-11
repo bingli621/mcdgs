@@ -21,7 +21,7 @@ tof at the source monitor, tunes the transmission at the beam monitor, and
 :func:`.plot_comparison` draws them side by side. It also prints the count rates of the flux and
 of a monitor with ε = C λ. Run the module to do it::
 
-    pixi run python -m mcdgs.diagnostics.trex_04_beam_monitor
+    pixi run python -m mcdgs.diagnostics.trex.beam_monitor
 """
 
 from collections.abc import Callable, Mapping

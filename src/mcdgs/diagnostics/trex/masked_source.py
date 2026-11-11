@@ -1,7 +1,7 @@
 """The neutrons that reach the sample of T-Rex, from ESS_butterfly and from Polygon_ESS_butterfly.
 
 Both runs are :class:`.TRexToSample`, T-Rex up to its sample monitor, as in
-:mod:`.trex_07_neutrons_on_sample`, with the same number of rays and the same seed. The first
+:mod:`.diagnostics.trex.neutrons_on_sample`, with the same number of rays and the same seed. The first
 has the source of :func:`.sources.source`, ``ESS_butterfly``. The second has that of
 :func:`.sources.masked_source`, ``Polygon_ESS_butterfly``, which emits only where the six
 choppers let neutrons through and multiplies each ray's weight by the acceptance, the share of
@@ -19,7 +19,7 @@ the relative error squared times the time: how much a second of each run is wort
 
 :func:`main` runs both and saves the figures and the table. Run the module to do it::
 
-    pixi run python -m mcdgs.diagnostics.trex_08_masked_source
+    pixi run python -m mcdgs.diagnostics.trex.masked_source
 """
 
 import json
@@ -39,7 +39,7 @@ from numpy.typing import NDArray
 
 from mcdgs.diagnostics.cli import markdown_table, output_folder, parse_out, save_figure, save_text
 from mcdgs.diagnostics.compare import read_mcstas_map
-from mcdgs.diagnostics.trex_07_neutrons_on_sample import TRexToSample
+from mcdgs.diagnostics.trex.neutrons_on_sample import TRexToSample
 from mcdgs.instruments.trex.monitors import sample_monitor
 from mcdgs.instruments.trex.sources import wavelength_band
 from mcdgs.mcstas.simulation import Simulation

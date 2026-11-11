@@ -1,7 +1,7 @@
 # Neutrons on sample
 
 `TRexToSample`, in
-[`mcdgs.diagnostics.trex_07_neutrons_on_sample`](https://github.com/bingli621/mcdgs/blob/main/src/mcdgs/diagnostics/trex_07_neutrons_on_sample.py),
+[`mcdgs.diagnostics.trex.neutrons_on_sample`](https://github.com/bingli621/mcdgs/blob/main/src/mcdgs/diagnostics/trex/neutrons_on_sample.py),
 compares McStas and [tof](../../how-to/simulate-the-choppers-with-tof.md) at the sample monitor of
 T-Rex, 163.8 m from the source. On the way are all the guides and all the
 [choppers](choppers.md): McStas models both, tof only the choppers. The page shows what reaches
@@ -15,7 +15,7 @@ the defaults: mode `"FF"`, `lambda0` = 2 Å and `rrm` = 18.
 
 <!-- fmt:off -->
 ```python
---8<-- "src/mcdgs/diagnostics/trex_07_neutrons_on_sample.py:trex_to_sample"
+--8<-- "src/mcdgs/diagnostics/trex/neutrons_on_sample.py:trex_to_sample"
 ```
 <!-- fmt:on -->
 
@@ -176,7 +176,7 @@ The figures need McStas, so they are not made with the site: `pixi run docs-diag
 them again, with the other files of the T-Rex pages. To make them yourself, run:
 
 ```bash
-pixi run python -m mcdgs.diagnostics.trex_07_neutrons_on_sample
+pixi run python -m mcdgs.diagnostics.trex.neutrons_on_sample
 ```
 
 At its defaults, `main` runs 1e8 McStas neutrons and 1e7 tof neutrons, with seed 1, and saves the

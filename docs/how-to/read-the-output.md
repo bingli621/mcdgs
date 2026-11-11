@@ -37,7 +37,7 @@ with h5py.File(scan_file) as file:
         entry = file[f"entry{n}"]
 ```
 
-`read_spectra` in [`mcdgs.diagnostics.trex_03_bender_scan`](../reference/diagnostics.md) reads a
+`read_spectra` in [`mcdgs.diagnostics.trex.bender_scan`](../reference/diagnostics.md) reads a
 scan this way, and the module is a complete example, from a scan to a figure: see
 [Bender](../instruments/trex/bender-scan.md#the-scan).
 

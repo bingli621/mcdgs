@@ -15,7 +15,7 @@ The short ticks across the beam are the choppers: `bw1` near 32 m, `bw2` near 40
 pulse-shaping choppers near 108 m and the monochromatic choppers near 162 m.
 
 This figure and the next need McStas, so they are not made with the site:
-[`mcdgs.diagnostics.trex_00_overview`](../../reference/diagnostics.md) draws them with McStasScript's
+[`mcdgs.diagnostics.trex.overview`](../../reference/diagnostics.md) draws them with McStasScript's
 `show_instrument` (mcdisplay), and `pixi run docs-diagnostics` runs it. They show the instrument as of
 that run.
 

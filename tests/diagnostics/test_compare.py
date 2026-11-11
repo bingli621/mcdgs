@@ -7,7 +7,7 @@ from matplotlib.colors import LogNorm
 from mcstasscript.data.data import McStasData, McStasMetaData
 
 from mcdgs.diagnostics.compare import plot_comparison, read_comparison, read_scaled_comparisons
-from mcdgs.diagnostics.trex_01_source import TRexSource
+from mcdgs.diagnostics.trex.source import TRexSource
 from mcdgs.tof.builder import build_tof
 from mcdgs.tof.reader import read_tof_monitor
 

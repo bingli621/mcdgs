@@ -1,7 +1,7 @@
 # Beam monitor
 
 `TRexBeamMonitor`, in
-[`mcdgs.diagnostics.trex_04_beam_monitor`](https://github.com/bingli621/mcdgs/blob/main/src/mcdgs/diagnostics/trex_04_beam_monitor.py),
+[`mcdgs.diagnostics.trex.beam_monitor`](https://github.com/bingli621/mcdgs/blob/main/src/mcdgs/diagnostics/trex/beam_monitor.py),
 compares McStas and [tof](../../how-to/simulate-the-choppers-with-tof.md) at the beam monitor of
 T-Rex, in the gap after guide 4. Between the source and that monitor are the
 [extraction guides](details.md#extraction-guides) 1 to 3 and guide 4a: McStas models them, tof
@@ -37,7 +37,7 @@ sends. Both monitors have `restore_neutron=1`, so they do not change the beam.
 
 <!-- fmt:off -->
 ```python
---8<-- "src/mcdgs/diagnostics/trex_04_beam_monitor.py:trex_beam_monitor"
+--8<-- "src/mcdgs/diagnostics/trex/beam_monitor.py:trex_beam_monitor"
 ```
 <!-- fmt:on -->
 
@@ -48,13 +48,13 @@ each monitor of both models is read on the bins of the McStas map:
 
 <!-- fmt:off -->
 ```python
---8<-- "src/mcdgs/diagnostics/trex_04_beam_monitor.py:run_mcstas"
+--8<-- "src/mcdgs/diagnostics/trex/beam_monitor.py:run_mcstas"
 ```
 <!-- fmt:on -->
 
 <!-- fmt:off -->
 ```python
---8<-- "src/mcdgs/diagnostics/trex_04_beam_monitor.py:run_tof"
+--8<-- "src/mcdgs/diagnostics/trex/beam_monitor.py:run_tof"
 ```
 <!-- fmt:on -->
 
@@ -103,7 +103,7 @@ scale at the first, the source monitor, and tunes T at the second, unless it is 
 
 <!-- fmt:off -->
 ```python
---8<-- "src/mcdgs/diagnostics/trex_04_beam_monitor.py:transmission"
+--8<-- "src/mcdgs/diagnostics/trex/beam_monitor.py:transmission"
 ```
 <!-- fmt:on -->
 
@@ -199,7 +199,7 @@ profile in counts/s, and gives its average and its peak:
 
 <!-- fmt:off -->
 ```python
---8<-- "src/mcdgs/diagnostics/trex_04_beam_monitor.py:count_rate"
+--8<-- "src/mcdgs/diagnostics/trex/beam_monitor.py:count_rate"
 ```
 <!-- fmt:on -->
 
@@ -253,11 +253,11 @@ The figure needs McStas, so it is not made with the site: `pixi run docs-diagnos
 again, with the other files of the T-Rex pages. To make it yourself, run:
 
 ```bash
-pixi run python -m mcdgs.diagnostics.trex_04_beam_monitor
+pixi run python -m mcdgs.diagnostics.trex.beam_monitor
 ```
 
 Call `main` with other numbers for a finer or a faster figure, or with a transmission of your own:
 
 ```bash
-pixi run python -c "from mcdgs.diagnostics.trex_04_beam_monitor import main; main(ncount=1e6, transmission=0.2)"
+pixi run python -c "from mcdgs.diagnostics.trex.beam_monitor import main; main(ncount=1e6, transmission=0.2)"
 ```

@@ -5,7 +5,7 @@ sample, and without the beamstop and the banana detector after it. Its control p
 those of :class:`.TRex`.
 
 tof has no guides: every neutron its choppers let through reaches the sample. As in
-:mod:`.trex_04_beam_monitor`, its counts are scaled at the source monitor, to the total of
+:mod:`.diagnostics.trex.beam_monitor`, its counts are scaled at the source monitor, to the total of
 McStas there, where both see the same beam. At the sample monitor, a transmission on top of that
 scale stands for what the guides take out of the beam. It is tuned so that tof matches McStas:
 by default, so that both have the same total. The transmission is then that of the guides in
@@ -18,7 +18,7 @@ the time profile joined by lines: first all on linear scales, then all on log sc
 each model, the sub-pulses and any weak ones between them, and :func:`plot_patches` draws the
 center of mass of each in time and wavelength, with its width as error bars.
 
-:func:`subpulse_windows` reduces the tof run as :mod:`.trex_10_elastic_plane` reduces McStas:
+:func:`subpulse_windows` reduces the tof run as :mod:`.diagnostics.trex.elastic_plane` reduces McStas:
 the sub-pulses at the pre-sample and beamstop monitors give their incident energy and the time
 they reach the sample, and :func:`.arrival_window` when the neutrons of each reach the banana
 detector. :func:`windows_table` lists them.
@@ -27,7 +27,7 @@ detector. :func:`windows_table` lists them.
 tof at the source monitor, tunes the transmission at the sample monitor and saves the figures.
 Run the module to do it::
 
-    pixi run python -m mcdgs.diagnostics.trex_07_neutrons_on_sample
+    pixi run python -m mcdgs.diagnostics.trex.neutrons_on_sample
 """
 
 from pathlib import Path
@@ -218,7 +218,7 @@ def subpulse_windows(
 ) -> sc.DataArray:
     """Give each sub-pulse of a tof run its arrival window at the banana detector.
 
-    As :mod:`.trex_10_elastic_plane` does with McStas: :func:`.find_patches` finds the
+    As :mod:`.diagnostics.trex.elastic_plane` does with McStas: :func:`.find_patches` finds the
     sub-pulses at both monitors, in the first pulse, :func:`.subpulse_flight` gives their
     incident energy from the flight between them, :func:`.time_at_sample` the time they reach
     the sample, and :func:`.arrival_window` when their neutrons reach the detector,

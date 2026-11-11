@@ -1,7 +1,7 @@
 # Elastic plane
 
 `TRexWithLa2Ni7`, in
-[`mcdgs.diagnostics.trex_10_elastic_plane`](https://github.com/bingli621/mcdgs/blob/main/src/mcdgs/diagnostics/trex_10_elastic_plane.py),
+[`mcdgs.diagnostics.trex.elastic_plane`](https://github.com/bingli621/mcdgs/blob/main/src/mcdgs/diagnostics/trex/elastic_plane.py),
 puts the La2Ni7 crystal on `sample_pos` and reduces every neutron that reaches the banana
 detector to its momentum transfer Q. It uses the sub-pulses and incident energies of
 [Incident energy](incident-energy.md), and the [reduction package](../../reference/reduction.md)
@@ -113,7 +113,7 @@ crystal scatters 0.03 to 0.6 % of each sub-pulse into the detector.
 The figure needs McStas, so it is not made with the site. To run McStas and make it, run:
 
 ```bash
-pixi run python -c "from mcdgs.diagnostics.trex_10_elastic_plane import main; main()"
+pixi run python -c "from mcdgs.diagnostics.trex.elastic_plane import main; main()"
 ```
 
 At its defaults, `main` runs both parts, 1e9 rays from the masked source with seed 1, as for
@@ -123,5 +123,5 @@ Running the module, as `pixi run docs-diagnostics` does, only reduces the runs a
 McStas:
 
 ```bash
-pixi run python -m mcdgs.diagnostics.trex_10_elastic_plane
+pixi run python -m mcdgs.diagnostics.trex.elastic_plane
 ```

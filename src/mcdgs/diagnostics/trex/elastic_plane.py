@@ -12,7 +12,7 @@ detector. The second part can run again from the same beam, without the long fir
 The reduction follows :mod:`mcdgs.reduction`:
 
 1. :func:`subpulse_timing` finds the sub-pulses at the pre-sample and beamstop monitors of the
-   first part with :func:`.find_patches`, as :mod:`.trex_09_determine_ei` does: both come before
+   first part with :func:`.find_patches`, as :mod:`.diagnostics.trex.incident_energy` does: both come before
    ``sample_pos`` in beam order. It gives each sub-pulse its incident energy, from its flight
    between the monitors with :func:`.subpulse_flight`, and the time it reaches the sample, with
    :func:`.time_at_sample`.
@@ -37,12 +37,12 @@ through the origin, where the detector covers it.
 :func:`main` is :func:`simulate`, which runs McStas, then :func:`analyze`, which reduces and
 draws. Run it to do both::
 
-    pixi run python -c "from mcdgs.diagnostics.trex_10_elastic_plane import main; main()"
+    pixi run python -c "from mcdgs.diagnostics.trex.elastic_plane import main; main()"
 
 Running the module only reduces the runs again, without McStas, with :func:`analyze`;
 :func:`reduce_runs` gives the sub-pulses and the neutrons alone::
 
-    pixi run python -m mcdgs.diagnostics.trex_10_elastic_plane
+    pixi run python -m mcdgs.diagnostics.trex.elastic_plane
 """
 
 from pathlib import Path
@@ -408,7 +408,7 @@ def simulate(ncount: float = 1e9, seed: int = 1) -> tuple[Path, Path]:
         Number of McStas rays of the first part. With the masked source nearly every ray reaches
         the sample: 1e8 rays leave about as many neutrons in the beam file as 1e10 of the plain
         source, and 1e9 about ten times as many. The second part, and every angle of
-        :mod:`.trex_11_elastic_scan`, runs every neutron of the beam file.
+        :mod:`.diagnostics.trex.elastic_scan`, runs every neutron of the beam file.
     seed:
         Seed of the random numbers of the first part; the second part takes ``seed + 1``.
 

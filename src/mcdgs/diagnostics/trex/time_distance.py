@@ -8,7 +8,7 @@
 
 It needs only mcdgs and tof. Run the module for them::
 
-    pixi run python -m mcdgs.diagnostics.trex_06_time_distance_diagram --out FOLDER
+    pixi run python -m mcdgs.diagnostics.trex.time_distance --out FOLDER
 """
 
 from pathlib import Path

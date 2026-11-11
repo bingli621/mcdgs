@@ -1,6 +1,6 @@
 # Bender
 
-[`mcdgs.diagnostics.trex_03_bender_scan`](https://github.com/bingli621/mcdgs/blob/main/src/mcdgs/diagnostics/trex_03_bender_scan.py)
+[`mcdgs.diagnostics.trex.bender_scan`](https://github.com/bingli621/mcdgs/blob/main/src/mcdgs/diagnostics/trex/bender_scan.py)
 shows what the [bender](details.md#bender) does to the beam. It runs the
 [`Extraction`](extraction.md) with the bender in, through the bender and the cold guide 4b, and
 reads its beam monitor, after guide 4: first at the nominal rotation of the bender, then over a
@@ -17,7 +17,7 @@ tof neutrons and seed 1.
 
 <!-- fmt:off -->
 ```python
---8<-- "src/mcdgs/diagnostics/trex_03_bender_scan.py:bender_in"
+--8<-- "src/mcdgs/diagnostics/trex/bender_scan.py:bender_in"
 ```
 <!-- fmt:on -->
 
@@ -68,7 +68,7 @@ parameters, so McStas compiles it once:
 
 <!-- fmt:off -->
 ```python
---8<-- "src/mcdgs/diagnostics/trex_03_bender_scan.py:run_scan"
+--8<-- "src/mcdgs/diagnostics/trex/bender_scan.py:run_scan"
 ```
 <!-- fmt:on -->
 
@@ -80,7 +80,7 @@ half a bin, 0.01 Å:
 
 <!-- fmt:off -->
 ```python
---8<-- "src/mcdgs/diagnostics/trex_03_bender_scan.py:bands"
+--8<-- "src/mcdgs/diagnostics/trex/bender_scan.py:bands"
 ```
 <!-- fmt:on -->
 
@@ -88,7 +88,7 @@ The bins are independent, so their errors add in quadrature:
 
 <!-- fmt:off -->
 ```python
---8<-- "src/mcdgs/diagnostics/trex_03_bender_scan.py:sum_bands"
+--8<-- "src/mcdgs/diagnostics/trex/bender_scan.py:sum_bands"
 ```
 <!-- fmt:on -->
 
@@ -97,7 +97,7 @@ relative errors of the two add in quadrature:
 
 <!-- fmt:off -->
 ```python
---8<-- "src/mcdgs/diagnostics/trex_03_bender_scan.py:transmission"
+--8<-- "src/mcdgs/diagnostics/trex/bender_scan.py:transmission"
 ```
 <!-- fmt:on -->
 
@@ -133,7 +133,7 @@ The figures need McStas, so they are not made with the site: `pixi run docs-diag
 them again, with the other files of the T-Rex pages. To make them yourself, run:
 
 ```bash
-pixi run python -m mcdgs.diagnostics.trex_03_bender_scan
+pixi run python -m mcdgs.diagnostics.trex.bender_scan
 ```
 
 This is `main` at its defaults: 1e6 McStas neutrons per angle, and seed 1. The scan goes to

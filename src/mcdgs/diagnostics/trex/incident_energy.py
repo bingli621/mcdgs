@@ -8,7 +8,7 @@ The beamstop monitor is ``BEAMSTOP_DISTANCE`` after the sample in space, but bef
 order: it counts the direct beam as if there were no sample. So both monitors see the same
 sub-pulses, the beamstop monitor later by the flight over the distance between them.
 
-As in :mod:`.trex_07_neutrons_on_sample`, tof's counts are scaled at the source monitor, to the
+As in :mod:`.diagnostics.trex.neutrons_on_sample`, tof's counts are scaled at the source monitor, to the
 total of McStas there. A transmission on top of that scale stands for what the guides take out of
 the beam, which tof does not model: by default, it is tuned so that tof has the total of McStas at
 the pre-sample monitor, and the same factor holds at the beamstop monitor.
@@ -28,7 +28,7 @@ incident energy it should have.
 :func:`plot_incident_energies` the incident energy of each sub-pulse, and :func:`save_graph` the
 graph. Run the module to do it::
 
-    pixi run python -m mcdgs.diagnostics.trex_09_determine_ei
+    pixi run python -m mcdgs.diagnostics.trex.incident_energy
 """
 
 from pathlib import Path

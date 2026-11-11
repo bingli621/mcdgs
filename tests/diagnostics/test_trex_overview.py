@@ -1,4 +1,4 @@
-from mcdgs.diagnostics.trex_00_overview import along_beam_range
+from mcdgs.diagnostics.trex.overview import along_beam_range
 from mcdgs.instruments.trex.model import TRex
 
 

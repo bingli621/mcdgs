@@ -2,7 +2,7 @@ import matplotlib
 
 matplotlib.use("Agg")
 
-from mcdgs.diagnostics.trex_06_time_distance_diagram import main
+from mcdgs.diagnostics.trex.time_distance import main
 
 
 def test_main_draws_the_diagram_and_lists_its_parameters(tmp_path):

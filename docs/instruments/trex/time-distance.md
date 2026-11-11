@@ -17,7 +17,7 @@ its current parameters, runs it and draws the diagram. It takes any instrument:
 from mcdgs.instruments.trex.model import TRex
 from mcdgs.tof.time_distance import time_distance_diagram
 
---8<-- "src/mcdgs/diagnostics/trex_06_time_distance_diagram.py:time_distance"
+--8<-- "src/mcdgs/diagnostics/trex/time_distance.py:time_distance"
 ```
 <!-- fmt:on -->
 
@@ -70,5 +70,5 @@ Unlike the [acceptance diagram](choppers.md#acceptance-diagram), the time-distan
 follows real neutrons. It shows the shape of the ESS pulse, but with the noise of a Monte Carlo
 run: only the drawn rays are a sample of the neutrons.
 
-[`mcdgs.diagnostics.trex_06_time_distance_diagram`](../../reference/diagnostics.md) makes the
+[`mcdgs.diagnostics.trex.time_distance`](../../reference/diagnostics.md) makes the
 diagram and the tables of its parameters, and `pixi run docs-diagnostics` runs it.

@@ -12,9 +12,9 @@ it, so the beam monitor shows what the guides let through in McStas against that
 McStas runs also draw McStasScript's diagnostics, the beam after the source, after guide 3 and
 at the exit of guide 4b, and its diagram of the intensity before each component. :func:`main`
 draws the extraction from above and runs the path without the bender, through guide 4a; the
-path with it is run by :func:`.trex_03_bender_scan.main`. Run the module for it::
+path with it is run by :func:`.bender_scan.main`. Run the module for it::
 
-    pixi run python -m mcdgs.diagnostics.trex_02_extraction
+    pixi run python -m mcdgs.diagnostics.trex.extraction
 """
 
 from dataclasses import dataclass
@@ -318,7 +318,7 @@ def main(
 
     The view from above is ``trex_extraction_top.png``; the path through guide 4a is
     :func:`diagnose_path` with the bender out. The path with the bender in is drawn by
-    :func:`.trex_03_bender_scan.main`.
+    :func:`.bender_scan.main`.
 
     Parameters
     ----------

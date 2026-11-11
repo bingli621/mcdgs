@@ -2,7 +2,7 @@ import h5py
 import numpy as np
 import pytest
 
-from mcdgs.diagnostics.trex_03_bender_scan import read_spectra, transmission
+from mcdgs.diagnostics.trex.bender_scan import read_spectra, transmission
 
 
 def test_the_transmission_divides_each_band_by_the_reference():
