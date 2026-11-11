@@ -1,15 +1,12 @@
 """The T-Rex instrument and its control parameters."""
 
 from dataclasses import dataclass, replace
-from typing import TYPE_CHECKING, Any, NamedTuple
+from typing import TYPE_CHECKING, Any
 
 from mcdgs.core.base import Instrument
 from mcdgs.core.components import (
     Arm,
-    ESS_butterfly,
     Guide_gravity,
-    Monitor_nD,
-    Polygon_ESS_butterfly,
     Progress_bar,
     Single_crystal,
 )
@@ -81,45 +78,6 @@ class Params:
 DEFAULT_PARAMS = Params()  # frozen, so one shared default is safe
 
 
-class Band(NamedTuple):
-    """The components of T-Rex that follow the band of ``lambda0``, by name.
-
-    Each takes the band of :func:`.sources.wavelength_band`: the source simulates it, and the
-    time and wavelength monitors span it.
-    """
-
-    source: ESS_butterfly
-    beam_monitor: Monitor_nD
-    pre_sample_monitor: Monitor_nD
-    beamstop_monitor: Monitor_nD
-    sample_monitor: Monitor_nD
-
-    @classmethod
-    def of(cls, lambda0: float, masked: bool) -> "Band":
-        """Create the components for a central wavelength.
-
-        Parameters
-        ----------
-        lambda0:
-            Central wavelength, in Å.
-        masked:
-            True for :func:`.sources.masked_source`, False for :func:`.sources.source`.
-
-        Returns
-        -------
-        :
-            New components.
-        """
-        band = wavelength_band(lambda0)
-        return cls(
-            source=(masked_source if masked else source)(*band),
-            beam_monitor=beam_monitor(lambda_limits=band),
-            pre_sample_monitor=pre_sample_monitor(lambda_limits=band),
-            beamstop_monitor=beamstop_monitor(lambda_limits=band),
-            sample_monitor=sample_monitor(lambda_limits=band),
-        )
-
-
 class TRex(Instrument):
     """The T-Rex instrument.
 
@@ -155,10 +113,11 @@ class TRex(Instrument):
         to_bwc1, to_bwc2, to_end_of_curve = guides_curve()
         to_psc, to_mc, to_slit = guides_straight()
 
-        band = Band.of(self.params.lambda0, source_masked)
+        # the source simulates the band of lambda0, and the time and wavelength monitors span it
+        band = wavelength_band(self.params.lambda0)
 
         self.origin = Progress_bar(at=[0, 0, 0])
-        self.source = band.source
+        self.source = (masked_source if source_masked else source)(*band)
         self.source_monitor = source_monitor()  # the entrance of guide 1, the widest band
         self.add_components(guides_extraction())
         # bispectral switch: guide 4a (thermal) or bender and guide 4b (cold)
@@ -166,7 +125,7 @@ class TRex(Instrument):
         self.guide_4a = guide_4a(when="bender_in==0")
         self.bender = bender(when="bender_in==1")
         self.guide_4b = guide_4b(when="bender_in==1")
-        self.beam_monitor = band.beam_monitor
+        self.beam_monitor = beam_monitor(lambda_limits=band)
         # curved guides
         self.add_components(to_bwc1)
         self.bw1 = chopper("bw1")
@@ -182,13 +141,13 @@ class TRex(Instrument):
         self.mc2 = chopper("mc2")
         self.add_components(to_slit)
         self.slit_mc = slit_mc()
-        self.pre_sample_monitor = band.pre_sample_monitor
+        self.pre_sample_monitor = pre_sample_monitor(lambda_limits=band)
         # before the sample in order, 3 m after it in space: it counts the beam as if there were
         # no sample, and gives the sample each neutron back unchanged
-        self.beamstop_monitor = band.beamstop_monitor
+        self.beamstop_monitor = beamstop_monitor(lambda_limits=band)
         # sample position
         self.sample_pos = sample_pos()
-        self.sample_monitor = band.sample_monitor
+        self.sample_monitor = sample_monitor(lambda_limits=band)
         self.sample = None
         if sample is not None:
             self.sample = replace(sample, relative=sample.relative or "sample_pos")
@@ -199,10 +158,10 @@ class TRex(Instrument):
     def update_params(self, **values: Any) -> None:
         """Change control parameters.
 
-        A new ``lambda0`` also creates the components of :class:`Band` again, the source and
-        the beam, pre-sample, beamstop and sample monitors, with its band. A masked source
-        stays masked: the source decides, so that it also holds for an instrument a parameters
-        file made.
+        A new ``lambda0`` also gives the source the band of :func:`.sources.wavelength_band`,
+        and creates the time and wavelength monitors again (the beam, pre-sample, beamstop and
+        sample monitors) with it. The source keeps everything else, so a masked source stays
+        masked, also in an instrument a parameters file made.
 
         Parameters
         ----------
@@ -216,9 +175,12 @@ class TRex(Instrument):
         """
         super().update_params(**values)
         if "lambda0" in values:
-            masked = isinstance(self.source, Polygon_ESS_butterfly)
-            band = Band.of(self.params.lambda0, masked)
-            self.add_components(band._asdict())  # each in its place
+            band = wavelength_band(self.params.lambda0)
+            self.source = replace(self.source, Lmin=band[0], Lmax=band[1])
+            self.beam_monitor = beam_monitor(lambda_limits=band)
+            self.pre_sample_monitor = pre_sample_monitor(lambda_limits=band)
+            self.beamstop_monitor = beamstop_monitor(lambda_limits=band)
+            self.sample_monitor = sample_monitor(lambda_limits=band)
 
     def running_conditions(self) -> str:
         """Describe the settings of T-Rex in one line, such as the title of a figure.
