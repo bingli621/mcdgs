@@ -32,7 +32,6 @@ of it, at 1e6 and at 1e5 neutrons in both models, and with the band of ``lambda0
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
 
 import mcstasscript as ms
 
@@ -64,11 +63,6 @@ class TRexSourceParams:
     lambda0: float | None = param(None, "Å", "central wavelength, None for the widest band")
 
 
-def _source(lambda0: float | None) -> ESS_butterfly:
-    """Return the T-Rex source with the band around ``lambda0``, or the widest band if ``None``."""
-    return source() if lambda0 is None else source(*wavelength_band(lambda0))
-
-
 class TRexSource(Instrument):
     """The source of T-Rex and a time and wavelength monitor at the entrance of guide 1.
 
@@ -90,27 +84,9 @@ class TRexSource(Instrument):
 
     def __init__(self, params: TRexSourceParams | None = None) -> None:
         super().__init__(params)
-        self.source = _source(self.params.lambda0)
+        lambda0 = self.params.lambda0
+        self.source = source() if lambda0 is None else source(*wavelength_band(lambda0))
         self.source_monitor = source_monitor()
-
-    def update_params(self, **values: Any) -> None:
-        """Change control parameters.
-
-        A new ``lambda0`` also creates the source again, with its band.
-
-        Parameters
-        ----------
-        **values:
-            New values by parameter name, e.g. ``update_params(lambda0=2.0)``.
-
-        Raises
-        ------
-        TypeError
-            If a name is not a field of :class:`TRexSourceParams`.
-        """
-        super().update_params(**values)
-        if "lambda0" in values:
-            self.source = _source(self.params.lambda0)
 
     @property
     def instr_params(self) -> list[InstrParam]:
