@@ -23,6 +23,10 @@ GUIDE_1_IN_Z = 1.895927  # m, cell B13
 GUIDE_1_IN_WIDTH = 0.089955  # m, cell E13
 GUIDE_1_IN_HEIGHT = 0.029992  # m, cell F13
 
+# x of the fixed wall of the NBOA, which the -x wall of the guides is on: the source focuses
+# up to it on both sides
+NBOA_FIXED_WALL_X = -0.047  # FIXME, not in Table of Optics v3.2, in m
+
 
 def half_taper_angle(w1: float, w2: float, length: float) -> float:
     """Compute the horizontal rotation angle to make the right wall (-x) along z-axis.
@@ -59,8 +63,7 @@ def entrance_x(width: float, tilt: float) -> float:
     :
         x of the entrance center in lab frame, in m.
     """
-    nboa_fixed_wall_x = -0.047  # FIXME, not in Table of Optics v3.2, in m
-    return width * math.cos(math.radians(tilt)) / 2 + nboa_fixed_wall_x
+    return width * math.cos(math.radians(tilt)) / 2 + NBOA_FIXED_WALL_X
 
 
 def z_along_arm(z_lab: float, arm_z_lab: float, tilt: float) -> float:

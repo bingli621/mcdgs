@@ -11,7 +11,7 @@ from mcdgs.core.components.source import ESS_SOURCE_FREQUENCY, ESS_SOURCE_LENGTH
 from mcdgs.core.utils import speed_from_wavelength
 
 from .choppers import chopper_train
-from .guides.extraction import GUIDE_1_IN_HEIGHT, GUIDE_1_IN_Z
+from .guides.extraction import GUIDE_1_IN_HEIGHT, GUIDE_1_IN_Z, NBOA_FIXED_WALL_X
 from .guides.straight import SAMPLE_Z
 
 
@@ -78,8 +78,8 @@ def _source(l_min: float, l_max: float) -> dict[str, Any]:
         # of the moderator it then covers the whole opening, so the flux into guide 1 is right
         "dist": GUIDE_1_IN_Z,
         # centered on the axis, it reaches the fixed wall of guide 1 at x = -0.047 m
-        # on both sides, so it covers the entrance 2.0 mm off the axis
-        "focus_xw": 0.094,
+        # on both sides, 0.094 m, so it covers the entrance 2.0 mm off the axis
+        "focus_xw": 2 * abs(NBOA_FIXED_WALL_X),
         "focus_yh": GUIDE_1_IN_HEIGHT,
         "Lmin": l_min,
         "Lmax": l_max,
