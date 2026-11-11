@@ -523,4 +523,4 @@ def main(out: Path | None = None, ncount: float = 1e9, seed: int = 1) -> Path:
 
 
 if __name__ == "__main__":
-    analyze(out=parse_out(__doc__))  # McStas runs only with main, about ten minutes
+    analyze(out=parse_out(__doc__))  # McStas runs only with main, about two minutes

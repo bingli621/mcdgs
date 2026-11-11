@@ -28,9 +28,9 @@ it onto the Ewald spheres of the sub-pulses.
 `simulate` runs only the part from `sample_pos` to the detector, with `scan_from_sample` of
 [`Simulation`](../../how-to/run-a-simulation.md), once per angle and in parallel. Each angle
 starts from the beam file of [Elastic plane](elastic-plane.md#two-runs-split-at-the-sample), the
-496,089 neutrons at `sample_pos` from 1e8 rays of the masked source: the beam before the sample
-does not depend on the crystal. The 31 angles take about 310 MB, in one file with one entry per
-angle.
+4,965,069 neutrons at `sample_pos` from 1e9 rays of the masked source: the beam before the
+sample does not depend on the crystal. The 31 angles take about a minute on 18 cores, and
+about 3.2 GB, in one file with one entry per angle.
 
 ## The reduction
 
