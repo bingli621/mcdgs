@@ -32,7 +32,7 @@ from mcdgs.instruments.trex.sources import (
     source,
     wavelength_band,
 )
-from mcdgs.samples import aluminum
+from mcdgs.samples import aluminum, la2ni7, lead
 
 
 def test_the_components_are_in_beam_order():
@@ -383,6 +383,14 @@ def test_a_sample_goes_after_the_sample_position():
     ]
     assert trex.sample.relative == "sample_pos"
     assert trex.positions()["sample"] == trex.positions()["sample_pos"]
+
+
+@pytest.mark.parametrize("make", [aluminum, la2ni7, lead])
+def test_every_ready_made_sample_goes_on_trex(make):
+    trex = TRex(sample=make())
+    assert type(trex.sample) is type(make())
+    assert trex.sample.relative == "sample_pos"
+    assert trex.sample == make(relative="sample_pos")
 
 
 def test_a_sample_keeps_its_own_placement():

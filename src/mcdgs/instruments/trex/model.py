@@ -6,9 +6,9 @@ from typing import TYPE_CHECKING, Any
 from mcdgs.core.base import Instrument
 from mcdgs.core.components import (
     Arm,
+    Component,
     Guide_gravity,
     Progress_bar,
-    Single_crystal,
 )
 from mcdgs.core.params import InstrParam, param
 
@@ -84,8 +84,10 @@ class TRex(Instrument):
     Parameters
     ----------
     sample:
-        The crystal, if any. A copy goes in the instrument, relative to ``sample_pos`` unless
-        ``sample.relative`` says otherwise; ``sample`` itself is not changed.
+        The sample, if any: any component, such as those of :mod:`mcdgs.samples`, a
+        ``Single_crystal`` or a ``Phonon_simple``. A copy goes in the instrument, relative to
+        ``sample_pos`` unless ``sample.relative`` says otherwise; ``sample`` itself is not
+        changed.
     params:
         Control parameters.
     source_masked:
@@ -104,7 +106,7 @@ class TRex(Instrument):
 
     def __init__(
         self,
-        sample: Single_crystal | None = None,
+        sample: Component | None = None,
         params: Params = DEFAULT_PARAMS,
         source_masked: bool = False,
     ) -> None:
