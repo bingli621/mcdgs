@@ -50,8 +50,8 @@ SAMPLE_MONITOR_TIME_RESOLUTION = 5e-5  # s, FIXME, as the beam monitor
 
 BEAMSTOP_GAP = 0.001  # m, FIXME, not in Table of Optics v3.2: in front of the banana detector
 BEAMSTOP_DISTANCE = BANANA_RADIUS - BEAMSTOP_GAP  # m, from the sample
-BEAMSTOP_WIDTH = PRE_SAMPLE_MONITOR_WIDTH  # m, FIXME, as the pre-sample monitor
-BEAMSTOP_HEIGHT = PRE_SAMPLE_MONITOR_HEIGHT  # m, FIXME, as the pre-sample monitor
+BEAMSTOP_WIDTH = 0.076  # m, FIXME, not in Table of Optics v3.2
+BEAMSTOP_HEIGHT = 0.076  # m, FIXME, not in Table of Optics v3.2
 BEAMSTOP_MONITOR_LAMBDA_RESOLUTION = 0.02  # Å, FIXME, as the beam monitor
 BEAMSTOP_MONITOR_TIME_RESOLUTION = 5e-6  # s, FIXME, as the pre-sample monitor
 
