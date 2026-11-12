@@ -15,16 +15,17 @@ from .guides.extraction import GUIDE_1_IN_HEIGHT, GUIDE_1_IN_Z, NBOA_FIXED_WALL_
 from .guides.straight import SAMPLE_Z
 
 
-def wavelength_band(lambda0: float) -> tuple[float, float]:
+def wavelength_band(lambda0: float | None) -> tuple[float, float]:
     """Return the wavelength band the source simulates around ``lambda0``.
 
     The band is the wavelengths that reach the sample in one source period plus the pulse
-    length, 1.810 Å, centered on ``lambda0`` and clipped to ``L_MIN`` and ``L_MAX``.
+    length, 1.810 Å, centered on ``lambda0`` and clipped to ``L_MIN`` and ``L_MAX``. Without a
+    ``lambda0`` it is not limited: the whole of ``L_MIN`` to ``L_MAX``.
 
     Parameters
     ----------
     lambda0:
-        Central wavelength, in Å.
+        Central wavelength, in Å, or ``None`` for the white beam.
 
     Returns
     -------
@@ -37,6 +38,8 @@ def wavelength_band(lambda0: float) -> tuple[float, float]:
         If the clipped band is empty: ``lambda0`` is half the band or more outside ``L_MIN``
         to ``L_MAX``.
     """
+    if lambda0 is None:
+        return (L_MIN, L_MAX)
     # h / m_n = 3956.034 m·Å/s, Planck's constant over the neutron mass: a neutron of
     # wavelength λ in Å flies at h / (m_n λ) m/s, so the one of 1 Å at 3956.034 m/s
     h_over_m_n = speed_from_wavelength(1.0)  # m·Å/s

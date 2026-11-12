@@ -48,7 +48,9 @@ class Params:
         Time from the start of the pulse at which the neutrons the choppers are phased to leave
         the moderator, in s.
     lambda0:
-        Central wavelength, in Å.
+        Central wavelength, in Å. ``None`` is the white beam: the source simulates the whole
+        of ``L_MIN`` to ``L_MAX``. The choppers then have no wavelength to be phased to, so
+        only an instrument that parks them can run.
     rrm:
         Repetition rate multiplication factor.
     mode:
@@ -66,7 +68,7 @@ class Params:
         0.0017, "s", "time added to choppers shifting to middle of the long pulse"
     )
 
-    lambda0: float = param(2.0, "Å", "central wavelength")
+    lambda0: float | None = param(2.0, "Å", "central wavelength")
     rrm: int = param(18, "", "repetition rate multiplication factor")
     mode: Mode = param("FF", "", "FF = high flux, RR = high resolution")
 
@@ -211,9 +213,36 @@ class TRex(Instrument):
         """McStas instrument parameters.
 
         The choice of guide 4, the rotation of the bender and of the goniometer, and the
-        frequency and delay of each chopper, computed from ``lambda0``, ``rrm``, ``mode`` and
-        ``t0_offset``.
+        frequency and delay of each chopper, from :meth:`chopper_instr_params`.
         """
+        bender_params = [
+            InstrParam("bender_in", int(self.params.bender_in), "", "bender in = 1, out = 0"),
+            InstrParam("b_rot", self.params.b_rot, "deg", "rotation of the cold neutron bender"),
+        ]
+        gonio_params = [
+            InstrParam("omega", self.params.omega, "deg", "rotation of the goniometer about +Y"),
+        ]
+
+        return bender_params + gonio_params + self.chopper_instr_params()
+
+    def chopper_instr_params(self) -> list[InstrParam]:
+        """Return the McStas instrument parameters of the choppers.
+
+        The frequency and delay of each chopper, computed from ``lambda0``, ``rrm``, ``mode``
+        and ``t0_offset`` with :func:`.chopper_timings`.
+
+        Returns
+        -------
+        :
+            ``nu_<name>`` and ``delay_<name>`` of each chopper, in beam order.
+
+        Raises
+        ------
+        ValueError
+            If ``lambda0`` is ``None``: the choppers have no wavelength to be phased to.
+        """
+        if self.params.lambda0 is None:
+            raise ValueError("lambda0 is None: the choppers have no wavelength to be phased to")
         timings = chopper_timings(
             self.params.lambda0,
             self.params.rrm,
@@ -221,12 +250,7 @@ class TRex(Instrument):
             self.params.mode,
             self.params.t0_offset,
         )
-        bender_params = [
-            InstrParam("bender_in", int(self.params.bender_in), "", "bender in = 1, out = 0"),
-            InstrParam("b_rot", self.params.b_rot, "deg", "rotation of the cold neutron bender"),
-        ]
-
-        chopper_params = [
+        return [
             p
             for name, timing in timings.items()
             for p in (
@@ -234,8 +258,3 @@ class TRex(Instrument):
                 InstrParam(f"delay_{name}", timing.delay, "s", f"delay of chopper {name}"),
             )
         ]
-        gonio_params = [
-            InstrParam("omega", self.params.omega, "deg", "rotation of the goniometer about +Y"),
-        ]
-
-        return bender_params + gonio_params + chopper_params
