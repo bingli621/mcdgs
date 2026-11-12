@@ -5,13 +5,15 @@
 compares McStas and [tof](../../how-to/simulate-the-choppers-with-tof.md) at the sample monitor of
 T-Rex, 163.8 m from the source. On the way are all the guides and all the
 [choppers](choppers.md): McStas models both, tof only the choppers. The page shows what reaches
-the sample, in time and wavelength, and where the two models differ.
+the sample, in time and wavelength, and where the two models differ; and, from McStas, where
+the neutrons cross the sample position.
 
 ## The setup
 
 `TRexToSample` is `TRex` up to its sample monitor, at `sample_pos`: without a sample, and without
-the beamstop and the banana detector after it. Its control parameters are those of `TRex`, here
-the defaults: mode `"FF"`, `lambda0` = 2 Å and `rrm` = 18.
+the beamstop and the banana detector after it. In their place is `sample_xy_monitor`, at
+`sample_pos` too. Its control parameters are those of `TRex`, here the defaults: mode `"FF"`,
+`lambda0` = 2 Å and `rrm` = 18.
 
 <!-- fmt:off -->
 ```python
@@ -25,6 +27,15 @@ The sample monitor records one 2D map of time against wavelength, on the band of
 | ---- | ----- | ---- | --------- |
 | Time | 45.3 to 123.8 ms | 1569 | 0.05 ms |
 | Wavelength | 1.095 to 2.915 Å | 91 | 0.02 Å |
+
+`sample_xy_monitor` has the place and the opening of the sample monitor, 0.1 m × 0.1 m. It
+records one 2D map of x against y, across the beam, summed over time and wavelength, and leaves
+the neutrons unchanged:
+
+| Axis | Range | Bins | Bin width |
+| ---- | ----- | ---- | --------- |
+| x, horizontal | −50 to 50 mm | 50 | 2 mm |
+| y, up | −50 to 50 mm | 50 | 2 mm |
 
 ## Scale and transmission
 
@@ -48,7 +59,7 @@ anything weaker than that.
 
 ## The figures
 
-`main` runs both models with the same seed and draws three figures.
+`main` runs both models with the same seed and draws four figures.
 
 ### On linear scales
 
@@ -84,6 +95,19 @@ is when its neutrons arrive if they fly through the sample without changing spee
 neutrons: nearer the opening than the close, since a neutron that gains energy shortens its
 flight less than one that loses as much lengthens it. The sample monitor is at the sample, so
 each cross falls on its patch. The bands lie between the sub-pulses.
+
+### The beam across the sample position
+
+![The beam of McStas at the sample position: the map of x against y, and its profile along each axis](figures/neutrons-on-sample/trex_neutrons_on_sample_xy.png)
+
+The map of `sample_xy_monitor`, in n/s per bin, with both axes to the same scale, and its
+profiles: the map summed over y, against x, and summed over x, against y, with the errors of
+McStas. tof has no x and y, so this figure is of McStas alone.
+
+The beam is centered on the axis, with a full width at half maximum of 20.6 mm in x and 25.8 mm
+in y, and nothing beyond about 18 mm from the axis in x and 22 mm in y. `slit_mc`, 0.695 m
+before the sample, is 20.5 mm wide and 34.5 mm high. With 1e8 McStas neutrons, a bin at the
+center of the map has an error of about 30 %, so the structure within the spot is noise.
 
 ## What reaches the sample
 
