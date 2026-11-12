@@ -27,7 +27,7 @@ print(trex)  # every parameter and component, with its position in the lab frame
 | Part | State |
 | ---- | ----- |
 | [T-Rex](instruments/trex/details.md) | Modeled from the source to the detector: the guides, the choppers, the monitors, a beamstop and a banana detector. The polarizers and the collimators are not modeled yet. |
-| Simulation with McStas | Single runs, parameter scans and split runs at the sample position. |
+| [Simulation with McStas](how-to/run-a-simulation.md) | Single runs, parameter scans and split runs at the sample position. |
 | [Simulation with tof](how-to/simulate-the-choppers-with-tof.md) | The source, the choppers and every monitor, with the choppers timed as in McStas. |
 | [Chopper acceptance](instruments/trex/choppers.md#acceptance-diagram) | The acceptance diagram of the choppers, exact and without neutrons, with scippneutron. |
 | Reading the output | Monitors and detector pixels from McStas NeXus files; the neutrons at each tof detector. |
