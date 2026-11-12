@@ -13,6 +13,7 @@ class. A parameters file names a component's class by it.
 from .base import Component
 from .choppers import NXdisk_chopper
 from .crystal import Single_crystal
+from .incoherent import Incoherent
 from .masked_source import Polygon_ESS_butterfly
 from .misc import Arm, Progress_bar
 from .monitors import Monitor_nD
@@ -27,6 +28,7 @@ __all__ = [
     "Component",
     "ESS_butterfly",
     "Guide_gravity",
+    "Incoherent",
     "Monitor_nD",
     "NXdisk_chopper",
     "Phonon_simple",

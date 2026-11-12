@@ -4,9 +4,9 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from mcdgs.core.components import Phonon_simple, Single_crystal
+from mcdgs.core.components import Incoherent, Phonon_simple, Single_crystal
 from mcdgs.core.components.crystal import CIF_DIR
-from mcdgs.samples import aluminum, la2ni7, lead
+from mcdgs.samples import aluminum, la2ni7, lead, vanadium
 
 ALUMINUM = {  # the parameters of aluminum()
     "xwidth": 0.005, "yheight": 0.005, "zdepth": 0.005, "order": 1, "mosaic": 5.0,
@@ -108,3 +108,28 @@ def test_the_focusing_window_of_lead_is_given_by_the_caller():
     sample = lead(target_index=2, focus_aw=60, focus_ah=10, c=7.54, T=100)
     assert (sample.target_index, sample.focus_aw, sample.focus_ah) == (2, 60, 10)
     assert (sample.c, sample.T) == (7.54, 100)
+
+
+def test_vanadium_is_an_incoherent_sample_placed_like_any_component():
+    sample = vanadium(name="sample", at=[0, 0, 0.1], rotated=[0, 5, 0], relative="arm")
+    assert type(sample) is Incoherent
+    assert sample.name == "sample"
+    assert (sample.at, sample.rotated, sample.relative) == ([0, 0, 0.1], [0, 5, 0], "arm")
+    assert (vanadium().at, vanadium().relative) == ([0, 0, 0], None)
+
+
+def test_vanadium_is_a_solid_cylinder_with_the_cross_sections_of_vanadium():
+    sample = vanadium()
+    assert (sample.radius, sample.yheight, sample.thickness, sample.pack) == (0.005, 0.01, 0, 1)
+    assert (sample.sigma_abs, sample.sigma_inc, sample.Vc) == (5.08, 5.08, 13.827)
+    assert sample.Vc == pytest.approx(3.024**3 / 2, abs=5e-4)  # two atoms per bcc cell
+    assert sample.scattering_length == pytest.approx(0.0272, abs=5e-5)  # m
+    assert (sample.f_QE, sample.deltaE) == (0, 0)  # elastic
+
+
+def test_the_focusing_window_of_vanadium_is_given_by_the_caller():
+    sample = vanadium()
+    assert (sample.focus_r, sample.focus_aw, sample.focus_ah, sample.target_index) == (0, 0, 0, 0)
+    sample = vanadium(target_index=2, focus_aw=60, focus_ah=10, order=1, pack=0.6)
+    assert (sample.target_index, sample.focus_aw, sample.focus_ah) == (2, 60, 10)
+    assert (sample.order, sample.pack) == (1, 0.6)

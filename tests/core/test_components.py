@@ -8,6 +8,7 @@ from mcdgs.core.components import (
     Component,
     ESS_butterfly,
     Guide_gravity,
+    Incoherent,
     Monitor_nD,
     NXdisk_chopper,
     Phonon_simple,
@@ -372,3 +373,40 @@ def test_the_phonon_sample_requires_what_mcstas_requires(missing):
 
 def test_the_phonon_branch_ends_at_four_times_the_sound_velocity_over_the_lattice_constant():
     assert Phonon_simple(**PHONON).branch_maximum == pytest.approx(4 * 13.75 / 4.9508)
+
+
+def test_the_incoherent_sample_defaults_are_those_of_mcstas():
+    assert Incoherent().mcstas_parameters() == {
+        "geometry": None,
+        "radius": 0,
+        "xwidth": 0,
+        "yheight": 0,
+        "zdepth": 0,
+        "thickness": 0,
+        "target_x": 0,
+        "target_y": 0,
+        "target_z": 0,
+        "target_index": 0,
+        "focus_r": 0,
+        "focus_xw": 0,
+        "focus_yh": 0,
+        "focus_aw": 0,
+        "focus_ah": 0,
+        "pack": 1,
+        "p_interact": 1,
+        "f_QE": 0,
+        "gamma": 0,
+        "Etrans": 0,
+        "deltaE": 0,
+        "sigma_abs": 5.08,
+        "sigma_inc": 5.08,
+        "Vc": 13.827,
+        "concentric": 0,
+        "order": 0,
+    }
+
+
+def test_the_incoherent_scattering_length_follows_the_density_of_atoms():
+    assert Incoherent().scattering_length == pytest.approx(13.827 / 508)  # m
+    assert Incoherent(pack=0.5).scattering_length == pytest.approx(2 * 13.827 / 508)
+    assert Incoherent(sigma_inc=80.27, Vc=30.0).scattering_length == pytest.approx(30 / 8027)

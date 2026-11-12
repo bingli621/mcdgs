@@ -20,4 +20,6 @@ each one does.
 
 ::: mcdgs.core.components.phonon
 
+::: mcdgs.core.components.incoherent
+
 ::: mcdgs.core.components.misc

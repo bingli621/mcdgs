@@ -3,7 +3,8 @@
 :func:`aluminum` and :func:`la2ni7` return a :class:`.Single_crystal` with its own lattice,
 orientation, size and mosaic, and its CIF file (if any) in this folder: they scatter
 elastically. :func:`lead` returns a :class:`.Phonon_simple`, which scatters from one phonon
-branch. Placement is up to the caller: ``at``, and ``relative`` to a component of the
+branch. :func:`vanadium` returns an :class:`.Incoherent`, which scatters elastically in every
+direction. Placement is up to the caller: ``at``, and ``relative`` to a component of the
 instrument, e.g. the goniometer's ``"gonio_phi"``. Keyword arguments set the sample's other
 parameters or change the defaults, e.g.
 ``la2ni7(name="sample", mosaic=60, relative="gonio_phi")``.
@@ -25,9 +26,9 @@ To add a sample:
 
 from typing import Any
 
-from mcdgs.core.components import Phonon_simple, Single_crystal
+from mcdgs.core.components import Incoherent, Phonon_simple, Single_crystal
 
-__all__ = ["aluminum", "la2ni7", "lead"]
+__all__ = ["aluminum", "la2ni7", "lead", "vanadium"]
 
 # a 5 mm cube, single scattering only (much faster)
 SMALL_CUBE = {"xwidth": 0.005, "yheight": 0.005, "zdepth": 0.005, "order": 1}
@@ -139,6 +140,40 @@ def lead(**params: Any) -> Phonon_simple:
             "c": (LEAD_C11 / LEAD_DENSITY) ** 0.5 / MEV_ANGSTROM,  # 13.75 meV Å
             "DW": 1.0,
             "T": 300.0,
+            **params,
+        }
+    )
+
+
+def vanadium(**params: Any) -> Incoherent:
+    """Create a vanadium sample that scatters elastically in every direction.
+
+    A solid cylinder 10 mm across and 10 mm high. The cross-sections are per atom, and the
+    volume per atom is half the bcc cell of 3.024 Å. A neutron scatters every 27 mm on average,
+    and as many times as it happens to: give ``order=1`` for single scattering only.
+
+    No focusing window is set: it depends on the instrument. Give the direction of the
+    detector from the sample and a window that covers it, e.g.
+    ``vanadium(target_z=1, focus_aw=60, focus_ah=10)`` for one straight ahead.
+
+    Parameters
+    ----------
+    **params:
+        Further ``Incoherent`` parameters, or changes to the defaults (e.g. ``name``, ``at``,
+        ``relative``, the shape, ``pack``, the focusing window).
+
+    Returns
+    -------
+    :
+        The sample.
+    """
+    return Incoherent(
+        **{
+            "radius": 0.01,
+            "yheight": 0.01,
+            "sigma_abs": 5.08,  # barns, at 2200 m/s
+            "sigma_inc": 5.08,  # barns
+            "Vc": 13.827,  # Å³
             **params,
         }
     )

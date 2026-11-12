@@ -17,7 +17,7 @@ from mcdgs.core.components import (
 from mcdgs.core.params import InstrParam
 from mcdgs.instruments.trex.model import TRex
 from mcdgs.mcstas.builder import build_mcstas, default_input_dir
-from mcdgs.samples import aluminum, la2ni7, lead
+from mcdgs.samples import aluminum, la2ni7, lead, vanadium
 
 
 @dataclass(frozen=True)
@@ -234,6 +234,16 @@ def test_every_field_of_the_phonon_sample_is_a_mcstas_parameter(tmp_path):
     own = {f.name for f in fields(lead())} - {f.name for f in fields(Component)}
     assert own <= set(sample.parameter_names)
     assert (sample.a, sample.b, sample.M) == (4.9508, 9.405, 207.2)
+
+
+def test_every_field_of_the_incoherent_sample_is_a_mcstas_parameter(tmp_path):
+    beamline = _Beamline()
+    beamline.sample = vanadium(at=[0, 0, 1], relative="axis", target_index=-1, focus_aw=10)
+    sample = build_mcstas(beamline, input_path=tmp_path).get_component("sample")
+    own = {f.name for f in fields(vanadium())} - {f.name for f in fields(Component)}
+    assert own == set(sample.parameter_names)
+    assert (sample.sigma_abs, sample.sigma_inc, sample.Vc) == (5.08, 5.08, 13.827)
+    assert sample.geometry == '"NULL"'  # no shape file
 
 
 @pytest.mark.skipif(shutil.which("mcrun") is None, reason="McStas is not on the PATH")
