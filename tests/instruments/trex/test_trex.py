@@ -1,4 +1,5 @@
 import math
+from dataclasses import replace
 from itertools import pairwise
 
 import numpy as np
@@ -220,6 +221,14 @@ def test_each_chopper_window_is_as_wide_as_the_exit_of_the_guide_in_front(name, 
     in_front = [n for n in names[:arm] if isinstance(trex.components[n], Guide_gravity)][-1]
     assert getattr(trex, name).xwidth == trex.components[in_front].w2
     assert getattr(trex, name).xwidth == pytest.approx(width, abs=1e-15)
+
+
+def test_the_choppers_are_the_instruments_own_in_beam_order():
+    trex = TRex()
+    assert list(trex.choppers) == ["bw1", "bw2", "ps1", "ps2", "mc1", "mc2"]
+    assert all(c is getattr(trex, name) for name, c in trex.choppers.items())
+    trex.mc1 = replace(trex.mc1, nu=0)
+    assert trex.choppers["mc1"].nu == 0
 
 
 def test_without_a_guide_in_front_the_window_is_unrestricted():

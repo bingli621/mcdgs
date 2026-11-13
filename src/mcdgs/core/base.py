@@ -14,13 +14,14 @@ The io/ and mcstas/ layers rely only on what this base class provides: ``name``,
 ``update_params``, ``components``, ``instr_params``, ``positions``, equality and the summary
 (``repr``). ``add_components`` sets several components at once, in order.
 ``running_conditions`` and ``chopper_frequencies`` describe the settings of a run in one line,
-such as the title of a figure.
+such as the title of a figure. ``choppers`` gives the disk choppers, and ``upstream_guides`` the
+guide in front of each.
 """
 
 from dataclasses import asdict, fields, replace
 from typing import Any
 
-from .components import Component, NXdisk_chopper
+from .components import Component, Guide_gravity, NXdisk_chopper
 from .geometry import place_absolute
 from .params import InstrParam
 from .utils import evaluate, format_value
@@ -147,6 +148,38 @@ class Instrument:
         placed = place_absolute(self.components, self.numeric_instr_params())
         return {name: (position.round(9) + 0.0).tolist() for name, (position, _) in placed.items()}
 
+    @property
+    def choppers(self) -> dict[str, NXdisk_chopper]:
+        """The disk choppers of the instrument, by name, in beam order.
+
+        Returns
+        -------
+        :
+            Every :class:`.NXdisk_chopper` in :attr:`components`: the instrument's own, with any
+            change made to them since.
+        """
+        return {n: c for n, c in self.components.items() if isinstance(c, NXdisk_chopper)}
+
+    @property
+    def upstream_guides(self) -> dict[str, Guide_gravity | None]:
+        """The guide in front of each disk chopper, on the source side, by chopper name.
+
+        Returns
+        -------
+        :
+            One entry per :class:`.NXdisk_chopper` in :attr:`components`, in beam order: the
+            chopper's name, and the last :class:`.Guide_gravity` before it in
+            :attr:`components`, or ``None`` if there is none.
+        """
+        guides: dict[str, Guide_gravity | None] = {}
+        last: Guide_gravity | None = None
+        for name, component in self.components.items():
+            if isinstance(component, Guide_gravity):
+                last = component
+            elif isinstance(component, NXdisk_chopper):
+                guides[name] = last
+        return guides
+
     def chopper_frequencies(self, prefix: str = "") -> dict[str, float]:
         """Return the signed frequency of the disk choppers whose names start with ``prefix``.
 
@@ -163,9 +196,9 @@ class Instrument:
         """
         params = self.numeric_instr_params()
         return {
-            name: float(evaluate(component.nu, params))
-            for name, component in self.components.items()
-            if isinstance(component, NXdisk_chopper) and name.startswith(prefix)
+            name: float(evaluate(chopper.nu, params))
+            for name, chopper in self.choppers.items()
+            if name.startswith(prefix)
         }
 
     def running_conditions(self) -> str:

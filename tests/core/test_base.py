@@ -3,7 +3,7 @@ from dataclasses import dataclass
 import pytest
 
 from mcdgs.core.base import INSTRUMENTS, Instrument
-from mcdgs.core.components import Arm, NXdisk_chopper, Progress_bar
+from mcdgs.core.components import Arm, Guide_gravity, NXdisk_chopper, Progress_bar
 from mcdgs.core.params import InstrParam, param
 
 
@@ -50,6 +50,25 @@ def test_components_are_named_after_their_attribute_in_beam_order():
     toy = Toy()
     assert list(toy.components) == ["progress", "origin", "sample", "detector"]
     assert toy.sample.name == "sample"
+
+
+def test_the_choppers_are_the_disk_choppers_in_beam_order():
+    toy = Toy()
+    toy.first = NXdisk_chopper()
+    toy.second = NXdisk_chopper()
+    assert toy.choppers == {"first": toy.first, "second": toy.second}
+    assert toy.choppers["first"] is toy.first
+
+
+def test_the_upstream_guide_of_a_chopper_is_the_last_guide_before_it():
+    toy = Toy()
+    toy.unguided = NXdisk_chopper()
+    toy.guide_1 = Guide_gravity(w1=0.03, h1=0.1, l=1)
+    toy.guide_2 = Guide_gravity(w1=0.03, h1=0.1, l=1)
+    toy.arm = Arm()
+    toy.first = NXdisk_chopper()
+    toy.second = NXdisk_chopper()
+    assert toy.upstream_guides == {"unguided": None, "first": toy.guide_2, "second": toy.guide_2}
 
 
 def test_an_attribute_set_to_none_is_no_component():

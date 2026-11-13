@@ -81,16 +81,6 @@ class Params:
 
 DEFAULT_PARAMS = Params()  # frozen, so one shared default is safe
 
-# the guide in front of each disk, on the source side, by chopper name, in beam order
-UPSTREAM_GUIDES = {
-    "bw1": "guide_13a",
-    "bw2": "guide_15a",
-    "ps1": "guide_32",
-    "ps2": "guide_32",
-    "mc1": "guide_49",
-    "mc2": "guide_49",
-}
-
 
 class TRex(Instrument):
     """The T-Rex instrument.
@@ -185,23 +175,15 @@ class TRex(Instrument):
         if source_masked:
             self.source = masked_source(chopper_train(list(choppers.values())), *band)
 
-    @property
-    def upstream_guides(self) -> dict[str, Guide_gravity]:
-        """The guide in front of each disk, on the source side, by chopper name, in beam order.
-
-        Read from the components of the instrument, by the names of :data:`UPSTREAM_GUIDES`.
-        """
-        guides = {n: c for n, c in self.components.items() if isinstance(c, Guide_gravity)}
-        return {name: guides[guide_name] for name, guide_name in UPSTREAM_GUIDES.items()}
-
     def _create_choppers(self) -> dict[str, tuple[NXdisk_chopper, float]]:
         """Create the choppers, each with a beam window as wide as the guide in front.
 
         Returns
         -------
         :
-            Each chopper with its flight path, from :func:`.choppers.chopper`, by name, in the
-            order of :attr:`upstream_guides`.
+            Each chopper in the place kept for it in :attr:`components` with its flight path,
+            from :func:`.choppers.chopper`, by name, in beam order. A disk with no guide in front
+            has an unrestricted window.
         """
         return {name: chopper(name, guide) for name, guide in self.upstream_guides.items()}
 
