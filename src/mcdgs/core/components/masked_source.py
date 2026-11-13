@@ -1,12 +1,16 @@
 """The masked source: Polygon_ESS_butterfly, and the disks of its chopper train.
 
 ``Polygon_ESS_butterfly`` is ``ESS_butterfly`` emitting only where a chopper train lets neutrons
-through. :class:`ChopperTrainParameters` describes one disk of the train, as chopper-lib takes it.
+through. :class:`ChopperTrainParameters` describes one disk of the train, as chopper-lib takes it,
+and :func:`chopper_train` describes the disks an instrument passes it, each with its flight path.
 """
 
+import math
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from typing import Any, TypedDict
 
+from .choppers import NXdisk_chopper
 from .source import ESS_butterfly
 
 
@@ -161,3 +165,77 @@ class Polygon_ESS_butterfly(ESS_butterfly):
             )
             parameters["resample"] = 0
         return parameters
+
+
+def aperture(disk: NXdisk_chopper) -> float:
+    """Return the angular width of the beam on a disk, about its spindle, as chopper-lib takes it.
+
+    The inner corners of the beam window, nearest the spindle, are the furthest round the disk.
+    NXdisk_chopper hangs the window from the height of the rim at its edges,
+    ``sqrt(radius**2 - (xwidth/2)**2)``, so those corners are ``yheight`` inside it.
+
+    Parameters
+    ----------
+    disk:
+        The disk, with its beam window.
+
+    Returns
+    -------
+    :
+        ``2 atan2(xwidth / 2, sqrt(radius**2 - (xwidth / 2)**2) - yheight)``, in deg.
+
+    Examples
+    --------
+    >>> disk = NXdisk_chopper(slit_edges=[-10, 10], radius=0.5, yheight=0.1, xwidth=0.1)
+    >>> round(aperture(disk), 3)
+    14.339
+    """
+    half_width = disk.xwidth / 2
+    reach = math.sqrt(disk.radius**2 - half_width**2) - disk.yheight
+    return math.degrees(2 * math.atan2(half_width, reach))
+
+
+def chopper_train(disks: Sequence[tuple[NXdisk_chopper, float]]) -> list[ChopperTrainParameters]:
+    """Describe disks to chopper-lib, as :class:`Polygon_ESS_butterfly` takes them.
+
+    Each entry has the disk's edges, beam angle and frequency and delay, which may be instrument
+    parameters, and its :func:`aperture`. Both McStas components put the disk angle ``a`` on the
+    beam axis at ``delay + (beam_angle - a) / (360 nu)``, so the delay is the same.
+
+    Parameters
+    ----------
+    disks:
+        Each disk with its flight path from the moderator, in m: the disk is placed relative to
+        other components, so the instrument gives the path.
+
+    Returns
+    -------
+    :
+        One entry per disk, in the order of ``disks``.
+
+    Raises
+    ------
+    TypeError
+        If a disk's ``beam_angle`` is an instrument parameter: chopper-lib takes a number.
+
+    Examples
+    --------
+    >>> disk = NXdisk_chopper(slit_edges=[-10, 10], nu="nu_ps1", delay="delay_ps1", beam_angle=180)
+    >>> chopper_train([(disk, 107.95)])[0]["beam"], chopper_train([(disk, 107.95)])[0]["path"]
+    (180, 107.95)
+    """
+    train: list[ChopperTrainParameters] = []
+    for disk, path in disks:
+        if isinstance(disk.beam_angle, str):
+            raise TypeError(f"beam_angle {disk.beam_angle!r} is not a number")
+        train.append(
+            {
+                "speed": disk.nu,
+                "delay": disk.delay,
+                "beam": disk.beam_angle,
+                "edges": list(disk.slit_edges),
+                "path": path,
+                "aperture": aperture(disk),
+            }
+        )
+    return train

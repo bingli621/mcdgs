@@ -1,3 +1,4 @@
+import math
 from dataclasses import dataclass
 
 import pytest
@@ -16,6 +17,7 @@ from mcdgs.core.components import (
     Polygon_ESS_butterfly,
     Progress_bar,
 )
+from mcdgs.core.components.masked_source import aperture, chopper_train
 
 
 @dataclass(kw_only=True, repr=False)
@@ -410,3 +412,50 @@ def test_the_incoherent_scattering_length_follows_the_density_of_atoms():
     assert Incoherent().scattering_length == pytest.approx(13.827 / 508)  # m
     assert Incoherent(pack=0.5).scattering_length == pytest.approx(2 * 13.827 / 508)
     assert Incoherent(sigma_inc=80.27, Vc=30.0).scattering_length == pytest.approx(30 / 8027)
+
+
+def test_the_aperture_is_that_of_chopper_lib():
+    # chopper-lib's example: a 100 mm window on a 0.5 m disk with 100 mm openings. Its README
+    # gives 14.4 deg, its formula, in Polygon_ESS_butterfly_image.instr, 14.34 deg
+    disk = NXdisk_chopper(slit_edges=[-10, 10], radius=0.5, yheight=0.1, xwidth=0.1)
+    reach = math.sqrt(0.5**2 - 0.05**2)
+    assert aperture(disk) == pytest.approx(2 * math.degrees(math.atan2(0.05, reach - 0.1)))
+    assert aperture(disk) == pytest.approx(14.339, abs=1e-3)
+    # wider than the width over the radius of the beam crossing, 12.7 deg: the inner corners
+    # stand furthest round the disk
+    assert aperture(disk) > math.degrees(0.1 / (0.5 - 0.1 / 2))
+
+
+def test_the_chopper_train_describes_each_disk_at_its_path():
+    first = NXdisk_chopper(slit_edges=[-10, 10], nu="nu_a", delay="delay_a", beam_angle=180)
+    second = NXdisk_chopper(slit_edges=[0, 5, 90, 95], nu=14, delay=0.001)
+    assert chopper_train([(first, 10.0), (second, 20.0)]) == [
+        {
+            "speed": "nu_a",
+            "delay": "delay_a",
+            "beam": 180,
+            "edges": [-10, 10],
+            "path": 10.0,
+            "aperture": aperture(first),
+        },
+        {
+            "speed": 14,
+            "delay": 0.001,
+            "beam": 0,
+            "edges": [0, 5, 90, 95],
+            "path": 20.0,
+            "aperture": aperture(second),
+        },
+    ]
+
+
+def test_the_chopper_train_does_not_share_the_edges_of_the_disks():
+    disk = NXdisk_chopper(slit_edges=[-10, 10])
+    chopper_train([(disk, 10.0)])[0]["edges"].append(90)
+    assert disk.slit_edges == [-10, 10]
+
+
+def test_the_chopper_train_refuses_a_beam_angle_that_is_a_parameter():
+    disk = NXdisk_chopper(slit_edges=[-10, 10], beam_angle="beam_a")
+    with pytest.raises(TypeError, match="beam_a"):
+        chopper_train([(disk, 10.0)])
