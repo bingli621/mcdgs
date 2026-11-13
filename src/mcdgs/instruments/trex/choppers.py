@@ -228,8 +228,8 @@ def chopper_timings(
     return timings
 
 
-def chopper(name: str, upstream_guide: Guide_gravity | None) -> NXdisk_chopper:
-    """Create a chopper.
+def chopper(name: str, upstream_guide: Guide_gravity | None) -> tuple[NXdisk_chopper, float]:
+    """Create a chopper, with its flight path.
 
     Parameters
     ----------
@@ -244,10 +244,11 @@ def chopper(name: str, upstream_guide: Guide_gravity | None) -> NXdisk_chopper:
     :
         A new chopper, relative to the arm of its gap, with its frequency and delay given by
         the instrument parameters ``nu_<name>`` and ``delay_<name>``, and a beam window of
-        ``upstream_guide.w2``, or 0 without a guide.
+        ``upstream_guide.w2``, or 0 without a guide; and the disk's distance from the
+        moderator along the beam axis, in m, which the chopper does not know.
     """
     disk = DISKS[name]
-    return NXdisk_chopper(
+    nx_chopper = NXdisk_chopper(
         slit_edges=list(disk.slit_edges),
         radius=disk.radius,
         yheight=disk.slit_height,
@@ -261,3 +262,4 @@ def chopper(name: str, upstream_guide: Guide_gravity | None) -> NXdisk_chopper:
         at=[0, 0, disk.z],
         relative=disk.gap_arm,
     )
+    return nx_chopper, disk.distance

@@ -223,7 +223,14 @@ def test_each_chopper_window_is_as_wide_as_the_exit_of_the_guide_in_front(name, 
 
 
 def test_without_a_guide_in_front_the_window_is_unrestricted():
-    assert chopper("mc1", None).xwidth == 0
+    nx_chopper, _ = chopper("mc1", None)
+    assert nx_chopper.xwidth == 0
+
+
+def test_each_chopper_comes_with_the_flight_path_of_its_disk():
+    for name, disk in DISKS.items():
+        _, distance = chopper(name, None)
+        assert distance == disk.distance, name
 
 
 @pytest.mark.parametrize(
@@ -385,9 +392,14 @@ def test_every_ready_made_sample_goes_on_trex(make):
     assert trex.sample == make(relative="sample_pos")
 
 
-def test_a_sample_keeps_its_own_placement():
-    trex = TRex(sample=aluminum(relative="guide_1"))
-    assert trex.sample.relative == "guide_1"
+def test_a_sample_relative_to_the_sample_position_stays_there():
+    trex = TRex(sample=aluminum(relative="sample_pos"))
+    assert trex.sample.relative == "sample_pos"
+
+
+def test_a_sample_relative_to_another_component_is_refused():
+    with pytest.raises(ValueError, match="'guide_1', not to 'sample_pos'"):
+        TRex(sample=aluminum(relative="guide_1"))
 
 
 def test_the_given_sample_is_not_changed():

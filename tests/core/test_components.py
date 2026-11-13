@@ -339,9 +339,11 @@ def test_the_chopper_counts_its_edges():
     assert chopper.mcstas_parameters()["n_edges"] == 4
 
 
-def test_the_chopper_requires_its_edges():
-    with pytest.raises(TypeError):
-        NXdisk_chopper()
+def test_by_default_the_chopper_has_no_slits():
+    chopper = NXdisk_chopper()
+    assert chopper.slit_edges == []
+    assert chopper.mcstas_parameters()["n_edges"] == 0
+    assert NXdisk_chopper().slit_edges is not chopper.slit_edges  # each its own list
 
 
 PHONON = {  # what Phonon_simple requires, as in McStas

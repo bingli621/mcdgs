@@ -5,7 +5,7 @@ and the gap it turns in. An instrument describes its disks with it and builds an
 :class:`NXdisk_chopper` from each.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 from .base import Component
@@ -21,7 +21,8 @@ class NXdisk_chopper(Component):
     ----------
     slit_edges:
         Opening and closing edge of each slit from the disk's zero mark, in pairs, increasing,
-        in deg. McStas's ``n_edges`` is computed from it.
+        in deg. McStas's ``n_edges`` is computed from it. Empty by default: a disk without
+        slits.
     radius:
         Outer radius of the disk in m.
     yheight:
@@ -58,7 +59,7 @@ class NXdisk_chopper(Component):
     ([-10, 10], 2, 'f')
     """
 
-    slit_edges: list[float]
+    slit_edges: list[float] = field(default_factory=list)
     radius: float = 0.35
     yheight: float = 0
     xwidth: float = 0
