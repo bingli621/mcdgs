@@ -142,7 +142,7 @@ def build_tof(
     neutrons: int = 1_000_000,
     seed: int | None = None,
     n_pulses: int = 1,
-) -> tof.Model:
+) -> tof.Model:  # type: ignore
     """Build the tof model of an instrument.
 
     Parameters
@@ -181,7 +181,7 @@ def build_tof(
             wmin=sc.scalar(float(evaluate(source.Lmin, params)), unit="angstrom"),
             wmax=sc.scalar(float(evaluate(source.Lmax, params)), unit="angstrom"),
             seed=seed,
-        )
+        )  # type: ignore
     )
     for name, component, distance in after_source:
         match component:
@@ -191,7 +191,7 @@ def build_tof(
                 model.add(tof.Chopper.from_diskchopper(disk, name=name))
             case Monitor_nD():  # a curved one is centered on the sample: its radius further on
                 reached = distance + (component.curved_radius or 0)
-                model.add(tof.Detector(distance=sc.scalar(reached, unit="m"), name=name))
+                model.add(tof.Detector(distance=sc.scalar(reached, unit="m"), name=name))  # type: ignore
             case _:
                 pass  # not something tof understands
     return model

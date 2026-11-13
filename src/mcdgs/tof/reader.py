@@ -46,7 +46,7 @@ def monitor_bins(monitor: Monitor_nD) -> dict[str, sc.Variable]:
     return bins
 
 
-def read_tof_monitor(monitor: tof.DetectorReading, bins: Mapping[str, sc.Variable]) -> NDArray:
+def read_tof_monitor(monitor: tof.DetectorReading, bins: Mapping[str, sc.Variable]) -> NDArray:  # type: ignore
     """Count the neutrons of the first pulse that reach a tof monitor, on any bins.
 
     Parameters
