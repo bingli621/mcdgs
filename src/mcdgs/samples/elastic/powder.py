@@ -10,7 +10,7 @@ __all__ = ["vanadium"]
 def vanadium(**params: Any) -> Incoherent:
     """Create a vanadium sample that scatters elastically in every direction.
 
-    A solid cylinder 10 mm across and 10 mm high. The cross-sections are per atom, and the
+    A solid cylinder 20 mm across and 10 mm high. The cross-sections are per atom, and the
     volume per atom is half the bcc cell of 3.024 Å. A neutron scatters every 27 mm on average,
     and as many times as it happens to: give ``order=1`` for single scattering only.
 

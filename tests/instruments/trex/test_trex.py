@@ -699,10 +699,7 @@ def test_the_beamstop_is_just_in_front_of_the_banana_with_its_monitor_on_its_fac
     positions = trex.positions()
     assert positions["beamstop_monitor"] == positions["beamstop"]
     assert (stop.xwidth, stop.yheight) == (monitor.xwidth, monitor.yheight)
-    assert (monitor.xwidth, monitor.yheight) == (
-        trex.pre_sample_monitor.xwidth,
-        trex.pre_sample_monitor.yheight,
-    )
+    assert (monitor.xwidth, monitor.yheight) == (0.076, 0.076)
     assert stop.relative == banana.relative == "sample_pos"
     assert banana.curved_radius - stop.at[2] == pytest.approx(0.001, abs=1e-12)
 

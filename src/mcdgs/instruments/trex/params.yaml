@@ -1862,8 +1862,8 @@ pre_sample_monitor:
   position: [0.82782737, 0.0, 163.497252314]
 beamstop_monitor:
   component: Monitor_nD
-  xwidth: 0.1
-  yheight: 0.1
+  xwidth: 0.076
+  yheight: 0.076
   zdepth: 0
   xmin: 0
   xmax: 0
@@ -1916,8 +1916,8 @@ sample_monitor:
   position: [0.830079437, 0.0, 163.797243861]
 beamstop:
   component: Beamstop
-  xwidth: 0.1
-  yheight: 0.1
+  xwidth: 0.076
+  yheight: 0.076
   at: [0, 0, 2.999]
   rotated: [0, 0, 0]
   relative: sample_pos

@@ -120,7 +120,7 @@ def test_vanadium_is_an_incoherent_sample_placed_like_any_component():
 
 def test_vanadium_is_a_solid_cylinder_with_the_cross_sections_of_vanadium():
     sample = vanadium()
-    assert (sample.radius, sample.yheight, sample.thickness, sample.pack) == (0.005, 0.01, 0, 1)
+    assert (sample.radius, sample.yheight, sample.thickness, sample.pack) == (0.01, 0.01, 0, 1)
     assert (sample.sigma_abs, sample.sigma_inc, sample.Vc) == (5.08, 5.08, 13.827)
     assert sample.Vc == pytest.approx(3.024**3 / 2, abs=5e-4)  # two atoms per bcc cell
     assert sample.scattering_length == pytest.approx(0.0272, abs=5e-5)  # m
