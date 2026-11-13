@@ -19,9 +19,10 @@ The flight path to a disk is its distance from the moderator along the beam axis
 of its gap in the Table of Optics plus the disk's place in the gap. The path through the bender
 is taken to be that through guide 4a.
 
-:data:`DISK_DISTANCE` gives the masked source the flight path of each disk.
+:data:`DISKS` describes the design of each disk, with its flight path.
 """
 
+from dataclasses import dataclass
 from typing import Literal, NamedTuple, get_args
 
 from mcdgs.core.components import Guide_gravity, NXdisk_chopper
@@ -52,76 +53,136 @@ MC_DISK_SPACING = 0.01  # FIXME, not in Table of Optics v3.2, in m
 # chopper_timings
 PSC_FREQUENCY_RATIO = 0.75
 
-# deg, opening and closing edge of each slit from the disk's zero mark. The wide slit of mc2 is
-# centered on 175, not on the 185 of mctrex: its narrow slit then comes by the beam 175 deg of
-# turn after the wide one, and that of mc1 185 deg after, so the two are never open together
-SLIT_EDGES = {
-    "bw1": [-30.7, 30.7],
-    "bw2": [-31.65, 31.65],
-    "ps1": [-10, 10, 107.5, 142.5, 170, 190, 287.5, 322.5],
-    "ps2": [-10, 10, 107.5, 142.5, 170, 190, 287.5, 322.5],
-    "mc1": [178.75, 181.25, 362.8, 367.2],
-    "mc2": [-1.25, 1.25, 172.8, 177.2],
-}
 
-# deg, where the beam crosses each disk from its zero mark: 0 puts the axle below the guide,
-# 180 above it
-BEAM_ANGLE = {"bw1": 0, "bw2": 0, "ps1": 180, "ps2": 180, "mc1": 180, "mc2": 0}
+@dataclass(frozen=True, kw_only=True)
+class Disk:
+    """The design of one chopper disk of T-Rex.
 
-# m, radial height of the slits of each disk
-SLIT_HEIGHT = {
-    "bw1": 0.085,  # FIXME slit height unknown
-    "bw2": 0.085,  # FIXME slit height unknown
-    "ps1": 0.095,
-    "ps2": 0.095,
-    "mc1": 0.045,
-    "mc2": 0.045,
-}
+    Attributes
+    ----------
+    slits:
+        Center and width of each slit, in deg: the center from the disk's zero mark.
+    radius:
+        Outer radius of the disk, in m.
+    beam_angle:
+        Where the beam crosses the disk from its zero mark, in deg: 0 puts the axle below the
+        guide, 180 above it.
+    zero_angle:
+        Angle from the +y axis of the disk to its top-dead-center pickup, in deg.
+    slit_height:
+        Radial height of the slits, in m.
+    mode_slit:
+        Index of the slit on the beam in each mode: wide for flux, narrow for resolution.
+    gap_arm:
+        The arm at the entrance of the disk's gap, which places it.
+    gap_z:
+        Distance of that arm from the moderator along the beam axis, in m.
+    z:
+        Distance of the disk from the entrance of its gap, in m.
+    upstream_guide:
+        The guide in front of the disk, on the source side: the beam window is as wide as its
+        exit.
+    """
 
-# index of the slit of each disk on the beam in each mode: wide for flux, narrow for resolution
-MODE_SLIT: dict[Mode, dict[str, int]] = {
-    "FF": {"bw1": 0, "bw2": 0, "ps1": 1, "ps2": 1, "mc1": 1, "mc2": 1},
-    "RR": {"bw1": 0, "bw2": 0, "ps1": 2, "ps2": 2, "mc1": 0, "mc2": 0},
-}
+    slits: tuple[tuple[float, float], ...]
+    radius: float
+    beam_angle: float
+    zero_angle: float
+    slit_height: float
+    mode_slit: dict[Mode, int]
+    gap_arm: str
+    gap_z: float
+    z: float
+    upstream_guide: str
 
-# the arm at the entrance of the gap of each disk, which places it
-GAP_ARM = {
-    "bw1": "arm_bwc1",
-    "bw2": "arm_bwc2",
-    "ps1": "arm_psc",
-    "ps2": "arm_psc",
-    "mc1": "arm_mc",
-    "mc2": "arm_mc",
-}
+    @property
+    def slit_edges(self) -> tuple[float, ...]:
+        """Opening and closing edge of each slit from the disk's zero mark, in deg."""
+        return tuple(edge for c, w in self.slits for edge in (c - w / 2, c + w / 2))
 
-# the guide in front of each disk, on the source side: the beam window is as wide as its exit
-UPSTREAM_GUIDE = {
-    "bw1": "guide_13a",
-    "bw2": "guide_15a",
-    "ps1": "guide_32",
-    "ps2": "guide_32",
-    "mc1": "guide_49",
-    "mc2": "guide_49",
-}
+    @property
+    def distance(self) -> float:
+        """Distance of the disk from the moderator along the beam axis, in m: its flight path."""
+        return self.gap_z + self.z
 
-# m, distance of each disk from the entrance of its gap
-DISK_Z = {
-    "bw1": BWC1_GAP_LENGTH / 2,  # 0.015
-    "bw2": BWC2_GAP_LENGTH / 2,  # 0.015
-    "ps1": (PSC_GAP_LENGTH - PSC_DISK_SPACING) / 2,  # 0.05
-    "ps2": (PSC_GAP_LENGTH + PSC_DISK_SPACING) / 2,  # 0.15
-    "mc1": (MC_GAP_LENGTH - MC_DISK_SPACING) / 2,  # 0.0425
-    "mc2": (MC_GAP_LENGTH + MC_DISK_SPACING) / 2,  # 0.0525
-}
 
-# m, distance of each disk from the moderator along the beam axis: its flight path
-DISK_DISTANCE = {
-    "bw1": ARM_BWC1_Z + DISK_Z["bw1"],  # 31.96404
-    "bw2": ARM_BWC2_Z + DISK_Z["bw2"],  # 39.95504
-    "ps1": ARM_PSC_Z + DISK_Z["ps1"],  # 107.95
-    "ps2": ARM_PSC_Z + DISK_Z["ps2"],  # 108.05
-    "mc1": ARM_MC_Z + DISK_Z["mc1"],  # 162.0275
-    "mc2": ARM_MC_Z + DISK_Z["mc2"],  # 162.0375
+# the six disks, in beam order
+DISKS = {
+    "bw1": Disk(
+        slits=((0, 61.4),),
+        radius=0.35,
+        beam_angle=0,
+        zero_angle=0,
+        slit_height=0.085,  # FIXME slit height unknown
+        mode_slit={"FF": 0, "RR": 0},
+        gap_arm="arm_bwc1",
+        gap_z=ARM_BWC1_Z,
+        z=BWC1_GAP_LENGTH / 2,  # 0.015, distance 31.96404
+        upstream_guide="guide_13a",
+    ),
+    "bw2": Disk(
+        slits=((0, 63.3),),
+        radius=0.35,
+        beam_angle=0,
+        zero_angle=0,
+        slit_height=0.085,  # FIXME slit height unknown
+        mode_slit={"FF": 0, "RR": 0},
+        gap_arm="arm_bwc2",
+        gap_z=ARM_BWC2_Z,
+        z=BWC2_GAP_LENGTH / 2,  # 0.015, distance 39.95504
+        upstream_guide="guide_15a",
+    ),
+    "ps1": Disk(
+        slits=((0, 20), (125, 35), (180, 20), (305, 35)),
+        radius=0.35,
+        beam_angle=180,
+        zero_angle=0,
+        slit_height=0.095,
+        mode_slit={"FF": 1, "RR": 2},
+        gap_arm="arm_psc",
+        gap_z=ARM_PSC_Z,
+        z=(PSC_GAP_LENGTH - PSC_DISK_SPACING) / 2,  # 0.05, distance 107.95
+        upstream_guide="guide_32",
+    ),
+    "ps2": Disk(
+        slits=((0, 20), (125, 35), (180, 20), (305, 35)),
+        radius=0.35,
+        beam_angle=180,
+        zero_angle=0,
+        slit_height=0.095,
+        mode_slit={"FF": 1, "RR": 2},
+        gap_arm="arm_psc",
+        gap_z=ARM_PSC_Z,
+        z=(PSC_GAP_LENGTH + PSC_DISK_SPACING) / 2,  # 0.15, distance 108.05
+        upstream_guide="guide_32",
+    ),
+    "mc1": Disk(
+        slits=((180, 2.5), (365, 4.4)),
+        radius=0.35,
+        beam_angle=180,
+        zero_angle=0,
+        slit_height=0.045,
+        mode_slit={"FF": 1, "RR": 0},
+        gap_arm="arm_mc",
+        gap_z=ARM_MC_Z,
+        z=(MC_GAP_LENGTH - MC_DISK_SPACING) / 2,  # 0.0425, distance 162.0275
+        upstream_guide="guide_49",
+    ),
+    # the wide slit is centered on 175, not on the 185 of mctrex: the narrow slit then comes by
+    # the beam 175 deg of turn after the wide one, and that of mc1 185 deg after, so the two are
+    # never open together
+    "mc2": Disk(
+        slits=((0, 2.5), (175, 4.4)),
+        radius=0.35,
+        beam_angle=0,
+        zero_angle=0,
+        slit_height=0.045,
+        mode_slit={"FF": 1, "RR": 0},
+        gap_arm="arm_mc",
+        gap_z=ARM_MC_Z,
+        z=(MC_GAP_LENGTH + MC_DISK_SPACING) / 2,  # 0.0525, distance 162.0375
+        upstream_guide="guide_49",
+    ),
 }
 
 
@@ -160,10 +221,9 @@ def slit_angle(name: str, mode: Mode) -> float:
     >>> slit_angle("ps1", "FF"), slit_angle("mc1", "FF"), slit_angle("mc1", "RR")
     (55.0, 175.0, 0.0)
     """
-    edges = SLIT_EDGES[name]
-    slit = MODE_SLIT[mode][name]
-    center = (edges[2 * slit] + edges[2 * slit + 1]) / 2
-    return (BEAM_ANGLE[name] - center) % 360
+    disk = DISKS[name]
+    center, _ = disk.slits[disk.mode_slit[mode]]
+    return float((disk.beam_angle - center) % 360)
 
 
 def chopper_timings(
@@ -219,8 +279,8 @@ def chopper_timings(
     }
     speed = speed_from_wavelength(lambda0)
     timings = {}
-    for name, distance in DISK_DISTANCE.items():
-        arrival = t0_offset + distance / speed
+    for name, disk in DISKS.items():
+        arrival = t0_offset + disk.distance / speed
         # the zero mark passes the beam earlier, for the disk to have turned to the slit
         timings[name] = Timing(nu[name], arrival - slit_angle(name, mode) / (360 * nu[name]))
     return timings
@@ -232,12 +292,12 @@ def window_width(name: str) -> float:
     Parameters
     ----------
     name:
-        Chopper name, such as ``"ps1"``: a key of :data:`UPSTREAM_GUIDE`.
+        Chopper name, such as ``"ps1"``: a key of :data:`DISKS`.
 
     Returns
     -------
     :
-        ``w2`` of the guide :data:`UPSTREAM_GUIDE` names, in m.
+        ``w2`` of the disk's ``upstream_guide``, in m.
 
     Examples
     --------
@@ -250,7 +310,7 @@ def window_width(name: str) -> float:
         for guide_name, guide in part.items()
         if isinstance(guide, Guide_gravity)
     }
-    return float(guides[UPSTREAM_GUIDE[name]].w2)
+    return float(guides[DISKS[name].upstream_guide].w2)
 
 
 def chopper(name: str) -> NXdisk_chopper:
@@ -259,7 +319,7 @@ def chopper(name: str) -> NXdisk_chopper:
     Parameters
     ----------
     name:
-        Chopper name, such as ``"ps1"``: a key of :data:`SLIT_EDGES`.
+        Chopper name, such as ``"ps1"``: a key of :data:`DISKS`.
 
     Returns
     -------
@@ -268,17 +328,18 @@ def chopper(name: str) -> NXdisk_chopper:
         the instrument parameters ``nu_<name>`` and ``delay_<name>``, and the beam window of
         :func:`window_width`.
     """
+    disk = DISKS[name]
     return NXdisk_chopper(
-        slit_edges=SLIT_EDGES[name],
-        radius=0.35,
-        yheight=SLIT_HEIGHT[name],
+        slit_edges=list(disk.slit_edges),
+        radius=disk.radius,
+        yheight=disk.slit_height,
         xwidth=window_width(name),
         nu=f"nu_{name}",
         delay=f"delay_{name}",
-        beam_angle=BEAM_ANGLE[name],
-        zero_angle=0,
+        beam_angle=disk.beam_angle,
+        zero_angle=disk.zero_angle,
         abs_out=0,
         verbose=1,
-        at=[0, 0, DISK_Z[name]],
-        relative=GAP_ARM[name],
+        at=[0, 0, disk.z],
+        relative=disk.gap_arm,
     )

@@ -11,7 +11,7 @@ from mcdgs.core.components.masked_source import chopper_train
 from mcdgs.core.components.source import ESS_SOURCE_FREQUENCY, ESS_SOURCE_LENGTH, L_MAX, L_MIN
 from mcdgs.core.utils import speed_from_wavelength
 
-from .choppers import DISK_DISTANCE, chopper
+from .choppers import DISKS, chopper
 from .guides.extraction import GUIDE_1_IN_HEIGHT, GUIDE_1_IN_Z, NBOA_FIXED_WALL_X
 from .guides.straight import SAMPLE_Z
 
@@ -112,7 +112,7 @@ def masked_source(l_min: float = L_MIN, l_max: float = L_MAX) -> Polygon_ESS_but
     """Create the source of T-Rex masked by its six choppers.
 
     It is :func:`source` emitting only where the six disks of :func:`.choppers.chopper`, at the
-    paths of :data:`.choppers.DISK_DISTANCE`, let neutrons through, with
+    distances of :data:`.choppers.DISKS`, let neutrons through, with
     :data:`PATH_SPREAD_FRACTION`. Every ray then reaches the choppers in a window they are open
     in, with its weight multiplied by the acceptance.
 
@@ -128,6 +128,6 @@ def masked_source(l_min: float = L_MIN, l_max: float = L_MAX) -> Polygon_ESS_but
     """
     return Polygon_ESS_butterfly(
         **_source(l_min, l_max),
-        choppers=chopper_train([(chopper(name), path) for name, path in DISK_DISTANCE.items()]),
+        choppers=chopper_train([(chopper(name), disk.distance) for name, disk in DISKS.items()]),
         path_spread_fraction=PATH_SPREAD_FRACTION,
     )

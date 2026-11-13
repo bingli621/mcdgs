@@ -14,11 +14,7 @@ from mcdgs.core.components import (
 from mcdgs.core.components.masked_source import aperture
 from mcdgs.core.geometry import place_absolute
 from mcdgs.instruments.trex.choppers import (
-    BEAM_ANGLE,
-    DISK_DISTANCE,
-    MODE_SLIT,
-    SLIT_EDGES,
-    UPSTREAM_GUIDE,
+    DISKS,
     chopper_timings,
     slit_angle,
 )
@@ -127,8 +123,8 @@ def test_the_masked_source_is_the_source_masked_by_the_six_choppers():
 def test_the_chopper_train_is_the_choppers_of_trex():
     trex = TRex()
     train = masked_source().choppers
-    assert [disk["path"] for disk in train] == list(DISK_DISTANCE.values())
-    for disk, name in zip(train, DISK_DISTANCE, strict=True):
+    assert [disk["path"] for disk in train] == [disk.distance for disk in DISKS.values()]
+    for disk, name in zip(train, DISKS, strict=True):
         chopper = getattr(trex, name)
         assert (disk["speed"], disk["delay"]) == (f"nu_{name}", f"delay_{name}")
         assert (disk["speed"], disk["delay"]) == (chopper.nu, chopper.delay)
@@ -220,7 +216,7 @@ def test_each_chopper_window_is_as_wide_as_the_exit_of_the_guide_in_front(name, 
     names = list(trex.components)
     arm = names.index(getattr(trex, name).relative)
     in_front = [n for n in names[:arm] if isinstance(trex.components[n], Guide_gravity)][-1]
-    assert in_front == UPSTREAM_GUIDE[name]
+    assert in_front == DISKS[name].upstream_guide
     assert getattr(trex, name).xwidth == pytest.approx(width, abs=1e-15)
 
 
@@ -236,7 +232,7 @@ def test_each_chopper_window_is_as_wide_as_the_exit_of_the_guide_in_front(name, 
     ],
 )
 def test_each_chopper_is_at_its_distance_from_the_moderator(name, distance):
-    assert DISK_DISTANCE[name] == pytest.approx(distance, abs=1e-9)
+    assert DISKS[name].distance == pytest.approx(distance, abs=1e-9)
 
 
 def test_the_choppers_turn_at_the_frequencies_of_trex_primary():
@@ -249,7 +245,7 @@ def test_the_choppers_turn_at_the_frequencies_of_trex_primary():
 def test_in_rr_each_zero_mark_passes_the_beam_when_the_central_wavelength_arrives():
     timings = chopper_timings(lambda0=2.4, rrm=4, source_frequency=14, mode="RR", t0_offset=0.0017)
     for name, timing in timings.items():
-        arrival = 0.0017 + DISK_DISTANCE[name] * 2.4 / 3956.034
+        arrival = 0.0017 + DISKS[name].distance * 2.4 / 3956.034
         assert timing.delay == pytest.approx(arrival, rel=1e-6)
 
 
@@ -269,26 +265,37 @@ def test_the_slit_angles_are_the_shifts_of_trex_primary(mode, angles):
 def test_the_slit_of_the_mode_is_centered_on_the_beam_when_the_central_wavelength_arrives(mode):
     timings = chopper_timings(lambda0=2.4, rrm=4, source_frequency=14, mode=mode, t0_offset=0.0017)
     for name, timing in timings.items():
-        arrival = 0.0017 + DISK_DISTANCE[name] * 2.4 / 3956.034
+        arrival = 0.0017 + DISKS[name].distance * 2.4 / 3956.034
         # as NXdisk_chopper: the disk angle on the beam is beam_angle minus the turn of the mark
         mark = 360 * timing.nu * (arrival - timing.delay)
-        on_beam = BEAM_ANGLE[name] - mark
-        edges = SLIT_EDGES[name]
-        slit = MODE_SLIT[mode][name]
-        center = (edges[2 * slit] + edges[2 * slit + 1]) / 2
+        on_beam = DISKS[name].beam_angle - mark
+        center, _ = DISKS[name].slits[DISKS[name].mode_slit[mode]]
         off_center = (on_beam - center + 180) % 360 - 180  # in [-180, 180): 359.9... is -0.0...
         assert off_center == pytest.approx(0, abs=1e-3), name
 
 
 def test_the_mode_selects_the_wide_slit_for_flux_and_the_narrow_one_for_resolution():
     for name in ("ps1", "ps2", "mc1", "mc2"):
-        edges = SLIT_EDGES[name]
+        disk = DISKS[name]
+        _, wide = disk.slits[disk.mode_slit["FF"]]
+        _, narrow = disk.slits[disk.mode_slit["RR"]]
+        assert wide > narrow, name
 
-        def width(mode, edges=edges, name=name):
-            slit = MODE_SLIT[mode][name]
-            return edges[2 * slit + 1] - edges[2 * slit]
 
-        assert width("FF") > width("RR"), name
+@pytest.mark.parametrize(
+    ("name", "edges"),
+    [
+        ("bw1", (-30.7, 30.7)),
+        ("bw2", (-31.65, 31.65)),
+        ("ps1", (-10, 10, 107.5, 142.5, 170, 190, 287.5, 322.5)),
+        ("ps2", (-10, 10, 107.5, 142.5, 170, 190, 287.5, 322.5)),
+        ("mc1", (178.75, 181.25, 362.8, 367.2)),
+        ("mc2", (-1.25, 1.25, 172.8, 177.2)),
+    ],
+)
+def test_the_slit_edges_are_the_centers_plus_and_minus_half_the_widths(name, edges):
+    assert DISKS[name].slit_edges == edges
+    assert TRex().components[name].slit_edges == list(edges)
 
 
 def test_an_unknown_mode_raises():

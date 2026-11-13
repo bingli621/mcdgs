@@ -15,7 +15,7 @@
 * 
 * %Identification
 * Written by: Python McStas Instrument Generator
-* Date: 10:36:36 on November 13, 2026
+* Date: 11:48:55 on November 13, 2026
 * Origin: ESS DMSC
 * %INSTRUMENT_SITE: Generated_instruments
 * 
@@ -77,8 +77,8 @@ double bender_rRightUpPar[5] = {0.99,0.0219,3.02,4.0,0.003};
 double bender_rRightDownPar[5] = {0.99,0.0219,3.02,4.0,0.003};
 double bw1_slit_edges[2] = {-30.7,30.7};
 double bw2_slit_edges[2] = {-31.65,31.65};
-double ps1_slit_edges[8] = {-10,10,107.5,142.5,170,190,287.5,322.5};
-double ps2_slit_edges[8] = {-10,10,107.5,142.5,170,190,287.5,322.5};
+double ps1_slit_edges[8] = {-10.0,10.0,107.5,142.5,170.0,190.0,287.5,322.5};
+double ps2_slit_edges[8] = {-10.0,10.0,107.5,142.5,170.0,190.0,287.5,322.5};
 double mc1_slit_edges[4] = {178.75,181.25,362.8,367.2};
 double mc2_slit_edges[4] = {-1.25,1.25,172.8,177.2};
 %}

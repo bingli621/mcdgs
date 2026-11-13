@@ -34,7 +34,7 @@ from matplotlib.figure import Figure
 from mcdgs.core.params import InstrParam
 from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
 from mcdgs.diagnostics.trex.elastic_plane import pixel_solid_angle
-from mcdgs.instruments.trex.choppers import SLIT_EDGES, slit_angle
+from mcdgs.instruments.trex.choppers import DISKS, slit_angle
 from mcdgs.instruments.trex.detectors import (
     BANANA_CENTER_Y,
     BANANA_HEIGHT,
@@ -132,7 +132,7 @@ class TRexWithVanadium(TRex):
         for monitor in (pre_sample_monitor, beamstop_monitor, sample_monitor):
             wide = monitor(lambda_limits=band, time_resolution=MONITOR_TIME_RESOLUTION)
             setattr(self, monitor.__name__, wide)
-        for name in SLIT_EDGES:
+        for name in DISKS:
             angle = slit_angle(name, params.mode)
             parked = replace(getattr(self, name), nu=0, delay=0, park_angle=angle)
             setattr(self, name, parked)

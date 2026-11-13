@@ -16,7 +16,7 @@ from mcdgs.core.components import (
 )
 from mcdgs.core.params import InstrParam
 from mcdgs.core.utils import evaluate, speed_from_wavelength
-from mcdgs.instruments.trex.choppers import DISK_DISTANCE
+from mcdgs.instruments.trex.choppers import DISKS
 from mcdgs.instruments.trex.model import TRex
 from mcdgs.samples import aluminum
 from mcdgs.tof.builder import build_tof
@@ -177,9 +177,9 @@ def _trex(mode):
 
 def test_trex_choppers_are_placed_in_beam_order():
     model = build_tof(TRex(), neutrons=1000, seed=1)
-    assert list(model.choppers) == list(DISK_DISTANCE)
+    assert list(model.choppers) == list(DISKS)
     for name, chopper in model.choppers.items():
-        assert chopper.distance.value == pytest.approx(DISK_DISTANCE[name], abs=1e-3), name
+        assert chopper.distance.value == pytest.approx(DISKS[name].distance, abs=1e-3), name
     assert list(model.detectors) == [
         "source_monitor",
         "beam_monitor",
@@ -240,6 +240,6 @@ def test_trex_disks_lie_within_1_mm_of_the_distances_the_choppers_are_phased_to(
     trex = TRex()
     positions = trex.positions()
     source = np.array(positions["source"])
-    for name, distance in DISK_DISTANCE.items():
+    for name, disk in DISKS.items():
         straight = np.linalg.norm(np.array(positions[name]) - source)
-        assert straight == pytest.approx(distance, abs=1e-3), name
+        assert straight == pytest.approx(disk.distance, abs=1e-3), name
