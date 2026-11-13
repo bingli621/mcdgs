@@ -1,4 +1,5 @@
 import math
+from dataclasses import replace
 from itertools import pairwise
 
 import numpy as np
@@ -15,8 +16,10 @@ from mcdgs.core.components.masked_source import aperture
 from mcdgs.core.geometry import place_absolute
 from mcdgs.instruments.trex.choppers import (
     DISKS,
+    chopper,
     chopper_timings,
-    slit_angle,
+    mode_phase_shift,
+    phase_shift,
 )
 from mcdgs.instruments.trex.guides.extraction import half_taper_angle
 from mcdgs.instruments.trex.guides.sections import split_after
@@ -220,6 +223,11 @@ def test_each_chopper_window_is_as_wide_as_the_exit_of_the_guide_in_front(name, 
     assert getattr(trex, name).xwidth == pytest.approx(width, abs=1e-15)
 
 
+def test_without_a_guide_in_front_the_window_is_unrestricted(monkeypatch):
+    monkeypatch.setitem(DISKS, "mc1", replace(DISKS["mc1"], upstream_guide=None))
+    assert chopper("mc1").xwidth == 0
+
+
 @pytest.mark.parametrize(
     ("name", "distance"),
     [  # the positions in column AB of the sheet, two disks around each P and M position
@@ -250,6 +258,14 @@ def test_in_rr_each_zero_mark_passes_the_beam_when_the_central_wavelength_arrive
 
 
 @pytest.mark.parametrize(
+    ("beam_angle", "angle", "shift"),
+    [(180, 180, 0), (180, 125, 55), (180, 365, 175), (0, 175, 185), (0, 0, 0)],
+)
+def test_the_phase_shift_turns_the_angle_onto_the_beam_within_one_turn(beam_angle, angle, shift):
+    assert phase_shift(replace(DISKS["ps1"], beam_angle=beam_angle), angle) == shift
+
+
+@pytest.mark.parametrize(
     ("mode", "angles"),
     [  # FF: the shifts of the slit edges in trex_primary.txt's HF mode, but for mc2: its wide
         # slit is centered on 175 deg here, not on 185 deg, so it turns 185 deg to the beam
@@ -257,8 +273,8 @@ def test_in_rr_each_zero_mark_passes_the_beam_when_the_central_wavelength_arrive
         ("RR", {"bw1": 0, "bw2": 0, "ps1": 0, "ps2": 0, "mc1": 0, "mc2": 0}),
     ],
 )
-def test_the_slit_angles_are_the_shifts_of_trex_primary(mode, angles):
-    assert {name: slit_angle(name, mode) for name in angles} == pytest.approx(angles)
+def test_the_phase_shifts_of_the_mode_are_the_shifts_of_trex_primary(mode, angles):
+    assert {name: mode_phase_shift(name, mode) for name in angles} == pytest.approx(angles)
 
 
 @pytest.mark.parametrize("mode", ["FF", "RR"])
@@ -276,9 +292,8 @@ def test_the_slit_of_the_mode_is_centered_on_the_beam_when_the_central_wavelengt
 
 def test_the_mode_selects_the_wide_slit_for_flux_and_the_narrow_one_for_resolution():
     for name in ("ps1", "ps2", "mc1", "mc2"):
-        disk = DISKS[name]
-        _, wide = disk.slits[disk.mode_slit["FF"]]
-        _, narrow = disk.slits[disk.mode_slit["RR"]]
+        _, wide = DISKS[name].slits[DISKS[name].mode_slit["FF"]]
+        _, narrow = DISKS[name].slits[DISKS[name].mode_slit["RR"]]
         assert wide > narrow, name
 
 

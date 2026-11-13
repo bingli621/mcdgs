@@ -2,7 +2,8 @@
 
 One dataclass per McStas component. The fields are the McStas parameters, so the
 [McStas component manual](https://www.mcstas.org/download/components/) is the reference for what
-each one does.
+each one does. The choppers also hold `Disk`, the design of a disk an instrument builds a
+chopper from.
 
 ::: mcdgs.core.components.base
 

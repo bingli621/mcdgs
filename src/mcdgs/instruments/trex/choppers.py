@@ -19,13 +19,15 @@ The flight path to a disk is its distance from the moderator along the beam axis
 of its gap in the Table of Optics plus the disk's place in the gap. The path through the bender
 is taken to be that through guide 4a.
 
-:data:`DISKS` describes the design of each disk, with its flight path.
+:data:`DISKS` describes the design of each disk as a :class:`TRexDisk`, with its flight path
+and the slit of each mode.
 """
 
 from dataclasses import dataclass
 from typing import Literal, NamedTuple, get_args
 
 from mcdgs.core.components import Guide_gravity, NXdisk_chopper
+from mcdgs.core.components.choppers import Disk
 from mcdgs.core.utils import speed_from_wavelength
 
 from .guides.curve import (
@@ -55,60 +57,22 @@ PSC_FREQUENCY_RATIO = 0.75
 
 
 @dataclass(frozen=True, kw_only=True)
-class Disk:
-    """The design of one chopper disk of T-Rex.
+class TRexDisk(Disk):
+    """The design of one chopper disk of T-Rex: a :class:`.Disk` with a slit for each mode.
 
     Attributes
     ----------
-    slits:
-        Center and width of each slit, in deg: the center from the disk's zero mark.
-    radius:
-        Outer radius of the disk, in m.
-    beam_angle:
-        Where the beam crosses the disk from its zero mark, in deg: 0 puts the axle below the
-        guide, 180 above it.
-    zero_angle:
-        Angle from the +y axis of the disk to its top-dead-center pickup, in deg.
-    slit_height:
-        Radial height of the slits, in m.
     mode_slit:
-        Index of the slit on the beam in each mode: wide for flux, narrow for resolution.
-    gap_arm:
-        The arm at the entrance of the disk's gap, which places it.
-    gap_z:
-        Distance of that arm from the moderator along the beam axis, in m.
-    z:
-        Distance of the disk from the entrance of its gap, in m.
-    upstream_guide:
-        The guide in front of the disk, on the source side: the beam window is as wide as its
-        exit.
+        Index in ``slits`` of the slit on the beam in each mode: wide for flux, narrow for
+        resolution.
     """
 
-    slits: tuple[tuple[float, float], ...]
-    radius: float
-    beam_angle: float
-    zero_angle: float
-    slit_height: float
     mode_slit: dict[Mode, int]
-    gap_arm: str
-    gap_z: float
-    z: float
-    upstream_guide: str
-
-    @property
-    def slit_edges(self) -> tuple[float, ...]:
-        """Opening and closing edge of each slit from the disk's zero mark, in deg."""
-        return tuple(edge for c, w in self.slits for edge in (c - w / 2, c + w / 2))
-
-    @property
-    def distance(self) -> float:
-        """Distance of the disk from the moderator along the beam axis, in m: its flight path."""
-        return self.gap_z + self.z
 
 
 # the six disks, in beam order
-DISKS = {
-    "bw1": Disk(
+DISKS: dict[str, TRexDisk] = {
+    "bw1": TRexDisk(
         slits=((0, 61.4),),
         radius=0.35,
         beam_angle=0,
@@ -120,7 +84,7 @@ DISKS = {
         z=BWC1_GAP_LENGTH / 2,  # 0.015, distance 31.96404
         upstream_guide="guide_13a",
     ),
-    "bw2": Disk(
+    "bw2": TRexDisk(
         slits=((0, 63.3),),
         radius=0.35,
         beam_angle=0,
@@ -132,7 +96,7 @@ DISKS = {
         z=BWC2_GAP_LENGTH / 2,  # 0.015, distance 39.95504
         upstream_guide="guide_15a",
     ),
-    "ps1": Disk(
+    "ps1": TRexDisk(
         slits=((0, 20), (125, 35), (180, 20), (305, 35)),
         radius=0.35,
         beam_angle=180,
@@ -144,7 +108,7 @@ DISKS = {
         z=(PSC_GAP_LENGTH - PSC_DISK_SPACING) / 2,  # 0.05, distance 107.95
         upstream_guide="guide_32",
     ),
-    "ps2": Disk(
+    "ps2": TRexDisk(
         slits=((0, 20), (125, 35), (180, 20), (305, 35)),
         radius=0.35,
         beam_angle=180,
@@ -156,7 +120,7 @@ DISKS = {
         z=(PSC_GAP_LENGTH + PSC_DISK_SPACING) / 2,  # 0.15, distance 108.05
         upstream_guide="guide_32",
     ),
-    "mc1": Disk(
+    "mc1": TRexDisk(
         slits=((180, 2.5), (365, 4.4)),
         radius=0.35,
         beam_angle=180,
@@ -171,7 +135,7 @@ DISKS = {
     # the wide slit is centered on 175, not on the 185 of mctrex: the narrow slit then comes by
     # the beam 175 deg of turn after the wide one, and that of mc1 185 deg after, so the two are
     # never open together
-    "mc2": Disk(
+    "mc2": TRexDisk(
         slits=((0, 2.5), (175, 4.4)),
         radius=0.35,
         beam_angle=0,
@@ -184,6 +148,71 @@ DISKS = {
         upstream_guide="guide_49",
     ),
 }
+
+
+def phase_shift(disk: Disk, angle: float) -> float:
+    """Compute the angle a disk turns past its zero mark to put an angle on the beam.
+
+    Parameters
+    ----------
+    disk:
+        The disk.
+    angle:
+        Angle on the disk from its zero mark, such as the center of a slit, in deg.
+
+    Returns
+    -------
+    :
+        Angle from ``angle`` to the disk's ``beam_angle``, in [0, 360) deg.
+
+    Examples
+    --------
+    >>> phase_shift(DISKS["ps1"], 125), phase_shift(DISKS["mc1"], 365)
+    (55.0, 175.0)
+    """
+    return float((disk.beam_angle - angle) % 360)
+
+
+def trex_guides() -> dict[str, Guide_gravity]:
+    """Return the guides of T-Rex by name, in beam order.
+
+    Returns
+    -------
+    :
+        The :class:`.Guide_gravity` components of :func:`.guides_curve` and
+        :func:`.guides_straight`.
+    """
+    return {
+        guide_name: guide
+        for part in (*guides_curve(), *guides_straight())
+        for guide_name, guide in part.items()
+        if isinstance(guide, Guide_gravity)
+    }
+
+
+def mode_phase_shift(name: str, mode: Mode) -> float:
+    """Compute the phase shift that puts the center of the slit of a mode on the beam.
+
+    Parameters
+    ----------
+    name:
+        Chopper name, such as ``"ps1"``: a key of :data:`DISKS`.
+    mode:
+        ``"FF"`` or ``"RR"``.
+
+    Returns
+    -------
+    :
+        :func:`phase_shift` of the center of the disk's ``mode_slit`` of ``mode``, in deg.
+
+    Examples
+    --------
+    >>> mode_phase_shift("ps1", "FF"), mode_phase_shift("mc1", "FF"), mode_phase_shift("mc1", "RR")
+    (55.0, 175.0, 0.0)
+    """
+    disk = DISKS[name]
+    center, _ = disk.slits[disk.mode_slit[mode]]
+    return phase_shift(disk, center)
 
 
 class Timing(NamedTuple):
@@ -199,31 +228,6 @@ class Timing(NamedTuple):
 
     nu: float
     delay: float
-
-
-def slit_angle(name: str, mode: Mode) -> float:
-    """Compute the angle the disk turns past its zero mark to put the slit of a mode on the beam.
-
-    Parameters
-    ----------
-    name:
-        Chopper name.
-    mode:
-        ``"FF"`` or ``"RR"``.
-
-    Returns
-    -------
-    :
-        Angle from the center of the slit to ``beam_angle``, in [0, 360) deg.
-
-    Examples
-    --------
-    >>> slit_angle("ps1", "FF"), slit_angle("mc1", "FF"), slit_angle("mc1", "RR")
-    (55.0, 175.0, 0.0)
-    """
-    disk = DISKS[name]
-    center, _ = disk.slits[disk.mode_slit[mode]]
-    return float((disk.beam_angle - center) % 360)
 
 
 def chopper_timings(
@@ -282,35 +286,9 @@ def chopper_timings(
     for name, disk in DISKS.items():
         arrival = t0_offset + disk.distance / speed
         # the zero mark passes the beam earlier, for the disk to have turned to the slit
-        timings[name] = Timing(nu[name], arrival - slit_angle(name, mode) / (360 * nu[name]))
+        shift = mode_phase_shift(name, mode)
+        timings[name] = Timing(nu[name], arrival - shift / (360 * nu[name]))
     return timings
-
-
-def window_width(name: str) -> float:
-    """Return the width of the beam window of a disk: the exit width of the guide in front.
-
-    Parameters
-    ----------
-    name:
-        Chopper name, such as ``"ps1"``: a key of :data:`DISKS`.
-
-    Returns
-    -------
-    :
-        ``w2`` of the disk's ``upstream_guide``, in m.
-
-    Examples
-    --------
-    >>> round(window_width("mc1"), 4)
-    0.0224
-    """
-    guides = {
-        guide_name: guide
-        for part in (*guides_curve(), *guides_straight())
-        for guide_name, guide in part.items()
-        if isinstance(guide, Guide_gravity)
-    }
-    return float(guides[DISKS[name].upstream_guide].w2)
 
 
 def chopper(name: str) -> NXdisk_chopper:
@@ -326,14 +304,14 @@ def chopper(name: str) -> NXdisk_chopper:
     :
         A new chopper, relative to the arm of its gap, with its frequency and delay given by
         the instrument parameters ``nu_<name>`` and ``delay_<name>``, and the beam window of
-        :func:`window_width`.
+        :meth:`.Disk.window_width` in the guides of :func:`trex_guides`.
     """
     disk = DISKS[name]
     return NXdisk_chopper(
         slit_edges=list(disk.slit_edges),
         radius=disk.radius,
         yheight=disk.slit_height,
-        xwidth=window_width(name),
+        xwidth=disk.window_width(trex_guides()),
         nu=f"nu_{name}",
         delay=f"delay_{name}",
         beam_angle=disk.beam_angle,

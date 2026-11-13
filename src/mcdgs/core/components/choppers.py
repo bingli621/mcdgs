@@ -1,9 +1,16 @@
-"""Choppers: NXdisk_chopper."""
+"""Choppers: NXdisk_chopper, and the design of a disk it is built from.
 
+:class:`Disk` is not a component: it holds what a disk is and where it sits, its slits, its size
+and the gap it turns in. An instrument describes its disks with it and builds an
+:class:`NXdisk_chopper` from each.
+"""
+
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
 from .base import Component
+from .optics import Guide_gravity
 
 
 @dataclass(kw_only=True, repr=False)  # repr: Component's
@@ -75,3 +82,89 @@ class NXdisk_chopper(Component):
             The fields, plus ``n_edges``.
         """
         return super().mcstas_parameters() | {"n_edges": len(self.slit_edges)}
+
+
+@dataclass(frozen=True, kw_only=True)
+class Disk:
+    """The design of one chopper disk, placed in a gap at an arm.
+
+    Attributes
+    ----------
+    slits:
+        Center and width of each slit, in deg: the center from the disk's zero mark.
+    radius:
+        Outer radius of the disk, in m.
+    beam_angle:
+        Where the beam crosses the disk from its zero mark, in deg: 0 puts the axle below the
+        guide, 180 above it.
+    zero_angle:
+        Angle from the +y axis of the disk to its top-dead-center pickup, in deg.
+    slit_height:
+        Radial height of the slits, in m.
+    gap_arm:
+        The arm at the entrance of the disk's gap, which places it.
+    gap_z:
+        Distance of that arm from the moderator along the beam axis, in m.
+    z:
+        Distance of the disk from the entrance of its gap, in m.
+    upstream_guide:
+        The guide in front of the disk, on the source side: the beam window is as wide as its
+        exit. ``None`` leaves the window unrestricted.
+    """
+
+    slits: tuple[tuple[float, float], ...]
+    radius: float
+    beam_angle: float
+    zero_angle: float
+    slit_height: float
+    gap_arm: str
+    gap_z: float
+    z: float
+    upstream_guide: str | None = None
+
+    @property
+    def slit_edges(self) -> tuple[float, ...]:
+        """Opening and closing edge of each slit from the disk's zero mark, in deg."""
+        return tuple(edge for c, w in self.slits for edge in (c - w / 2, c + w / 2))
+
+    @property
+    def distance(self) -> float:
+        """Distance of the disk from the moderator along the beam axis, in m: its flight path."""
+        return self.gap_z + self.z
+
+    def window_width(self, guides: Mapping[str, Guide_gravity] | None) -> float:
+        """Return the width of the beam window: the exit width of the guide in front.
+
+        Without guides, or without a guide in front, the width is 0: NXdisk_chopper then
+        leaves the opening unrestricted.
+
+        Parameters
+        ----------
+        guides:
+            Guides by name, among them the disk's ``upstream_guide``.
+
+        Returns
+        -------
+        :
+            ``w2`` of ``upstream_guide`` in ``guides``, or 0 without one, in m.
+
+        Examples
+        --------
+        >>> disk = Disk(
+        ...     slits=((0, 20),),
+        ...     radius=0.35,
+        ...     beam_angle=0,
+        ...     zero_angle=0,
+        ...     slit_height=0.095,
+        ...     gap_arm="arm",
+        ...     gap_z=100,
+        ...     z=0.05,
+        ...     upstream_guide="guide",
+        ... )
+        >>> guides = {"guide": Guide_gravity(w1=0.03, h1=0.1, w2=0.02, l=1)}
+        >>> disk.window_width(guides), disk.window_width(None)
+        (0.02, 0.0)
+        """
+        if guides is None or self.upstream_guide is None:
+            return 0.0
+        return float(guides[self.upstream_guide].w2)
