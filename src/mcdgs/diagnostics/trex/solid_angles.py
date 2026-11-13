@@ -34,7 +34,7 @@ from matplotlib.figure import Figure
 from mcdgs.core.params import InstrParam
 from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
 from mcdgs.diagnostics.trex.elastic_plane import pixel_solid_angle
-from mcdgs.instruments.trex.choppers import DISKS, mode_phase_shift
+from mcdgs.instruments.trex.choppers import DISKS
 from mcdgs.instruments.trex.detectors import (
     BANANA_CENTER_Y,
     BANANA_HEIGHT,
@@ -105,7 +105,7 @@ class TRexWithVanadium(TRex):
     The sample is that of :func:`.vanadium`, a cylinder 10 mm high, thinned to a radius of
     ``SAMPLE_RADIUS``, which scatters towards the window of
     :func:`detector_window` only, split ``SAMPLE_SPLIT`` times. Each disk stands still
-    (``nu = 0``) with the slit of the mode on the beam, turned by :func:`.mode_phase_shift`:
+    (``nu = 0``) with the slit of the mode on the beam, turned by :meth:`.TRexDisk.phase_from_mode`:
     the wide ones in ``"FF"``. There are no instrument parameters ``nu_<name>`` and
     ``delay_<name>``.
 
@@ -134,7 +134,7 @@ class TRexWithVanadium(TRex):
             wide = monitor(lambda_limits=band, time_resolution=MONITOR_TIME_RESOLUTION)
             setattr(self, monitor.__name__, wide)
         for name in DISKS:
-            angle = mode_phase_shift(name, params.mode)
+            angle = DISKS[name].phase_from_mode(params.mode)
             parked = replace(getattr(self, name), nu=0, delay=0, park_angle=angle)
             setattr(self, name, parked)
 

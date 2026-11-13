@@ -5,12 +5,10 @@ and the gap it turns in. An instrument describes its disks with it and builds an
 :class:`NXdisk_chopper` from each.
 """
 
-from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
 from .base import Component
-from .optics import Guide_gravity
 
 
 @dataclass(kw_only=True, repr=False)  # repr: Component's
@@ -107,9 +105,6 @@ class Disk:
         Distance of that arm from the moderator along the beam axis, in m.
     z:
         Distance of the disk from the entrance of its gap, in m.
-    upstream_guide:
-        The guide in front of the disk, on the source side: the beam window is as wide as its
-        exit. ``None`` leaves the window unrestricted.
     """
 
     slits: tuple[tuple[float, float], ...]
@@ -120,7 +115,6 @@ class Disk:
     gap_arm: str
     gap_z: float
     z: float
-    upstream_guide: str | None = None
 
     @property
     def slit_edges(self) -> tuple[float, ...]:
@@ -131,40 +125,3 @@ class Disk:
     def distance(self) -> float:
         """Distance of the disk from the moderator along the beam axis, in m: its flight path."""
         return self.gap_z + self.z
-
-    def window_width(self, guides: Mapping[str, Guide_gravity] | None) -> float:
-        """Return the width of the beam window: the exit width of the guide in front.
-
-        Without guides, or without a guide in front, the width is 0: NXdisk_chopper then
-        leaves the opening unrestricted.
-
-        Parameters
-        ----------
-        guides:
-            Guides by name, among them the disk's ``upstream_guide``.
-
-        Returns
-        -------
-        :
-            ``w2`` of ``upstream_guide`` in ``guides``, or 0 without one, in m.
-
-        Examples
-        --------
-        >>> disk = Disk(
-        ...     slits=((0, 20),),
-        ...     radius=0.35,
-        ...     beam_angle=0,
-        ...     zero_angle=0,
-        ...     slit_height=0.095,
-        ...     gap_arm="arm",
-        ...     gap_z=100,
-        ...     z=0.05,
-        ...     upstream_guide="guide",
-        ... )
-        >>> guides = {"guide": Guide_gravity(w1=0.03, h1=0.1, w2=0.02, l=1)}
-        >>> disk.window_width(guides), disk.window_width(None)
-        (0.02, 0.0)
-        """
-        if guides is None or self.upstream_guide is None:
-            return 0.0
-        return float(guides[self.upstream_guide].w2)

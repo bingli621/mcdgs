@@ -10,9 +10,10 @@ from mcdgs.core.components import (
     Guide_gravity,
     Progress_bar,
 )
+from mcdgs.core.components.masked_source import chopper_train
 from mcdgs.core.params import InstrParam, param
 
-from .choppers import Mode, chopper, chopper_timings
+from .choppers import DISKS, Mode, chopper, chopper_timings
 from .detectors import banana_detector
 from .guides.bispectral import (
     BENDER_ROTATION,
@@ -80,6 +81,32 @@ class Params:
 DEFAULT_PARAMS = Params()  # frozen, so one shared default is safe
 
 
+def _guide(part: dict[str, Component], name: str) -> Guide_gravity:
+    """Return a guide of a part of the guide system by name.
+
+    Parameters
+    ----------
+    part:
+        Components by name, as :func:`.guides_curve` and :func:`.guides_straight` give them.
+    name:
+        Name of a :class:`.Guide_gravity` in ``part``.
+
+    Returns
+    -------
+    :
+        The guide.
+
+    Raises
+    ------
+    TypeError
+        If the component of that name is not a :class:`.Guide_gravity`.
+    """
+    guide = part[name]
+    if not isinstance(guide, Guide_gravity):
+        raise TypeError(f"{name!r} is a {type(guide).__name__}, not a Guide_gravity")
+    return guide
+
+
 class TRex(Instrument):
     """The T-Rex instrument.
 
@@ -119,9 +146,20 @@ class TRex(Instrument):
 
         # the source simulates the band of lambda0, and the time and wavelength monitors span it
         band = wavelength_band(self.params.lambda0)
+        # each beam window is as wide as the exit of the guide in front of the disk; the masked
+        # source is masked by these same choppers
+        choppers = {
+            "bw1": chopper("bw1", _guide(to_bwc1, "guide_13a")),
+            "bw2": chopper("bw2", _guide(to_bwc2, "guide_15a")),
+            "ps1": chopper("ps1", _guide(to_psc, "guide_32")),
+            "ps2": chopper("ps2", _guide(to_psc, "guide_32")),
+            "mc1": chopper("mc1", _guide(to_mc, "guide_49")),
+            "mc2": chopper("mc2", _guide(to_mc, "guide_49")),
+        }
 
         self.origin = Progress_bar(at=[0, 0, 0])
-        self.source = (masked_source if source_masked else source)(*band)
+        train = chopper_train([(choppers[name], disk.distance) for name, disk in DISKS.items()])
+        self.source = masked_source(train, *band) if source_masked else source(*band)
         self.source_monitor = source_monitor()  # the entrance of guide 1, the widest band
         self.add_components(guides_extraction())
         # bispectral switch: guide 4a (thermal) or bender and guide 4b (cold)
@@ -132,17 +170,17 @@ class TRex(Instrument):
         self.beam_monitor = beam_monitor(lambda_limits=band)
         # curved guides
         self.add_components(to_bwc1)
-        self.bw1 = chopper("bw1")
+        self.bw1 = choppers["bw1"]
         self.add_components(to_bwc2)
-        self.bw2 = chopper("bw2")
+        self.bw2 = choppers["bw2"]
         self.add_components(to_end_of_curve)
         # straight guides
         self.add_components(to_psc)
-        self.ps1 = chopper("ps1")
-        self.ps2 = chopper("ps2")
+        self.ps1 = choppers["ps1"]
+        self.ps2 = choppers["ps2"]
         self.add_components(to_mc)
-        self.mc1 = chopper("mc1")
-        self.mc2 = chopper("mc2")
+        self.mc1 = choppers["mc1"]
+        self.mc2 = choppers["mc2"]
         self.add_components(to_slit)
         self.slit_mc = slit_mc()
         self.pre_sample_monitor = pre_sample_monitor(lambda_limits=band)
@@ -252,9 +290,9 @@ class TRex(Instrument):
         )
         return [
             p
-            for name, timing in timings.items()
+            for name, (nu, delay) in timings.items()
             for p in (
-                InstrParam(f"nu_{name}", timing.nu, "Hz", f"rotation frequency of chopper {name}"),
-                InstrParam(f"delay_{name}", timing.delay, "s", f"delay of chopper {name}"),
+                InstrParam(f"nu_{name}", nu, "Hz", f"rotation frequency of chopper {name}"),
+                InstrParam(f"delay_{name}", delay, "s", f"delay of chopper {name}"),
             )
         ]

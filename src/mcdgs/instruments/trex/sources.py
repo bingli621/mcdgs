@@ -7,11 +7,10 @@ same band.
 from typing import Any
 
 from mcdgs.core.components import ESS_butterfly, Polygon_ESS_butterfly
-from mcdgs.core.components.masked_source import chopper_train
+from mcdgs.core.components.masked_source import ChopperTrainParameters
 from mcdgs.core.components.source import ESS_SOURCE_FREQUENCY, ESS_SOURCE_LENGTH, L_MAX, L_MIN
 from mcdgs.core.utils import speed_from_wavelength
 
-from .choppers import DISKS, chopper
 from .guides.extraction import GUIDE_1_IN_HEIGHT, GUIDE_1_IN_Z, NBOA_FIXED_WALL_X
 from .guides.straight import SAMPLE_Z
 
@@ -108,16 +107,20 @@ def source(l_min: float = L_MIN, l_max: float = L_MAX) -> ESS_butterfly:
     return ESS_butterfly(**_source(l_min, l_max))
 
 
-def masked_source(l_min: float = L_MIN, l_max: float = L_MAX) -> Polygon_ESS_butterfly:
+def masked_source(
+    choppers: list[ChopperTrainParameters], l_min: float = L_MIN, l_max: float = L_MAX
+) -> Polygon_ESS_butterfly:
     """Create the source of T-Rex masked by its six choppers.
 
-    It is :func:`source` emitting only where the six disks of :func:`.choppers.chopper`, at the
-    distances of :data:`.choppers.DISKS`, let neutrons through, with
+    It is :func:`source` emitting only where the disks of ``choppers`` let neutrons through, with
     :data:`PATH_SPREAD_FRACTION`. Every ray then reaches the choppers in a window they are open
     in, with its weight multiplied by the acceptance.
 
     Parameters
     ----------
+    choppers:
+        The chopper train, as :func:`.chopper_train` describes the choppers of the instrument
+        with their flight paths.
     l_min, l_max:
         Wavelength band, in Å.
 
@@ -128,6 +131,6 @@ def masked_source(l_min: float = L_MIN, l_max: float = L_MAX) -> Polygon_ESS_but
     """
     return Polygon_ESS_butterfly(
         **_source(l_min, l_max),
-        choppers=chopper_train([(chopper(name), disk.distance) for name, disk in DISKS.items()]),
+        choppers=choppers,
         path_spread_fraction=PATH_SPREAD_FRACTION,
     )

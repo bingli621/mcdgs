@@ -1,5 +1,4 @@
 import math
-from dataclasses import replace
 from itertools import pairwise
 
 import numpy as np
@@ -12,14 +11,12 @@ from mcdgs.core.components import (
     NXdisk_chopper,
     Polygon_ESS_butterfly,
 )
-from mcdgs.core.components.masked_source import aperture
+from mcdgs.core.components.masked_source import aperture, chopper_train
 from mcdgs.core.geometry import place_absolute
 from mcdgs.instruments.trex.choppers import (
     DISKS,
     chopper,
     chopper_timings,
-    mode_phase_shift,
-    phase_shift,
 )
 from mcdgs.instruments.trex.guides.extraction import half_taper_angle
 from mcdgs.instruments.trex.guides.sections import split_after
@@ -116,7 +113,8 @@ def test_the_source_focuses_on_the_whole_entrance_of_guide_1():
 
 
 def test_the_masked_source_is_the_source_masked_by_the_six_choppers():
-    plain, masked = source(1.0, 3.0), masked_source(1.0, 3.0)
+    train = TRex(source_masked=True).source.choppers
+    plain, masked = source(1.0, 3.0), masked_source(train, 1.0, 3.0)
     masked_parameters = masked.mcstas_parameters()
     assert {k: masked_parameters[k] for k in plain.mcstas_parameters()} == plain.mcstas_parameters()
     assert masked.path_spread_fraction == PATH_SPREAD_FRACTION
@@ -124,8 +122,8 @@ def test_the_masked_source_is_the_source_masked_by_the_six_choppers():
 
 
 def test_the_chopper_train_is_the_choppers_of_trex():
-    trex = TRex()
-    train = masked_source().choppers
+    trex = TRex(source_masked=True)
+    train = trex.source.choppers
     assert [disk["path"] for disk in train] == [disk.distance for disk in DISKS.values()]
     for disk, name in zip(train, DISKS, strict=True):
         chopper = getattr(trex, name)
@@ -141,7 +139,8 @@ def test_by_default_the_source_is_not_masked():
 
 def test_a_masked_source_is_masked_by_the_choppers_and_the_rest_is_the_same():
     plain, masked = TRex(), TRex(source_masked=True)
-    assert masked.source == masked_source(*wavelength_band(2.0))
+    train = chopper_train([(getattr(plain, name), disk.distance) for name, disk in DISKS.items()])
+    assert masked.source == masked_source(train, *wavelength_band(2.0))
     assert list(masked.components) == list(plain.components)
     assert {n: c for n, c in masked.components.items() if n != "source"} == {
         n: c for n, c in plain.components.items() if n != "source"
@@ -219,13 +218,12 @@ def test_each_chopper_window_is_as_wide_as_the_exit_of_the_guide_in_front(name, 
     names = list(trex.components)
     arm = names.index(getattr(trex, name).relative)
     in_front = [n for n in names[:arm] if isinstance(trex.components[n], Guide_gravity)][-1]
-    assert in_front == DISKS[name].upstream_guide
+    assert getattr(trex, name).xwidth == trex.components[in_front].w2
     assert getattr(trex, name).xwidth == pytest.approx(width, abs=1e-15)
 
 
-def test_without_a_guide_in_front_the_window_is_unrestricted(monkeypatch):
-    monkeypatch.setitem(DISKS, "mc1", replace(DISKS["mc1"], upstream_guide=None))
-    assert chopper("mc1").xwidth == 0
+def test_without_a_guide_in_front_the_window_is_unrestricted():
+    assert chopper("mc1", None).xwidth == 0
 
 
 @pytest.mark.parametrize(
@@ -245,24 +243,16 @@ def test_each_chopper_is_at_its_distance_from_the_moderator(name, distance):
 
 def test_the_choppers_turn_at_the_frequencies_of_trex_primary():
     timings = chopper_timings(lambda0=2.4, rrm=4, source_frequency=14, mode="FF", t0_offset=0.0017)
-    assert {name: timing.nu for name, timing in timings.items()} == pytest.approx(
+    assert {name: nu for name, (nu, _) in timings.items()} == pytest.approx(
         {"bw1": 14, "bw2": 14, "ps1": 42, "ps2": -42, "mc1": 56, "mc2": 56}
     )
 
 
 def test_in_rr_each_zero_mark_passes_the_beam_when_the_central_wavelength_arrives():
     timings = chopper_timings(lambda0=2.4, rrm=4, source_frequency=14, mode="RR", t0_offset=0.0017)
-    for name, timing in timings.items():
+    for name, (_, delay) in timings.items():
         arrival = 0.0017 + DISKS[name].distance * 2.4 / 3956.034
-        assert timing.delay == pytest.approx(arrival, rel=1e-6)
-
-
-@pytest.mark.parametrize(
-    ("beam_angle", "angle", "shift"),
-    [(180, 180, 0), (180, 125, 55), (180, 365, 175), (0, 175, 185), (0, 0, 0)],
-)
-def test_the_phase_shift_turns_the_angle_onto_the_beam_within_one_turn(beam_angle, angle, shift):
-    assert phase_shift(replace(DISKS["ps1"], beam_angle=beam_angle), angle) == shift
+        assert delay == pytest.approx(arrival, rel=1e-6)
 
 
 @pytest.mark.parametrize(
@@ -274,16 +264,16 @@ def test_the_phase_shift_turns_the_angle_onto_the_beam_within_one_turn(beam_angl
     ],
 )
 def test_the_phase_shifts_of_the_mode_are_the_shifts_of_trex_primary(mode, angles):
-    assert {name: mode_phase_shift(name, mode) for name in angles} == pytest.approx(angles)
+    assert {name: DISKS[name].phase_from_mode(mode) for name in angles} == pytest.approx(angles)
 
 
 @pytest.mark.parametrize("mode", ["FF", "RR"])
 def test_the_slit_of_the_mode_is_centered_on_the_beam_when_the_central_wavelength_arrives(mode):
     timings = chopper_timings(lambda0=2.4, rrm=4, source_frequency=14, mode=mode, t0_offset=0.0017)
-    for name, timing in timings.items():
+    for name, (nu, delay) in timings.items():
         arrival = 0.0017 + DISKS[name].distance * 2.4 / 3956.034
         # as NXdisk_chopper: the disk angle on the beam is beam_angle minus the turn of the mark
-        mark = 360 * timing.nu * (arrival - timing.delay)
+        mark = 360 * nu * (arrival - delay)
         on_beam = DISKS[name].beam_angle - mark
         center, _ = DISKS[name].slits[DISKS[name].mode_slit[mode]]
         off_center = (on_beam - center + 180) % 360 - 180  # in [-180, 180): 359.9... is -0.0...
@@ -339,7 +329,7 @@ def test_the_timing_follows_the_control_parameters():
     trex.update_params(lambda0=4.0, rrm=6)
     instr_param_dict = {p.name: p.value for p in trex.instr_params}
     assert instr_param_dict["nu_mc1"] == pytest.approx(84)
-    assert instr_param_dict["delay_bw1"] == chopper_timings(4.0, 6, 14, "FF", 0.0017)["bw1"].delay
+    assert instr_param_dict["delay_bw1"] == chopper_timings(4.0, 6, 14, "FF", 0.0017)["bw1"][1]
 
 
 def test_the_t0_offset_delays_every_chopper_by_as_much():
