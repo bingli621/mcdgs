@@ -1,0 +1,1 @@
+"""Samples that scatter inelastically."""

@@ -43,7 +43,7 @@ def test_the_cif_of_a_crystal_is_a_path_inside_the_package():
 
 
 def test_the_mcstas_parameters_give_the_cif_as_a_full_path():
-    assert la2ni7().mcstas_parameters()["reflections"] == str(CIF_DIR / "La2Ni7.cif")
+    assert la2ni7().mcstas_parameters()["reflections"] == str(CIF_DIR / "elastic/La2Ni7.cif")
     assert aluminum().mcstas_parameters()["reflections"] == "Al.lau"  # McStas's own
 
 
