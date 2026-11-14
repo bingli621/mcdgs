@@ -62,42 +62,40 @@ def sim(tmp_path):
 
 
 def test_a_run_of_mcstas_writes_the_file_it_returns(sim):
-    h5_file = sim.run(ncount=1e4, seed=1, mpi=None)
-    assert h5_file.is_file()
-    run = Run.load(h5_file.parent)  # the record of the run, in its folder
+    run = sim.run(ncount=1e4, seed=1, mpi=None)
+    assert run.data_file.is_file()
+    assert Run.load(run.folder) == run  # the record of the run, in its folder
     assert list_runs(sim.workspace.runs_folder) == [run]
     assert (run.instrument, run.run_type, run.ncount, run.seed) == ("small", RunType.RUN, 1e4, 1)
     assert run.instr_params == {"width": 0.1}  # not given: as the instrument has it
-    assert run.data_file == h5_file
 
 
 def test_a_scan_runs_each_point_with_its_own_values_and_seed(sim):
-    h5_file = sim.scan("width", [0.1, 0.05], ncount=1e4, seed=1, n_jobs=2)
-    points = read_pixels(h5_file.parent, "detector", "source", "sample_pos")
+    run = sim.scan("width", [0.1, 0.05], ncount=1e4, seed=1, n_jobs=2)
+    points = read_pixels(run.folder, "detector", "source", "sample_pos")
     assert [params["width"] for params, _ in points] == [0.1, 0.05]
-    with h5py.File(h5_file) as f:
+    with h5py.File(run.data_file) as f:
         assert [f[f"entry{n}/simulation"].attrs["Seed"] for n in (1, 2)] == [b"2", b"3"]
     narrow, wide = points[1][1].sum().value, points[0][1].sum().value
     assert narrow < wide  # the instrument parameter reached McStas
-    assert not (h5_file.parent / "point_0000").exists()  # merged, then removed
-    run = Run.load(h5_file.parent)
+    assert not (run.folder / "point_0000").exists()  # merged, then removed
+    assert Run.load(run.folder) == run
     assert (run.run_type, run.variable, run.values) == (RunType.SCAN, "width", [0.1, 0.05])
     assert run.instr_params == {} and run.seed == 1  # the variable is in the values
 
 
 def test_a_split_run_gives_the_intensity_and_geometry_of_a_direct_run(sim):
-    h5_file = sim.scan("width", [0.1], ncount=1e5, seed=1, n_jobs=1)
-    direct = read_pixels(h5_file.parent, "detector", "source", "sample_pos")[0][1]
+    direct_run = sim.scan("width", [0.1], ncount=1e5, seed=1, n_jobs=1)
+    direct = read_pixels(direct_run.folder, "detector", "source", "sample_pos")[0][1]
 
-    beam = sim.run_to_sample(ncount=1e5, mpi=None)
-    assert beam.is_file() and sim.beam_run == beam.parent.name
-    to_sample = Run.load(beam.parent)
-    assert to_sample.run_type is RunType.RUN_TO_SAMPLE and to_sample.beam_file == beam
-    h5_file = sim.run_from_sample(seed=2, mpi=None)
-    from_sample = Run.load(h5_file.parent)
+    to_sample = sim.run_to_sample(ncount=1e5, mpi=None)
+    assert to_sample.beam_file.is_file() and sim.beam_run == to_sample.name
+    assert to_sample.run_type is RunType.RUN_TO_SAMPLE and Run.load(to_sample.folder) == to_sample
+    from_sample = sim.run_from_sample(seed=2, mpi=None)
+    assert Run.load(from_sample.folder) == from_sample
     assert from_sample.run_type is RunType.RUN_FROM_SAMPLE
     assert from_sample.beam_run == to_sample.name and from_sample.ncount is None
-    split = read_pixels(h5_file.parent, "detector", "source", "sample_pos", [0, 0, 1])[0][1]
+    split = read_pixels(from_sample.folder, "detector", "source", "sample_pos", [0, 0, 1])[0][1]
 
     assert split.sum().value == pytest.approx(direct.sum().value, rel=0.05)
     # the part from the sample runs in the frame of sample_pos, at its origin
@@ -105,21 +103,18 @@ def test_a_split_run_gives_the_intensity_and_geometry_of_a_direct_run(sim):
     pixel = split.coords["position"].values - split.coords["sample_position"].value
     assert np.allclose(pixel[:, 2], DETECTOR_AT)
 
-    h5_file = sim.scan_from_sample("width", [0.1, 0.05], seed=3, n_jobs=2)
-    points = read_pixels(h5_file.parent, "detector", "source", "sample_pos", [0, 0, 1])
+    scan = sim.scan_from_sample("width", [0.1, 0.05], seed=3, n_jobs=2)
+    points = read_pixels(scan.folder, "detector", "source", "sample_pos", [0, 0, 1])
     assert [params["width"] for params, _ in points] == [0.1, 0.05]
     assert points[1][1].sum().value < points[0][1].sum().value
-    scan = Run.load(h5_file.parent)
     assert (scan.run_type, scan.values) == (RunType.SCAN_FROM_SAMPLE, [0.1, 0.05])
     assert scan.beam_run == to_sample.name
 
 
 def _detected(instrument, tmp_path, seed=1, ncount=1e5):
     """The intensity on the detector of a run of ``instrument``."""
-    h5_file = Simulation(instrument, Workspace(tmp_path)).scan(
-        "width", [0.1], ncount=ncount, seed=seed
-    )
-    return read_pixels(h5_file.parent, "detector", "source", "sample_pos")[0][1].sum()
+    run = Simulation(instrument, Workspace(tmp_path)).scan("width", [0.1], ncount=ncount, seed=seed)
+    return read_pixels(run.folder, "detector", "source", "sample_pos")[0][1].sum()
 
 
 def test_polygon_ess_butterfly_without_a_disk_is_ess_butterfly(tmp_path):
@@ -153,8 +148,8 @@ def test_polygon_ess_butterfly_gives_the_intensity_of_the_choppers_alone(tmp_pat
     shape = {"Lmin": 2, "Lmax": 4, "dist": 2, "focus_xw": 0.05, "focus_yh": 0.05}
     masked = _chopped(Polygon_ESS_butterfly(**shape, choppers=[disk]))
 
-    h5_file = Simulation(masked, Workspace(tmp_path / "region")).run(ncount=1e3, seed=1, mpi=None)
-    region = json.loads((h5_file.parent / "source.json").read_text())  # named after the source
+    run = Simulation(masked, Workspace(tmp_path / "region")).run(ncount=1e3, seed=1, mpi=None)
+    region = json.loads((run.folder / "source.json").read_text())  # named after the source
     # the disk passes a little over half of the 8.6 ms the source emits in, at each wavelength
     assert 0.5 < region["acceptance"] < 0.6
 
@@ -168,10 +163,10 @@ def test_trex_with_the_masked_source_gives_the_intensity_on_the_sample(tmp_path)
     # the masked source gives the sample all the intensity of the plain one, from fewer rays:
     # at the defaults, 2.64e7 +- 5 % from 2e5 rays, and 2.72e7 +- 17 % from 2e6
     masked = TRex(source_masked=True)
-    h5_file = Simulation(masked, Workspace(tmp_path)).run(ncount=2e5, seed=1, mpi=None)
-    region = json.loads((h5_file.parent / "source.json").read_text())
+    run = Simulation(masked, Workspace(tmp_path)).run(ncount=2e5, seed=1, mpi=None)
+    region = json.loads((run.folder / "source.json").read_text())
     assert 0 < region["acceptance"] < 0.02  # 42 polygons, about 1 %
-    with h5py.File(h5_file) as f:
+    with h5py.File(run.data_file) as f:
         (name,) = [k for k in f["entry1/data"] if k.startswith("sample_monitor")]
         intensity = f[f"entry1/data/{name}/data"][...].sum()
     assert intensity == pytest.approx(2.7e7, rel=0.2)
@@ -185,8 +180,8 @@ def test_a_split_run_compiles_with_the_masked_source(tmp_path):
         Lmin=2, Lmax=4, dist=2, focus_xw=0.05, focus_yh=0.05, choppers=[disk]
     )
     sim = Simulation(small, Workspace(tmp_path))
-    assert sim.run_to_sample(ncount=1e4, mpi=None).is_file()
-    assert sim.run_from_sample(seed=2, mpi=None).is_file()
+    assert sim.run_to_sample(ncount=1e4, mpi=None).beam_file.is_file()
+    assert sim.run_from_sample(seed=2, mpi=None).data_file.is_file()
 
 
 @pytest.mark.parametrize("mode", ["FF", "RR"])
@@ -194,5 +189,5 @@ def test_trex_runs_through_with_its_choppers_turning(tmp_path, mode):
     # compiling alone let through an abort at INITIALIZE: the slit edges of the choppers
     trex = TRex()
     trex.update_params(mode=mode)
-    h5_file = Simulation(trex, Workspace(tmp_path)).run(ncount=1e3, seed=1, mpi=None)
-    assert h5_file.is_file()
+    run = Simulation(trex, Workspace(tmp_path)).run(ncount=1e3, seed=1, mpi=None)
+    assert run.data_file.is_file()

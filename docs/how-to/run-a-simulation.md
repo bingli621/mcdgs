@@ -20,11 +20,12 @@ Keywords that are not settings of the run are McStas instrument parameters. Thos
 keep the instrument's values.
 
 ```python
-h5_file = simulation.run(ncount=1e6, seed=1, bender_in=1)
+run = simulation.run(ncount=1e6, seed=1, bender_in=1)
+run.data_file  # mccode.h5, in the run folder run.folder
 ```
 
-`run` uses all cores through MPI by default (`mpi="auto"`). It returns the path of the McStas NeXus
-file of the run, `mccode.h5` in the run folder.
+`run` uses all cores through MPI by default (`mpi="auto"`). Like every run method, it returns the
+[record of the run](#find-and-clean-up-runs), which knows its folder and its McStas NeXus file.
 
 ## A scan
 
@@ -33,7 +34,7 @@ one entry per value. This is the [bender scan](../instruments/trex/bender-scan.m
 neutrons and at the sample position:
 
 ```python
-h5_file = simulation.scan(
+scan = simulation.scan(
     "b_rot",
     np.linspace(-0.8, 0.1, 19),
     ncount=1e5,  # per value
@@ -120,7 +121,8 @@ from mcdgs.instruments.trex.model import TRex
 from mcdgs.samples import aluminum
 
 simulation = Simulation(TRex(sample=aluminum()))
-simulation.run_to_sample("to_sample", ncount=1e8)  # once, with many neutrons
+to_sample = simulation.run_to_sample("to_sample", ncount=1e8)  # once, with many neutrons
+to_sample.beam_file  # beam.mcpl.gz, in its run folder
 
 simulation.run_from_sample()  # part 2, from the beam of the run above
 simulation.scan_from_sample("omega", [0, 10, 20])  # part 2, per goniometer angle

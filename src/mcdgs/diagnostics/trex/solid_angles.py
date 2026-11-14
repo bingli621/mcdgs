@@ -376,7 +376,7 @@ def main(out: Path | None = None, ncount: float = 1e8, seed: int = 1) -> list[Pa
         The paths of the figures, in that order.
     """
     instrument = TRexWithVanadium()  # the white beam
-    run = Simulation(instrument).run(RUN, ncount=ncount, seed=seed).parent
+    run = Simulation(instrument).run(RUN, ncount=ncount, seed=seed).folder
 
     binned = read_events(run, DETECTOR, SOURCE, SAMPLE)
     image = detector_image(binned)

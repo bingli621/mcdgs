@@ -14,7 +14,8 @@ Everything runs through McStasScript's public API (``settings``, ``set_parameter
 the outputs into one file. The instrument is first compiled once with mcrun itself, since
 McStasScript has no compile-only call.
 
-A run that finished leaves its record, a :class:`.Run`, as ``run.json`` in its folder.
+Each of them returns the :class:`.Run` it made, which is also left as ``run.json`` in the
+folder of the run.
 """
 
 import copy
@@ -395,7 +396,7 @@ class Simulation:
         mpi: int | str = "auto",
         custom_flags: str | None = None,
         **instr_params: float,
-    ) -> Path:
+    ) -> Run:
         """Simulate source -> detector once.
 
         Parameters
@@ -416,7 +417,7 @@ class Simulation:
         Returns
         -------
         :
-            ``<runs folder>/<folder>/mccode.h5``.
+            The run, with its file ``data_file``, ``<runs folder>/<folder>/mccode.h5``.
         """
         run, inst = self._prepare(
             folder_name,
@@ -430,7 +431,7 @@ class Simulation:
         inst.set_parameters(**instr_params)  # the rest keep the instrument's values
         inst.backengine()  # compiles in its build folder
         run.save()
-        return run.data_file
+        return run
 
     def scan(
         self,
@@ -442,7 +443,7 @@ class Simulation:
         seed: int | None = None,
         custom_flags: str | None = None,
         **instr_params: float,
-    ) -> Path:
+    ) -> Run:
         """Simulate source -> detector for every value of an instrument parameter.
 
         The values run in parallel as single-process mcrun jobs.
@@ -470,7 +471,8 @@ class Simulation:
         Returns
         -------
         :
-            ``<runs folder>/<folder>/mccode.h5``, with one entry per value.
+            The run, with its file ``data_file``, ``<runs folder>/<folder>/mccode.h5``, which
+            has one entry per value.
 
         Raises
         ------
@@ -492,7 +494,7 @@ class Simulation:
         )
         _run_points_in_parallel(inst, run.folder, points, seed=seed, n_jobs=n_jobs)
         run.save()
-        return run.data_file
+        return run
 
     def run_to_sample(
         self,
@@ -501,7 +503,7 @@ class Simulation:
         seed: int | None = None,
         mpi: int | str = "auto",
         **instr_params: float,
-    ) -> Path:
+    ) -> Run:
         """Simulate source -> ``sample_pos`` and dump the beam to an MCPL file.
 
         This is part 1 of a split run: run it once, with a large ``ncount``. The run folder also
@@ -526,7 +528,8 @@ class Simulation:
         Returns
         -------
         :
-            ``<runs folder>/<folder>/beam.mcpl.gz``. The run also becomes :attr:`beam_run`.
+            The run, with its beam ``beam_file``, ``<runs folder>/<folder>/beam.mcpl.gz``. It
+            also becomes :attr:`beam_run`.
 
         Raises
         ------
@@ -550,7 +553,7 @@ class Simulation:
         inst.backengine()
         run.save()
         self.beam_run = run.name
-        return run.folder / BEAM_FILE
+        return run
 
     def run_from_sample(
         self,
@@ -559,7 +562,7 @@ class Simulation:
         seed: int | None = None,
         mpi: int | str = "auto",
         **instr_params: float,
-    ) -> Path:
+    ) -> Run:
         """Simulate ``sample_pos`` -> sample -> detector once, from a beam file.
 
         This is part 2 of a split run, and may run any time later, even in another session. The
@@ -583,7 +586,7 @@ class Simulation:
         Returns
         -------
         :
-            ``<runs folder>/<folder>/mccode.h5``.
+            The run, with its file ``data_file``, ``<runs folder>/<folder>/mccode.h5``.
 
         Raises
         ------
@@ -606,7 +609,7 @@ class Simulation:
         inst.set_parameters(**instr_params)  # the rest keep the instrument's values
         inst.backengine()
         run.save()
-        return run.data_file
+        return run
 
     def scan_from_sample(
         self,
@@ -617,7 +620,7 @@ class Simulation:
         n_jobs: int | None = None,
         seed: int | None = None,
         **instr_params: float,
-    ) -> Path:
+    ) -> Run:
         """Simulate ``sample_pos`` -> detector from a beam file, for every value of a parameter.
 
         This is part 2 of a split run, for a scan. The values run in parallel as single-process
@@ -645,7 +648,8 @@ class Simulation:
         Returns
         -------
         :
-            ``<runs folder>/<folder>/mccode.h5``, with one entry per value.
+            The run, with its file ``data_file``, ``<runs folder>/<folder>/mccode.h5``, which
+            has one entry per value.
 
         Raises
         ------
@@ -673,4 +677,4 @@ class Simulation:
         inst.run_from(SAMPLE_POS, filename=self._beam_filename(beam))
         _run_points_in_parallel(inst, run.folder, points, seed=seed, n_jobs=n_jobs)
         run.save()
-        return run.data_file
+        return run

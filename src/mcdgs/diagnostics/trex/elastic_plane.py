@@ -418,10 +418,10 @@ def simulate(ncount: float = 1e9, seed: int = 1) -> tuple[Path, Path]:
         The folders of the first and the second part.
     """
     simulation = Simulation(TRexWithLa2Ni7())  # the default control parameters
-    beam_file = simulation.run_to_sample(TO_SAMPLE, ncount=ncount, seed=seed)
+    to_sample = simulation.run_to_sample(TO_SAMPLE, ncount=ncount, seed=seed)
     # sample_pos -> detector, from the beam file, in the frame of sample_pos: the beam frame
-    detector_file = simulation.run_from_sample(FROM_SAMPLE, seed=seed + 1)
-    return beam_file.parent, detector_file.parent
+    from_sample = simulation.run_from_sample(FROM_SAMPLE, seed=seed + 1)
+    return to_sample.folder, from_sample.folder
 
 
 def subpulse_timing_of_run(to_sample: str | Path | None = None) -> sc.DataArray:

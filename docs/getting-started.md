@@ -66,10 +66,10 @@ from mcdgs.instruments.trex.model import TRex
 from mcdgs.mcstas.simulation import Simulation
 
 simulation = Simulation(TRex())
-h5_file = simulation.run(ncount=1e7, bender_in=1)
-print(h5_file)
+run = simulation.run(ncount=1e7, bender_in=1)
+print(run.data_file)
 
-with h5py.File(h5_file) as file:
+with h5py.File(run.data_file) as file:
     components = file["entry1/instrument/components"]
     # groups are numbered, such as 0076_sample_monitor; not 0073_pre_sample_monitor
     monitor = next(
@@ -93,7 +93,7 @@ The monitor's own bins are 0.02 Å, so the script adds them up 0.1 Å at a time.
 | Folder | Contents |
 | ------ | -------- |
 | `mcdgs_workspace/builds/TRex/` | The generated `.instr` and `.c` files and the compiled instrument. |
-| `mcdgs_workspace/runs/<time>_run/` | The results of this run, in `mccode.h5`. |
+| `mcdgs_workspace/runs/<time>_run/` | The results of this run, in `mccode.h5`, and its record, `run.json`. |
 
 `mcdgs_workspace/` is created where you ran the script, and in this repository git ignores it.
 Set the environment variable `MCDGS_WORKSPACE` to a folder to have it there instead.

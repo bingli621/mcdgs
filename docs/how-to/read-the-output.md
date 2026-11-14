@@ -1,7 +1,10 @@
 # Read the output
 
 Every run writes a McStas NeXus (HDF5) file, `mccode.h5`. A scan has one entry per value, `entry1`,
-`entry2` and so on, and a single run has one.
+`entry2` and so on, and a single run has one. In the examples `run` and `scan` are what
+`simulation.run` and `simulation.scan` returned, or what
+[`latest_run`](run-a-simulation.md#find-and-clean-up-runs) found: `data_file` is the file and
+`folder` the run folder.
 
 ## A monitor
 
@@ -11,7 +14,7 @@ Monitors are read with `h5py`. This reads `sample_monitor`, the `Monitor_nD` of 
 ```python
 import h5py
 
-with h5py.File(h5_file) as file:
+with h5py.File(run.data_file) as file:
     components = file["entry1/instrument/components"]
     monitor = next(
         c for name, c in components.items() if name.partition("_")[2] == "sample_monitor"
@@ -32,7 +35,7 @@ To read every entry of a scan, count through the entries, since sorted by name `
 before `entry2`:
 
 ```python
-with h5py.File(scan_file) as file:
+with h5py.File(scan.data_file) as file:
     for n in range(1, len(file) + 1):
         entry = file[f"entry{n}"]
 ```
@@ -66,7 +69,7 @@ returns one `(parameters, pixels)` per entry:
 ```python
 from mcdgs.mcstas.nexus_io import read_pixels
 
-points = read_pixels(h5_file.parent, "banana_detector", "source", "sample_pos")
+points = read_pixels(run.folder, "banana_detector", "source", "sample_pos")
 for parameters, pixels in points:
     print(parameters, pixels.sum().value)
 ```
@@ -80,6 +83,6 @@ sample, in the frame of `sample_pos`:
 
 ```python
 points = read_pixels(
-    h5_file.parent, "banana_detector", "source", "sample_pos", beam_direction=[0, 0, 1]
+    run.folder, "banana_detector", "source", "sample_pos", beam_direction=[0, 0, 1]
 )
 ```

@@ -551,7 +551,7 @@ def main(
     name = "trex_neutrons_on_sample"
 
     # run McStas and load its monitors, in n/s per bin
-    folder = Simulation(instrument).run(name, ncount=ncount, seed=seed).parent
+    folder = Simulation(instrument).run(name, ncount=ncount, seed=seed).folder
     mcstas_data = ms.load_data(str(folder))
 
     # run tof, then read the monitors of both on the bins of the McStas maps: time, wavelength

@@ -130,7 +130,7 @@ def main(
 
     # --8<-- [start:run_mcstas]
     # run McStas and load its monitors, in n/s per bin
-    folder = Simulation(instrument).run("trex_source", ncount=ncount, seed=seed).parent
+    folder = Simulation(instrument).run("trex_source", ncount=ncount, seed=seed).folder
     mcstas_data = ms.load_data(str(folder))
     # --8<-- [end:run_mcstas]
 

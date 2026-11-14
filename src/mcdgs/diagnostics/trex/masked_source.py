@@ -119,7 +119,7 @@ def run_source(instrument: TRexToSample, folder_name: str, ncount: float, seed: 
         The run.
     """
     start = time.perf_counter()
-    folder = Simulation(instrument).run(folder_name, ncount=ncount, seed=seed).parent
+    folder = Simulation(instrument).run(folder_name, ncount=ncount, seed=seed).folder
     seconds = time.perf_counter() - start
     intensity, error = read_mcstas_map(
         MONITOR, ms.load_data(str(folder)), monitor_bins(instrument.sample_monitor)

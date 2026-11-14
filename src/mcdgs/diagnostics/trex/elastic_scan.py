@@ -117,10 +117,10 @@ def simulate(omegas: np.ndarray = OMEGAS, beam_run: str = plane.TO_SAMPLE, seed:
         per angle.
     """
     simulation = Simulation(TRexWithRotatingLa2Ni7())  # the default control parameters
-    scan_file = simulation.scan_from_sample(
+    scan = simulation.scan_from_sample(
         "omega", omegas, folder_name=SCAN, beam_run=beam_run, seed=seed
     )
-    return scan_file.parent
+    return scan.folder
 
 
 def crystal_frame(events: sc.DataArray, omega: float) -> sc.DataArray:

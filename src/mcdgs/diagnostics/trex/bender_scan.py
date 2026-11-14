@@ -178,14 +178,12 @@ def run_bender_scan(
 
     # --8<-- [start:run_scan]
     simulation = Simulation(Extraction(), workspace)
-    scan_file = simulation.scan(
-        "b_rot", angles, "bender_scan", ncount=ncount, seed=seed, bender_in=1
-    )
-    print(f"Saved {scan_file}")
-    bender_out_file = simulation.run("bender_out", ncount=ncount, seed=seed, bender_in=0)
+    scan = simulation.scan("b_rot", angles, "bender_scan", ncount=ncount, seed=seed, bender_in=1)
+    print(f"Saved {scan.data_file}")
+    bender_out = simulation.run("bender_out", ncount=ncount, seed=seed, bender_in=0)
     # --8<-- [end:run_scan]
-    print(f"Saved {bender_out_file}")
-    return scan_file, bender_out_file
+    print(f"Saved {bender_out.data_file}")
+    return scan.data_file, bender_out.data_file
 
 
 def plot_bender_scan(scan_file: Path, bender_out_file: Path) -> Figure:
