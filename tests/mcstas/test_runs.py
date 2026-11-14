@@ -2,6 +2,7 @@ import json
 import re
 from datetime import datetime, timedelta, timezone
 
+import numpy as np
 import pytest
 
 from mcdgs.mcstas.runs import (
@@ -12,6 +13,7 @@ from mcdgs.mcstas.runs import (
     list_runs,
     monitor_file,
     new_run_folder,
+    recorded_instr_params,
 )
 
 TO_SAMPLE, FROM_SAMPLE = RunType.RUN_TO_SAMPLE, RunType.SCAN_FROM_SAMPLE
@@ -172,3 +174,9 @@ def test_clean_of_a_type_removes_only_the_older_runs_of_that_type(tmp_path, fini
     assert clean_runs(tmp_path, keep=2, run_type=RunType.SCAN) == scans[:1]
     assert clean_runs(tmp_path, keep=5, run_type=RunType.RUN) == []
     assert sorted(tmp_path.iterdir()) == [beams[2], *scans[1:]]
+
+
+def test_a_numpy_number_is_recorded_as_a_float():
+    recorded = recorded_instr_params([], {"omega": np.float64(2.5), "n": np.int64(3)})
+    assert recorded == {"omega": 2.5, "n": 3.0}
+    assert all(type(value) is float for value in recorded.values())  # JSON takes them

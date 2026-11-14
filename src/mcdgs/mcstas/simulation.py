@@ -19,7 +19,6 @@ folder of the run.
 
 from collections.abc import Mapping
 from datetime import datetime
-from numbers import Real
 
 import numpy as np
 from mcstasscript.interface.instr import McStas_instr
@@ -27,55 +26,11 @@ from numpy.typing import ArrayLike
 
 from mcdgs.core.base import Instrument
 from mcdgs.mcstas.builder import build_mcstas
-from mcdgs.mcstas.runs import BEAM_FILE, Run, RunType, new_run_folder
+from mcdgs.mcstas.runs import BEAM_FILE, Run, RunType, new_run_folder, recorded_instr_params
 from mcdgs.mcstas.scan import random_seed, run_points_in_parallel
 from mcdgs.mcstas.workspace import Workspace
 
 SAMPLE_POS = "sample_pos"  # the component a split run cuts the beam at
-
-
-def _recorded(value: object) -> float | str:
-    """Return the value of an instrument parameter as the record of a run keeps it.
-
-    Parameters
-    ----------
-    value:
-        The value, as the instrument or the caller of a run gave it.
-
-    Returns
-    -------
-    :
-        A number as a float, also a NumPy one, and anything else as its string.
-
-    Examples
-    --------
-    >>> _recorded(1), _recorded(np.float64(2.5)), _recorded("beam.mcpl")
-    (1.0, 2.5, 'beam.mcpl')
-    """
-    return float(value) if isinstance(value, Real) else str(value)
-
-
-def recorded_instr_params(
-    instrument: Instrument, given: Mapping[str, object], variable: str | None = None
-) -> dict[str, float | str]:
-    """Return the value of every instrument parameter in a run, as its record keeps them.
-
-    Parameters
-    ----------
-    instrument:
-        The instrument.
-    given:
-        The instrument parameters given to the run, by McStas name.
-    variable:
-        The instrument parameter of a scan, which is left out: its values are recorded apart.
-
-    Returns
-    -------
-    :
-        The parameters given, and the rest as the instrument has them.
-    """
-    used = {p.name: p.value for p in instrument.instr_params} | dict(given)
-    return {name: _recorded(value) for name, value in used.items() if name != variable}
 
 
 class Simulation:
@@ -191,7 +146,9 @@ class Simulation:
             instrument=self.instrument.name,
             run_type=run_type,
             started=started,
-            instr_params=recorded_instr_params(self.instrument, instr_params, variable),
+            instr_params=recorded_instr_params(
+                self.instrument.instr_params, instr_params, variable
+            ),
             ncount=ncount,
             seed=seed,
             variable=variable,

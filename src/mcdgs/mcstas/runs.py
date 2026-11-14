@@ -9,22 +9,28 @@ values of the instrument parameters. It is saved as ``run.json`` in the run fold
 has finished, so a folder with a ``run.json`` is a finished run, and it is read back from
 there, also in a later session and without the instrument.
 
+- :func:`recorded_instr_params` gives the instrument parameters of a run as its record keeps
+  them.
 - :func:`new_run_folder` picks the folder of a run and clears the way for the run to write it.
 - :func:`list_runs` and :func:`latest_run` find finished runs, and :func:`monitor_file` the
   file a run is normalized by.
 - :func:`clean_runs` removes older runs.
 
-Nothing here knows McStas, an instrument or a :class:`.Workspace`: the runs are found by their
-folder, and what a run did is read from its record, never from the name of its folder.
+Nothing here knows McStas, an :class:`.Instrument` or a :class:`.Workspace`: the runs are found
+by their folder, and what a run did is read from its record, never from the name of its folder.
 """
 
 import json
 import re
 import shutil
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
 from enum import StrEnum
+from numbers import Real
 from pathlib import Path
+
+from mcdgs.core.params import InstrParam
 
 RUN_FILE = "run.json"  # the record of a run, in its folder
 DATA_FILE = "mccode.h5"  # the McStas NeXus file of a run
@@ -155,6 +161,58 @@ class Run:
             values=record["values"],
             beam_run=record["beam_run"],
         )
+
+
+def _recorded(value: object) -> float | str:
+    """Return the value of an instrument parameter as the record of a run keeps it.
+
+    Parameters
+    ----------
+    value:
+        The value, as the instrument or the caller of a run gave it.
+
+    Returns
+    -------
+    :
+        A number as a float, also a NumPy one, and anything else as its string.
+
+    Examples
+    --------
+    >>> _recorded(1), _recorded(2.5), _recorded("beam.mcpl")
+    (1.0, 2.5, 'beam.mcpl')
+    """
+    return float(value) if isinstance(value, Real) else str(value)
+
+
+def recorded_instr_params(
+    defaults: Iterable[InstrParam], given: Mapping[str, object], variable: str | None = None
+) -> dict[str, float | str]:
+    """Return the value of every instrument parameter in a run, as its record keeps them.
+
+    Parameters
+    ----------
+    defaults:
+        The instrument parameters of the instrument, with the values it has.
+    given:
+        The instrument parameters given to the run, by McStas name.
+    variable:
+        The instrument parameter of a scan, which is left out: its values are recorded apart.
+
+    Returns
+    -------
+    :
+        The parameters given, and the rest as the instrument has them.
+
+    Examples
+    --------
+    >>> defaults = [InstrParam("omega", 0), InstrParam("b_rot", -0.4), InstrParam("mode", "FF")]
+    >>> recorded_instr_params(defaults, {"omega": 30})
+    {'omega': 30.0, 'b_rot': -0.4, 'mode': 'FF'}
+    >>> recorded_instr_params(defaults, {}, variable="omega")
+    {'b_rot': -0.4, 'mode': 'FF'}
+    """
+    used = {param.name: param.value for param in defaults} | dict(given)
+    return {name: _recorded(value) for name, value in used.items() if name != variable}
 
 
 def _check_name(folder_name: object) -> None:

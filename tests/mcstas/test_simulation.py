@@ -1,4 +1,3 @@
-
 import pytest
 
 from mcdgs.instruments.trex.model import TRex
