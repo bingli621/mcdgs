@@ -1,8 +1,9 @@
 # Run a McStas simulation
 
-A [`Simulation`](../reference/mcstas.md) holds an instrument and the folder its runs write to. The
-examples use `TRex`, as in [Install and first run](../getting-started.md). For the timing of the
-choppers alone, [tof](simulate-the-choppers-with-tof.md) is much faster.
+A [`Simulation`](../reference/mcstas.md) holds an instrument and the
+[workspace](#where-the-files-go) its runs write into. The examples use `TRex`, as in
+[Install and first run](../getting-started.md). For the timing of the choppers alone,
+[tof](simulate-the-choppers-with-tof.md) is much faster.
 
 ```python
 import numpy as np
@@ -22,7 +23,8 @@ keep the instrument's values.
 h5_file = simulation.run(ncount=1e6, seed=1, bender_in=1)
 ```
 
-`run` uses all cores through MPI by default (`mpi="auto"`).
+`run` uses all cores through MPI by default (`mpi="auto"`). It returns the path of the McStas NeXus
+file of the run, `mccode.h5` in the run folder.
 
 ## A scan
 
@@ -45,13 +47,41 @@ The instrument is compiled once, then the values run in parallel as single-proce
 do not repeat each other's random numbers. A name that is not an instrument parameter raises a
 `KeyError` before anything runs.
 
+## Where the files go
+
+Everything is written into one folder, the workspace:
+
+| Folder | Contents |
+| ------ | -------- |
+| `mcdgs_workspace/builds/<instrument name>/` | The generated `.instr` and `.c` files and the compiled instrument. |
+| `mcdgs_workspace/runs/<run name>/` | What McStas wrote in one run, and the record of the run. |
+| `mcdgs_workspace/results/` | For what is made from the runs, such as figures. |
+
+Without anything else, `mcdgs_workspace/` is in the folder you run Python in. To keep it in one
+place, set the environment variable `MCDGS_WORKSPACE` to a folder, or give the simulation a
+workspace:
+
+```python
+from mcdgs.mcstas.workspace import Workspace
+
+workspace = Workspace.find("~/trex_workspace")
+simulation = Simulation(TRex(), workspace)
+```
+
+Each run writes a new folder in `runs/`, named after its start time and what it did, such as
+`20261022-143005_scan_b_rot`.
+
+!!! warning "A `folder_name` is replaced on every run"
+
+    Giving a run a name, as in `simulation.run("bender_out", ...)`, makes the output easy to find
+    from a plotting script. An earlier run of that name is removed first.
+
 ## Find and clean up runs
 
-Each run writes a new folder in `mcdgs_workspace/runs/`, named after its start time and what it
-did, such as `20261022-143005_scan_b_rot`.
-
 A run that finished leaves its record, `run.json`, in its folder: the instrument, the type of the
-run, and the value of every instrument parameter. The runs are found by that record:
+run, the number of neutrons, the seed, and the value of every instrument parameter. A folder
+without one is not a finished run. The runs are found by that record, also in a later session and
+without the instrument:
 
 ```python
 from mcdgs.mcstas.runs import RunType, clean_runs, latest_run, list_runs
@@ -59,18 +89,24 @@ from mcdgs.mcstas.runs import RunType, clean_runs, latest_run, list_runs
 runs_folder = simulation.workspace.runs_folder
 list_runs(runs_folder)  # the finished runs, newest first
 scan = latest_run(runs_folder, RunType.SCAN)  # the newest scan
-scan.folder, scan.variable, scan.values, scan.instr_params
-clean_runs(runs_folder, keep=5)  # remove all but the 5 newest
+scan.folder, scan.data_file  # where it is, and its mccode.h5
+scan.variable, scan.values, scan.instr_params  # what it simulated
+```
+
+`clean_runs` removes all but the newest runs:
+
+```python
+clean_runs(runs_folder, keep=5)  # all but the 5 newest
 clean_runs(runs_folder, keep=1, run_type=RunType.RUN_TO_SAMPLE)  # all but the newest beam
 ```
 
-Without a `run_type`, `clean_runs` never removes a `run_to_sample` run. It never removes a folder
-without a `run.json`.
+- Without a `run_type`, it never removes a `run_to_sample` run, whose beam file the
+  [split runs](#a-split-run-at-the-sample) start from.
+- With a `run_type`, it removes only runs of that type.
+- It never removes a folder without a `run.json`.
 
-!!! warning "A `folder_name` is replaced on every run"
-
-    Giving a run a name, as in `simulation.run("bender_out", ...)`, makes the output easy to find
-    from a plotting script. An earlier run of that name is removed first.
+The build folders only hold what every run makes anew, so `simulation.workspace.clean_builds()`
+removes them all.
 
 ## A split run at the sample
 
@@ -84,17 +120,37 @@ from mcdgs.instruments.trex.model import TRex
 from mcdgs.samples import aluminum
 
 simulation = Simulation(TRex(sample=aluminum()))
-beam_file = simulation.run_to_sample(ncount=1e8)  # once, with many neutrons
+simulation.run_to_sample("to_sample", ncount=1e8)  # once, with many neutrons
 
-simulation.run_from_sample()  # part 2, also from a later session
+simulation.run_from_sample()  # part 2, from the beam of the run above
 simulation.scan_from_sample("omega", [0, 10, 20])  # part 2, per goniometer angle
 ```
 
-The beam file is found again by a later `Simulation` on the same workspace. The number of
-neutrons in part 2 is the number in the file.
+A later session names the run to the sample whose beam it starts from, which must be in the same
+workspace:
+
+```python
+simulation = Simulation(TRex(sample=aluminum()))
+simulation.scan_from_sample("omega", [0, 10, 20], beam_run="to_sample")
+```
+
+The beam of an earlier session is never picked by itself: the newest one in the workspace may be
+that of another instrument. The number of neutrons in part 2 is the number in the file.
+
+Part 2 has no incident monitor of its own. Its record names the run to the sample it started from,
+and `monitor_file` gives the file of that run:
+
+```python
+from mcdgs.mcstas.runs import monitor_file
+
+scan = latest_run(runs_folder, RunType.SCAN_FROM_SAMPLE)
+scan.beam_run  # "to_sample"
+monitor_file(scan)  # the mccode.h5 of "to_sample"
+```
 
 - Make a new beam file after changing a component up to `sample_pos`, or an instrument parameter
   they use.
+- Removing a run to the sample leaves the runs from it without their monitor.
 - Part 2 runs in the frame of `sample_pos`, so anything after it must be placed `relative` to it,
   not in the lab frame.
 
