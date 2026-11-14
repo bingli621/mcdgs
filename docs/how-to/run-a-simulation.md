@@ -56,7 +56,7 @@ Everything is written into one folder, the workspace:
 | ------ | -------- |
 | `mcdgs_workspace/builds/<instrument name>/` | The generated `.instr` and `.c` files and the compiled instrument. |
 | `mcdgs_workspace/runs/<run name>/` | What McStas wrote in one run, and the record of the run. |
-| `mcdgs_workspace/results/` | For what is made from the runs, such as figures. |
+| `mcdgs_workspace/results/<name>/` | What is made from the runs, such as the figures of a diagnostics module. |
 
 Without anything else, `mcdgs_workspace/` is in the folder you run Python in. To keep it in one
 place, set the environment variable `MCDGS_WORKSPACE` to a folder, or give the simulation a

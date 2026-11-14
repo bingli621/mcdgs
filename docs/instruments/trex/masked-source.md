@@ -127,6 +127,5 @@ pixi run python -m mcdgs.diagnostics.trex.masked_source
 ```
 
 At its defaults, `main` runs 1e8 rays with each source, with seed 1, and saves the figures and
-the table next to the `mccode.h5` of the run with the plain source, or to the folder given with
-`--out`. The masked source also writes its region, `source.json` in its run folder: the
+the table to `mcdgs_workspace/results/trex_masked_source/`, or to the folder given with `--out`. The masked source also writes its region, `source.json` in its run folder: the
 polygons, their area and the acceptance.

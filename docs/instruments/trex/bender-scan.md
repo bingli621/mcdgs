@@ -137,12 +137,14 @@ pixi run python -m mcdgs.diagnostics.trex.bender_scan
 ```
 
 This is `main` at its defaults: 1e6 McStas neutrons per angle, and seed 1. The scan goes to
-`mcdgs_workspace/runs/bender_scan/`, the run without the bender to `mcdgs_workspace/runs/bender_out/`, each
-replacing the one of an earlier run, and the figure, `bender_scan.png`, next to the scan.
+`mcdgs_workspace/runs/bender_scan/`, the run without the bender to
+`mcdgs_workspace/runs/bender_out/`, each replacing the one of an earlier run, and the figure,
+`bender_scan.png`, to `mcdgs_workspace/results/trex_bender_scan/`.
 `read_angles`, `read_spectra` and `transmission` read the two files again, without running McStas.
 
 Then `main` runs the path with the bender in at its nominal rotation, with `path_ncount`, 1e7,
 McStas neutrons in the run of the diagram and the monitors: its three figures go to
-`mcdgs_workspace/runs/trex_extraction_bender_in/`, with McStasScript's event lists of the run with the
-diagnostics, about 180 MB at 1e6 neutrons, and the run of the diagram to
+`mcdgs_workspace/results/trex_extraction/`. The run with the diagnostics, with McStasScript's
+event lists, about 180 MB at 1e6 neutrons, goes to
+`mcdgs_workspace/runs/trex_extraction_bender_in/`, and the run of the diagram to
 `mcdgs_workspace/runs/trex_extraction_bender_in_intensity/`.

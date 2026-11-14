@@ -5,7 +5,7 @@ control parameters and McStasScript's diagram of how its components are placed, 
 with McStasScript's ``show_instrument``, which runs mcdisplay:
 
 - ``trex_print.txt``: ``print(trex)``, the parameters and the position of every component;
-- ``TRex.instr``: the instrument file, written with its build files to its build folder;
+- ``TRex.instr``: the instrument file, copied from the build folder of T-Rex;
 - ``trex_diagram_legend.png`` and ``trex_diagram.png``: McStasScript's ``show_diagram()``, its
   legend and which component each one is placed and rotated relative to;
 - ``overview_top.png``: the instrument seen from above, z along the beam and x across it;
@@ -25,7 +25,13 @@ from unittest.mock import patch
 import matplotlib.pyplot as plt
 from mcstasscript.interface.instr import McStas_instr
 
-from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure, save_text
+from mcdgs.diagnostics.cli import (
+    output_folder,
+    parse_out,
+    remove_mcdisplay_folders,
+    save_figure,
+    save_text,
+)
 from mcdgs.instruments.trex.model import TRex
 from mcdgs.mcstas.builder import build_mcstas
 from mcdgs.mcstas.workspace import Workspace
@@ -151,6 +157,7 @@ def draw_views(
             height=600,
         )
     along_beam = _save_view(folder / "overview_along_beam.png", dpi=150)
+    remove_mcdisplay_folders(mcstas_instr.input_path)  # one per view, not needed once drawn
     return [top, along_beam]
 
 
@@ -160,8 +167,8 @@ def main(out: Path | None = None) -> list[Path]:
     Parameters
     ----------
     out:
-        Folder of the files. If ``None``, the build folder of T-Rex in
-        :meth:`.Workspace.find`, where the instrument file is written to build it.
+        Folder of the files. If ``None``, ``trex_overview`` in the results folder of
+        :meth:`.Workspace.find`.
 
     Returns
     -------
@@ -175,9 +182,8 @@ def main(out: Path | None = None) -> list[Path]:
     mcstas_instr.write_full_instrument()
     instr_file = build_folder / f"{mcstas_instr.name}.instr"
 
-    folder = output_folder(out, build_folder)
-    if folder.resolve() != build_folder.resolve():
-        instr_file = Path(shutil.copyfile(instr_file, folder / instr_file.name))
+    folder = output_folder(out, "trex_overview")
+    instr_file = Path(shutil.copyfile(instr_file, folder / instr_file.name))
     print(f"Saved {instr_file}")
     return [
         write_printout(trex, folder),

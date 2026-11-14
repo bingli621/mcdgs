@@ -18,6 +18,7 @@ path with it is run by :func:`.bender_scan.main`. Run the module for it::
 """
 
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 from unittest.mock import patch
 
@@ -36,7 +37,7 @@ from mcdgs.core.components import (
     Progress_bar,
 )
 from mcdgs.core.params import InstrParam, param
-from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
+from mcdgs.diagnostics.cli import output_folder, parse_out, remove_mcdisplay_folders, save_figure
 from mcdgs.diagnostics.compare import plot_comparison, read_scaled_comparisons
 from mcdgs.instruments.trex.guides.bispectral import (
     BENDER_ROTATION,
@@ -49,7 +50,8 @@ from mcdgs.instruments.trex.guides.extraction import guides_extraction
 from mcdgs.instruments.trex.monitors import beam_monitor, source_monitor
 from mcdgs.instruments.trex.sources import source
 from mcdgs.mcstas.builder import build_mcstas
-from mcdgs.mcstas.runs import new_run_folder
+from mcdgs.mcstas.runs import Run, RunType, new_run_folder
+from mcdgs.mcstas.simulation import recorded_instr_params
 from mcdgs.mcstas.workspace import Workspace
 from mcdgs.tof.builder import build_tof
 from mcdgs.tof.reader import monitor_bins
@@ -150,6 +152,53 @@ def _zoom_intensity(diagram: Figure, limits: tuple[float, float]) -> None:
     rays_ax.set_xlim(limits[0] * rays_per_intensity, limits[1] * rays_per_intensity)
 
 
+def save_run_record(
+    folder: Path,
+    extraction: Extraction,
+    started: datetime,
+    bender_in: bool,
+    ncount: float,
+    seed: int,
+) -> Run:
+    """Save the record of a run of the extraction that McStasScript started itself.
+
+    The runs of :func:`diagnose_path` go through McStasScript's diagnostics and its diagram,
+    not through a :class:`.Simulation`, which would save the record. With it the run is found
+    and cleaned as any other. McStasScript writes them in McStas's own format, so the
+    ``data_file`` of the record, a ``mccode.h5``, does not exist: the folder is loaded with
+    ``ms.load_data``.
+
+    Parameters
+    ----------
+    folder:
+        The run folder, written by the run.
+    extraction:
+        The instrument.
+    started:
+        When the run started.
+    bender_in:
+        The path of the run: True for the bender and guide 4b.
+    ncount, seed:
+        The number of neutrons and the seed of the run.
+
+    Returns
+    -------
+    :
+        The run, saved in its folder.
+    """
+    run = Run(
+        folder=folder,
+        instrument=extraction.name,
+        run_type=RunType.RUN,
+        started=started,
+        instr_params=recorded_instr_params(extraction, {"bender_in": int(bender_in)}),
+        ncount=ncount,
+        seed=seed,
+    )
+    run.save()
+    return run
+
+
 def draw_top_view(mcstas_instr: McStas_instr, path: Path) -> Path:
     """Draw the instrument from above with McStasScript's ``show_instrument``, and save it.
 
@@ -177,6 +226,7 @@ def draw_top_view(mcstas_instr: McStas_instr, path: Path) -> Path:
             width=1600,  # pixels at 100 dpi: 16 x 4 in
             height=400,
         )
+    remove_mcdisplay_folders(mcstas_instr.input_path)  # not needed once drawn
     return save_figure(plt.gcf(), path)
 
 
@@ -205,7 +255,8 @@ def diagnose_path(
     bender_in:
         True for the bender and guide 4b, False for guide 4a.
     out:
-        Folder of the figures. If ``None``, the folder of the McStas run with the diagnostics.
+        Folder of the figures. If ``None``, ``trex_extraction`` in the results folder of
+        :meth:`.Workspace.find`.
     ncount:
         Number of McStas neutrons of the run of the diagram and the monitors.
     neutrons:
@@ -249,6 +300,7 @@ def diagnose_path(
     diag.add_view("l")
     # --8<-- [end:diagnostics]
 
+    started = datetime.now().astimezone()
     folder = new_run_folder(workspace.runs_folder, run_name, "diagnose")
     diag.set_parameters(bender_in=int(bender_in))
     diag.settings(
@@ -259,12 +311,14 @@ def diagnose_path(
         output_path=str(folder),
     )
     diag.run()
+    save_run_record(folder, extraction, started, bender_in, diagnostics_ncount, seed)
     diag.plot()  # draws on a new figure, which it does not return
-    figure_folder = output_folder(out, folder)
+    figure_folder = output_folder(out, "trex_extraction")
     figures = [save_figure(plt.gcf(), figure_folder / f"{run_name}_diagnose.png", dpi=100)]
 
     # McStasScript's diagram of the components, with the intensity and the rays before each:
     # a McStas run of its own, in a folder of its own, which also holds the monitors
+    started = datetime.now().astimezone()
     intensity_folder = new_run_folder(workspace.runs_folder, f"{run_name}_intensity", "diagram")
     mcstas_instr.set_parameters(bender_in=int(bender_in))
     mcstas_instr.settings(
@@ -282,6 +336,7 @@ def diagnose_path(
     diagram = plt.gcf()
     _zoom_intensity(diagram, DIAGRAM_INTENSITY_LIMITS)
     # --8<-- [end:diagram]
+    save_run_record(intensity_folder, extraction, started, bender_in, ncount, seed)
     figures.append(save_figure(diagram, figure_folder / f"{run_name}_intensity.png", dpi=100))
 
     # --8<-- [start:scale_tof]
@@ -325,8 +380,8 @@ def main(
     Parameters
     ----------
     out:
-        Folder of the figures. If ``None``, the folder of the instrument file for the view from
-        above, and that of the McStas run for the others.
+        Folder of the figures. If ``None``, ``trex_extraction`` in the results folder of
+        :meth:`.Workspace.find`.
     ncount, neutrons, seed, transmission:
         As in :func:`diagnose_path`.
 
@@ -340,7 +395,8 @@ def main(
     build_folder = Workspace.find().build_folder(extraction.name)
     # the geometry: mcdisplay draws every component, whatever its WHEN
     mcstas_instr = build_mcstas(extraction, input_path=build_folder)
-    top = draw_top_view(mcstas_instr, output_folder(out, build_folder) / "trex_extraction_top.png")
+    figure_folder = output_folder(out, "trex_extraction")
+    top = draw_top_view(mcstas_instr, figure_folder / "trex_extraction_top.png")
     path = diagnose_path(
         False, out, ncount=ncount, neutrons=neutrons, seed=seed, transmission=transmission
     )

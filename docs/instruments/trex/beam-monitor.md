@@ -124,8 +124,8 @@ what the guides do at each wavelength and time. A value given by hand, such as
 ## The figure
 
 `main` runs both models with the same seed, prints the mean time and wavelength of each, the
-McStas totals, the scale and the transmission, and saves `trex_beam_monitor.png` next to the
-`mccode.h5` of the McStas run, or to the folder given with `--out`. The figure has the layout of
+McStas totals, the scale and the transmission, and saves `trex_beam_monitor.png` to
+`mcdgs_workspace/results/trex_beam_monitor/`, or to the folder given with `--out`. The figure has the layout of
 [Source](source.md#the-figure): the maps of both models on one color scale, then the wavelength
 spectrum and the time profile of both, with their error bars. The legend gives the scale and the
 transmission of tof.

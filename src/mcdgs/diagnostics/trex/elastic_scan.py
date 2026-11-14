@@ -348,7 +348,8 @@ def analyze(
     Parameters
     ----------
     out:
-        Folder of the files. If ``None``, the scan folder.
+        Folder of the files. If ``None``, ``trex_elastic_scan`` in the results folder of
+        :meth:`.Workspace.find`.
     scan, to_sample:
         As :func:`reduce_angles`.
 
@@ -364,7 +365,7 @@ def analyze(
         f"T-Rex, La2Ni7 ({hkl}) in plane\n{TRexWithRotatingLa2Ni7().running_conditions()}\n"
         f"|Qy| < {QY_HALF_WIDTH:g} 1/Å, in the frame of the crystal at omega = 0"
     )
-    folder = output_folder(out, scan)
+    folder = output_folder(out, NAME)
     gif = animate(maps, folder / f"{NAME}.gif", title)
     print(f"Saved {gif}")
     return [gif, save_figure(plot_scan(maps, title), folder / f"{NAME}.png")]

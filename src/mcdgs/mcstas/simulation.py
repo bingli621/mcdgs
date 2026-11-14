@@ -68,6 +68,29 @@ def _recorded(value: object) -> float | str:
     return float(value) if isinstance(value, Real) else str(value)
 
 
+def recorded_instr_params(
+    instrument: Instrument, given: Mapping[str, object], variable: str | None = None
+) -> dict[str, float | str]:
+    """Return the value of every instrument parameter in a run, as its record keeps them.
+
+    Parameters
+    ----------
+    instrument:
+        The instrument.
+    given:
+        The instrument parameters given to the run, by McStas name.
+    variable:
+        The instrument parameter of a scan, which is left out: its values are recorded apart.
+
+    Returns
+    -------
+    :
+        The parameters given, and the rest as the instrument has them.
+    """
+    used = {p.name: p.value for p in instrument.instr_params} | dict(given)
+    return {name: _recorded(value) for name, value in used.items() if name != variable}
+
+
 def _compile(inst: McStas_instr) -> None:
     """Write the instrument into its input folder and compile it there, without simulating.
 
@@ -281,14 +304,12 @@ class Simulation:
             seed=seed,
             **settings,  # pyright: ignore[reportArgumentType]
         )
-        # every instrument parameter of the run: those given, the rest as the instrument has them
-        used = {p.name: p.value for p in self.instrument.instr_params} | dict(instr_params)
         run = Run(
             folder=folder,
             instrument=self.instrument.name,
             run_type=run_type,
             started=started,
-            instr_params={name: _recorded(v) for name, v in used.items() if name != variable},
+            instr_params=recorded_instr_params(self.instrument, instr_params, variable),
             ncount=ncount,
             seed=seed,
             variable=variable,

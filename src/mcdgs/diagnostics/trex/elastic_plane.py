@@ -483,8 +483,8 @@ def analyze(
     Parameters
     ----------
     out:
-        Folder of the figure. If ``None``, the folder of the second part, next to its
-        ``mccode.h5``.
+        Folder of the figure. If ``None``, ``trex_elastic_plane`` in the results folder of
+        :meth:`.Workspace.find`.
     to_sample, from_sample:
         The folders of the two parts, as :func:`reduce_runs`.
 
@@ -502,7 +502,7 @@ def analyze(
         f"T-Rex, La2Ni7: (Qx, Qz) of {pulses.sizes['subpulse']} sub-pulses\n"
         f"{TRexWithLa2Ni7().running_conditions()}",
     )
-    return save_figure(fig, output_folder(out, from_sample) / f"{NAME}.png")
+    return save_figure(fig, output_folder(out, NAME) / f"{NAME}.png")
 
 
 def main(out: Path | None = None, ncount: float = 1e9, seed: int = 1) -> Path:

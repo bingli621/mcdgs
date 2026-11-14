@@ -117,8 +117,8 @@ pixi run python -c "from mcdgs.diagnostics.trex.elastic_plane import main; main(
 ```
 
 At its defaults, `main` runs both parts, 1e9 rays from the masked source with seed 1, as for
-the figure here. It prints the sub-pulses and saves the figure next to the `mccode.h5` of the
-second part, or to the folder given as `out`.
+the figure here. It prints the sub-pulses and saves the figure to
+`mcdgs_workspace/results/trex_elastic_plane/`, or to the folder given as `out`.
 Running the module, as `pixi run docs-diagnostics` does, only reduces the runs again, without
 McStas:
 

@@ -204,5 +204,6 @@ pixi run python -m mcdgs.diagnostics.trex.neutrons_on_sample
 ```
 
 At its defaults, `main` runs 1e8 McStas neutrons and 1e7 tof neutrons, with seed 1, and saves the
-figures next to the `mccode.h5` of the McStas run, or to the folder given with `--out`. With fewer
+figures to `mcdgs_workspace/results/trex_neutrons_on_sample/`, or to the folder given with
+`--out`. With fewer
 neutrons, the sub-pulses at the band edges fade into the noise.

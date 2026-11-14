@@ -218,6 +218,6 @@ pixi run python -m mcdgs.diagnostics.trex.incident_energy
 ```
 
 At its defaults, `main` runs 1e8 McStas rays from the masked source and 1e7 tof neutrons, with seed 1, prints the
-table of each model, and saves the two figures and the graph next to the `mccode.h5` of the McStas
-run, or to the folder given with `--out`. `sc.show_graph` needs graphviz, which the default pixi
+table of each model, and saves the two figures and the graph to
+`mcdgs_workspace/results/trex_incident_energy/`, or to the folder given with `--out`. `sc.show_graph` needs graphviz, which the default pixi
 environment has.

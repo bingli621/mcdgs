@@ -364,7 +364,8 @@ def main(out: Path | None = None, ncount: float = 1e8, seed: int = 1) -> list[Pa
     Parameters
     ----------
     out:
-        Folder of the figures. If ``None``, the folder of the run, next to its ``mccode.h5``.
+        Folder of the figures. If ``None``, ``trex_solid_angles`` in the results folder of
+        :meth:`.Workspace.find`.
     ncount:
         Number of McStas rays.
     seed:
@@ -390,7 +391,7 @@ def main(out: Path | None = None, ncount: float = 1e8, seed: int = 1) -> list[Pa
         f"{instrument.name} · {instrument.params.mode} · choppers parked open · "
         f"λ = {l_min:.3f} to {l_max:.3f} Å"
     )
-    folder = output_folder(out, run)
+    folder = output_folder(out, NAME)
     title = "T-Rex, vanadium in the white beam: the banana detector"
     image_figure = plot_detector_image(image, f"{title}\n{conditions}")
     title = "T-Rex, vanadium in the white beam: the pixels of the banana detector"

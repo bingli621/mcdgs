@@ -527,8 +527,8 @@ def main(
     Parameters
     ----------
     out:
-        Folder of the figures. If ``None``, the folder of the McStas run, next to its
-        ``mccode.h5``.
+        Folder of the figures. If ``None``, ``trex_neutrons_on_sample`` in the results folder of
+        :meth:`.Workspace.find`.
     ncount:
         Number of McStas neutrons. Many: the guides and the choppers let through a small
         fraction of the beam.
@@ -582,7 +582,7 @@ def main(
         f"{comparison.scale:.4g} n/s each, transmission {transmission:.4g}"
     )
 
-    folder = output_folder(out, folder)
+    folder = output_folder(out, name)
     conditions = instrument.running_conditions()
     files = [
         save_figure(

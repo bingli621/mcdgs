@@ -108,8 +108,8 @@ def main(
     Parameters
     ----------
     out:
-        Folder of the figure, ``<name>.png``. If ``None``, the folder of the McStas run, next to
-        its ``mccode.h5``.
+        Folder of the figure, ``<name>.png``. If ``None``, ``trex_source`` in the results folder of
+        :meth:`.Workspace.find`.
     ncount:
         Number of McStas neutrons.
     neutrons:
@@ -150,7 +150,7 @@ def main(
     )
 
     fig = plot_comparison(comparison, "T-Rex flux at the entrance of guide 1")
-    return save_figure(fig, output_folder(out, folder) / f"{name}.png")
+    return save_figure(fig, output_folder(out, "trex_source") / f"{name}.png")
 
 
 if __name__ == "__main__":

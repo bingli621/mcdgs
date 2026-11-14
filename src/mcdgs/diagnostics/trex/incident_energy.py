@@ -338,8 +338,8 @@ def main(
     Parameters
     ----------
     out:
-        Folder of the figures. If ``None``, the folder of the McStas run, next to its
-        ``mccode.h5``.
+        Folder of the figures. If ``None``, ``trex_incident_energy`` in the results folder of
+        :meth:`.Workspace.find`.
     ncount:
         Number of McStas neutrons.
     neutrons:
@@ -394,7 +394,7 @@ def main(
     print_incident_energies(flights)
 
     conditions = instrument.running_conditions()
-    folder = output_folder(out, folder)
+    folder = output_folder(out, "trex_incident_energy")
     profiles = plot_time_profiles(comparisons, f"T-Rex direct beam\n{conditions}")
     energies = plot_incident_energies(flights, f"T-Rex incident energy per sub-pulse\n{conditions}")
     files = [

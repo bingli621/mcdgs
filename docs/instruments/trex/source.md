@@ -170,7 +170,7 @@ errors add in quadrature.
 
 `main` runs both models with the same seed, reads each monitor on the same bins, prints the mean
 time and wavelength of each and the McStas total, scales tof to McStas, and saves `<name>.png`,
-by default `trex_source.png`, next to the `mccode.h5` of the McStas run, or to the folder given
+by default `trex_source.png`, to `mcdgs_workspace/results/trex_source/`, or to the folder given
 with `--out`. Run as a module, it makes three figures: `trex_source_1e6.png`, this one,
 `trex_source_1e5.png` and `trex_source_lambda0_2.png`, below. The figure has two rows:
 

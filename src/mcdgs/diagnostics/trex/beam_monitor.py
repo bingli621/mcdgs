@@ -192,8 +192,8 @@ def main(
     Parameters
     ----------
     out:
-        Folder of the figure. If ``None``, the folder of the McStas run, next to its
-        ``mccode.h5``.
+        Folder of the figure. If ``None``, ``trex_beam_monitor`` in the results folder of
+        :meth:`.Workspace.find`.
     ncount:
         Number of McStas neutrons. More than at the source: the guides let through a fraction
         of the beam.
@@ -253,7 +253,7 @@ def main(
     _print_rates(comparison.mcstas_intensity, bins, area=monitor.xwidth * monitor.yheight * 1e4)
 
     fig = plot_comparison(comparison, "T-Rex flux at the beam monitor after guide 4a")
-    return save_figure(fig, output_folder(out, folder) / f"{name}.png")
+    return save_figure(fig, output_folder(out, name) / f"{name}.png")
 
 
 if __name__ == "__main__":

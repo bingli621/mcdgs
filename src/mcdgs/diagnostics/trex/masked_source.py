@@ -388,8 +388,8 @@ def main(
     Parameters
     ----------
     out:
-        Folder of the files. If ``None``, the folder of the plain run, next to its
-        ``mccode.h5``.
+        Folder of the files. If ``None``, ``trex_masked_source`` in the results folder of
+        :meth:`.Workspace.find`.
     ncount:
         Number of McStas rays of each run.
     seed:
@@ -420,7 +420,7 @@ def main(
 
     table = summary_table(plain, masked, ncount)
     print(table, end="")
-    folder = output_folder(out, plain.folder)
+    folder = output_folder(out, "trex_masked_source")
 
     bins = monitor_bins(plain_instrument.sample_monitor)
     peaks = find_peaks(masked, bins)

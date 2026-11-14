@@ -248,8 +248,9 @@ def main(
     Parameters
     ----------
     out:
-        Folder of the figures. If ``None``, the folder of the scan, next to its ``mccode.h5``,
-        for ``bender_scan.png``, and that of the McStas run of the path for the others.
+        Folder of the figures. If ``None``, ``trex_bender_scan`` in the results folder of
+        :meth:`.Workspace.find` for ``bender_scan.png``, and ``trex_extraction`` there for
+        the others.
     ncount:
         Number of McStas neutrons, per angle and in the run without the bender.
     seed:
@@ -268,7 +269,7 @@ def main(
     """
     scan_file, bender_out_file = run_bender_scan(ncount=ncount, seed=seed)
     fig = plot_bender_scan(scan_file, bender_out_file)
-    figure = save_figure(fig, output_folder(out, scan_file.parent) / "bender_scan.png")
+    figure = save_figure(fig, output_folder(out, "trex_bender_scan") / "bender_scan.png")
     # --8<-- [start:bender_in]
     path = diagnose_path(
         True, out, ncount=path_ncount, neutrons=neutrons, seed=seed, transmission=transmission
