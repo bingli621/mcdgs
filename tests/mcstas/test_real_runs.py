@@ -103,6 +103,12 @@ def test_a_split_run_gives_the_intensity_and_geometry_of_a_direct_run(sim):
     pixel = split.coords["position"].values - split.coords["sample_position"].value
     assert np.allclose(pixel[:, 2], DETECTOR_AT)
 
+    # an instrument parameter given to the part from the sample reaches McStas
+    narrow = sim.run_from_sample(seed=2, mpi=None, width=0.05)
+    assert narrow.instr_params == {"width": 0.05}
+    pixels = read_pixels(narrow.folder, "detector", "source", "sample_pos", [0, 0, 1])[0][1]
+    assert pixels.sum().value < 0.75 * split.sum().value
+
     scan = sim.scan_from_sample("width", [0.1, 0.05], seed=3, n_jobs=2)
     points = read_pixels(scan.folder, "detector", "source", "sample_pos", [0, 0, 1])
     assert [params["width"] for params, _ in points] == [0.1, 0.05]

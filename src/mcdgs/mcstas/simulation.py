@@ -19,6 +19,7 @@ folder of the run.
 
 from collections.abc import Mapping
 from datetime import datetime
+from typing import Any
 
 import numpy as np
 from mcstasscript.interface.instr import McStas_instr
@@ -102,7 +103,8 @@ class Simulation:
             What the run does.
         instr_params:
             The instrument parameters given to the run, of a scan those other than
-            ``variable``. They are recorded, not set: the run sets them.
+            ``variable``. They are recorded, and set unless the run is a scan, whose points
+            each set their own.
         ncount:
             Number of neutrons. If ``None``, as from the sample, it is not set.
         seed:
@@ -141,6 +143,8 @@ class Simulation:
             seed=seed,
             **settings,  # pyright: ignore[reportArgumentType]
         )
+        if variable is None:
+            inst.set_parameters(**instr_params)  # the rest keep the instrument's values
         run = Run(
             folder=folder,
             instrument=self.instrument.name,
@@ -156,6 +160,63 @@ class Simulation:
             beam_run=beam_run,
         )
         return run, inst
+
+    def _prepare_from_sample(
+        self,
+        folder_name: str | None,
+        run_type: RunType,
+        instr_params: Mapping[str, float],
+        beam_run: str | None,
+        **prepare: Any,
+    ) -> tuple[Run, McStas_instr]:
+        """Prepare a run from the sample: as :meth:`_prepare`, cut to start from a beam file.
+
+        Parameters
+        ----------
+        folder_name, run_type, instr_params:
+            As in :meth:`_prepare`.
+        beam_run:
+            Name of the run to the sample whose beam to start from. If ``None``,
+            :attr:`beam_run`.
+        **prepare:
+            The other keywords of :meth:`_prepare`.
+
+        Returns
+        -------
+        :
+            The record of the run, not saved yet, and the McStasScript instrument starting at
+            ``sample_pos`` from the beam file.
+
+        Raises
+        ------
+        ValueError
+            If the instrument has no ``sample_pos``, before anything runs.
+        FileNotFoundError
+            If there is no run to the sample to start from, before anything runs.
+        """
+        self._check_sample_pos()  # before anything
+        beam = self.find_beam_run(beam_run, folder_name)
+        run, inst = self._prepare(
+            folder_name, run_type, instr_params, beam_run=beam.name, **prepare
+        )
+        inst.run_from(SAMPLE_POS, filename=self._beam_filename(beam))
+        return run, inst
+
+    @staticmethod
+    def _run_once(run: Run, inst: McStas_instr) -> Run:
+        """Run McStas once, then save and return the record of the run."""
+        inst.backengine()  # compiles in its build folder
+        run.save()
+        return run
+
+    @staticmethod
+    def _run_points(
+        run: Run, inst: McStas_instr, points: list[dict[str, float]], n_jobs: int | None
+    ) -> Run:
+        """Run McStas once per point of a scan, then save and return the record of the run."""
+        run_points_in_parallel(inst, run.folder, points, seed=run.seed, n_jobs=n_jobs)
+        run.save()
+        return run
 
     def _check_sample_pos(self) -> None:
         """Check that the instrument has the component a split run cuts the beam at.
@@ -288,10 +349,7 @@ class Simulation:
             mpi=mpi,
             custom_flags=custom_flags,
         )
-        inst.set_parameters(**instr_params)  # the rest keep the instrument's values
-        inst.backengine()  # compiles in its build folder
-        run.save()
-        return run
+        return self._run_once(run, inst)
 
     def scan(
         self,
@@ -340,21 +398,18 @@ class Simulation:
             If a name is not an instrument parameter, before anything runs.
         """
         points = self.get_scan_points(variable, values, instr_params)  # checked before anything
-        seed = random_seed() if seed is None else seed  # picked here, to record it
         run, inst = self._prepare(
             folder_name,
             RunType.SCAN,
             instr_params,
             ncount=ncount,
-            seed=seed,
+            seed=random_seed() if seed is None else seed,  # picked here, to record it
             variable=variable,
             values=[point[variable] for point in points],
             mpi=None,  # no MPI: the points run in parallel instead
             custom_flags=custom_flags,
         )
-        run_points_in_parallel(inst, run.folder, points, seed=seed, n_jobs=n_jobs)
-        run.save()
-        return run
+        return self._run_points(run, inst, points, n_jobs)
 
     def run_to_sample(
         self,
@@ -400,7 +455,6 @@ class Simulation:
         run, inst = self._prepare(
             folder_name, RunType.RUN_TO_SAMPLE, instr_params, ncount=ncount, seed=seed, mpi=mpi
         )
-        inst.set_parameters(**instr_params)  # the rest keep the instrument's values
         inst.run_to(
             SAMPLE_POS,
             run_name="beam",
@@ -410,8 +464,7 @@ class Simulation:
             # default to the raw weights of mode 2, which are deprecated
             weight_mode=1,
         )
-        inst.backengine()
-        run.save()
+        self._run_once(run, inst)
         self.beam_run = run.name
         return run
 
@@ -455,21 +508,10 @@ class Simulation:
         FileNotFoundError
             If there is no run to the sample to start from, before anything runs.
         """
-        self._check_sample_pos()  # before anything
-        beam = self.find_beam_run(beam_run, folder_name)
-        run, inst = self._prepare(
-            folder_name,
-            RunType.RUN_FROM_SAMPLE,
-            instr_params,
-            seed=seed,
-            beam_run=beam.name,
-            mpi=mpi,
+        run, inst = self._prepare_from_sample(
+            folder_name, RunType.RUN_FROM_SAMPLE, instr_params, beam_run, seed=seed, mpi=mpi
         )
-        inst.run_from(SAMPLE_POS, filename=self._beam_filename(beam))
-        inst.set_parameters(**instr_params)  # the rest keep the instrument's values
-        inst.backengine()
-        run.save()
-        return run
+        return self._run_once(run, inst)
 
     def scan_from_sample(
         self,
@@ -521,20 +563,14 @@ class Simulation:
             If there is no run to the sample to start from, before anything runs.
         """
         points = self.get_scan_points(variable, values, instr_params)  # checked before anything
-        self._check_sample_pos()
-        beam = self.find_beam_run(beam_run, folder_name)
-        seed = random_seed() if seed is None else seed  # picked here, to record it
-        run, inst = self._prepare(
+        run, inst = self._prepare_from_sample(
             folder_name,
             RunType.SCAN_FROM_SAMPLE,
             instr_params,
-            seed=seed,
+            beam_run,
+            seed=random_seed() if seed is None else seed,  # picked here, to record it
             variable=variable,
             values=[point[variable] for point in points],
-            beam_run=beam.name,
             mpi=None,  # no MPI: the points run in parallel instead
         )
-        inst.run_from(SAMPLE_POS, filename=self._beam_filename(beam))
-        run_points_in_parallel(inst, run.folder, points, seed=seed, n_jobs=n_jobs)
-        run.save()
-        return run
+        return self._run_points(run, inst, points, n_jobs)
