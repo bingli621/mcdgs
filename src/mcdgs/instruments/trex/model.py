@@ -241,7 +241,7 @@ class TRex(Instrument):
         """McStas instrument parameters.
 
         The choice of guide 4, the rotation of the bender and of the goniometer, and the
-        frequency and delay of each chopper, from :meth:`chopper_instr_params`.
+        frequency and delay of each chopper, from :meth:`_chopper_instr_params`.
         """
         bender_params = [
             InstrParam("bender_in", int(self.params.bender_in), "", "bender in = 1, out = 0"),
