@@ -9,6 +9,8 @@ what it writes.
 
 ::: mcdgs.mcstas.workspace
 
+::: mcdgs.mcstas.runs
+
 ::: mcdgs.mcstas.run_folders
 
 ::: mcdgs.mcstas.nexus_io
