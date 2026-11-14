@@ -251,9 +251,9 @@ class TRex(Instrument):
             InstrParam("omega", self.params.omega, "deg", "rotation of the goniometer about +Y"),
         ]
 
-        return bender_params + gonio_params + self.chopper_instr_params()
+        return bender_params + gonio_params + self._chopper_instr_params()
 
-    def chopper_instr_params(self) -> list[InstrParam]:
+    def _chopper_instr_params(self) -> list[InstrParam]:
         """Return the McStas instrument parameters of the choppers.
 
         The frequency and delay of each chopper, computed from ``lambda0``, ``rrm``, ``mode``

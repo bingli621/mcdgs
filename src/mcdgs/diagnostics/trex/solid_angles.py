@@ -138,7 +138,7 @@ class TRexWithVanadium(TRex):
             parked = replace(getattr(self, name), nu=0, delay=0, park_angle=angle)
             setattr(self, name, parked)
 
-    def chopper_instr_params(self) -> list[InstrParam]:
+    def _chopper_instr_params(self) -> list[InstrParam]:
         """Return no instrument parameters for the choppers: they are parked."""
         return []
 
