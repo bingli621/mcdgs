@@ -35,7 +35,7 @@ from numpy.typing import ArrayLike
 from mcdgs.core.base import Instrument
 from mcdgs.mcstas.builder import build_mcstas
 from mcdgs.mcstas.nexus_io import merge_entries
-from mcdgs.mcstas.runs import BEAM_FILE, Run, RunType, latest_beam, new_run_folder
+from mcdgs.mcstas.runs import BEAM_FILE, Run, RunType, new_run_folder
 from mcdgs.mcstas.workspace import Workspace
 
 SAMPLE_POS = "sample_pos"  # the component a split run cuts the beam at
@@ -189,10 +189,10 @@ class Simulation:
 
     Attributes
     ----------
-    beam_file:
-        Beam file the runs from the sample start from: that of the last :meth:`run_to_sample`,
-        else the newest ``beam.mcpl.gz`` in the runs folder, so a beam dumped in an earlier
-        session is found. ``None`` if there is none.
+    beam_run:
+        The name of the last :meth:`run_to_sample` of this simulation, whose beam the runs from
+        the sample start from unless they name another. ``None`` before the first one: a beam
+        of an earlier session is never guessed, it is named.
 
     Notes
     -----
@@ -215,7 +215,7 @@ class Simulation:
     def __init__(self, instrument: Instrument, workspace: Workspace | None = None) -> None:
         self.instrument = instrument
         self.workspace = workspace or Workspace.find()
-        self.beam_file = latest_beam(self.workspace.runs_folder)
+        self.beam_run: str | None = None
 
     def _prepare(
         self,
@@ -227,7 +227,7 @@ class Simulation:
         seed: int | None = None,
         variable: str | None = None,
         values: list[float] | None = None,
-        beam_file: Path | None = None,
+        beam_run: str | None = None,
         **settings: object,
     ) -> tuple[Run, McStas_instr]:
         """Pick the run folder and build the instrument with the settings every run shares.
@@ -248,8 +248,8 @@ class Simulation:
             Random seed. If ``None``, McStas picks one.
         variable, values:
             The instrument parameter of a scan and its values.
-        beam_file:
-            The beam file a run from the sample starts from.
+        beam_run:
+            The name of the run to the sample a run from the sample starts from.
         **settings:
             The run's other McStasScript settings, e.g. ``mpi``.
 
@@ -292,14 +292,9 @@ class Simulation:
             seed=seed,
             variable=variable,
             values=values,
-            beam_run=None if beam_file is None else self._beam_run(beam_file),
+            beam_run=beam_run,
         )
         return run, inst
-
-    def _beam_run(self, beam_file: Path) -> str | None:
-        """Return the name of the run a beam file is from, or ``None`` if it is not in a run."""
-        in_runs_folder = beam_file.parent.parent == self.workspace.runs_folder.resolve()
-        return beam_file.parent.name if in_runs_folder else None
 
     def _check_sample_pos(self) -> None:
         """Check that the instrument has the component a split run cuts the beam at.
@@ -312,32 +307,54 @@ class Simulation:
         if SAMPLE_POS not in self.instrument.components:
             raise ValueError(f"{self.instrument.name} has no {SAMPLE_POS} component to split at")
 
-    def find_beam_file(self, beam_file: str | Path | None = None) -> Path:
-        """Return the absolute path of the beam file a run from the sample starts from.
+    @staticmethod
+    def _beam_filename(beam: Run) -> str:
+        """Return the beam file of a run to the sample as McStas takes it.
 
-        The path is absolute because mcrun runs in the build folder.
+        It is in C quotes, and absolute, because mcrun runs in the build folder.
+        """
+        return f'"{(beam.folder / BEAM_FILE).resolve()}"'
+
+    def find_beam_run(self, beam_run: str | None = None, folder_name: str | None = None) -> Run:
+        """Return the run to the sample that a run from the sample starts from.
 
         Parameters
         ----------
-        beam_file:
-            The beam file. If ``None``, :attr:`beam_file`.
+        beam_run:
+            The name of the run to the sample, in the runs folder of the workspace. If
+            ``None``, :attr:`beam_run`.
+        folder_name:
+            The folder name of the run from the sample, which must not be that of the run to
+            the sample: the run would remove the beam it starts from.
 
         Returns
         -------
         :
-            The absolute path.
+            The run to the sample.
 
         Raises
         ------
         FileNotFoundError
-            If both ``beam_file`` and :attr:`beam_file` are ``None``.
+            If both ``beam_run`` and :attr:`beam_run` are ``None``, or the run is not a
+            finished run of the workspace.
+        ValueError
+            If the run is not a ``run_to_sample``, or ``folder_name`` is its name.
         """
-        beam_file = beam_file or self.beam_file
-        if beam_file is None:
+        runs_folder = self.workspace.runs_folder
+        beam_run = beam_run or self.beam_run
+        if beam_run is None:
             raise FileNotFoundError(
-                f"no beam file in {self.workspace.runs_folder}: run run_to_sample first"
+                "no run to the sample: run run_to_sample first, or name an earlier one as beam_run"
             )
-        return Path(beam_file).resolve()
+        try:
+            run = Run.load(runs_folder / beam_run)
+        except FileNotFoundError:
+            raise FileNotFoundError(f"no finished run {beam_run!r} in {runs_folder}") from None
+        if run.run_type is not RunType.RUN_TO_SAMPLE:
+            raise ValueError(f"{beam_run!r} is a {run.run_type} run, not a run_to_sample")
+        if folder_name == beam_run:
+            raise ValueError(f"folder_name {folder_name!r} is the run to the sample it starts from")
+        return run
 
     def get_scan_points(
         self, variable: str, values: ArrayLike, instr_params: Mapping[str, float]
@@ -509,7 +526,7 @@ class Simulation:
         Returns
         -------
         :
-            ``<runs folder>/<folder>/beam.mcpl.gz``, which also becomes :attr:`beam_file`.
+            ``<runs folder>/<folder>/beam.mcpl.gz``. The run also becomes :attr:`beam_run`.
 
         Raises
         ------
@@ -532,13 +549,13 @@ class Simulation:
         )
         inst.backengine()
         run.save()
-        self.beam_file = run.folder / BEAM_FILE
-        return self.beam_file
+        self.beam_run = run.name
+        return run.folder / BEAM_FILE
 
     def run_from_sample(
         self,
         folder_name: str | None = None,
-        beam_file: str | Path | None = None,
+        beam_run: str | None = None,
         seed: int | None = None,
         mpi: int | str = "auto",
         **instr_params: float,
@@ -552,8 +569,9 @@ class Simulation:
         ----------
         folder_name:
             Run folder name. If ``None``, ``<time>_run_from_sample``.
-        beam_file:
-            Beam file to start from. If ``None``, :attr:`beam_file`.
+        beam_run:
+            Name of the run to the sample whose beam to start from, in the runs folder of the
+            workspace. If ``None``, :attr:`beam_run`, the last one of this simulation.
         seed:
             Random seed. If ``None``, McStas picks one.
         mpi:
@@ -572,19 +590,19 @@ class Simulation:
         ValueError
             If the instrument has no ``sample_pos``, before anything runs.
         FileNotFoundError
-            If there is no beam file, before anything runs.
+            If there is no run to the sample to start from, before anything runs.
         """
         self._check_sample_pos()  # before anything
-        beam_file = self.find_beam_file(beam_file)
+        beam = self.find_beam_run(beam_run, folder_name)
         run, inst = self._prepare(
             folder_name,
             RunType.RUN_FROM_SAMPLE,
             instr_params,
             seed=seed,
-            beam_file=beam_file,
+            beam_run=beam.name,
             mpi=mpi,
         )
-        inst.run_from(SAMPLE_POS, filename=f'"{beam_file}"')
+        inst.run_from(SAMPLE_POS, filename=self._beam_filename(beam))
         inst.set_parameters(**instr_params)  # the rest keep the instrument's values
         inst.backengine()
         run.save()
@@ -595,7 +613,7 @@ class Simulation:
         variable: str,
         values: ArrayLike,
         folder_name: str | None = None,
-        beam_file: str | Path | None = None,
+        beam_run: str | None = None,
         n_jobs: int | None = None,
         seed: int | None = None,
         **instr_params: float,
@@ -613,8 +631,9 @@ class Simulation:
             Values of ``variable``, e.g. ``np.linspace(-0.5, -0.3, 11)``.
         folder_name:
             Run folder name. If ``None``, ``<time>_scan_<variable>_from_sample``.
-        beam_file:
-            Beam file to start from. If ``None``, :attr:`beam_file`.
+        beam_run:
+            Name of the run to the sample whose beam to start from, in the runs folder of the
+            workspace. If ``None``, :attr:`beam_run`, the last one of this simulation.
         n_jobs:
             Number of jobs at a time. If ``None``, the number of cores.
         seed:
@@ -635,11 +654,11 @@ class Simulation:
         ValueError
             If the instrument has no ``sample_pos``, before anything runs.
         FileNotFoundError
-            If there is no beam file, before anything runs.
+            If there is no run to the sample to start from, before anything runs.
         """
         points = self.get_scan_points(variable, values, instr_params)  # checked before anything
         self._check_sample_pos()
-        beam_file = self.find_beam_file(beam_file)
+        beam = self.find_beam_run(beam_run, folder_name)
         seed = _random_seed() if seed is None else seed  # picked here, to record it
         run, inst = self._prepare(
             folder_name,
@@ -648,10 +667,10 @@ class Simulation:
             seed=seed,
             variable=variable,
             values=[point[variable] for point in points],
-            beam_file=beam_file,
+            beam_run=beam.name,
             mpi=None,  # no MPI: the points run in parallel instead
         )
-        inst.run_from(SAMPLE_POS, filename=f'"{beam_file}"')
+        inst.run_from(SAMPLE_POS, filename=self._beam_filename(beam))
         _run_points_in_parallel(inst, run.folder, points, seed=seed, n_jobs=n_jobs)
         run.save()
         return run.data_file

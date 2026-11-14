@@ -29,8 +29,8 @@ def test_a_scan_of_an_unknown_parameter_raises(variable, instr_params):
     ("method", "kwargs"),
     [
         ("run_to_sample", {}),
-        ("run_from_sample", {"beam_file": "beam.mcpl"}),
-        ("scan_from_sample", {"variable": "b_rot", "values": [1], "beam_file": "beam.mcpl"}),
+        ("run_from_sample", {"beam_run": "beam"}),
+        ("scan_from_sample", {"variable": "b_rot", "values": [1], "beam_run": "beam"}),
     ],
 )
 def test_a_split_run_without_sample_pos_raises_before_anything(tmp_path, method, kwargs):
@@ -42,21 +42,37 @@ def test_a_split_run_without_sample_pos_raises_before_anything(tmp_path, method,
     assert not any(tmp_path.iterdir())  # no run folder
 
 
-def test_a_run_from_the_sample_without_a_beam_file_raises_before_anything(tmp_path):
+def test_a_run_from_the_sample_without_a_run_to_the_sample_raises_before_anything(tmp_path):
     sim = Simulation(TRex(), Workspace(tmp_path))
-    with pytest.raises(FileNotFoundError, match="run_to_sample"):
+    with pytest.raises(FileNotFoundError, match="run_to_sample first"):
         sim.run_from_sample()
+    with pytest.raises(FileNotFoundError, match="no finished run 'missing'"):
+        sim.scan_from_sample("b_rot", [1], beam_run="missing")
     assert not any(tmp_path.iterdir())  # no run folder
 
 
-def test_the_beam_file_found_is_the_one_given_else_the_simulations(tmp_path, monkeypatch):
-    monkeypatch.chdir(tmp_path)
+def test_the_beam_of_an_earlier_session_is_named_not_guessed(tmp_path, finished_run):
+    beam = finished_run(tmp_path / "runs" / "beam", 1, RunType.RUN_TO_SAMPLE)
+    finished_run(tmp_path / "runs" / "newer_beam", 2, RunType.RUN_TO_SAMPLE, instrument="other")
     sim = Simulation(TRex(), Workspace(tmp_path))
+    assert sim.beam_run is None
     with pytest.raises(FileNotFoundError):
-        sim.find_beam_file()  # none given, none found
-    sim.beam_file = tmp_path / "a" / "beam.mcpl.gz"
-    assert sim.find_beam_file() == sim.beam_file
-    assert sim.find_beam_file("b/beam.mcpl.gz") == tmp_path.resolve() / "b" / "beam.mcpl.gz"
+        sim.find_beam_run()  # none given, none of this simulation
+    assert sim.find_beam_run("beam") == beam
+    sim.beam_run = "beam"  # as run_to_sample leaves it
+    assert sim.find_beam_run() == beam
+    assert sim.find_beam_run("newer_beam").name == "newer_beam"  # the one given comes first
+
+
+def test_only_a_run_to_the_sample_is_a_beam_run_and_it_is_not_replaced(tmp_path, finished_run):
+    finished_run(tmp_path / "runs" / "beam", 1, RunType.RUN_TO_SAMPLE)
+    finished_run(tmp_path / "runs" / "scan", 2, RunType.SCAN)
+    sim = Simulation(TRex(), Workspace(tmp_path))
+    with pytest.raises(ValueError, match="'scan' is a scan run, not a run_to_sample"):
+        sim.run_from_sample(beam_run="scan")
+    with pytest.raises(ValueError, match="folder_name 'beam'"):
+        sim.run_from_sample("beam", beam_run="beam")
+    assert (tmp_path / "runs" / "beam" / "run.json").is_file()  # still there
 
 
 def test_the_folders_are_those_of_the_workspace(tmp_path, monkeypatch):
@@ -67,14 +83,6 @@ def test_the_folders_are_those_of_the_workspace(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path.parent)  # fixed when the simulation was created
     assert sim.workspace.root == tmp_path / "mcdgs_workspace"
     assert Simulation(TRex(), Workspace(tmp_path / "w")).workspace.root == tmp_path / "w"
-
-
-def test_the_beam_file_is_that_of_the_newest_run_to_the_sample(tmp_path, finished_run):
-    assert Simulation(TRex(), Workspace(tmp_path)).beam_file is None
-    finished_run(tmp_path / "runs" / "old_beam", 1, RunType.RUN_TO_SAMPLE)
-    new = finished_run(tmp_path / "runs" / "new_beam", 2, RunType.RUN_TO_SAMPLE)
-    finished_run(tmp_path / "runs" / "newer_scan", 3, RunType.SCAN)
-    assert Simulation(TRex(), Workspace(tmp_path)).beam_file == new.folder / "beam.mcpl.gz"
 
 
 def test_the_record_of_a_run_has_every_instrument_parameter_it_used(tmp_path):
@@ -99,14 +107,10 @@ def test_the_record_of_a_scan_has_its_variable_apart_from_the_other_parameters(t
     assert run.started.tzinfo is not None
 
 
-def test_the_beam_run_of_a_record_is_the_run_its_beam_file_is_in(tmp_path):
+def test_the_record_of_a_run_from_the_sample_names_its_beam_run(tmp_path):
     sim = Simulation(TRex(), Workspace(tmp_path))
-    beam_file = sim.find_beam_file(tmp_path / "runs" / "to_sample" / "beam.mcpl.gz")
-    run, _ = sim._prepare("a", RunType.RUN_FROM_SAMPLE, {}, beam_file=beam_file)
-    assert run.beam_run == "to_sample"
-    elsewhere = sim.find_beam_file(tmp_path / "elsewhere" / "beam.mcpl.gz")
-    run, _ = sim._prepare("b", RunType.RUN_FROM_SAMPLE, {}, beam_file=elsewhere)
-    assert run.beam_run is None  # not in a run of this workspace
+    run, _ = sim._prepare("a", RunType.RUN_FROM_SAMPLE, {}, beam_run="to_sample")
+    assert run.beam_run == "to_sample" and run.ncount is None
 
 
 class _FakeRun:

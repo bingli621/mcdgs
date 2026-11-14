@@ -8,7 +8,6 @@ from mcdgs.mcstas.runs import (
     Run,
     RunType,
     clean_runs,
-    latest_beam,
     latest_run,
     list_runs,
     monitor_file,
@@ -130,14 +129,6 @@ def test_the_latest_run_is_the_newest_of_its_type_and_instrument(tmp_path, finis
         latest_run(tmp_path, FROM_SAMPLE, "TRex")
     with pytest.raises(FileNotFoundError, match="no finished run in"):
         latest_run(tmp_path / "missing")
-
-
-def test_the_latest_beam_is_that_of_the_newest_run_to_the_sample(tmp_path, finished_run):
-    assert latest_beam(tmp_path) is None
-    finished_run(tmp_path / "old_beam", 1, TO_SAMPLE)
-    new = finished_run(tmp_path / "new_beam", 2, TO_SAMPLE)
-    finished_run(tmp_path / "newer_scan", 3, RunType.SCAN)
-    assert latest_beam(tmp_path) == new.folder / "beam.mcpl.gz"
 
 
 def test_a_run_from_the_sample_is_normalized_by_the_run_its_beam_is_from(tmp_path, finished_run):

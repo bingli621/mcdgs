@@ -288,25 +288,6 @@ def latest_run(
     raise FileNotFoundError(f"no finished run{of} in {runs_folder}")
 
 
-def latest_beam(runs_folder: str | Path) -> Path | None:
-    """Return the beam file of the newest run to the sample.
-
-    Parameters
-    ----------
-    runs_folder:
-        The folder of the runs.
-
-    Returns
-    -------
-    :
-        The ``beam.mcpl.gz`` of the newest ``run_to_sample``, or ``None`` without one.
-    """
-    try:
-        return latest_run(runs_folder, RunType.RUN_TO_SAMPLE).beam_file
-    except FileNotFoundError:
-        return None
-
-
 def monitor_file(run: Run) -> Path:
     """Return the file with the incident monitor that normalizes a run.
 

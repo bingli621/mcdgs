@@ -97,18 +97,16 @@ def crystal(split: int = SCAN_SPLIT) -> Single_crystal:
     return la2ni7(name="sample", split=split, in_plane=IN_PLANE, rotated=[0, "omega", 0])
 
 
-def simulate(
-    omegas: np.ndarray = OMEGAS, beam_file: str | Path | None = None, seed: int = 1
-) -> Path:
+def simulate(omegas: np.ndarray = OMEGAS, beam_run: str = plane.TO_SAMPLE, seed: int = 1) -> Path:
     """Run the scan from ``sample_pos`` to the detector, once per angle, from a beam file.
 
     Parameters
     ----------
     omegas:
         The angles of the crystal, in deg.
-    beam_file:
-        The beam at ``sample_pos``. If ``None``, that of :mod:`.diagnostics.trex.elastic_plane`, in its
-        run to the sample.
+    beam_run:
+        The name of the run to the sample whose beam to start from: by default that of
+        :mod:`.diagnostics.trex.elastic_plane`.
     seed:
         Seed of the random numbers; angle ``n`` takes ``seed + n + 1``.
 
@@ -118,10 +116,9 @@ def simulate(
         The scan folder, ``SCAN`` in the runs folder of :meth:`.Workspace.find`, with one entry
         per angle.
     """
-    beam_file = beam_file or Workspace.find().run_folder(plane.TO_SAMPLE) / "beam.mcpl.gz"
     simulation = Simulation(TRexWithRotatingLa2Ni7())  # the default control parameters
     scan_file = simulation.scan_from_sample(
-        "omega", omegas, folder_name=SCAN, beam_file=beam_file, seed=seed
+        "omega", omegas, folder_name=SCAN, beam_run=beam_run, seed=seed
     )
     return scan_file.parent
 

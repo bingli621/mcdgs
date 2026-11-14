@@ -90,7 +90,7 @@ def test_a_split_run_gives_the_intensity_and_geometry_of_a_direct_run(sim):
     direct = read_pixels(h5_file.parent, "detector", "source", "sample_pos")[0][1]
 
     beam = sim.run_to_sample(ncount=1e5, mpi=None)
-    assert beam == sim.beam_file and beam.is_file()
+    assert beam.is_file() and sim.beam_run == beam.parent.name
     to_sample = Run.load(beam.parent)
     assert to_sample.run_type is RunType.RUN_TO_SAMPLE and to_sample.beam_file == beam
     h5_file = sim.run_from_sample(seed=2, mpi=None)
