@@ -5,6 +5,8 @@ what it writes.
 
 ::: mcdgs.mcstas.simulation
 
+::: mcdgs.mcstas.scan
+
 ::: mcdgs.mcstas.builder
 
 ::: mcdgs.mcstas.workspace

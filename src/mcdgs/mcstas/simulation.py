@@ -11,23 +11,15 @@ write into. It offers:
 
 Everything runs through McStasScript's public API (``settings``, ``set_parameters``,
 ``run_to``, ``run_from``, ``backengine``). A scan runs ``backengine`` once per value and merges
-the outputs into one file. The instrument is first compiled once with mcrun itself, since
-McStasScript has no compile-only call.
+the outputs into one file, after compiling the instrument once: see :mod:`.mcstas.scan`.
 
 Each of them returns the :class:`.Run` it made, which is also left as ``run.json`` in the
 folder of the run.
 """
 
-import copy
-import os
-import shlex
-import shutil
-import subprocess
-from collections.abc import Mapping, Sequence
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from collections.abc import Mapping
 from datetime import datetime
 from numbers import Real
-from pathlib import Path
 
 import numpy as np
 from mcstasscript.interface.instr import McStas_instr
@@ -35,16 +27,11 @@ from numpy.typing import ArrayLike
 
 from mcdgs.core.base import Instrument
 from mcdgs.mcstas.builder import build_mcstas
-from mcdgs.mcstas.nexus_io import merge_entries
 from mcdgs.mcstas.runs import BEAM_FILE, Run, RunType, new_run_folder
+from mcdgs.mcstas.scan import random_seed, run_points_in_parallel
 from mcdgs.mcstas.workspace import Workspace
 
 SAMPLE_POS = "sample_pos"  # the component a split run cuts the beam at
-
-
-def _random_seed() -> int:
-    """Return a random seed for mcrun, which does not accept 0 or more than nine digits."""
-    return int(np.random.SeedSequence().generate_state(1)[0] % 10**9)
 
 
 def _recorded(value: object) -> float | str:
@@ -89,111 +76,6 @@ def recorded_instr_params(
     """
     used = {p.name: p.value for p in instrument.instr_params} | dict(given)
     return {name: _recorded(value) for name, value in used.items() if name != variable}
-
-
-def _compile(inst: McStas_instr) -> None:
-    """Write the instrument into its input folder and compile it there, without simulating.
-
-    mcrun compiles (``-c``), then the instrument only prints its info (``--info``), so not even a
-    beam file is read. The compile flags are those of ``inst``'s settings (NeXus, OpenACC,
-    custom flags), so its runs reuse the executable.
-
-    Raises
-    ------
-    RuntimeError
-        With mcrun's output, if compiling fails.
-    """
-    inst.write_full_instrument()
-    options = inst._run_settings  # McStasScript keeps them private
-    mcrun = Path(options.get("executable_path", "")) / options.get("executable", "mcrun")
-    command = [str(mcrun), "-c", "--info"]
-    if options.get("NeXus"):
-        command.append("--format=NeXus")
-    if options.get("openacc"):
-        command.append("--openacc")
-    command += [*shlex.split(options.get("custom_flags", "")), f"{inst.name}.instr"]
-    process = subprocess.run(
-        command, cwd=inst.input_path, capture_output=True, text=True, check=False
-    )
-    if process.returncode != 0:
-        raise RuntimeError(f"compiling {inst.name} failed:\n{process.stdout}{process.stderr}")
-
-
-def _run_points_in_parallel(
-    inst: McStas_instr,
-    output_path: Path,
-    points: Sequence[Mapping[str, float]],
-    seed: int | None = None,
-    n_jobs: int | None = None,
-) -> Path:
-    """Run the instrument once per point and merge the outputs into one scan file.
-
-    The instrument is written and compiled once, first, without simulating. Then every point
-    runs a copy of ``inst`` in parallel, with its own values, output folder and random seed.
-
-    Parameters
-    ----------
-    inst:
-        The McStasScript instrument, with its settings.
-    output_path:
-        Folder to create for the scan.
-    points:
-        Instrument parameter values (by McStas name) of each point.
-    seed:
-        Seed of the first point; point ``n`` gets ``seed + n + 1``, so the runs do not repeat
-        each other's random numbers. If ``None``, a random seed.
-    n_jobs:
-        Number of points run at a time. If ``None``, the number of cores.
-
-    Returns
-    -------
-    :
-        ``output_path/mccode.h5``, with one entry per point in the order of ``points``.
-
-    Raises
-    ------
-    ValueError
-        If there are no points, before anything runs.
-    RuntimeError
-        Naming the point that failed, once the points already running are done. Points not
-        started yet are not run, and every point's folder is kept in ``output_path``.
-    """
-    if not points:
-        raise ValueError("a scan needs at least one point")
-    _compile(inst)  # once, before any point
-    output_path.mkdir()  # holds a folder per point
-    if seed is None:
-        seed = _random_seed()
-    folders = [output_path / f"point_{n:04d}" for n in range(len(points))]
-
-    runs = []
-    for n, (values, folder) in enumerate(zip(points, folders)):
-        run = copy.deepcopy(inst)  # a run's settings and values stay its own
-        run.settings(
-            output_path=str(folder),
-            seed=seed + n + 1,  # mcrun does not accept seed 0
-            force_compile=False,  # compiled once, above
-        )
-        run.set_parameters(**values)
-        runs.append(run)
-
-    def run_point(n: int) -> None:
-        try:
-            runs[n].backengine()  # a separate mcrun process
-        except Exception as error:
-            raise RuntimeError(f"point {n} {points[n]} failed, see {folders[n]}") from error
-
-    with ThreadPoolExecutor(max_workers=n_jobs or os.cpu_count()) as pool:
-        futures = [pool.submit(run_point, n) for n in range(len(runs))]
-        for future in as_completed(futures):
-            if future.exception() is not None:
-                pool.shutdown(wait=False, cancel_futures=True)  # the exit waits for the running
-                future.result()
-
-    merged = merge_entries([folder / "mccode.h5" for folder in folders], output_path / "mccode.h5")
-    for folder in folders:
-        shutil.rmtree(folder)
-    return merged
 
 
 class Simulation:
@@ -282,7 +164,7 @@ class Simulation:
         :
             The record of the run, not saved yet, and the McStasScript instrument writing into
             its folder. A scan's points write into folders of their own instead
-            (:func:`_run_points_in_parallel`).
+            (:func:`.run_points_in_parallel`).
         """
         started = datetime.now().astimezone()
         label = (
@@ -501,7 +383,7 @@ class Simulation:
             If a name is not an instrument parameter, before anything runs.
         """
         points = self.get_scan_points(variable, values, instr_params)  # checked before anything
-        seed = _random_seed() if seed is None else seed  # picked here, to record it
+        seed = random_seed() if seed is None else seed  # picked here, to record it
         run, inst = self._prepare(
             folder_name,
             RunType.SCAN,
@@ -513,7 +395,7 @@ class Simulation:
             mpi=None,  # no MPI: the points run in parallel instead
             custom_flags=custom_flags,
         )
-        _run_points_in_parallel(inst, run.folder, points, seed=seed, n_jobs=n_jobs)
+        run_points_in_parallel(inst, run.folder, points, seed=seed, n_jobs=n_jobs)
         run.save()
         return run
 
@@ -684,7 +566,7 @@ class Simulation:
         points = self.get_scan_points(variable, values, instr_params)  # checked before anything
         self._check_sample_pos()
         beam = self.find_beam_run(beam_run, folder_name)
-        seed = _random_seed() if seed is None else seed  # picked here, to record it
+        seed = random_seed() if seed is None else seed  # picked here, to record it
         run, inst = self._prepare(
             folder_name,
             RunType.SCAN_FROM_SAMPLE,
@@ -696,6 +578,6 @@ class Simulation:
             mpi=None,  # no MPI: the points run in parallel instead
         )
         inst.run_from(SAMPLE_POS, filename=self._beam_filename(beam))
-        _run_points_in_parallel(inst, run.folder, points, seed=seed, n_jobs=n_jobs)
+        run_points_in_parallel(inst, run.folder, points, seed=seed, n_jobs=n_jobs)
         run.save()
         return run
