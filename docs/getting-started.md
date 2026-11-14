@@ -92,10 +92,11 @@ The monitor's own bins are 0.02 Å, so the script adds them up 0.1 Å at a time.
 
 | Folder | Contents |
 | ------ | -------- |
-| `mcstas_input/TRex/` | The generated `.instr` and `.c` files and the compiled instrument. |
-| `mcstas_output/<time>_run/` | The results of this run, in `mccode.h5`. |
+| `mcdgs_workspace/builds/TRex/` | The generated `.instr` and `.c` files and the compiled instrument. |
+| `mcdgs_workspace/runs/<time>_run/` | The results of this run, in `mccode.h5`. |
 
-Both folders are created where you ran the script, and in this repository git ignores them.
+`mcdgs_workspace/` is created where you ran the script, and in this repository git ignores it.
+Set the environment variable `MCDGS_WORKSPACE` to a folder to have it there instead.
 
 ## Next
 

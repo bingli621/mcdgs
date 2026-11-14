@@ -66,8 +66,8 @@ from mcdgs.instruments.trex.detectors import (
 )
 from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
 from mcdgs.mcstas.nexus_io import read_events
-from mcdgs.mcstas.run_folders import default_output_dir
 from mcdgs.mcstas.simulation import Simulation
+from mcdgs.mcstas.workspace import Workspace
 from mcdgs.reduction.binning import bin_edges
 from mcdgs.reduction.inelastic import events_to_q_and_energy, time_at_sample
 from mcdgs.reduction.patches import MIN_FRACTION, find_patches, subpulse_flight
@@ -399,8 +399,8 @@ def simulate(ncount: float = 1e9, seed: int = 1) -> tuple[Path, Path]:
 
     The first part runs from the source to ``sample_pos`` into ``TO_SAMPLE``, with the monitors
     of the incident energy and the beam file; the second from that beam through the crystal to
-    the detector, into ``FROM_SAMPLE``, both in :func:`.default_output_dir`. Each replaces the
-    folder of an earlier run.
+    the detector, into ``FROM_SAMPLE``, both in the runs folder of :meth:`.Workspace.find`. Each
+    replaces the folder of an earlier run.
 
     Parameters
     ----------
@@ -430,14 +430,15 @@ def subpulse_timing_of_run(to_sample: str | Path | None = None) -> sc.DataArray:
     Parameters
     ----------
     to_sample:
-        The folder of the first part. If ``None``, ``TO_SAMPLE`` in :func:`.default_output_dir`.
+        The folder of the first part. If ``None``, ``TO_SAMPLE`` in the runs folder of
+        :meth:`.Workspace.find`.
 
     Returns
     -------
     :
         The sub-pulses of :func:`subpulse_timing`.
     """
-    to_sample = Path(to_sample or default_output_dir() / TO_SAMPLE)
+    to_sample = Path(to_sample or Workspace.find().run_folder(TO_SAMPLE))
     instrument = TRexWithLa2Ni7()  # the default control parameters, as simulate runs
     bins = {monitor: monitor_bins(getattr(instrument, monitor)) for monitor in MONITORS}
     return subpulse_timing(ms.load_data(str(to_sample)), bins, instrument.positions())
@@ -452,7 +453,8 @@ def reduce_runs(
     ----------
     to_sample, from_sample:
         The folders of the first and the second part. If ``None``, ``TO_SAMPLE`` and
-        ``FROM_SAMPLE`` in :func:`.default_output_dir`, where :func:`simulate` writes.
+        ``FROM_SAMPLE`` in the runs folder of :meth:`.Workspace.find`, where :func:`simulate`
+        writes.
 
     Returns
     -------
@@ -460,7 +462,7 @@ def reduce_runs(
         The sub-pulses of :func:`subpulse_timing`, and the neutrons of
         :func:`.events_to_q_and_energy`.
     """
-    from_sample = Path(from_sample or default_output_dir() / FROM_SAMPLE)
+    from_sample = Path(from_sample or Workspace.find().run_folder(FROM_SAMPLE))
     # the first part: the incident energy and the time at the sample of each sub-pulse
     pulses = subpulse_timing_of_run(to_sample)
     # the second part has no source: the incident beam is given by its direction instead
@@ -491,7 +493,7 @@ def analyze(
     :
         The path of the figure.
     """
-    from_sample = Path(from_sample or default_output_dir() / FROM_SAMPLE)
+    from_sample = Path(from_sample or Workspace.find().run_folder(FROM_SAMPLE))
     pulses, events = reduce_runs(to_sample, from_sample)
     print_subpulse_table(pulses, events)
 

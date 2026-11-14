@@ -5,7 +5,7 @@ control parameters and McStasScript's diagram of how its components are placed, 
 with McStasScript's ``show_instrument``, which runs mcdisplay:
 
 - ``trex_print.txt``: ``print(trex)``, the parameters and the position of every component;
-- ``TRex.instr``: the instrument file, written with its build files to ``mcstas_input/TRex/``;
+- ``TRex.instr``: the instrument file, written with its build files to its build folder;
 - ``trex_diagram_legend.png`` and ``trex_diagram.png``: McStasScript's ``show_diagram()``, its
   legend and which component each one is placed and rotated relative to;
 - ``overview_top.png``: the instrument seen from above, z along the beam and x across it;
@@ -27,7 +27,8 @@ from mcstasscript.interface.instr import McStas_instr
 
 from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure, save_text
 from mcdgs.instruments.trex.model import TRex
-from mcdgs.mcstas.builder import build_mcstas, default_input_dir
+from mcdgs.mcstas.builder import build_mcstas
+from mcdgs.mcstas.workspace import Workspace
 
 
 def _save_view(path: Path, dpi: int) -> Path:
@@ -159,8 +160,8 @@ def main(out: Path | None = None) -> list[Path]:
     Parameters
     ----------
     out:
-        Folder of the files. If ``None``, ``mcstas_input/TRex/``, where the instrument file is
-        written to build it.
+        Folder of the files. If ``None``, the build folder of T-Rex in
+        :meth:`.Workspace.find`, where the instrument file is written to build it.
 
     Returns
     -------
@@ -169,13 +170,13 @@ def main(out: Path | None = None) -> list[Path]:
         the two views.
     """
     trex = TRex()  # the default control parameters
-    input_dir = default_input_dir(trex)
-    mcstas_instr = build_mcstas(trex, input_path=input_dir)
+    build_folder = Workspace.find().build_folder(trex.name)
+    mcstas_instr = build_mcstas(trex, input_path=build_folder)
     mcstas_instr.write_full_instrument()
-    instr_file = input_dir / f"{mcstas_instr.name}.instr"
+    instr_file = build_folder / f"{mcstas_instr.name}.instr"
 
-    folder = output_folder(out, input_dir)
-    if folder.resolve() != input_dir.resolve():
+    folder = output_folder(out, build_folder)
+    if folder.resolve() != build_folder.resolve():
         instr_file = Path(shutil.copyfile(instr_file, folder / instr_file.name))
     print(f"Saved {instr_file}")
     return [

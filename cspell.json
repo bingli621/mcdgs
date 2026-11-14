@@ -3,8 +3,7 @@
   "language": "en",
   "ignorePaths": [
     ".pixi",
-    "mcstas_input",
-    "mcstas_output",
+    "mcdgs_workspace",
     "site",
     "*.cif"
   ],

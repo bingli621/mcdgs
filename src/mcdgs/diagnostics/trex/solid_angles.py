@@ -356,8 +356,8 @@ def plot_pixel_intensity(
 def main(out: Path | None = None, ncount: float = 1e8, seed: int = 1) -> list[Path]:
     """Run :class:`TRexWithVanadium` in McStas, and save the figures of the detector.
 
-    The run goes from the source to the detector, into ``RUN`` in :func:`.default_output_dir`,
-    and replaces the folder of an earlier one. The figures are
+    The run goes from the source to the detector, into ``RUN`` in the runs folder of the
+    workspace, and replaces the folder of an earlier one. The figures are
     ``trex_solid_angles_detector.png``, from :func:`plot_detector_image`, and
     ``trex_solid_angles_pixels.png``, from :func:`plot_pixel_intensity`.
 

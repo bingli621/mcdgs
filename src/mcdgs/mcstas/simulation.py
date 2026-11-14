@@ -1,7 +1,7 @@
 """Simulate an instrument into McStas NeXus (HDF5) output, read with :func:`.read_pixels`.
 
-A :class:`Simulation` holds the instrument to simulate and the folder its runs write to. It
-offers:
+A :class:`Simulation` holds the instrument to simulate and the :class:`.Workspace` its runs
+write into. It offers:
 
 - ``run``: one run, source -> detector;
 - ``scan``: one run per value of an instrument parameter, source -> detector, in parallel;
@@ -29,16 +29,16 @@ from mcstasscript.interface.instr import McStas_instr
 from numpy.typing import ArrayLike
 
 from mcdgs.core.base import Instrument
-from mcdgs.mcstas.builder import build_mcstas, default_input_dir
+from mcdgs.mcstas.builder import build_mcstas
 from mcdgs.mcstas.nexus_io import merge_entries
 from mcdgs.mcstas.run_folders import (
     clean_runs,
-    default_output_dir,
     latest_beam,
     latest_run,
     list_runs,
-    run_folder,
+    new_run_folder,
 )
+from mcdgs.mcstas.workspace import Workspace
 
 SAMPLE_POS = "sample_pos"  # the component a split run cuts the beam at
 
@@ -151,31 +151,28 @@ def _run_points_in_parallel(
 class Simulation:
     """Run McStas simulations of an instrument.
 
-    Every run builds the instrument anew, into ``input_dir``, so a change to the instrument
+    Every run builds the instrument anew, into its build folder, so a change to the instrument
     applies to the next run.
 
     Parameters
     ----------
     instrument:
         The instrument to simulate.
-    output_dir:
-        Folder for the run folders. If ``None``, ``work_dir/mcstas_output``.
-    input_dir:
-        Folder for the McStas files. If ``None``, ``work_dir/mcstas_input/<instrument name>``.
-    work_dir:
-        Work folder for the defaults above, fixed when the simulation is created. If ``None``,
-        the current folder.
+    workspace:
+        The folders to write into: the McStas files into its build folder of the instrument,
+        each run into a folder of its runs folder. If ``None``, :meth:`.Workspace.find`, fixed
+        when the simulation is created.
 
     Attributes
     ----------
     beam_file:
         Beam file the runs from the sample start from: that of the last :meth:`run_to_sample`,
-        else the newest ``beam.mcpl.gz`` in ``output_dir``, so a beam dumped in an earlier
+        else the newest ``beam.mcpl.gz`` in the runs folder, so a beam dumped in an earlier
         session is found. ``None`` if there is none.
 
     Notes
     -----
-    Each run writes into a new folder of ``output_dir``, named by its start time and mode:
+    Each run writes into a new folder of the runs folder, named by its start time and mode:
     ``<time>_run``, ``<time>_scan_<variable>``, ``<time>_run_to_sample``,
     ``<time>_run_from_sample`` and ``<time>_scan_<variable>_from_sample``, with ``<time>`` e.g.
     ``20261022-143005``. A ``folder_name`` names the folder instead, and it is then replaced on
@@ -191,29 +188,22 @@ class Simulation:
     component after it must be placed ``relative`` to it, not in the lab frame.
     """
 
-    def __init__(
-        self,
-        instrument: Instrument,
-        output_dir: str | Path | None = None,
-        input_dir: str | Path | None = None,
-        work_dir: str | Path | None = None,
-    ) -> None:
+    def __init__(self, instrument: Instrument, workspace: Workspace | None = None) -> None:
         self.instrument = instrument
-        self.output_dir = Path(output_dir or default_output_dir(work_dir))
-        self.input_dir = Path(input_dir or default_input_dir(instrument, work_dir))
-        self.beam_file = latest_beam(self.output_dir)
+        self.workspace = workspace or Workspace.find()
+        self.beam_file = latest_beam(self.workspace.runs_folder)
 
     def list_runs(self) -> list[str]:
-        """List the finished runs in ``output_dir``, newest first; see :func:`.list_runs`."""
-        return list_runs(self.output_dir)
+        """List the finished runs of the workspace, newest first; see :func:`.list_runs`."""
+        return list_runs(self.workspace.runs_folder)
 
     def latest_run(self, pattern: str = "*") -> Path:
         """Return the newest finished run matching ``pattern``; see :func:`.latest_run`."""
-        return latest_run(self.output_dir, pattern)
+        return latest_run(self.workspace.runs_folder, pattern)
 
     def clean_runs(self, keep: int = 5) -> list[Path]:
         """Remove all but the ``keep`` newest runs; see :func:`.clean_runs`."""
-        return clean_runs(self.output_dir, keep)
+        return clean_runs(self.workspace.runs_folder, keep)
 
     def _prepare(
         self, folder_name: str | None, mode: str, **settings: object
@@ -235,8 +225,9 @@ class Simulation:
             The run folder, and the McStasScript instrument writing into it. A scan's points
             write into folders of their own instead (:func:`_run_points_in_parallel`).
         """
-        output_path = run_folder(self.output_dir, folder_name, mode)
-        inst = build_mcstas(self.instrument, input_path=self.input_dir)
+        output_path = new_run_folder(self.workspace.runs_folder, folder_name, mode)
+        input_path = self.workspace.build_folder(self.instrument.name)
+        inst = build_mcstas(self.instrument, input_path=input_path)
         inst.settings(
             NeXus=True,
             increment_folder_name=False,
@@ -261,7 +252,7 @@ class Simulation:
     def find_beam_file(self, beam_file: str | Path | None = None) -> Path:
         """Return the absolute path of the beam file a run from the sample starts from.
 
-        The path is absolute because mcrun runs in ``input_dir``.
+        The path is absolute because mcrun runs in the build folder.
 
         Parameters
         ----------
@@ -280,7 +271,9 @@ class Simulation:
         """
         beam_file = beam_file or self.beam_file
         if beam_file is None:
-            raise FileNotFoundError(f"no beam file in {self.output_dir}: run run_to_sample first")
+            raise FileNotFoundError(
+                f"no beam file in {self.workspace.runs_folder}: run run_to_sample first"
+            )
         return Path(beam_file).resolve()
 
     def get_scan_points(
@@ -343,13 +336,13 @@ class Simulation:
         Returns
         -------
         :
-            ``output_dir/<folder>/mccode.h5``.
+            ``<runs folder>/<folder>/mccode.h5``.
         """
         output_path, inst = self._prepare(
             folder_name, "run", ncount=ncount, mpi=mpi, seed=seed, custom_flags=custom_flags
         )
         inst.set_parameters(**instr_params)  # the rest keep the instrument's values
-        inst.backengine()  # compiles in its input_dir
+        inst.backengine()  # compiles in its build folder
         return output_path / "mccode.h5"
 
     def scan(
@@ -390,7 +383,7 @@ class Simulation:
         Returns
         -------
         :
-            ``output_dir/<folder>/mccode.h5``, with one entry per value.
+            ``<runs folder>/<folder>/mccode.h5``, with one entry per value.
 
         Raises
         ------
@@ -439,7 +432,7 @@ class Simulation:
         Returns
         -------
         :
-            ``output_dir/<folder>/beam.mcpl.gz``, which also becomes :attr:`beam_file`.
+            ``<runs folder>/<folder>/beam.mcpl.gz``, which also becomes :attr:`beam_file`.
 
         Raises
         ------
@@ -494,7 +487,7 @@ class Simulation:
         Returns
         -------
         :
-            ``output_dir/<folder>/mccode.h5``.
+            ``<runs folder>/<folder>/mccode.h5``.
 
         Raises
         ------
@@ -547,7 +540,7 @@ class Simulation:
         Returns
         -------
         :
-            ``output_dir/<folder>/mccode.h5``, with one entry per value.
+            ``<runs folder>/<folder>/mccode.h5``, with one entry per value.
 
         Raises
         ------

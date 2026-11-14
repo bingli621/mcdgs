@@ -7,7 +7,7 @@ from mcdgs.mcstas.run_folders import (
     latest_run,
     list_runs,
     monitor_file,
-    run_folder,
+    new_run_folder,
 )
 
 
@@ -16,15 +16,15 @@ from mcdgs.mcstas.run_folders import (
 )
 def test_a_folder_name_is_one_safe_folder_name(tmp_path, folder_name):
     with pytest.raises(ValueError, match="folder_name"):
-        run_folder(tmp_path / "out", folder_name, "run")
+        new_run_folder(tmp_path / "out", folder_name, "run")
     assert not (tmp_path / "out").exists()
 
 
 def test_runs_without_a_name_get_new_folders_by_time_and_kind(tmp_path):
-    first = run_folder(tmp_path / "out", None, "scan_omega")
+    first = new_run_folder(tmp_path / "out", None, "scan_omega")
     assert (tmp_path / "out").is_dir() and not first.exists()  # mcrun creates the run folder
     first.mkdir()  # as the run fills it
-    second = run_folder(tmp_path / "out", None, "scan_omega")
+    second = new_run_folder(tmp_path / "out", None, "scan_omega")
     assert re.fullmatch(r"\d{8}-\d{6}_scan_omega", first.name)
     assert second != first and second.name.startswith(first.name[:8])
     assert first.exists()  # a new run never cleans an earlier one
@@ -33,7 +33,7 @@ def test_runs_without_a_name_get_new_folders_by_time_and_kind(tmp_path):
 def test_a_named_run_replaces_its_folder(tmp_path):
     (tmp_path / "mine").mkdir()
     (tmp_path / "mine" / "mccode.h5").touch()
-    assert run_folder(tmp_path, "mine", "run") == tmp_path / "mine"
+    assert new_run_folder(tmp_path, "mine", "run") == tmp_path / "mine"
     assert not (tmp_path / "mine").exists()
 
 
@@ -53,7 +53,7 @@ def test_latest_run_is_the_newest_finished_one_matching(tmp_path, finished_run):
         latest_run(tmp_path, "*_from_sample")
 
 
-def test_no_output_folder_has_no_runs(tmp_path):
+def test_no_runs_folder_has_no_runs(tmp_path):
     assert list_runs(tmp_path / "missing") == []
 
 

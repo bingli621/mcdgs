@@ -15,7 +15,7 @@ from pathlib import Path
 
 from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure, save_text
 from mcdgs.instruments.trex.model import TRex
-from mcdgs.mcstas.run_folders import default_output_dir
+from mcdgs.mcstas.workspace import Workspace
 from mcdgs.tof.acceptance import acceptance_diagram
 from mcdgs.tof.builder import get_choppers
 
@@ -26,14 +26,15 @@ def main(out: Path | None = None) -> list[Path]:
     Parameters
     ----------
     out:
-        Folder to write to. If ``None``, ``mcstas_output/trex_choppers``, beside the McStas runs.
+        Folder to write to. If ``None``, ``trex_choppers`` in the runs folder of
+        :meth:`.Workspace.find`, beside the McStas runs.
 
     Returns
     -------
     :
         The paths of the pictures of the disks, in beam order, then of the diagram.
     """
-    folder = output_folder(out, default_output_dir() / "trex_choppers")
+    folder = output_folder(out, Workspace.find().run_folder("trex_choppers"))
     paths = []
 
     # --8<-- [start:draw_choppers]

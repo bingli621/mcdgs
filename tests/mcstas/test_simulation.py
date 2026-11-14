@@ -6,6 +6,7 @@ import pytest
 from mcdgs.instruments.trex.model import TRex
 from mcdgs.mcstas import simulation
 from mcdgs.mcstas.simulation import Simulation, _run_points_in_parallel
+from mcdgs.mcstas.workspace import Workspace
 
 
 def test_a_scan_has_a_point_per_value_of_its_variable():
@@ -34,14 +35,14 @@ def test_a_scan_of_an_unknown_parameter_raises(variable, instr_params):
 def test_a_split_run_without_sample_pos_raises_before_anything(tmp_path, method, kwargs):
     trex = TRex()
     del trex.sample_pos
-    sim = Simulation(trex, output_dir=tmp_path)
+    sim = Simulation(trex, Workspace(tmp_path))
     with pytest.raises(ValueError, match="sample_pos"):
         getattr(sim, method)(**kwargs)
     assert not any(tmp_path.iterdir())  # no run folder
 
 
 def test_a_run_from_the_sample_without_a_beam_file_raises_before_anything(tmp_path):
-    sim = Simulation(TRex(), output_dir=tmp_path)
+    sim = Simulation(TRex(), Workspace(tmp_path))
     with pytest.raises(FileNotFoundError, match="run_to_sample"):
         sim.run_from_sample()
     assert not any(tmp_path.iterdir())  # no run folder
@@ -49,7 +50,7 @@ def test_a_run_from_the_sample_without_a_beam_file_raises_before_anything(tmp_pa
 
 def test_the_beam_file_found_is_the_one_given_else_the_simulations(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
-    sim = Simulation(TRex(), output_dir=tmp_path)
+    sim = Simulation(TRex(), Workspace(tmp_path))
     with pytest.raises(FileNotFoundError):
         sim.find_beam_file()  # none given, none found
     sim.beam_file = tmp_path / "a" / "beam.mcpl.gz"
@@ -57,23 +58,22 @@ def test_the_beam_file_found_is_the_one_given_else_the_simulations(tmp_path, mon
     assert sim.find_beam_file("b/beam.mcpl.gz") == tmp_path.resolve() / "b" / "beam.mcpl.gz"
 
 
-def test_the_folders_are_in_the_work_folder(tmp_path, monkeypatch):
+def test_the_folders_are_those_of_the_workspace(tmp_path, monkeypatch):
+    monkeypatch.delenv("MCDGS_WORKSPACE", raising=False)
     monkeypatch.chdir(tmp_path)
-    trex = TRex()
-    sim = Simulation(trex)
-    assert sim.output_dir == tmp_path / "mcstas_output"
-    assert sim.input_dir == tmp_path / "mcstas_input" / trex.name
-    sim = Simulation(trex, work_dir=tmp_path / "w", output_dir="out")
-    assert sim.output_dir == Path("out")
-    assert sim.input_dir == tmp_path / "w" / "mcstas_input" / trex.name
+    sim = Simulation(TRex())
+    assert sim.workspace == Workspace(tmp_path / "mcdgs_workspace")
+    monkeypatch.chdir(tmp_path.parent)  # fixed when the simulation was created
+    assert sim.workspace.root == tmp_path / "mcdgs_workspace"
+    assert Simulation(TRex(), Workspace(tmp_path / "w")).workspace.root == tmp_path / "w"
 
 
 def test_the_beam_file_is_the_newest_one_found(tmp_path, finished_run):
-    assert Simulation(TRex(), output_dir=tmp_path).beam_file is None
-    finished_run(tmp_path / "old_beam", 1, beam=True)
-    new = finished_run(tmp_path / "new_beam", 2, beam=True)
-    finished_run(tmp_path / "newer_scan", 3)
-    assert Simulation(TRex(), output_dir=tmp_path).beam_file == new / "beam.mcpl.gz"
+    assert Simulation(TRex(), Workspace(tmp_path)).beam_file is None
+    finished_run(tmp_path / "runs" / "old_beam", 1, beam=True)
+    new = finished_run(tmp_path / "runs" / "new_beam", 2, beam=True)
+    finished_run(tmp_path / "runs" / "newer_scan", 3)
+    assert Simulation(TRex(), Workspace(tmp_path)).beam_file == new / "beam.mcpl.gz"
 
 
 class _FakeRun:
@@ -138,9 +138,9 @@ def test_no_points_raises_before_anything(tmp_path):
 
 
 def test_a_simulation_finds_and_cleans_its_own_runs(tmp_path, finished_run):
-    beam = finished_run(tmp_path / "1_run_to_sample", 1, beam=True)
-    scans = [finished_run(tmp_path / f"{n}_scan_b_rot", n) for n in (2, 3)]
-    sim = Simulation(TRex(), output_dir=tmp_path)
+    beam = finished_run(tmp_path / "runs" / "1_run_to_sample", 1, beam=True)
+    scans = [finished_run(tmp_path / "runs" / f"{n}_scan_b_rot", n) for n in (2, 3)]
+    sim = Simulation(TRex(), Workspace(tmp_path))
     assert sim.list_runs() == ["3_scan_b_rot", "2_scan_b_rot", "1_run_to_sample"]
     assert sim.latest_run("*_run_to_sample") == beam
     assert sim.clean_runs(keep=1) == [scans[0]]

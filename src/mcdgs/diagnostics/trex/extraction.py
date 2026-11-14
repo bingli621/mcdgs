@@ -48,8 +48,9 @@ from mcdgs.instruments.trex.guides.bispectral import (
 from mcdgs.instruments.trex.guides.extraction import guides_extraction
 from mcdgs.instruments.trex.monitors import beam_monitor, source_monitor
 from mcdgs.instruments.trex.sources import source
-from mcdgs.mcstas.builder import build_mcstas, default_input_dir
-from mcdgs.mcstas.run_folders import default_output_dir, run_folder
+from mcdgs.mcstas.builder import build_mcstas
+from mcdgs.mcstas.run_folders import new_run_folder
+from mcdgs.mcstas.workspace import Workspace
 from mcdgs.tof.builder import build_tof
 from mcdgs.tof.reader import monitor_bins
 
@@ -237,7 +238,8 @@ def diagnose_path(
     # --8<-- [start:diagnostics]
     # McStasScript's diagnostics: the beam after the source, guide 3 and guide 4b, its profile,
     # wavelength against x, and its spectrum
-    mcstas_instr = build_mcstas(extraction, input_path=default_input_dir(extraction))
+    workspace = Workspace.find()
+    mcstas_instr = build_mcstas(extraction, input_path=workspace.build_folder(extraction.name))
     diag = ms.Diagnostics(mcstas_instr)  # works on a copy: mcstas_instr is left as it is
     for component in ("source", "guide_3", "guide_4b"):
         # rays="all": a limited list stops early, which leaves the intensities too low
@@ -247,7 +249,7 @@ def diagnose_path(
     diag.add_view("l")
     # --8<-- [end:diagnostics]
 
-    folder = run_folder(default_output_dir(), run_name, "diagnose")
+    folder = new_run_folder(workspace.runs_folder, run_name, "diagnose")
     diag.set_parameters(bender_in=int(bender_in))
     diag.settings(
         ncount=diagnostics_ncount,
@@ -263,7 +265,7 @@ def diagnose_path(
 
     # McStasScript's diagram of the components, with the intensity and the rays before each:
     # a McStas run of its own, in a folder of its own, which also holds the monitors
-    intensity_folder = run_folder(default_output_dir(), f"{run_name}_intensity", "diagram")
+    intensity_folder = new_run_folder(workspace.runs_folder, f"{run_name}_intensity", "diagram")
     mcstas_instr.set_parameters(bender_in=int(bender_in))
     mcstas_instr.settings(
         ncount=ncount,
@@ -335,10 +337,10 @@ def main(
         comparison.
     """
     extraction = Extraction()
-    input_dir = default_input_dir(extraction)
+    build_folder = Workspace.find().build_folder(extraction.name)
     # the geometry: mcdisplay draws every component, whatever its WHEN
-    mcstas_instr = build_mcstas(extraction, input_path=input_dir)
-    top = draw_top_view(mcstas_instr, output_folder(out, input_dir) / "trex_extraction_top.png")
+    mcstas_instr = build_mcstas(extraction, input_path=build_folder)
+    top = draw_top_view(mcstas_instr, output_folder(out, build_folder) / "trex_extraction_top.png")
     path = diagnose_path(
         False, out, ncount=ncount, neutrons=neutrons, seed=seed, transmission=transmission
     )

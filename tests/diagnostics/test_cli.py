@@ -30,7 +30,7 @@ def test_out_is_created_with_its_parents(tmp_path):
 
 
 def test_the_default_folder_is_created_too(tmp_path):
-    default = tmp_path / "mcstas_output" / "trex_choppers"
+    default = tmp_path / "runs" / "trex_choppers"
     assert output_folder(None, default) == default
     assert default.is_dir()
 

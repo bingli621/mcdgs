@@ -16,7 +16,7 @@ from mcdgs.core.components import (
 )
 from mcdgs.core.params import InstrParam
 from mcdgs.instruments.trex.model import TRex
-from mcdgs.mcstas.builder import build_mcstas, default_input_dir
+from mcdgs.mcstas.builder import build_mcstas
 from mcdgs.samples import aluminum, la2ni7, lead, vanadium
 
 
@@ -62,12 +62,10 @@ def test_the_input_folder_is_created(tmp_path):
     assert folder.is_dir() and Path(inst.input_path) == folder
 
 
-def test_by_default_the_input_folder_is_per_instrument_in_the_current_folder(tmp_path, monkeypatch):
-    monkeypatch.chdir(tmp_path)
-    beamline = _Beamline()
-    inst = build_mcstas(beamline)
-    assert Path(inst.input_path) == tmp_path / "mcstas_input" / "beamline"
-    assert default_input_dir(beamline, "elsewhere") == Path("elsewhere/mcstas_input/beamline")
+def test_by_default_the_input_folder_is_the_build_folder_of_the_workspace(tmp_path, monkeypatch):
+    monkeypatch.setenv("MCDGS_WORKSPACE", str(tmp_path))
+    inst = build_mcstas(_Beamline())
+    assert Path(inst.input_path) == tmp_path / "builds" / "beamline"
 
 
 def test_the_instrument_parameters_follow_the_params(tmp_path):

@@ -47,8 +47,8 @@ do not repeat each other's random numbers. A name that is not an instrument para
 
 ## Find and clean up runs
 
-Each run writes a new folder in `mcstas_output/`, named after its start time and what it did, such
-as `20261022-143005_scan_b_rot`.
+Each run writes a new folder in `mcdgs_workspace/runs/`, named after its start time and what it
+did, such as `20261022-143005_scan_b_rot`.
 
 ```python
 simulation.list_runs()  # folder names, newest first
@@ -81,7 +81,7 @@ simulation.run_from_sample()  # part 2, also from a later session
 simulation.scan_from_sample("omega", [0, 10, 20])  # part 2, per goniometer angle
 ```
 
-The beam file is found again by a later `Simulation` on the same `output_dir`. The number of
+The beam file is found again by a later `Simulation` on the same workspace. The number of
 neutrons in part 2 is the number in the file.
 
 - Make a new beam file after changing a component up to `sample_pos`, or an instrument parameter

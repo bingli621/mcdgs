@@ -29,27 +29,7 @@ from mcstasscript.interface import instr
 from mcdgs.core.base import Instrument
 from mcdgs.core.components import Component, Polygon_ESS_butterfly
 from mcdgs.core.params import InstrParam
-
-
-def default_input_dir(instrument: Instrument, work_dir: str | Path | None = None) -> Path:
-    """Return the folder for the McStas-generated files of an instrument.
-
-    This is McStasScript's ``input_path``, where mcrun runs, and holds the .instr, .c and
-    compiled binary. Each instrument gets its own folder so they do not overwrite each other.
-
-    Parameters
-    ----------
-    instrument:
-        The instrument.
-    work_dir:
-        Work folder. If ``None``, the current folder is used.
-
-    Returns
-    -------
-    :
-        ``work_dir/mcstas_input/<instrument name>``.
-    """
-    return Path(work_dir or Path.cwd()) / "mcstas_input" / instrument.name
+from mcdgs.mcstas.workspace import Workspace
 
 
 def _instr_parameter(param: InstrParam) -> dict[str, Any]:
@@ -228,15 +208,15 @@ def build_mcstas(
     instrument:
         The instrument to build.
     input_path:
-        Folder for the McStas files, created if missing. If ``None``,
-        :func:`default_input_dir` is used.
+        Folder for the McStas files, created if missing. If ``None``, the build folder of the
+        instrument in :meth:`.Workspace.find`.
 
     Returns
     -------
     :
         The McStasScript instrument, with the instrument parameters and all components.
     """
-    input_path = Path(input_path or default_input_dir(instrument))
+    input_path = Path(input_path or Workspace.find().build_folder(instrument.name))
     input_path.mkdir(parents=True, exist_ok=True)
 
     mcstas_instr = instr.McStas_instr(instrument.name, input_path=str(input_path))

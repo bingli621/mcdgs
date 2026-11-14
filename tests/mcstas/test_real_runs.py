@@ -21,6 +21,7 @@ from mcdgs.core.params import InstrParam, param
 from mcdgs.instruments.trex.model import TRex
 from mcdgs.mcstas.nexus_io import read_pixels
 from mcdgs.mcstas.simulation import Simulation
+from mcdgs.mcstas.workspace import Workspace
 
 pytestmark = pytest.mark.skipif(shutil.which("mcrun") is None, reason="McStas is not on the PATH")
 
@@ -56,7 +57,7 @@ class _Small(Instrument):
 
 @pytest.fixture
 def sim(tmp_path):
-    return Simulation(_Small(), work_dir=tmp_path)
+    return Simulation(_Small(), Workspace(tmp_path))
 
 
 def test_a_run_of_mcstas_writes_the_file_it_returns(sim):
@@ -99,7 +100,7 @@ def test_a_split_run_gives_the_intensity_and_geometry_of_a_direct_run(sim):
 
 def _detected(instrument, tmp_path, seed=1, ncount=1e5):
     """The intensity on the detector of a run of ``instrument``."""
-    h5_file = Simulation(instrument, work_dir=tmp_path).scan(
+    h5_file = Simulation(instrument, Workspace(tmp_path)).scan(
         "width", [0.1], ncount=ncount, seed=seed
     )
     return read_pixels(h5_file.parent, "detector", "source", "sample_pos")[0][1].sum()
@@ -136,7 +137,7 @@ def test_polygon_ess_butterfly_gives_the_intensity_of_the_choppers_alone(tmp_pat
     shape = {"Lmin": 2, "Lmax": 4, "dist": 2, "focus_xw": 0.05, "focus_yh": 0.05}
     masked = _chopped(Polygon_ESS_butterfly(**shape, choppers=[disk]))
 
-    h5_file = Simulation(masked, work_dir=tmp_path / "region").run(ncount=1e3, seed=1, mpi=None)
+    h5_file = Simulation(masked, Workspace(tmp_path / "region")).run(ncount=1e3, seed=1, mpi=None)
     region = json.loads((h5_file.parent / "source.json").read_text())  # named after the source
     # the disk passes a little over half of the 8.6 ms the source emits in, at each wavelength
     assert 0.5 < region["acceptance"] < 0.6
@@ -151,7 +152,7 @@ def test_trex_with_the_masked_source_gives_the_intensity_on_the_sample(tmp_path)
     # the masked source gives the sample all the intensity of the plain one, from fewer rays:
     # at the defaults, 2.64e7 +- 5 % from 2e5 rays, and 2.72e7 +- 17 % from 2e6
     masked = TRex(source_masked=True)
-    h5_file = Simulation(masked, work_dir=tmp_path).run(ncount=2e5, seed=1, mpi=None)
+    h5_file = Simulation(masked, Workspace(tmp_path)).run(ncount=2e5, seed=1, mpi=None)
     region = json.loads((h5_file.parent / "source.json").read_text())
     assert 0 < region["acceptance"] < 0.02  # 42 polygons, about 1 %
     with h5py.File(h5_file) as f:
@@ -167,7 +168,7 @@ def test_a_split_run_compiles_with_the_masked_source(tmp_path):
     small.source = Polygon_ESS_butterfly(
         Lmin=2, Lmax=4, dist=2, focus_xw=0.05, focus_yh=0.05, choppers=[disk]
     )
-    sim = Simulation(small, work_dir=tmp_path)
+    sim = Simulation(small, Workspace(tmp_path))
     assert sim.run_to_sample(ncount=1e4, mpi=None).is_file()
     assert sim.run_from_sample(seed=2, mpi=None).is_file()
 
@@ -177,5 +178,5 @@ def test_trex_runs_through_with_its_choppers_turning(tmp_path, mode):
     # compiling alone let through an abort at INITIALIZE: the slit edges of the choppers
     trex = TRex()
     trex.update_params(mode=mode)
-    h5_file = Simulation(trex, work_dir=tmp_path).run(ncount=1e3, seed=1, mpi=None)
+    h5_file = Simulation(trex, Workspace(tmp_path)).run(ncount=1e3, seed=1, mpi=None)
     assert h5_file.is_file()

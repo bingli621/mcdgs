@@ -64,10 +64,10 @@ same object can go to both.
 
 1. [`build_mcstas`](reference/mcstas.md) turns the instrument into a McStasScript instrument. It
    adds the instrument parameters, then the components in beam order.
-2. [`Simulation`](reference/mcstas.md) writes it to `mcstas_input/<instrument name>/`, where McStas
-   compiles it, and runs it. Every run builds the instrument anew, so a change applies to the next
+2. [`Simulation`](reference/mcstas.md) writes it to `mcdgs_workspace/builds/<instrument name>/`,
+   where McStas compiles it, and runs it. Every run builds the instrument anew, so a change applies to the next
    run.
-3. Each run writes a folder in `mcstas_output/` with a McStas NeXus file, `mccode.h5`.
+3. Each run writes a folder in `mcdgs_workspace/runs/` with a McStas NeXus file, `mccode.h5`.
 4. [`read_pixels`](reference/mcstas.md) or `h5py` reads that file. See
    [Read the output](how-to/read-the-output.md).
 

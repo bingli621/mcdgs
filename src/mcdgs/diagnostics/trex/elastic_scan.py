@@ -42,8 +42,8 @@ from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
 from mcdgs.diagnostics.trex import elastic_plane as plane
 from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
 from mcdgs.mcstas.nexus_io import numeric_parameters, read_events
-from mcdgs.mcstas.run_folders import default_output_dir
 from mcdgs.mcstas.simulation import Simulation
+from mcdgs.mcstas.workspace import Workspace
 from mcdgs.reduction.binning import bin_edges
 from mcdgs.samples import la2ni7
 
@@ -115,9 +115,10 @@ def simulate(
     Returns
     -------
     :
-        The scan folder, ``SCAN`` in :func:`.default_output_dir`, with one entry per angle.
+        The scan folder, ``SCAN`` in the runs folder of :meth:`.Workspace.find`, with one entry
+        per angle.
     """
-    beam_file = beam_file or default_output_dir() / plane.TO_SAMPLE / "beam.mcpl.gz"
+    beam_file = beam_file or Workspace.find().run_folder(plane.TO_SAMPLE) / "beam.mcpl.gz"
     simulation = Simulation(TRexWithRotatingLa2Ni7())  # the default control parameters
     scan_file = simulation.scan_from_sample(
         "omega", omegas, folder_name=SCAN, beam_file=beam_file, seed=seed
@@ -183,7 +184,8 @@ def reduce_angles(
     Parameters
     ----------
     scan:
-        The scan folder of :func:`simulate`. If ``None``, ``SCAN`` in :func:`.default_output_dir`.
+        The scan folder of :func:`simulate`. If ``None``, ``SCAN`` in the runs folder of
+        :meth:`.Workspace.find`.
     to_sample:
         The run to the sample. If ``None``, that of :mod:`.diagnostics.trex.elastic_plane`.
     step:
@@ -204,7 +206,7 @@ def reduce_angles(
     ValueError
         If the scan has no angles.
     """
-    scan = Path(scan or default_output_dir() / SCAN)
+    scan = Path(scan or Workspace.find().run_folder(SCAN))
     pulses = plane.subpulse_timing_of_run(to_sample)
     edges = {name: bin_edges(name, -Q_LIMIT, Q_LIMIT, step, unit="1/Å") for name in ("Qz", "Qx")}
     with mcstastox.Read(str(scan)) as data:
@@ -358,7 +360,7 @@ def analyze(
     :
         The paths of the GIF and of the figure.
     """
-    scan = Path(scan or default_output_dir() / SCAN)
+    scan = Path(scan or Workspace.find().run_folder(SCAN))
     maps = crop(reduce_angles(scan, to_sample))
     hkl = " ".join(str(i) for i in IN_PLANE)
     title = (

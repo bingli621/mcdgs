@@ -44,8 +44,8 @@ scripts/         build tooling of the documentation site, and the pixi activatio
                  registers the plugins of graphviz
 tests/
 docs/            the documentation site, built with Zensical
-mcstas_input/    generated McStas files, per instrument (git-ignored)
-mcstas_output/   simulation results, a folder per run (git-ignored)
+mcdgs_workspace/ generated McStas files per instrument (builds/), simulation results in a
+                 folder per run (runs/), and what is made from them (results/); git-ignored
 ```
 
 Dependencies point inwards: `core` imports nothing from the other layers; `instruments` and

@@ -24,6 +24,7 @@ from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
 from mcdgs.diagnostics.trex.extraction import Extraction, diagnose_path
 from mcdgs.instruments.trex.guides.bispectral import BENDER_ROTATION
 from mcdgs.mcstas.simulation import Simulation
+from mcdgs.mcstas.workspace import Workspace
 
 BAND_WIDTH = 0.5  # Å: the bands are centered on its multiples, 0.5, 1.0, 1.5 Å, ...
 
@@ -149,11 +150,11 @@ def run_bender_scan(
     angles: NDArray | None = None,
     ncount: float = 1e6,
     seed: int = 1,
-    work_dir: str | Path | None = None,
+    workspace: Workspace | None = None,
 ) -> tuple[Path, Path]:
     """Scan the rotation of the bender, and run once without it.
 
-    The scan goes to the run folder ``bender_scan`` of the output folder, the run without the
+    The scan goes to the run folder ``bender_scan`` of the workspace, the run without the
     bender to ``bender_out``; each replaces the one of an earlier call.
 
     Parameters
@@ -164,8 +165,8 @@ def run_bender_scan(
         Number of McStas neutrons, per angle and in the run without the bender.
     seed:
         Seed of the random numbers.
-    work_dir:
-        Work folder, of the input and the output folders. If ``None``, the current folder.
+    workspace:
+        The folders to write into. If ``None``, :meth:`.Workspace.find`.
 
     Returns
     -------
@@ -176,7 +177,7 @@ def run_bender_scan(
         angles = np.linspace(-0.8, 0.1, 19)
 
     # --8<-- [start:run_scan]
-    simulation = Simulation(Extraction(), work_dir=work_dir)
+    simulation = Simulation(Extraction(), workspace)
     scan_file = simulation.scan(
         "b_rot", angles, "bender_scan", ncount=ncount, seed=seed, bender_in=1
     )

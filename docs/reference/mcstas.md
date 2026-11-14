@@ -7,6 +7,8 @@ what it writes.
 
 ::: mcdgs.mcstas.builder
 
+::: mcdgs.mcstas.workspace
+
 ::: mcdgs.mcstas.run_folders
 
 ::: mcdgs.mcstas.nexus_io
