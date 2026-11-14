@@ -49,7 +49,7 @@ from mcdgs.instruments.trex.guides.extraction import guides_extraction
 from mcdgs.instruments.trex.monitors import beam_monitor, source_monitor
 from mcdgs.instruments.trex.sources import source
 from mcdgs.mcstas.builder import build_mcstas
-from mcdgs.mcstas.run_folders import new_run_folder
+from mcdgs.mcstas.runs import new_run_folder
 from mcdgs.mcstas.workspace import Workspace
 from mcdgs.tof.builder import build_tof
 from mcdgs.tof.reader import monitor_bins

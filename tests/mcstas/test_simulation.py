@@ -69,12 +69,12 @@ def test_the_folders_are_those_of_the_workspace(tmp_path, monkeypatch):
     assert Simulation(TRex(), Workspace(tmp_path / "w")).workspace.root == tmp_path / "w"
 
 
-def test_the_beam_file_is_the_newest_one_found(tmp_path, finished_run):
+def test_the_beam_file_is_that_of_the_newest_run_to_the_sample(tmp_path, finished_run):
     assert Simulation(TRex(), Workspace(tmp_path)).beam_file is None
-    finished_run(tmp_path / "runs" / "old_beam", 1, beam=True)
-    new = finished_run(tmp_path / "runs" / "new_beam", 2, beam=True)
-    finished_run(tmp_path / "runs" / "newer_scan", 3)
-    assert Simulation(TRex(), Workspace(tmp_path)).beam_file == new / "beam.mcpl.gz"
+    finished_run(tmp_path / "runs" / "old_beam", 1, RunType.RUN_TO_SAMPLE)
+    new = finished_run(tmp_path / "runs" / "new_beam", 2, RunType.RUN_TO_SAMPLE)
+    finished_run(tmp_path / "runs" / "newer_scan", 3, RunType.SCAN)
+    assert Simulation(TRex(), Workspace(tmp_path)).beam_file == new.folder / "beam.mcpl.gz"
 
 
 def test_the_record_of_a_run_has_every_instrument_parameter_it_used(tmp_path):
@@ -168,13 +168,3 @@ def test_no_points_raises_before_anything(tmp_path):
     with pytest.raises(ValueError, match="at least one point"):
         _run_points_in_parallel(_FakeRun(), tmp_path / "scan", [])
     assert not (tmp_path / "scan").exists()
-
-
-def test_a_simulation_finds_and_cleans_its_own_runs(tmp_path, finished_run):
-    beam = finished_run(tmp_path / "runs" / "1_run_to_sample", 1, beam=True)
-    scans = [finished_run(tmp_path / "runs" / f"{n}_scan_b_rot", n) for n in (2, 3)]
-    sim = Simulation(TRex(), Workspace(tmp_path))
-    assert sim.list_runs() == ["3_scan_b_rot", "2_scan_b_rot", "1_run_to_sample"]
-    assert sim.latest_run("*_run_to_sample") == beam
-    assert sim.clean_runs(keep=1) == [scans[0]]
-    assert sim.list_runs() == ["3_scan_b_rot", "1_run_to_sample"]

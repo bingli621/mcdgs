@@ -1,19 +1,23 @@
-import os
+from datetime import UTC, datetime, timedelta
 
 import pytest
+
+from mcdgs.mcstas.runs import Run, RunType
+
+STARTED = datetime(2026, 10, 22, 12, tzinfo=UTC)
 
 
 @pytest.fixture
 def finished_run():
-    """finished_run(folder, mtime, beam=False) -> `folder`, made a fake finished run: a
-    `mccode.h5` (and a `beam.mcpl.gz` with `beam`), the `mccode.h5` last changed at `mtime`."""
+    """finished_run(folder, minute, run_type=RunType.RUN, **fields) -> the `Run` of `folder`,
+    made a fake finished run: the folder with its `run.json`, started `minute` minutes after
+    `STARTED`, of the instrument "TRex" unless `fields` names another."""
 
-    def make(folder, mtime, beam=False):
+    def make(folder, minute, run_type=RunType.RUN, **fields):
         folder.mkdir(parents=True)
-        (folder / "mccode.h5").touch()
-        if beam:
-            (folder / "beam.mcpl.gz").touch()
-        os.utime(folder / "mccode.h5", (mtime, mtime))
-        return folder
+        fields = {"instrument": "TRex", "instr_params": {}} | fields
+        run = Run(folder, run_type=run_type, started=STARTED + timedelta(minutes=minute), **fields)
+        run.save()
+        return run
 
     return make

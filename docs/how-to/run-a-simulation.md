@@ -50,13 +50,22 @@ do not repeat each other's random numbers. A name that is not an instrument para
 Each run writes a new folder in `mcdgs_workspace/runs/`, named after its start time and what it
 did, such as `20261022-143005_scan_b_rot`.
 
+A run that finished leaves its record, `run.json`, in its folder: the instrument, the type of the
+run, and the value of every instrument parameter. The runs are found by that record:
+
 ```python
-simulation.list_runs()  # folder names, newest first
-simulation.latest_run("*_scan_b_rot")  # the newest folder matching a pattern
-simulation.clean_runs(keep=5)  # remove all but the 5 newest
+from mcdgs.mcstas.runs import RunType, clean_runs, latest_run, list_runs
+
+runs_folder = simulation.workspace.runs_folder
+list_runs(runs_folder)  # the finished runs, newest first
+scan = latest_run(runs_folder, RunType.SCAN)  # the newest scan
+scan.folder, scan.variable, scan.values, scan.instr_params
+clean_runs(runs_folder, keep=5)  # remove all but the 5 newest
+clean_runs(runs_folder, keep=1, run_type=RunType.RUN_TO_SAMPLE)  # all but the newest beam
 ```
 
-`clean_runs` never removes a `run_to_sample` run, nor a folder without a `mccode.h5`.
+Without a `run_type`, `clean_runs` never removes a `run_to_sample` run. It never removes a folder
+without a `run.json`.
 
 !!! warning "A `folder_name` is replaced on every run"
 

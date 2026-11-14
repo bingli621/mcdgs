@@ -35,14 +35,7 @@ from numpy.typing import ArrayLike
 from mcdgs.core.base import Instrument
 from mcdgs.mcstas.builder import build_mcstas
 from mcdgs.mcstas.nexus_io import merge_entries
-from mcdgs.mcstas.run_folders import (
-    clean_runs,
-    latest_beam,
-    latest_run,
-    list_runs,
-    new_run_folder,
-)
-from mcdgs.mcstas.runs import BEAM_FILE, Run, RunType
+from mcdgs.mcstas.runs import BEAM_FILE, Run, RunType, latest_beam, new_run_folder
 from mcdgs.mcstas.workspace import Workspace
 
 SAMPLE_POS = "sample_pos"  # the component a split run cuts the beam at
@@ -203,12 +196,12 @@ class Simulation:
 
     Notes
     -----
-    Each run writes into a new folder of the runs folder, named by its start time and mode:
+    Each run writes into a new folder of the runs folder, named by its start time and type:
     ``<time>_run``, ``<time>_scan_<variable>``, ``<time>_run_to_sample``,
     ``<time>_run_from_sample`` and ``<time>_scan_<variable>_from_sample``, with ``<time>`` e.g.
     ``20261022-143005``. A ``folder_name`` names the folder instead, and it is then replaced on
-    every run. :meth:`list_runs` and :meth:`latest_run` find finished runs, and :meth:`clean_runs`
-    removes older ones, never a ``run_to_sample`` one.
+    every run. :func:`.list_runs` and :func:`.latest_run` find finished runs, and
+    :func:`.clean_runs` removes older ones.
 
     The ``instr_params`` of a run are its instrument parameters by McStas name
     (``Instrument.instr_params``). Those not given keep the instrument's values.
@@ -223,18 +216,6 @@ class Simulation:
         self.instrument = instrument
         self.workspace = workspace or Workspace.find()
         self.beam_file = latest_beam(self.workspace.runs_folder)
-
-    def list_runs(self) -> list[str]:
-        """List the finished runs of the workspace, newest first; see :func:`.list_runs`."""
-        return list_runs(self.workspace.runs_folder)
-
-    def latest_run(self, pattern: str = "*") -> Path:
-        """Return the newest finished run matching ``pattern``; see :func:`.latest_run`."""
-        return latest_run(self.workspace.runs_folder, pattern)
-
-    def clean_runs(self, keep: int = 5) -> list[Path]:
-        """Remove all but the ``keep`` newest runs; see :func:`.clean_runs`."""
-        return clean_runs(self.workspace.runs_folder, keep)
 
     def _prepare(
         self,
@@ -280,12 +261,12 @@ class Simulation:
             (:func:`_run_points_in_parallel`).
         """
         started = datetime.now().astimezone()
-        mode = (
+        label = (
             run_type.value
             if variable is None
             else run_type.value.replace("scan", f"scan_{variable}")
         )
-        folder = new_run_folder(self.workspace.runs_folder, folder_name, mode)
+        folder = new_run_folder(self.workspace.runs_folder, folder_name, label)
         input_path = self.workspace.build_folder(self.instrument.name)
         inst = build_mcstas(self.instrument, input_path=input_path)
         if ncount is not None:
