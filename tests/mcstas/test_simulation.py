@@ -5,6 +5,7 @@ import pytest
 
 from mcdgs.instruments.trex.model import TRex
 from mcdgs.mcstas import simulation
+from mcdgs.mcstas.runs import RunType
 from mcdgs.mcstas.simulation import Simulation, _run_points_in_parallel
 from mcdgs.mcstas.workspace import Workspace
 
@@ -74,6 +75,38 @@ def test_the_beam_file_is_the_newest_one_found(tmp_path, finished_run):
     new = finished_run(tmp_path / "runs" / "new_beam", 2, beam=True)
     finished_run(tmp_path / "runs" / "newer_scan", 3)
     assert Simulation(TRex(), Workspace(tmp_path)).beam_file == new / "beam.mcpl.gz"
+
+
+def test_the_record_of_a_run_has_every_instrument_parameter_it_used(tmp_path):
+    sim = Simulation(TRex(), Workspace(tmp_path))
+    run, _ = sim._prepare("mine", RunType.RUN, {"bender_in": 1, "omega": 30}, ncount=1e4, seed=3)
+    defaults = {p.name: p.value for p in TRex().instr_params}
+    assert run.instr_params.keys() == defaults.keys()
+    assert (run.instr_params["bender_in"], run.instr_params["omega"]) == (1.0, 30.0)  # as given
+    assert run.instr_params["b_rot"] == defaults["b_rot"]  # not given: as the instrument has it
+    assert (run.instrument, run.ncount, run.seed) == ("TRex", 1e4, 3)
+    assert run.folder == tmp_path / "runs" / "mine" and not run.folder.exists()  # not saved yet
+
+
+def test_the_record_of_a_scan_has_its_variable_apart_from_the_other_parameters(tmp_path):
+    sim = Simulation(TRex(), Workspace(tmp_path))
+    run, _ = sim._prepare(
+        None, RunType.SCAN_FROM_SAMPLE, {"bender_in": 1}, variable="omega", values=[0.0, 1.0]
+    )
+    assert run.folder.name.endswith("_scan_omega_from_sample")
+    assert (run.variable, run.values) == ("omega", [0.0, 1.0])
+    assert "omega" not in run.instr_params and run.instr_params["bender_in"] == 1.0
+    assert run.started.tzinfo is not None
+
+
+def test_the_beam_run_of_a_record_is_the_run_its_beam_file_is_in(tmp_path):
+    sim = Simulation(TRex(), Workspace(tmp_path))
+    beam_file = sim.find_beam_file(tmp_path / "runs" / "to_sample" / "beam.mcpl.gz")
+    run, _ = sim._prepare("a", RunType.RUN_FROM_SAMPLE, {}, beam_file=beam_file)
+    assert run.beam_run == "to_sample"
+    elsewhere = sim.find_beam_file(tmp_path / "elsewhere" / "beam.mcpl.gz")
+    run, _ = sim._prepare("b", RunType.RUN_FROM_SAMPLE, {}, beam_file=elsewhere)
+    assert run.beam_run is None  # not in a run of this workspace
 
 
 class _FakeRun:

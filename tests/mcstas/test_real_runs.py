@@ -20,6 +20,7 @@ from mcdgs.core.components import (
 from mcdgs.core.params import InstrParam, param
 from mcdgs.instruments.trex.model import TRex
 from mcdgs.mcstas.nexus_io import read_pixels
+from mcdgs.mcstas.runs import Run, RunType
 from mcdgs.mcstas.simulation import Simulation
 from mcdgs.mcstas.workspace import Workspace
 
@@ -64,6 +65,10 @@ def test_a_run_of_mcstas_writes_the_file_it_returns(sim):
     h5_file = sim.run(ncount=1e4, seed=1, mpi=None)
     assert h5_file.is_file()
     assert sim.list_runs() == [h5_file.parent.name]
+    run = Run.load(h5_file.parent)  # the record of the run, in its folder
+    assert (run.instrument, run.run_type, run.ncount, run.seed) == ("small", RunType.RUN, 1e4, 1)
+    assert run.instr_params == {"width": 0.1}  # not given: as the instrument has it
+    assert run.data_file == h5_file
 
 
 def test_a_scan_runs_each_point_with_its_own_values_and_seed(sim):
@@ -75,6 +80,9 @@ def test_a_scan_runs_each_point_with_its_own_values_and_seed(sim):
     narrow, wide = points[1][1].sum().value, points[0][1].sum().value
     assert narrow < wide  # the instrument parameter reached McStas
     assert not (h5_file.parent / "point_0000").exists()  # merged, then removed
+    run = Run.load(h5_file.parent)
+    assert (run.run_type, run.variable, run.values) == (RunType.SCAN, "width", [0.1, 0.05])
+    assert run.instr_params == {} and run.seed == 1  # the variable is in the values
 
 
 def test_a_split_run_gives_the_intensity_and_geometry_of_a_direct_run(sim):
@@ -83,7 +91,12 @@ def test_a_split_run_gives_the_intensity_and_geometry_of_a_direct_run(sim):
 
     beam = sim.run_to_sample(ncount=1e5, mpi=None)
     assert beam == sim.beam_file and beam.is_file()
+    to_sample = Run.load(beam.parent)
+    assert to_sample.run_type is RunType.RUN_TO_SAMPLE and to_sample.beam_file == beam
     h5_file = sim.run_from_sample(seed=2, mpi=None)
+    from_sample = Run.load(h5_file.parent)
+    assert from_sample.run_type is RunType.RUN_FROM_SAMPLE
+    assert from_sample.beam_run == to_sample.name and from_sample.ncount is None
     split = read_pixels(h5_file.parent, "detector", "source", "sample_pos", [0, 0, 1])[0][1]
 
     assert split.sum().value == pytest.approx(direct.sum().value, rel=0.05)
@@ -96,6 +109,9 @@ def test_a_split_run_gives_the_intensity_and_geometry_of_a_direct_run(sim):
     points = read_pixels(h5_file.parent, "detector", "source", "sample_pos", [0, 0, 1])
     assert [params["width"] for params, _ in points] == [0.1, 0.05]
     assert points[1][1].sum().value < points[0][1].sum().value
+    scan = Run.load(h5_file.parent)
+    assert (scan.run_type, scan.values) == (RunType.SCAN_FROM_SAMPLE, [0.1, 0.05])
+    assert scan.beam_run == to_sample.name
 
 
 def _detected(instrument, tmp_path, seed=1, ncount=1e5):

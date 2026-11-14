@@ -13,6 +13,8 @@ Everything runs through McStasScript's public API (``settings``, ``set_parameter
 ``run_to``, ``run_from``, ``backengine``). A scan runs ``backengine`` once per value and merges
 the outputs into one file. The instrument is first compiled once with mcrun itself, since
 McStasScript has no compile-only call.
+
+A run that finished leaves its record, a :class:`.Run`, as ``run.json`` in its folder.
 """
 
 import copy
@@ -22,6 +24,8 @@ import shutil
 import subprocess
 from collections.abc import Mapping, Sequence
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime
+from numbers import Real
 from pathlib import Path
 
 import numpy as np
@@ -38,9 +42,36 @@ from mcdgs.mcstas.run_folders import (
     list_runs,
     new_run_folder,
 )
+from mcdgs.mcstas.runs import BEAM_FILE, Run, RunType
 from mcdgs.mcstas.workspace import Workspace
 
 SAMPLE_POS = "sample_pos"  # the component a split run cuts the beam at
+
+
+def _random_seed() -> int:
+    """Return a random seed for mcrun, which does not accept 0 or more than nine digits."""
+    return int(np.random.SeedSequence().generate_state(1)[0] % 10**9)
+
+
+def _recorded(value: object) -> float | str:
+    """Return the value of an instrument parameter as the record of a run keeps it.
+
+    Parameters
+    ----------
+    value:
+        The value, as the instrument or the caller of a run gave it.
+
+    Returns
+    -------
+    :
+        A number as a float, also a NumPy one, and anything else as its string.
+
+    Examples
+    --------
+    >>> _recorded(1), _recorded(np.float64(2.5)), _recorded("beam.mcpl")
+    (1.0, 2.5, 'beam.mcpl')
+    """
+    return float(value) if isinstance(value, Real) else str(value)
 
 
 def _compile(inst: McStas_instr) -> None:
@@ -115,7 +146,7 @@ def _run_points_in_parallel(
     _compile(inst)  # once, before any point
     output_path.mkdir()  # holds a folder per point
     if seed is None:
-        seed = int(np.random.SeedSequence().generate_state(1)[0] % 10**9)
+        seed = _random_seed()
     folders = [output_path / f"point_{n:04d}" for n in range(len(points))]
 
     runs = []
@@ -206,37 +237,88 @@ class Simulation:
         return clean_runs(self.workspace.runs_folder, keep)
 
     def _prepare(
-        self, folder_name: str | None, mode: str, **settings: object
-    ) -> tuple[Path, McStas_instr]:
+        self,
+        folder_name: str | None,
+        run_type: RunType,
+        instr_params: Mapping[str, float],
+        *,
+        ncount: float | None = None,
+        seed: int | None = None,
+        variable: str | None = None,
+        values: list[float] | None = None,
+        beam_file: Path | None = None,
+        **settings: object,
+    ) -> tuple[Run, McStas_instr]:
         """Pick the run folder and build the instrument with the settings every run shares.
 
         Parameters
         ----------
         folder_name:
-            Run folder name. If ``None``, ``<time>_<mode>``.
-        mode:
-            What the run does, in the default folder name, e.g. ``"scan_omega"``.
+            Run folder name. If ``None``, the start time and what the run does, e.g.
+            ``<time>_scan_omega``.
+        run_type:
+            What the run does.
+        instr_params:
+            The instrument parameters given to the run, of a scan those other than
+            ``variable``. They are recorded, not set: the run sets them.
+        ncount:
+            Number of neutrons. If ``None``, as from the sample, it is not set.
+        seed:
+            Random seed. If ``None``, McStas picks one.
+        variable, values:
+            The instrument parameter of a scan and its values.
+        beam_file:
+            The beam file a run from the sample starts from.
         **settings:
-            The run's own McStasScript settings, e.g. ``ncount`` and ``mpi``.
+            The run's other McStasScript settings, e.g. ``mpi``.
 
         Returns
         -------
         :
-            The run folder, and the McStasScript instrument writing into it. A scan's points
-            write into folders of their own instead (:func:`_run_points_in_parallel`).
+            The record of the run, not saved yet, and the McStasScript instrument writing into
+            its folder. A scan's points write into folders of their own instead
+            (:func:`_run_points_in_parallel`).
         """
-        output_path = new_run_folder(self.workspace.runs_folder, folder_name, mode)
+        started = datetime.now().astimezone()
+        mode = (
+            run_type.value
+            if variable is None
+            else run_type.value.replace("scan", f"scan_{variable}")
+        )
+        folder = new_run_folder(self.workspace.runs_folder, folder_name, mode)
         input_path = self.workspace.build_folder(self.instrument.name)
         inst = build_mcstas(self.instrument, input_path=input_path)
+        if ncount is not None:
+            settings["ncount"] = ncount
         inst.settings(
             NeXus=True,
             increment_folder_name=False,
             suppress_output=True,
-            output_path=str(output_path),
+            output_path=str(folder),
             force_compile=True,
+            seed=seed,
             **settings,  # pyright: ignore[reportArgumentType]
         )
-        return output_path, inst
+        # every instrument parameter of the run: those given, the rest as the instrument has them
+        used = {p.name: p.value for p in self.instrument.instr_params} | dict(instr_params)
+        run = Run(
+            folder=folder,
+            instrument=self.instrument.name,
+            run_type=run_type,
+            started=started,
+            instr_params={name: _recorded(v) for name, v in used.items() if name != variable},
+            ncount=ncount,
+            seed=seed,
+            variable=variable,
+            values=values,
+            beam_run=None if beam_file is None else self._beam_run(beam_file),
+        )
+        return run, inst
+
+    def _beam_run(self, beam_file: Path) -> str | None:
+        """Return the name of the run a beam file is from, or ``None`` if it is not in a run."""
+        in_runs_folder = beam_file.parent.parent == self.workspace.runs_folder.resolve()
+        return beam_file.parent.name if in_runs_folder else None
 
     def _check_sample_pos(self) -> None:
         """Check that the instrument has the component a split run cuts the beam at.
@@ -338,12 +420,19 @@ class Simulation:
         :
             ``<runs folder>/<folder>/mccode.h5``.
         """
-        output_path, inst = self._prepare(
-            folder_name, "run", ncount=ncount, mpi=mpi, seed=seed, custom_flags=custom_flags
+        run, inst = self._prepare(
+            folder_name,
+            RunType.RUN,
+            instr_params,
+            ncount=ncount,
+            seed=seed,
+            mpi=mpi,
+            custom_flags=custom_flags,
         )
         inst.set_parameters(**instr_params)  # the rest keep the instrument's values
         inst.backengine()  # compiles in its build folder
-        return output_path / "mccode.h5"
+        run.save()
+        return run.data_file
 
     def scan(
         self,
@@ -391,14 +480,21 @@ class Simulation:
             If a name is not an instrument parameter, before anything runs.
         """
         points = self.get_scan_points(variable, values, instr_params)  # checked before anything
-        output_path, inst = self._prepare(
+        seed = _random_seed() if seed is None else seed  # picked here, to record it
+        run, inst = self._prepare(
             folder_name,
-            f"scan_{variable}",
+            RunType.SCAN,
+            instr_params,
             ncount=ncount,
+            seed=seed,
+            variable=variable,
+            values=[point[variable] for point in points],
             mpi=None,  # no MPI: the points run in parallel instead
             custom_flags=custom_flags,
         )
-        return _run_points_in_parallel(inst, output_path, points, seed=seed, n_jobs=n_jobs)
+        _run_points_in_parallel(inst, run.folder, points, seed=seed, n_jobs=n_jobs)
+        run.save()
+        return run.data_file
 
     def run_to_sample(
         self,
@@ -440,8 +536,8 @@ class Simulation:
             If the instrument has no ``sample_pos``, before anything runs.
         """
         self._check_sample_pos()  # before anything
-        output_path, inst = self._prepare(
-            folder_name, "run_to_sample", ncount=ncount, mpi=mpi, seed=seed
+        run, inst = self._prepare(
+            folder_name, RunType.RUN_TO_SAMPLE, instr_params, ncount=ncount, seed=seed, mpi=mpi
         )
         inst.set_parameters(**instr_params)  # the rest keep the instrument's values
         inst.run_to(
@@ -454,7 +550,8 @@ class Simulation:
             weight_mode=1,
         )
         inst.backengine()
-        self.beam_file = output_path / "beam.mcpl.gz"
+        run.save()
+        self.beam_file = run.folder / BEAM_FILE
         return self.beam_file
 
     def run_from_sample(
@@ -498,11 +595,19 @@ class Simulation:
         """
         self._check_sample_pos()  # before anything
         beam_file = self.find_beam_file(beam_file)
-        output_path, inst = self._prepare(folder_name, "run_from_sample", mpi=mpi, seed=seed)
+        run, inst = self._prepare(
+            folder_name,
+            RunType.RUN_FROM_SAMPLE,
+            instr_params,
+            seed=seed,
+            beam_file=beam_file,
+            mpi=mpi,
+        )
         inst.run_from(SAMPLE_POS, filename=f'"{beam_file}"')
         inst.set_parameters(**instr_params)  # the rest keep the instrument's values
         inst.backengine()
-        return output_path / "mccode.h5"
+        run.save()
+        return run.data_file
 
     def scan_from_sample(
         self,
@@ -554,10 +659,18 @@ class Simulation:
         points = self.get_scan_points(variable, values, instr_params)  # checked before anything
         self._check_sample_pos()
         beam_file = self.find_beam_file(beam_file)
-        output_path, inst = self._prepare(
+        seed = _random_seed() if seed is None else seed  # picked here, to record it
+        run, inst = self._prepare(
             folder_name,
-            f"scan_{variable}_from_sample",
+            RunType.SCAN_FROM_SAMPLE,
+            instr_params,
+            seed=seed,
+            variable=variable,
+            values=[point[variable] for point in points],
+            beam_file=beam_file,
             mpi=None,  # no MPI: the points run in parallel instead
         )
         inst.run_from(SAMPLE_POS, filename=f'"{beam_file}"')
-        return _run_points_in_parallel(inst, output_path, points, seed=seed, n_jobs=n_jobs)
+        _run_points_in_parallel(inst, run.folder, points, seed=seed, n_jobs=n_jobs)
+        run.save()
+        return run.data_file
