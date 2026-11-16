@@ -2,6 +2,7 @@
 
 - :func:`read_events` reads the neutrons of a detector, by pixel, with mcstastox.
 - :func:`read_pixels` reads the detector pixels of every scan point, with mcstastox.
+- :func:`numeric_parameters` keeps the instrument parameters of a file that are numbers.
 - :func:`merge_entries` merges single-run files into one scan file.
 
 Nothing here knows an instrument: the components to read are named by the caller.
@@ -61,19 +62,17 @@ def _export_events(
     ValueError
         If the file has no ``source`` and ``beam_direction`` is ``None``.
     """
-    try:
+    if source in data.get_components():
         return data.export_scipp(source, sample, component_name=detector)["events"]
-    except ValueError as error:  # no source in the file, e.g. a run from a beam file
-        if beam_direction is None:
-            raise ValueError(
-                f"{folder}: no component {source!r}; give beam_direction to read it"
-            ) from error
-        sample_pos = data.get_global_component_coordinates(sample)
-        upstream = np.asarray(beam_direction, float)
-        upstream = upstream / np.linalg.norm(upstream)
-        grouped = data.export_scipp(sample, sample, component_name=detector)["events"]
-        grouped.coords["source_position"] = sc.vector(sample_pos - upstream, unit="m")
-        return grouped
+    # no source in the file, e.g. a run from a beam file
+    if beam_direction is None:
+        raise ValueError(f"{folder}: no component {source!r}; give beam_direction to read it")
+    direction = np.asarray(beam_direction, float)
+    direction = direction / np.linalg.norm(direction)
+    sample_pos = data.get_global_component_coordinates(sample)
+    grouped = data.export_scipp(sample, sample, component_name=detector)["events"]
+    grouped.coords["source_position"] = sc.vector(sample_pos - direction, unit="m")  # 1 m upstream
+    return grouped
 
 
 def read_events(
@@ -164,15 +163,14 @@ def read_pixels(
     ValueError
         If the file has no ``source`` and ``beam_direction`` is ``None``.
     """
-    points = []
     with mcstastox.Read(str(folder)) as data:
         n_entries = data.get_number_of_entries()
 
+    points = []
     for entry in range(1, n_entries + 1):
         with mcstastox.Read(str(folder), entry_number=entry) as data:
             params = numeric_parameters(data.get_instrument_parameters())
             grouped = _export_events(data, folder, detector, source, sample, beam_direction)
-
         points.append((params, grouped.bins.sum()))  # events are grouped by pixel id
     return points
 
