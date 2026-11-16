@@ -24,7 +24,7 @@ import json
 import re
 import shutil
 from collections.abc import Iterable, Mapping
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from enum import StrEnum
 from numbers import Real
@@ -113,17 +113,11 @@ class Run:
         :
             The file written, ``folder/run.json``.
         """
-        record = {
-            "instrument": self.instrument,
+        record = asdict(self) | {
             "run_type": self.run_type.value,
             "started": self.started.isoformat(),
-            "instr_params": self.instr_params,
-            "ncount": self.ncount,
-            "seed": self.seed,
-            "variable": self.variable,
-            "values": self.values,
-            "beam_run": self.beam_run,
         }
+        del record["folder"]  # where the record is found, so a run folder can be moved
         path = self.folder / RUN_FILE
         path.write_text(json.dumps(record, indent=2) + "\n")
         return path
@@ -149,39 +143,11 @@ class Run:
         """
         folder = Path(folder)
         record = json.loads((folder / RUN_FILE).read_text())
-        return cls(
-            folder=folder,
-            instrument=record["instrument"],
-            run_type=RunType(record["run_type"]),
-            started=datetime.fromisoformat(record["started"]),
-            instr_params=record["instr_params"],
-            ncount=record["ncount"],
-            seed=record["seed"],
-            variable=record["variable"],
-            values=record["values"],
-            beam_run=record["beam_run"],
-        )
-
-
-def _recorded(value: object) -> float | str:
-    """Return the value of an instrument parameter as the record of a run keeps it.
-
-    Parameters
-    ----------
-    value:
-        The value, as the instrument or the caller of a run gave it.
-
-    Returns
-    -------
-    :
-        A number as a float, also a NumPy one, and anything else as its string.
-
-    Examples
-    --------
-    >>> _recorded(1), _recorded(2.5), _recorded("beam.mcpl")
-    (1.0, 2.5, 'beam.mcpl')
-    """
-    return float(value) if isinstance(value, Real) else str(value)
+        record |= {
+            "run_type": RunType(record["run_type"]),
+            "started": datetime.fromisoformat(record["started"]),
+        }
+        return cls(folder=folder, **record)
 
 
 def recorded_instr_params(
@@ -201,7 +167,8 @@ def recorded_instr_params(
     Returns
     -------
     :
-        The parameters given, and the rest as the instrument has them.
+        The parameters given, and the rest as the instrument has them: a number as a float,
+        also a NumPy one, and anything else as its string.
 
     Examples
     --------
@@ -212,7 +179,11 @@ def recorded_instr_params(
     {'b_rot': -0.4, 'mode': 'FF'}
     """
     used = {param.name: param.value for param in defaults} | dict(given)
-    return {name: _recorded(value) for name, value in used.items() if name != variable}
+    return {
+        name: float(value) if isinstance(value, Real) else str(value)
+        for name, value in used.items()
+        if name != variable
+    }
 
 
 def _check_name(folder_name: object) -> None:
