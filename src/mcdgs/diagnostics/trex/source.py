@@ -46,6 +46,8 @@ from mcdgs.mcstas.simulation import Simulation
 from mcdgs.tof.builder import build_tof
 from mcdgs.tof.reader import monitor_bins
 
+NAME = "trex_source"  # the run folder of McStas, the results folder and the figure
+
 
 # --8<-- [start:trex_source]
 @dataclass(frozen=True)
@@ -100,7 +102,7 @@ def main(
     ncount: float = 1e6,
     neutrons: int = 1_000_000,
     seed: int = 1,
-    name: str = "trex_source",
+    name: str = NAME,
     lambda0: float | None = None,
 ) -> Path:
     """Run both models of :class:`TRexSource`, print their means and save the figure.
@@ -130,7 +132,7 @@ def main(
 
     # --8<-- [start:run_mcstas]
     # run McStas and load its monitors, in n/s per bin
-    folder = Simulation(instrument).run("trex_source", ncount=ncount, seed=seed).folder
+    folder = Simulation(instrument).run(NAME, ncount=ncount, seed=seed).folder
     mcstas_data = ms.load_data(str(folder))
     # --8<-- [end:run_mcstas]
 
@@ -150,7 +152,7 @@ def main(
     )
 
     fig = plot_comparison(comparison, "T-Rex flux at the entrance of guide 1")
-    return save_figure(fig, output_folder(out, "trex_source") / f"{name}.png")
+    return save_figure(fig, output_folder(out, NAME) / f"{name}.png")
 
 
 if __name__ == "__main__":
