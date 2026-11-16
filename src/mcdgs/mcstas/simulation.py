@@ -199,7 +199,8 @@ class Simulation:
         run, inst = self._prepare(
             folder_name, run_type, instr_params, beam_run=beam.name, **prepare
         )
-        inst.run_from(SAMPLE_POS, filename=self._beam_filename(beam))
+        # in C quotes, and absolute, because mcrun runs in the build folder
+        inst.run_from(SAMPLE_POS, filename=f'"{(beam.folder / BEAM_FILE).resolve()}"')
         return run, inst
 
     @staticmethod
@@ -227,14 +228,6 @@ class Simulation:
         if SAMPLE_POS not in self.instrument.components:
             raise ValueError(f"{self.instrument.name} has no {SAMPLE_POS} component to split at")
 
-    @staticmethod
-    def _beam_filename(beam: Run) -> str:
-        """Return the beam file of a run to the sample as McStas takes it.
-
-        It is in C quotes, and absolute, because mcrun runs in the build folder.
-        """
-        return f'"{(beam.folder / BEAM_FILE).resolve()}"'
-
     def find_beam_run(self, beam_run: str | None = None, folder_name: str | None = None) -> Run:
         """Return the run to the sample that a run from the sample starts from.
 
@@ -260,16 +253,17 @@ class Simulation:
         ValueError
             If the run is not a ``run_to_sample``, or ``folder_name`` is its name.
         """
-        runs_folder = self.workspace.runs_folder
         beam_run = beam_run or self.beam_run
         if beam_run is None:
             raise FileNotFoundError(
                 "no run to the sample: run run_to_sample first, or name an earlier one as beam_run"
             )
         try:
-            run = Run.load(runs_folder / beam_run)
+            run = Run.load(self.workspace.run_folder(beam_run))
         except FileNotFoundError:
-            raise FileNotFoundError(f"no finished run {beam_run!r} in {runs_folder}") from None
+            raise FileNotFoundError(
+                f"no finished run {beam_run!r} in {self.workspace.runs_folder}"
+            ) from None
         if run.run_type is not RunType.RUN_TO_SAMPLE:
             raise ValueError(f"{beam_run!r} is a {run.run_type} run, not a run_to_sample")
         if folder_name == beam_run:
