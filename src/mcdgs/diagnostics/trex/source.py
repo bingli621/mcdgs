@@ -35,7 +35,7 @@ from pathlib import Path
 
 import mcstasscript as ms
 
-from mcdgs.core import InstrParam, Instrument, param
+from mcdgs.core import Instrument, param
 from mcdgs.core.components import ESS_butterfly, Monitor_nD
 from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
 from mcdgs.diagnostics.compare import plot_comparison, print_means, read_comparison
@@ -87,11 +87,6 @@ class TRexSource(Instrument):
         lambda0 = self.params.lambda0
         self.source = source() if lambda0 is None else source(*wavelength_band(lambda0))
         self.source_monitor = source_monitor()
-
-    @property
-    def instr_params(self) -> list[InstrParam]:
-        """McStas instrument parameters: there are none."""
-        return []
         # --8<-- [end:trex_source]
 
 

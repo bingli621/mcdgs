@@ -50,7 +50,7 @@ class Instrument:
     - create its components in ``__init__`` in beam order, after calling
       ``super().__init__(params)``. ``__init__`` must accept ``params`` as a keyword, since io/
       creates instruments with that argument only;
-    - implement :attr:`instr_params`.
+    - implement :attr:`instr_params`, if it has McStas instrument parameters.
     """
 
     params_class: type  # the frozen dataclass of the control parameters: a subclass sets it
@@ -112,9 +112,9 @@ class Instrument:
     def instr_params(self) -> list[InstrParam]:
         """McStas instrument parameters, computed from :attr:`params`.
 
-        A subclass must implement this.
+        There are none here: a subclass that has them implements this.
         """
-        raise NotImplementedError
+        return []
 
     @property
     def components(self) -> dict[str, Component]:

@@ -91,13 +91,13 @@ def test_positions_follow_the_instrument_parameters():
     assert toy.positions()["detector"] == [2.0, 0.0, 1.0]  # the sample's z is the lab's x
 
 
-def test_instr_params_must_be_implemented():
+def test_an_instrument_has_no_instr_params_unless_it_implements_them():
     class Bare(Instrument):
         params_class = ToyParams
         name = "bare"
 
-    with pytest.raises(NotImplementedError):
-        _ = Bare().instr_params
+    assert Bare().instr_params == []
+    assert Bare().numeric_instr_params() == {}
     del INSTRUMENTS["Bare"]
 
 

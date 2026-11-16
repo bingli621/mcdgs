@@ -33,7 +33,7 @@ import numpy as np
 import scipp as sc
 from numpy.typing import NDArray
 
-from mcdgs.core import InstrParam, Instrument
+from mcdgs.core import Instrument
 from mcdgs.core.components import Arm, ESS_butterfly, Guide_gravity, Monitor_nD, Progress_bar
 from mcdgs.core.components.source import ESS_SOURCE_FREQUENCY
 from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
@@ -90,11 +90,6 @@ class TRexBeamMonitor(Instrument):
         self.arm_guide_4 = arm_guide_4()
         self.guide_4a = guide_4a()
         self.beam_monitor = beam_monitor()
-
-    @property
-    def instr_params(self) -> list[InstrParam]:
-        """McStas instrument parameters: there are none."""
-        return []
         # --8<-- [end:trex_beam_monitor]
 
 
