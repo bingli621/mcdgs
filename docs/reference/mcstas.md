@@ -14,3 +14,5 @@ what it writes.
 ::: mcdgs.mcstas.runs
 
 ::: mcdgs.mcstas.nexus_io
+
+::: mcdgs.mcstas.reader

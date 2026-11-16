@@ -56,7 +56,6 @@ from matplotlib.figure import Figure
 from mcstasscript.data.data import McStasData
 
 from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
-from mcdgs.diagnostics.compare import read_mcstas_map
 from mcdgs.instruments.trex.detectors import (
     BANANA_HEIGHT,
     BANANA_RADIUS,
@@ -65,7 +64,7 @@ from mcdgs.instruments.trex.detectors import (
     BANANA_Y_BINS,
 )
 from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
-from mcdgs.mcstas import Simulation, Workspace, read_events
+from mcdgs.mcstas import Simulation, Workspace, read_events, read_mcstas_map
 from mcdgs.reduction.binning import bin_edges, monitor_bins
 from mcdgs.reduction.inelastic import events_to_q_and_energy, time_at_sample
 from mcdgs.reduction.patches import MIN_FRACTION, find_patches, subpulse_flight

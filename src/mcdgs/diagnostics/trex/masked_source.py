@@ -38,11 +38,10 @@ from matplotlib.figure import Figure
 from numpy.typing import NDArray
 
 from mcdgs.diagnostics.cli import markdown_table, output_folder, parse_out, save_figure, save_text
-from mcdgs.diagnostics.compare import read_mcstas_map
 from mcdgs.diagnostics.trex.neutrons_on_sample import TRexToSample
 from mcdgs.instruments.trex.monitors import sample_monitor
 from mcdgs.instruments.trex.sources import wavelength_band
-from mcdgs.mcstas import Simulation
+from mcdgs.mcstas import Simulation, read_mcstas_map
 from mcdgs.reduction.binning import monitor_bins
 
 MONITOR = "sample_monitor"  # where both sources are compared

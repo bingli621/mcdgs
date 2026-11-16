@@ -2,9 +2,8 @@
 
 :func:`read_comparison` reads one time and wavelength map from both runs, in n/s, and
 :func:`plot_comparison` draws it, and :func:`print_means` prints the mean time and wavelength of
-each model. :func:`read_mcstas_map` reads the map of one McStas run. One
-run of each model can feed several monitors: :func:`read_scaled_comparisons` reads them all, tof
-scaled at the first and, at the others, with the transmission on top of it.
+each model. One run of each model can feed several monitors: :func:`read_scaled_comparisons`
+reads them all, tof scaled at the first and, at the others, with the transmission on top of it.
 
 tof has no flux: each neutron has weight 1. :func:`read_comparison` scales its counts by
 ``scale``, the n/s each tof neutron stands for. Left out, it is the total of McStas over that of
@@ -13,14 +12,15 @@ beam, pass the scale found where both see the same beam, at the source, for a di
 the guides and choppers let through to show. ``transmission`` then scales tof on top of it, for
 what the beam loses that tof does not model, such as the guides: tof has none.
 
-:func:`.monitor_bins` gives the bin edges of a monitor's map, read from its ``options``.
+:func:`.monitor_bins` gives the bin edges of a monitor's map, read from its ``options``,
+:func:`.read_mcstas_map` reads the map of McStas on them and :func:`.read_tof_monitor` that of
+tof.
 """
 
 from collections.abc import Mapping
 from dataclasses import dataclass
 
 import matplotlib.pyplot as plt
-import mcstasscript as ms
 import numpy as np
 import scipp as sc
 import tof
@@ -29,6 +29,7 @@ from matplotlib.figure import Figure
 from mcstasscript.data.data import McStasData
 from numpy.typing import NDArray
 
+from mcdgs.mcstas import read_mcstas_map
 from mcdgs.tof import read_tof_monitor
 
 
@@ -75,43 +76,6 @@ class MonitorComparison:
     neutrons: int
     scale: float
     transmission: float
-
-
-def read_mcstas_map(
-    name: str, mcstas_data: list[McStasData], bins: Mapping[str, sc.Variable]
-) -> tuple[NDArray, NDArray]:
-    """Read the time and wavelength map of a monitor of one McStas run, in n/s per bin.
-
-    Parameters
-    ----------
-    name:
-        The name of the monitor.
-    mcstas_data:
-        The monitors of the McStas run, as ``mcstasscript.load_data`` reads them. This one must
-        be a 2D map of time against wavelength, ``"time ... lambda ..."``, on ``bins``.
-    bins:
-        The bin edges of the map, ``"toa"`` and ``"wavelength"``, in that order.
-
-    Returns
-    -------
-    :
-        The intensity and its error per bin, each of shape (time bins, wavelength bins).
-
-    Raises
-    ------
-    ValueError
-        If the map does not have the shape of ``bins``.
-    """
-    monitor = ms.name_search(name, mcstas_data)
-    # McStasScript has the map as (wavelength, time), the y axis first
-    intensity = np.asarray(monitor.Intensity, dtype=float).T
-    error = np.asarray(monitor.Error, dtype=float).T
-    shape = tuple(len(edges) - 1 for edges in bins.values())
-    if intensity.shape != shape:
-        raise ValueError(
-            f"{name}: McStas has a map of {intensity.shape} bins, the bins are {shape}"
-        )
-    return intensity, error
 
 
 def read_comparison(
