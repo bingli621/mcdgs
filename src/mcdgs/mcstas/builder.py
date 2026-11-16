@@ -6,7 +6,7 @@ McStas positions are relative to earlier components. Each component is:
 - added as its ``component_name``, named after its attribute in the instrument, with its instance
   keywords (``at``, ``rotated``, ``relative``, ``when``, ...);
 - given its McStas parameters (``Component.mcstas_parameters``: its fields plus what it
-  computes), written as McStas expects them: see :func:`_formatted_value`. A list, the value
+  computes), written as McStas expects them: see :func:`_parameter_value`. A list, the value
   of a McStas ``vector``, is declared as an array named ``<component>_<parameter>`` in DECLARE
   and passed by that name. McStas 3.10.2 sizes a vector written in place by its first instance,
   so the edges of a second chopper with more slits would overflow.
@@ -53,40 +53,9 @@ def _instr_parameter(param: InstrParam) -> dict[str, Any]:
     return asdict(param)
 
 
-def _formatted_value(value: Any, mcstas_type: str) -> Any:
-    """Write a value of a component as McStas takes it.
-
-    Parameters
-    ----------
-    value:
-        The value of a McStas parameter.
-    mcstas_type:
-        The type McStas declares for it, such as ``"string"``.
-
-    Returns
-    -------
-    :
-        A string in C quotes (``None`` as McStas's ``"NULL"``), and anything else, such as a
-        number or an expression, unchanged. A list is declared instead: see
-        :func:`_formatted_parameters`.
-
-    Examples
-    --------
-    >>> _formatted_value("W", "string")
-    '"W"'
-    >>> _formatted_value(None, "string")
-    '"NULL"'
-    >>> _formatted_value("-chi", "double")
-    '-chi'
-    """
-    if mcstas_type == "string":
-        return f'"{"NULL" if value is None else value}"'
-    return value
-
-
 def _declare_chopper_train(
     mcstas_instr: instr.McStas_instr, component: Polygon_ESS_butterfly
-) -> Any:
+) -> str | int:
     """Declare the chopper train of a ``Polygon_ESS_butterfly``, and return what McStas takes.
 
     McStas takes the train as a ``vector``, a ``double *``: the address of an array of
@@ -130,12 +99,53 @@ def _declare_chopper_train(
         )
     declare.append(f"double * {pointer};")
     initialize.append(f"{pointer} = (double *) {train};")
-    for append, lines in (
-        (mcstas_instr.append_declare, declare),
-        (mcstas_instr.append_initialize, initialize),
-    ):
-        append("\n".join(["#ifdef CHOPPER_LIB_VERSION", *lines, "#endif"]))
+    mcstas_instr.append_declare("\n".join(["#ifdef CHOPPER_LIB_VERSION", *declare, "#endif"]))
+    mcstas_instr.append_initialize("\n".join(["#ifdef CHOPPER_LIB_VERSION", *initialize, "#endif"]))
     return pointer
+
+
+def _parameter_value(
+    mcstas_instr: instr.McStas_instr,
+    mcstas_comp: Any,
+    component: Component,
+    name: str,
+    value: Any,
+) -> Any:
+    """Return the value of one McStas parameter as its McStasScript component takes it.
+
+    Parameters
+    ----------
+    mcstas_instr:
+        The McStasScript instrument, to declare the arrays in.
+    mcstas_comp:
+        The McStasScript component.
+    component:
+        The component.
+    name:
+        The McStas parameter.
+    value:
+        Its value.
+
+    Returns
+    -------
+    :
+        One of:
+
+        - a list: the array ``<component>_<parameter>`` it is declared as, passed by that name
+          (for the chopper train of a ``Polygon_ESS_butterfly``, what
+          :func:`_declare_chopper_train` returns);
+        - a value of a McStas ``string``: in C quotes, with ``None`` as McStas's ``"NULL"``;
+        - anything else, such as a number or an expression: unchanged.
+    """
+    if isinstance(component, Polygon_ESS_butterfly) and name == "choppers":
+        return _declare_chopper_train(mcstas_instr, component)
+    if isinstance(value, list):  # a vector: declared, not written in place
+        return mcstas_instr.add_declare_var(
+            "double", f"{component.name}_{name}", array=len(value), value=value
+        )
+    if mcstas_comp.parameter_types[name] == "string":
+        return f'"{"NULL" if value is None else value}"'
+    return value
 
 
 def _formatted_parameters(
@@ -148,9 +158,7 @@ def _formatted_parameters(
 
     Each entry of ``params`` (from ``component.mcstas_parameters``) must be one of:
 
-    - a McStas parameter: kept, formatted by :func:`_formatted_value`, or, if it is a list,
-      declared as the array ``<component>_<parameter>`` and passed by that name (the chopper
-      train of a ``Polygon_ESS_butterfly``, by :func:`_declare_chopper_train`);
+    - a McStas parameter: kept, as :func:`_parameter_value` writes it;
     - a field McStas does not take: left out, as the component only computes from it (e.g. the
       crystal's ``lattice_params``, put into its ``ax`` ... ``cz``).
 
@@ -183,19 +191,11 @@ def _formatted_parameters(
         raise ValueError(
             f"{component.name} ({component.component_name}): no McStas parameter {unknown}"
         )
-    values = {}
-    for name, value in params.items():
-        if name not in mcstas_names:  # a field the component computes from: not for McStas
-            continue
-        if isinstance(component, Polygon_ESS_butterfly) and name == "choppers":
-            values[name] = _declare_chopper_train(mcstas_instr, component)
-        elif isinstance(value, list):  # a vector: declared, not written in place
-            values[name] = mcstas_instr.add_declare_var(
-                "double", f"{component.name}_{name}", array=len(value), value=value
-            )
-        else:
-            values[name] = _formatted_value(value, mcstas_comp.parameter_types[name])
-    return values
+    return {
+        name: _parameter_value(mcstas_instr, mcstas_comp, component, name, value)
+        for name, value in params.items()
+        if name in mcstas_names  # not a field the component only computes from
+    }
 
 
 def build_mcstas(
@@ -224,7 +224,7 @@ def build_mcstas(
     for param in instrument.instr_params:
         mcstas_instr.add_parameter(**_instr_parameter(param))
 
-    for name, component in instrument.components.items():
+    for name, component in instrument.components.items():  # in beam order
         mcstas_comp = mcstas_instr.add_component(
             name,
             component.component_name,
