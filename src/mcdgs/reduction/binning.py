@@ -1,9 +1,23 @@
-"""Bin edges for histograms of reduced data, such as in Q and energy transfer."""
+"""Bin edges: for histograms of reduced data, and those of the map of a monitor.
+
+:func:`bin_edges` gives evenly spaced edges, such as in Q and energy transfer, and
+:func:`monitor_bins` the edges of the axes of a McStas monitor, so that anything else is read on
+the bins of McStas.
+"""
+
+from collections.abc import Mapping
 
 import numpy as np
 import scipp as sc
 
-__all__ = ["bin_edges"]
+__all__ = ["MONITOR_COORDINATES", "bin_edges", "monitor_bins"]
+
+# the variables of a McStas monitor that are coordinates of the neutrons, by McStas name: the
+# coordinate, as scippneutron and tof name it, and the unit of McStas
+MONITOR_COORDINATES: dict[str, tuple[str, str]] = {
+    "time": ("toa", "s"),
+    "lambda": ("wavelength", "Å"),
+}
 
 
 def bin_edges(
@@ -56,3 +70,34 @@ def bin_edges(
         if bins < 1 or not np.isclose(exact, bins, rtol=0.0, atol=1e-9 * max(1.0, exact)):
             raise ValueError(f"{dim}: step {step} does not divide {start} to {stop}")
     return sc.linspace(dim, start, stop, bins + 1, unit=unit)
+
+
+def monitor_bins(limits: Mapping[str, tuple[float, float, int]]) -> dict[str, sc.Variable]:
+    """Return the bin edges of each axis of a McStas monitor, by the coordinate of the neutrons.
+
+    Parameters
+    ----------
+    limits:
+        Start, stop and number of bins of each axis of the monitor, by McStas variable, such as
+        ``{"time": (0.01, 0.1, 1800), "lambda": (0.1, 10.0, 495)}``: the ``bin_limits`` of a
+        ``Monitor_nD``.
+
+    Returns
+    -------
+    :
+        The edges by coordinate, such as ``"toa"`` in s and ``"wavelength"`` in Å, in the order
+        of ``limits``: that of the axes of the map of McStas. An axis that is no coordinate of
+        the neutrons, one not in ``MONITOR_COORDINATES``, is left out.
+
+    Examples
+    --------
+    >>> bins = monitor_bins({"x": (-0.05, 0.05, 10), "lambda": (0.5, 5.0, 50)})
+    >>> list(bins), str(bins["wavelength"].unit), bins["wavelength"].sizes
+    (['wavelength'], 'Å', {'wavelength': 51})
+    """
+    bins = {}
+    for variable, (start, stop, n_bins) in limits.items():
+        if variable in MONITOR_COORDINATES:
+            coordinate, unit = MONITOR_COORDINATES[variable]
+            bins[coordinate] = sc.linspace(coordinate, start, stop, n_bins + 1, unit=unit)
+    return bins

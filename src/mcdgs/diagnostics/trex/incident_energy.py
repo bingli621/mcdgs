@@ -43,10 +43,11 @@ from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
 from mcdgs.diagnostics.compare import MonitorComparison, read_scaled_comparisons
 from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
 from mcdgs.mcstas import Simulation
+from mcdgs.reduction.binning import monitor_bins
 from mcdgs.reduction.incident_energy import EI_GRAPH, incident_flight
 from mcdgs.reduction.patches import MIN_FRACTION, find_patches, subpulse_flight
 from mcdgs.samples import la2ni7
-from mcdgs.tof import build_tof, monitor_bins
+from mcdgs.tof import build_tof
 
 MONITORS = ("pre_sample_monitor", "beamstop_monitor")  # in beam order
 MONITOR_LABELS = {
@@ -367,7 +368,10 @@ def main(
     read = read_scaled_comparisons(
         mcstas_data,
         tof_result,
-        {name: monitor_bins(getattr(instrument, name)) for name in ("source_monitor", *MONITORS)},
+        {
+            name: monitor_bins(getattr(instrument, name).bin_limits)
+            for name in ("source_monitor", *MONITORS)
+        },
         ncount,
         neutrons,
         transmission=transmission,

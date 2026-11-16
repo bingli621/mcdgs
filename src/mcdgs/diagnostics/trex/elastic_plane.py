@@ -66,12 +66,11 @@ from mcdgs.instruments.trex.detectors import (
 )
 from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
 from mcdgs.mcstas import Simulation, Workspace, read_events
-from mcdgs.reduction.binning import bin_edges
+from mcdgs.reduction.binning import bin_edges, monitor_bins
 from mcdgs.reduction.inelastic import events_to_q_and_energy, time_at_sample
 from mcdgs.reduction.patches import MIN_FRACTION, find_patches, subpulse_flight
 from mcdgs.reduction.solid_angle import rectangle_solid_angle
 from mcdgs.samples import la2ni7
-from mcdgs.tof import monitor_bins
 
 MONITORS = ("pre_sample_monitor", "beamstop_monitor")  # in beam order
 DETECTOR = "banana_detector"
@@ -438,7 +437,7 @@ def subpulse_timing_of_run(to_sample: str | Path | None = None) -> sc.DataArray:
     """
     to_sample = Path(to_sample or Workspace.find().run_folder(TO_SAMPLE))
     instrument = TRexWithLa2Ni7()  # the default control parameters, as simulate runs
-    bins = {monitor: monitor_bins(getattr(instrument, monitor)) for monitor in MONITORS}
+    bins = {monitor: monitor_bins(getattr(instrument, monitor).bin_limits) for monitor in MONITORS}
     return subpulse_timing(ms.load_data(str(to_sample)), bins, instrument.positions())
 
 

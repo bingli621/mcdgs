@@ -42,7 +42,8 @@ from mcdgs.diagnostics.compare import plot_comparison, print_means, read_compari
 from mcdgs.instruments.trex.monitors import source_monitor
 from mcdgs.instruments.trex.sources import source, wavelength_band
 from mcdgs.mcstas import Simulation
-from mcdgs.tof import build_tof, monitor_bins
+from mcdgs.reduction.binning import monitor_bins
+from mcdgs.tof import build_tof
 
 NAME = "trex_source"  # the run folder of McStas, the results folder and the figure
 
@@ -132,7 +133,7 @@ def main(
     # --8<-- [start:run_tof]
     # run tof, then read the monitor of both on the bins of the McStas map: time, wavelength
     tof_result = build_tof(instrument, neutrons=neutrons, seed=seed).run()
-    bins = monitor_bins(instrument.source_monitor)  # read from the monitor
+    bins = monitor_bins(instrument.source_monitor.bin_limits)  # read from the monitor
     # tof's counts are scaled to the total of McStas, in n/s
     comparison = read_comparison("source_monitor", mcstas_data, tof_result, bins, ncount, neutrons)
     # --8<-- [end:run_tof]

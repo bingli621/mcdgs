@@ -57,9 +57,10 @@ from mcdgs.instruments.trex.detectors import BANANA_RADIUS
 from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
 from mcdgs.instruments.trex.monitors import SAMPLE_MONITOR_HEIGHT, SAMPLE_MONITOR_WIDTH
 from mcdgs.mcstas import Simulation
+from mcdgs.reduction.binning import monitor_bins
 from mcdgs.reduction.inelastic import DEFAULT_ENERGY_TRANSFER_RATIO, arrival_window, time_at_sample
 from mcdgs.reduction.patches import find_patches, subpulse_flight
-from mcdgs.tof import build_tof, monitor_bins, read_tof_monitor
+from mcdgs.tof import build_tof, read_tof_monitor
 
 LOG_DECADES = 3  # the log color scale of the maps spans this many decades below the highest bin
 MONITORS = ("pre_sample_monitor", "beamstop_monitor")  # give the incident energy, in beam order
@@ -430,7 +431,7 @@ def subpulse_windows(
     start, end = (
         find_patches(read_tof_monitor(tof_result[name], bins), bins)
         for name in MONITORS
-        for bins in [monitor_bins(getattr(instrument, name))]
+        for bins in [monitor_bins(getattr(instrument, name).bin_limits)]
     )
     pulses = subpulse_flight(start, positions[MONITORS[0]], end, positions[MONITORS[1]])
     pulses.unit = None  # tof neutrons, not n/s
@@ -561,8 +562,8 @@ def main(
         mcstas_data,
         tof_result,
         {
-            "source_monitor": monitor_bins(instrument.source_monitor),
-            "sample_monitor": monitor_bins(instrument.sample_monitor),
+            "source_monitor": monitor_bins(instrument.source_monitor.bin_limits),
+            "sample_monitor": monitor_bins(instrument.sample_monitor.bin_limits),
         },
         ncount,
         neutrons,

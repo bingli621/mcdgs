@@ -43,7 +43,7 @@ from mcdgs.diagnostics.trex.neutrons_on_sample import TRexToSample
 from mcdgs.instruments.trex.monitors import sample_monitor
 from mcdgs.instruments.trex.sources import wavelength_band
 from mcdgs.mcstas import Simulation
-from mcdgs.tof import monitor_bins
+from mcdgs.reduction.binning import monitor_bins
 
 MONITOR = "sample_monitor"  # where both sources are compared
 LAMBDA_RESOLUTION = 0.002  # Å, the wavelength bin of its map: a tenth of that of T-Rex
@@ -122,7 +122,7 @@ def run_source(instrument: TRexToSample, folder_name: str, ncount: float, seed: 
     folder = Simulation(instrument).run(folder_name, ncount=ncount, seed=seed).folder
     seconds = time.perf_counter() - start
     intensity, error = read_mcstas_map(
-        MONITOR, ms.load_data(str(folder)), monitor_bins(instrument.sample_monitor)
+        MONITOR, ms.load_data(str(folder)), monitor_bins(instrument.sample_monitor.bin_limits)
     )
     region = folder / f"{instrument.source.name}.json"  # the masked source writes its region
     acceptance = json.loads(region.read_text())["acceptance"] if region.is_file() else None
@@ -422,7 +422,7 @@ def main(
     print(table, end="")
     folder = output_folder(out, "trex_masked_source")
 
-    bins = monitor_bins(plain_instrument.sample_monitor)
+    bins = monitor_bins(plain_instrument.sample_monitor.bin_limits)
     peaks = find_peaks(masked, bins)
     conditions = f"ncount = {int(ncount):,} each\n{plain_instrument.running_conditions()}"
     files = [

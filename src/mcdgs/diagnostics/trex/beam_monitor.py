@@ -43,7 +43,8 @@ from mcdgs.instruments.trex.guides.extraction import guides_extraction
 from mcdgs.instruments.trex.monitors import beam_monitor, source_monitor
 from mcdgs.instruments.trex.sources import source
 from mcdgs.mcstas import Simulation
-from mcdgs.tof import build_tof, monitor_bins
+from mcdgs.reduction.binning import monitor_bins
+from mcdgs.tof import build_tof
 
 # 1/Å: C of the example efficiency ε = C λ, 1e-4 at 2 Å, within the 1e-5 to 1e-3 of beam
 # monitors
@@ -216,8 +217,8 @@ def main(
     # --8<-- [start:run_tof]
     # run tof, then read the monitors of both on the bins of the McStas maps: time, wavelength
     tof_result = build_tof(instrument, neutrons=neutrons, seed=seed).run()
-    source_bins = monitor_bins(instrument.source_monitor)  # read from the monitors
-    bins = monitor_bins(instrument.beam_monitor)
+    source_bins = monitor_bins(instrument.source_monitor.bin_limits)  # read from the monitors
+    bins = monitor_bins(instrument.beam_monitor.bin_limits)
     # --8<-- [end:run_tof]
 
     # --8<-- [start:transmission]

@@ -49,7 +49,8 @@ from mcdgs.instruments.trex.guides.extraction import guides_extraction
 from mcdgs.instruments.trex.monitors import beam_monitor, source_monitor
 from mcdgs.instruments.trex.sources import source
 from mcdgs.mcstas import Run, RunType, Workspace, build_mcstas, recorded_instr_params
-from mcdgs.tof import build_tof, monitor_bins
+from mcdgs.reduction.binning import monitor_bins
+from mcdgs.tof import build_tof
 
 # McStas neutrons of the run with McStasScript's diagnostics, which lists every ray at each of its
 # three positions: about 180 MB at 1e6
@@ -274,8 +275,8 @@ def diagnose_path(
     run_name = f"trex_extraction_bender_{'in' if bender_in else 'out'}"
 
     # the bin edges of each monitor, read from it so that they cannot drift apart
-    source_bins = monitor_bins(extraction.source_monitor)
-    bins = monitor_bins(extraction.beam_monitor)
+    source_bins = monitor_bins(extraction.source_monitor.bin_limits)
+    bins = monitor_bins(extraction.beam_monitor.bin_limits)
 
     # tof has no bender: its run is the same on both paths
     tof_result = build_tof(extraction, neutrons=neutrons, seed=seed).run()
