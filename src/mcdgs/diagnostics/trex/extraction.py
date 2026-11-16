@@ -183,7 +183,7 @@ def save_run_record(
     Returns
     -------
     :
-        The run, saved in its folder.
+        The run, finished now and saved in its folder.
     """
     run = Run(
         folder=folder,
@@ -194,8 +194,7 @@ def save_run_record(
         ncount=ncount,
         seed=seed,
     )
-    run.save()
-    return run
+    return run.finish()
 
 
 def draw_top_view(mcstas_instr: McStas_instr, path: Path) -> Path:

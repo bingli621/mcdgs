@@ -5,9 +5,10 @@ default the folder is named after the start time and what the run does, e.g.
 ``20261022-143005_scan_omega``.
 
 A :class:`Run` says what one run did: which instrument, with which :class:`RunType` and which
-values of the instrument parameters. It is saved as ``run.json`` in the run folder once McStas
-has finished, so a folder with a ``run.json`` is a finished run, and it is read back from
-there, also in a later session and without the instrument.
+values of the instrument parameters, and when it started and finished. It is saved as
+``run.json`` in the run folder once McStas has finished (:meth:`Run.finish`), so a folder with
+a ``run.json`` is a finished run, and it is read back from there, also in a later session and
+without the instrument.
 
 - :func:`recorded_instr_params` gives the instrument parameters of a run as its record keeps
   them.
@@ -24,8 +25,8 @@ import json
 import re
 import shutil
 from collections.abc import Iterable, Mapping
-from dataclasses import asdict, dataclass
-from datetime import datetime
+from dataclasses import asdict, dataclass, replace
+from datetime import datetime, timedelta
 from enum import StrEnum
 from numbers import Real
 from pathlib import Path
@@ -65,6 +66,9 @@ class Run:
     instr_params:
         The value of every instrument parameter in the run, by McStas name. Of a scan, the
         ``variable`` is left out: its values are in ``values``.
+    finished:
+        When McStas finished, with its time zone. ``None`` while the run has not finished, and
+        in a record saved before the finish was recorded.
     ncount:
         The number of neutrons, of a scan per value. ``None`` from the sample, where it is the
         number in the beam file.
@@ -84,6 +88,7 @@ class Run:
     run_type: RunType
     started: datetime
     instr_params: dict[str, float | str]
+    finished: datetime | None = None
     ncount: float | None = None
     seed: int | None = None
     variable: str | None = None
@@ -105,6 +110,26 @@ class Run:
         """The beam file of a run to the sample, ``folder/beam.mcpl.gz``, else ``None``."""
         return self.folder / BEAM_FILE if self.run_type is RunType.RUN_TO_SAMPLE else None
 
+    @property
+    def duration(self) -> timedelta | None:
+        """The time the run took, from ``started`` to ``finished``: ``None`` without ``finished``.
+
+        It is the time of the whole run: building and compiling the instrument, and McStas.
+        """
+        return None if self.finished is None else self.finished - self.started
+
+    def finish(self) -> "Run":
+        """Record that the run has finished now, and save the record into the run folder.
+
+        Returns
+        -------
+        :
+            The run with the time now as ``finished``. This run is not changed.
+        """
+        finished = replace(self, finished=datetime.now().astimezone())
+        finished.save()
+        return finished
+
     def save(self) -> Path:
         """Write the record into the run folder, which must exist.
 
@@ -116,6 +141,7 @@ class Run:
         record = asdict(self) | {
             "run_type": self.run_type.value,
             "started": self.started.isoformat(),
+            "finished": None if self.finished is None else self.finished.isoformat(),
         }
         del record["folder"]  # where the record is found, so a run folder can be moved
         path = self.folder / RUN_FILE
@@ -143,9 +169,11 @@ class Run:
         """
         folder = Path(folder)
         record = json.loads((folder / RUN_FILE).read_text())
+        finished = record.get("finished")  # not in a record from before it was recorded
         record |= {
             "run_type": RunType(record["run_type"]),
             "started": datetime.fromisoformat(record["started"]),
+            "finished": None if finished is None else datetime.fromisoformat(finished),
         }
         return cls(folder=folder, **record)
 

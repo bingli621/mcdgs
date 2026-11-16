@@ -204,19 +204,17 @@ class Simulation:
 
     @staticmethod
     def _run_once(run: Run, inst: McStas_instr) -> Run:
-        """Run McStas once, then save and return the record of the run."""
+        """Run McStas once, then save and return the record of the finished run."""
         inst.backengine()  # compiles in its build folder
-        run.save()
-        return run
+        return run.finish()
 
     @staticmethod
     def _run_points(
         run: Run, inst: McStas_instr, points: list[dict[str, float]], n_jobs: int | None
     ) -> Run:
-        """Run McStas once per point of a scan, then save and return the record of the run."""
+        """Run McStas once per point of a scan, then save and return the finished run's record."""
         run_points_in_parallel(inst, run.folder, points, seed=run.seed, n_jobs=n_jobs)
-        run.save()
-        return run
+        return run.finish()
 
     def _check_sample_pos(self) -> None:
         """Check that the instrument has the component a split run cuts the beam at.
@@ -464,7 +462,7 @@ class Simulation:
             # default to the raw weights of mode 2, which are deprecated
             weight_mode=1,
         )
-        self._run_once(run, inst)
+        run = self._run_once(run, inst)
         self.beam_run = run.name
         return run
 

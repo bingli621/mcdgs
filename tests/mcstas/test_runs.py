@@ -28,6 +28,7 @@ def _scan(folder):
         run_type=RunType.SCAN_FROM_SAMPLE,
         started=STARTED,
         instr_params={"lambda0": 2.5, "bender_in": 1, "beam": "beam.mcpl"},
+        finished=STARTED + timedelta(minutes=90),
         seed=1,
         variable="omega",
         values=[0.0, 1.0, 2.0],
@@ -56,6 +57,29 @@ def test_a_run_without_the_optional_values_is_read_back_as_it_was(tmp_path):
     run = Run(tmp_path, "TRex", RunType.RUN, STARTED, {"omega": 5.0}, ncount=1e7)
     run.save()
     assert Run.load(tmp_path) == run
+
+
+def test_the_duration_is_from_the_start_to_the_finish(tmp_path):
+    assert _scan(tmp_path).duration == timedelta(minutes=90)
+    assert Run(tmp_path, "TRex", RunType.RUN, STARTED, {}).duration is None  # not finished
+
+
+def test_finish_saves_the_run_with_the_time_now_and_leaves_the_run_as_it_was(tmp_path):
+    run = Run(tmp_path, "TRex", RunType.RUN, datetime.now().astimezone(), {"omega": 5.0})
+    finished = run.finish()
+    assert run.finished is None and not run.duration
+    assert finished.finished.tzinfo is not None and finished.duration >= timedelta(0)
+    assert Run.load(tmp_path) == finished
+
+
+def test_a_record_from_before_the_finish_was_recorded_is_read_without_it(tmp_path):
+    _scan(tmp_path).save()
+    record = json.loads((tmp_path / "run.json").read_text())
+    del record["finished"]
+    (tmp_path / "run.json").write_text(json.dumps(record))
+    old = Run.load(tmp_path)
+    assert old.finished is None and old.duration is None
+    assert old.started == STARTED
 
 
 def test_the_folder_is_not_in_the_record_so_a_run_can_be_moved(tmp_path):

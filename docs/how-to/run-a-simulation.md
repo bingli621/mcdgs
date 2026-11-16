@@ -80,7 +80,8 @@ Each run writes a new folder in `runs/`, named after its start time and what it 
 ## Find and clean up runs
 
 A run that finished leaves its record, `run.json`, in its folder: the instrument, the type of the
-run, the number of neutrons, the seed, and the value of every instrument parameter. A folder
+run, when it started and finished, the number of neutrons, the seed, and the value of every
+instrument parameter. A folder
 without one is not a finished run. The runs are found by that record, also in a later session and
 without the instrument:
 

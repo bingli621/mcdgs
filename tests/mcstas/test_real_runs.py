@@ -68,6 +68,7 @@ def test_a_run_of_mcstas_writes_the_file_it_returns(sim):
     assert list_runs(sim.workspace.runs_folder) == [run]
     assert (run.instrument, run.run_type, run.ncount, run.seed) == ("small", RunType.RUN, 1e4, 1)
     assert run.instr_params == {"width": 0.1}  # not given: as the instrument has it
+    assert run.finished > run.started and run.duration == run.finished - run.started
 
 
 def test_a_scan_runs_each_point_with_its_own_values_and_seed(sim):
