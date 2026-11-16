@@ -86,11 +86,11 @@ without one is not a finished run. The runs are found by that record, also in a 
 without the instrument:
 
 ```python
-from mcdgs.mcstas.runs import RunType, clean_runs, latest_run, list_runs
+from mcdgs.mcstas.runs import RunType
 
-runs_folder = simulation.workspace.runs_folder
-list_runs(runs_folder)  # the finished runs, newest first
-scan = latest_run(runs_folder, RunType.SCAN)  # the newest scan
+workspace = simulation.workspace
+workspace.list_runs()  # the finished runs, newest first
+scan = workspace.latest_run(RunType.SCAN)  # the newest scan
 scan.folder, scan.data_file  # where it is, and its mccode.h5
 scan.variable, scan.values, scan.instr_params  # what it simulated
 ```
@@ -98,8 +98,8 @@ scan.variable, scan.values, scan.instr_params  # what it simulated
 `clean_runs` removes all but the newest runs:
 
 ```python
-clean_runs(runs_folder, keep=5)  # all but the 5 newest
-clean_runs(runs_folder, keep=1, run_type=RunType.RUN_TO_SAMPLE)  # all but the newest beam
+workspace.clean_runs(keep=5)  # all but the 5 newest
+workspace.clean_runs(keep=1, run_type=RunType.RUN_TO_SAMPLE)  # all but the newest beam
 ```
 
 - Without a `run_type`, it never removes a `run_to_sample` run, whose beam file the
@@ -146,7 +146,7 @@ and `monitor_file` gives the file of that run:
 ```python
 from mcdgs.mcstas.runs import monitor_file
 
-scan = latest_run(runs_folder, RunType.SCAN_FROM_SAMPLE)
+scan = workspace.latest_run(RunType.SCAN_FROM_SAMPLE)
 scan.beam_run  # "to_sample"
 monitor_file(scan)  # the mccode.h5 of "to_sample"
 ```

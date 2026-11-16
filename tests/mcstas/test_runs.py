@@ -1,20 +1,10 @@
 import json
-import re
 from datetime import datetime, timedelta, timezone
 
 import numpy as np
 import pytest
 
-from mcdgs.mcstas.runs import (
-    Run,
-    RunType,
-    clean_runs,
-    latest_run,
-    list_runs,
-    monitor_file,
-    new_run_folder,
-    recorded_instr_params,
-)
+from mcdgs.mcstas.runs import Run, RunType, monitor_file, recorded_instr_params
 
 TO_SAMPLE, FROM_SAMPLE = RunType.RUN_TO_SAMPLE, RunType.SCAN_FROM_SAMPLE
 
@@ -104,59 +94,6 @@ def test_a_folder_without_a_record_is_not_a_run(tmp_path):
         Run.load(tmp_path)
 
 
-@pytest.mark.parametrize(
-    "folder_name", ["", ".", "..", "../data", "a/b", "/tmp", ".hidden", "a b", 3]
-)
-def test_a_folder_name_is_one_safe_folder_name(tmp_path, folder_name):
-    with pytest.raises(ValueError, match="folder_name"):
-        new_run_folder(tmp_path / "out", folder_name, "run")
-    assert not (tmp_path / "out").exists()
-
-
-def test_runs_without_a_name_get_new_folders_by_time_and_label(tmp_path):
-    first = new_run_folder(tmp_path / "out", None, "scan_omega")
-    assert (tmp_path / "out").is_dir() and not first.exists()  # mcrun creates the run folder
-    first.mkdir()  # as the run fills it
-    second = new_run_folder(tmp_path / "out", None, "scan_omega")
-    assert re.fullmatch(r"\d{8}-\d{6}_scan_omega", first.name)
-    assert second != first and second.name.startswith(first.name[:8])
-    assert first.exists()  # a new run never cleans an earlier one
-
-
-def test_a_named_run_replaces_its_folder(tmp_path, finished_run):
-    finished_run(tmp_path / "mine", 1)
-    assert new_run_folder(tmp_path, "mine", "run") == tmp_path / "mine"
-    assert not (tmp_path / "mine").exists()
-
-
-def test_the_finished_runs_are_listed_newest_first_by_their_start(tmp_path, finished_run):
-    old = finished_run(tmp_path / "z_named_last", 1, RunType.SCAN)
-    new = finished_run(tmp_path / "a_named_first", 2, RunType.SCAN)
-    (tmp_path / "unfinished").mkdir()  # no record
-    (tmp_path / "unfinished" / "mccode.h5").touch()
-    assert list_runs(tmp_path) == [new, old]
-    assert list_runs(str(tmp_path)) == [new, old]
-
-
-def test_no_runs_folder_has_no_runs(tmp_path):
-    assert list_runs(tmp_path / "missing") == []
-
-
-def test_the_latest_run_is_the_newest_of_its_type_and_instrument(tmp_path, finished_run):
-    finished_run(tmp_path / "a", 1, RunType.SCAN)
-    scan = finished_run(tmp_path / "b", 2, RunType.SCAN)
-    other = finished_run(tmp_path / "c", 3, RunType.SCAN, instrument="trex_extraction")
-    beam = finished_run(tmp_path / "d", 4, TO_SAMPLE)
-    assert latest_run(tmp_path) == beam
-    assert latest_run(tmp_path, RunType.SCAN) == other
-    assert latest_run(tmp_path, RunType.SCAN, "TRex") == scan
-    assert latest_run(tmp_path, instrument="trex_extraction") == other
-    with pytest.raises(FileNotFoundError, match="type scan_from_sample and instrument TRex"):
-        latest_run(tmp_path, FROM_SAMPLE, "TRex")
-    with pytest.raises(FileNotFoundError, match="no finished run in"):
-        latest_run(tmp_path / "missing")
-
-
 def test_a_run_from_the_sample_is_normalized_by_the_run_its_beam_is_from(tmp_path, finished_run):
     beam = finished_run(tmp_path / "beam", 1, TO_SAMPLE)
     finished_run(tmp_path / "newer_beam", 2, TO_SAMPLE)  # not the one it started from
@@ -170,34 +107,6 @@ def test_a_run_from_the_sample_without_its_beam_run_raises(tmp_path, finished_ru
         monitor_file(finished_run(tmp_path / "unknown", 1, FROM_SAMPLE))
     with pytest.raises(FileNotFoundError):
         monitor_file(finished_run(tmp_path / "removed", 2, FROM_SAMPLE, beam_run="gone"))
-
-
-def test_clean_keeps_the_newest_runs_the_beam_and_unfinished_folders(tmp_path, finished_run):
-    beam = finished_run(tmp_path / "a_beam", 1, TO_SAMPLE)
-    runs = [finished_run(tmp_path / f"run{n}", 10 + n).folder for n in range(4)]
-    unfinished = tmp_path / "unfinished"
-    unfinished.mkdir()
-    (unfinished / "mccode.h5").touch()
-
-    assert clean_runs(tmp_path, keep=2) == runs[1::-1]
-    assert sorted(tmp_path.iterdir()) == [beam.folder, *runs[2:], unfinished]
-
-
-def test_clean_without_a_type_never_removes_a_run_to_the_sample(tmp_path, finished_run):
-    beams = [finished_run(tmp_path / f"beam{n}", n, TO_SAMPLE).folder for n in range(3)]
-    scans = [finished_run(tmp_path / f"scan{n}", 10 + n, RunType.SCAN).folder for n in range(2)]
-    assert clean_runs(tmp_path, keep=0) == scans[::-1]
-    assert sorted(tmp_path.iterdir()) == beams
-
-
-def test_clean_of_a_type_removes_only_the_older_runs_of_that_type(tmp_path, finished_run):
-    beams = [finished_run(tmp_path / f"beam{n}", n, TO_SAMPLE).folder for n in range(3)]
-    scans = [finished_run(tmp_path / f"scan{n}", 10 + n, RunType.SCAN).folder for n in range(3)]
-    assert clean_runs(tmp_path, keep=1, run_type=TO_SAMPLE) == beams[1::-1]
-    assert sorted(tmp_path.iterdir()) == [beams[2], *scans]
-    assert clean_runs(tmp_path, keep=2, run_type=RunType.SCAN) == scans[:1]
-    assert clean_runs(tmp_path, keep=5, run_type=RunType.RUN) == []
-    assert sorted(tmp_path.iterdir()) == [beams[2], *scans[1:]]
 
 
 def test_a_numpy_number_is_recorded_as_a_float():

@@ -27,7 +27,7 @@ from numpy.typing import ArrayLike
 
 from mcdgs.core.base import Instrument
 from mcdgs.mcstas.builder import build_mcstas
-from mcdgs.mcstas.runs import BEAM_FILE, Run, RunType, new_run_folder, recorded_instr_params
+from mcdgs.mcstas.runs import BEAM_FILE, Run, RunType, recorded_instr_params
 from mcdgs.mcstas.scan import random_seed, run_points_in_parallel
 from mcdgs.mcstas.workspace import Workspace
 
@@ -62,8 +62,8 @@ class Simulation:
     ``<time>_run``, ``<time>_scan_<variable>``, ``<time>_run_to_sample``,
     ``<time>_run_from_sample`` and ``<time>_scan_<variable>_from_sample``, with ``<time>`` e.g.
     ``20261022-143005``. A ``folder_name`` names the folder instead, and it is then replaced on
-    every run. :func:`.list_runs` and :func:`.latest_run` find finished runs, and
-    :func:`.clean_runs` removes older ones.
+    every run. :meth:`.Workspace.list_runs` and :meth:`.Workspace.latest_run` find finished
+    runs, and :meth:`.Workspace.clean_runs` removes older ones.
 
     The ``instr_params`` of a run are its instrument parameters by McStas name
     (``Instrument.instr_params``). Those not given keep the instrument's values.
@@ -129,7 +129,7 @@ class Simulation:
             if variable is None
             else run_type.value.replace("scan", f"scan_{variable}")
         )
-        folder = new_run_folder(self.workspace.runs_folder, folder_name, label)
+        folder = self.workspace.new_run_folder(folder_name, label)
         input_path = self.workspace.build_folder(self.instrument.name)
         inst = build_mcstas(self.instrument, input_path=input_path)
         if ncount is not None:

@@ -20,7 +20,7 @@ from mcdgs.core.components import (
 from mcdgs.core.params import InstrParam, param
 from mcdgs.instruments.trex.model import TRex
 from mcdgs.mcstas.nexus_io import read_pixels
-from mcdgs.mcstas.runs import Run, RunType, list_runs
+from mcdgs.mcstas.runs import Run, RunType
 from mcdgs.mcstas.simulation import Simulation
 from mcdgs.mcstas.workspace import Workspace
 
@@ -65,7 +65,7 @@ def test_a_run_of_mcstas_writes_the_file_it_returns(sim):
     run = sim.run(ncount=1e4, seed=1, mpi=None)
     assert run.data_file.is_file()
     assert Run.load(run.folder) == run  # the record of the run, in its folder
-    assert list_runs(sim.workspace.runs_folder) == [run]
+    assert sim.workspace.list_runs() == [run]
     assert (run.instrument, run.run_type, run.ncount, run.seed) == ("small", RunType.RUN, 1e4, 1)
     assert run.instr_params == {"width": 0.1}  # not given: as the instrument has it
     assert run.finished > run.started and run.duration == run.finished - run.started

@@ -50,7 +50,7 @@ from mcdgs.instruments.trex.guides.extraction import guides_extraction
 from mcdgs.instruments.trex.monitors import beam_monitor, source_monitor
 from mcdgs.instruments.trex.sources import source
 from mcdgs.mcstas.builder import build_mcstas
-from mcdgs.mcstas.runs import Run, RunType, new_run_folder, recorded_instr_params
+from mcdgs.mcstas.runs import Run, RunType, recorded_instr_params
 from mcdgs.mcstas.workspace import Workspace
 from mcdgs.tof.builder import build_tof
 from mcdgs.tof.reader import monitor_bins
@@ -299,7 +299,7 @@ def diagnose_path(
     # --8<-- [end:diagnostics]
 
     started = datetime.now().astimezone()
-    folder = new_run_folder(workspace.runs_folder, run_name, "diagnose")
+    folder = workspace.new_run_folder(run_name, "diagnose")
     diag.set_parameters(bender_in=int(bender_in))
     diag.settings(
         ncount=diagnostics_ncount,
@@ -317,7 +317,7 @@ def diagnose_path(
     # McStasScript's diagram of the components, with the intensity and the rays before each:
     # a McStas run of its own, in a folder of its own, which also holds the monitors
     started = datetime.now().astimezone()
-    intensity_folder = new_run_folder(workspace.runs_folder, f"{run_name}_intensity", "diagram")
+    intensity_folder = workspace.new_run_folder(f"{run_name}_intensity", "diagram")
     mcstas_instr.set_parameters(bender_in=int(bender_in))
     mcstas_instr.settings(
         ncount=ncount,
