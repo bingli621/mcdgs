@@ -124,9 +124,9 @@ def run_points_in_parallel(
     with ThreadPoolExecutor(max_workers=n_jobs or os.cpu_count()) as pool:
         futures = [pool.submit(run_point, n) for n in range(len(runs))]
         for future in as_completed(futures):
-            if future.exception() is not None:
+            if (error := future.exception()) is not None:
                 pool.shutdown(wait=False, cancel_futures=True)  # the exit waits for the running
-                future.result()
+                raise error
 
     merged = merge_entries([folder / DATA_FILE for folder in folders], output_path / DATA_FILE)
     for folder in folders:
