@@ -6,7 +6,7 @@ matplotlib.use("Agg")
 from matplotlib.figure import Figure
 
 from mcdgs.instruments.trex.model import TRex
-from mcdgs.tof.acceptance import acceptance_diagram, chopper_cascade
+from mcdgs.tof import acceptance_diagram, chopper_cascade
 
 
 @pytest.mark.parametrize("mode", ["FF", "RR"])

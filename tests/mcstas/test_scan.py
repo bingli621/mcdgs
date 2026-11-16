@@ -3,8 +3,7 @@ from pathlib import Path
 import h5py
 import pytest
 
-from mcdgs.mcstas import scan
-from mcdgs.mcstas.scan import random_seed, run_points_in_parallel
+from mcdgs.mcstas import random_seed, run_points_in_parallel, scan
 
 
 def test_a_random_seed_is_one_mcrun_accepts():

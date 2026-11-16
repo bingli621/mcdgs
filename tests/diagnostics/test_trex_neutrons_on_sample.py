@@ -6,7 +6,7 @@ from mcdgs.diagnostics.trex.neutrons_on_sample import (
     subpulse_windows,
     windows_table,
 )
-from mcdgs.tof.builder import build_tof
+from mcdgs.tof import build_tof
 
 
 def test_each_window_holds_the_elastic_arrival_and_ends_before_the_next_opens():

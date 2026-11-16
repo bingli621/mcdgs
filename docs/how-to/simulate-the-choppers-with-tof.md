@@ -13,7 +13,7 @@ model, with no change to the instrument.
 
 ```python
 from mcdgs.instruments.trex.model import TRex
-from mcdgs.tof.builder import build_tof
+from mcdgs.tof import build_tof
 
 trex = TRex()
 model = build_tof(trex, neutrons=1_000_000, seed=1)

@@ -8,8 +8,7 @@ from mcstasscript.data.data import McStasData, McStasMetaData
 
 from mcdgs.diagnostics.compare import plot_comparison, read_comparison, read_scaled_comparisons
 from mcdgs.diagnostics.trex.source import TRexSource
-from mcdgs.tof.builder import build_tof
-from mcdgs.tof.reader import read_tof_monitor
+from mcdgs.tof import build_tof, read_tof_monitor
 
 BINS = {
     "toa": sc.linspace("toa", 0.0, 15.0, 31, unit="ms"),

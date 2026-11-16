@@ -9,7 +9,7 @@ A [`Simulation`](../reference/mcstas.md) holds an instrument and the
 import numpy as np
 
 from mcdgs.instruments.trex.model import TRex
-from mcdgs.mcstas.simulation import Simulation
+from mcdgs.mcstas import Simulation
 
 simulation = Simulation(TRex())
 ```
@@ -63,7 +63,7 @@ place, set the environment variable `MCDGS_WORKSPACE` to a folder, or give the s
 workspace:
 
 ```python
-from mcdgs.mcstas.workspace import Workspace
+from mcdgs.mcstas import Workspace
 
 workspace = Workspace.find("~/trex_workspace")
 simulation = Simulation(TRex(), workspace)
@@ -86,7 +86,7 @@ without one is not a finished run. The runs are found by that record, also in a 
 without the instrument:
 
 ```python
-from mcdgs.mcstas.runs import RunType
+from mcdgs.mcstas import RunType
 
 workspace = simulation.workspace
 workspace.list_runs()  # the finished runs, newest first
@@ -144,7 +144,7 @@ Part 2 has no incident monitor of its own. Its record names the run to the sampl
 and `monitor_file` gives the file of that run:
 
 ```python
-from mcdgs.mcstas.runs import monitor_file
+from mcdgs.mcstas import monitor_file
 
 scan = workspace.latest_run(RunType.SCAN_FROM_SAMPLE)
 scan.beam_run  # "to_sample"

@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from mcdgs.core.base import Instrument
+from mcdgs.core import InstrParam, Instrument
 from mcdgs.core.components import (
     Arm,
     Component,
@@ -14,9 +14,8 @@ from mcdgs.core.components import (
     Polygon_ESS_butterfly,
     Progress_bar,
 )
-from mcdgs.core.params import InstrParam
 from mcdgs.instruments.trex.model import TRex
-from mcdgs.mcstas.builder import build_mcstas
+from mcdgs.mcstas import build_mcstas
 from mcdgs.samples import aluminum, la2ni7, lead, vanadium
 
 

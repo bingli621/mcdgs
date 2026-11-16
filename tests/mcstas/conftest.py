@@ -2,7 +2,7 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 
-from mcdgs.mcstas.runs import Run, RunType
+from mcdgs.mcstas import Run, RunType
 
 STARTED = datetime(2026, 10, 22, 12, tzinfo=UTC)
 

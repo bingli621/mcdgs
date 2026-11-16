@@ -5,6 +5,7 @@ from itertools import pairwise
 import numpy as np
 import pytest
 
+from mcdgs.core import place_absolute
 from mcdgs.core.components import (
     Arm,
     ESS_butterfly,
@@ -13,7 +14,6 @@ from mcdgs.core.components import (
     Polygon_ESS_butterfly,
 )
 from mcdgs.core.components.masked_source import aperture, chopper_train
-from mcdgs.core.geometry import place_absolute
 from mcdgs.instruments.trex.choppers import (
     DISKS,
     chopper,

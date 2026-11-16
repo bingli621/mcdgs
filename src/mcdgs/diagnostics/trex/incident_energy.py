@@ -42,12 +42,11 @@ from scippneutron.conversion import tof as tof_kernels
 from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
 from mcdgs.diagnostics.compare import MonitorComparison, read_scaled_comparisons
 from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
-from mcdgs.mcstas.simulation import Simulation
+from mcdgs.mcstas import Simulation
 from mcdgs.reduction.incident_energy import EI_GRAPH, incident_flight
 from mcdgs.reduction.patches import MIN_FRACTION, find_patches, subpulse_flight
 from mcdgs.samples import la2ni7
-from mcdgs.tof.builder import build_tof
-from mcdgs.tof.reader import monitor_bins
+from mcdgs.tof import build_tof, monitor_bins
 
 MONITORS = ("pre_sample_monitor", "beamstop_monitor")  # in beam order
 MONITOR_LABELS = {

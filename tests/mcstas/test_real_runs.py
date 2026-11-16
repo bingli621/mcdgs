@@ -8,7 +8,7 @@ import h5py
 import numpy as np
 import pytest
 
-from mcdgs.core.base import Instrument
+from mcdgs.core import InstrParam, Instrument, param
 from mcdgs.core.components import (
     Arm,
     ESS_butterfly,
@@ -17,12 +17,8 @@ from mcdgs.core.components import (
     Polygon_ESS_butterfly,
     Progress_bar,
 )
-from mcdgs.core.params import InstrParam, param
 from mcdgs.instruments.trex.model import TRex
-from mcdgs.mcstas.nexus_io import read_pixels
-from mcdgs.mcstas.runs import Run, RunType
-from mcdgs.mcstas.simulation import Simulation
-from mcdgs.mcstas.workspace import Workspace
+from mcdgs.mcstas import Run, RunType, Simulation, Workspace, read_pixels
 
 pytestmark = pytest.mark.skipif(shutil.which("mcrun") is None, reason="McStas is not on the PATH")
 

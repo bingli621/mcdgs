@@ -81,7 +81,7 @@ radius and slit height. scippneutron draws it with `make_svg`:
 from pathlib import Path
 
 from mcdgs.instruments.trex.model import TRex
-from mcdgs.tof.builder import get_choppers
+from mcdgs.tof import get_choppers
 
 folder = Path(".")  # where the pictures go
 --8<-- "src/mcdgs/diagnostics/trex/choppers.py:draw_choppers"
@@ -143,7 +143,7 @@ problem with direct geometry neutron chopper spectrometers](https://doi.org/10.1
 
 <!-- fmt:off -->
 ```python
-from mcdgs.tof.acceptance import acceptance_diagram
+from mcdgs.tof import acceptance_diagram
 
 --8<-- "src/mcdgs/diagnostics/trex/choppers.py:acceptance"
 ```

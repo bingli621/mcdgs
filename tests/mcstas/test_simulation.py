@@ -1,9 +1,7 @@
 import pytest
 
 from mcdgs.instruments.trex.model import TRex
-from mcdgs.mcstas.runs import RunType
-from mcdgs.mcstas.simulation import Simulation
-from mcdgs.mcstas.workspace import Workspace
+from mcdgs.mcstas import RunType, Simulation, Workspace
 
 
 def test_a_scan_has_a_point_per_value_of_its_variable():

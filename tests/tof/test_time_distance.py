@@ -5,7 +5,7 @@ matplotlib.use("Agg")
 from matplotlib.figure import Figure
 
 from mcdgs.instruments.trex.model import TRex
-from mcdgs.tof.time_distance import time_distance_diagram
+from mcdgs.tof import time_distance_diagram
 
 
 def test_the_title_is_the_running_conditions():

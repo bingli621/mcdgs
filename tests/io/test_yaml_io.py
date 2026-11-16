@@ -3,9 +3,8 @@ from dataclasses import dataclass
 
 import yaml
 
-from mcdgs.core.base import INSTRUMENTS, Instrument
+from mcdgs.core import INSTRUMENTS, InstrParam, Instrument, param
 from mcdgs.core.components import Progress_bar, Slit
-from mcdgs.core.params import InstrParam, param
 from mcdgs.instruments import TRex
 from mcdgs.instruments.trex import PARAMS_FILE
 from mcdgs.io import load, read_yaml, save, to_dict, write_yaml

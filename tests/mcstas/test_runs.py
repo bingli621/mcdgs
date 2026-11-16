@@ -4,7 +4,7 @@ from datetime import datetime, timedelta, timezone
 import numpy as np
 import pytest
 
-from mcdgs.mcstas.runs import Run, RunType, monitor_file, recorded_instr_params
+from mcdgs.mcstas import Run, RunType, monitor_file, recorded_instr_params
 
 TO_SAMPLE, FROM_SAMPLE = RunType.RUN_TO_SAMPLE, RunType.SCAN_FROM_SAMPLE
 

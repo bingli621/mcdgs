@@ -33,19 +33,17 @@ import numpy as np
 import scipp as sc
 from numpy.typing import NDArray
 
-from mcdgs.core.base import Instrument
+from mcdgs.core import InstrParam, Instrument
 from mcdgs.core.components import Arm, ESS_butterfly, Guide_gravity, Monitor_nD, Progress_bar
 from mcdgs.core.components.source import ESS_SOURCE_FREQUENCY
-from mcdgs.core.params import InstrParam
 from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
 from mcdgs.diagnostics.compare import plot_comparison, print_means, read_scaled_comparisons
 from mcdgs.instruments.trex.guides.bispectral import arm_guide_4, guide_4a
 from mcdgs.instruments.trex.guides.extraction import guides_extraction
 from mcdgs.instruments.trex.monitors import beam_monitor, source_monitor
 from mcdgs.instruments.trex.sources import source
-from mcdgs.mcstas.simulation import Simulation
-from mcdgs.tof.builder import build_tof
-from mcdgs.tof.reader import monitor_bins
+from mcdgs.mcstas import Simulation
+from mcdgs.tof import build_tof, monitor_bins
 
 # 1/Å: C of the example efficiency ε = C λ, 1e-4 at 2 Å, within the 1e-5 to 1e-3 of beam
 # monitors

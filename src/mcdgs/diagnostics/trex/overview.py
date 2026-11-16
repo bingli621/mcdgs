@@ -33,8 +33,7 @@ from mcdgs.diagnostics.cli import (
     save_text,
 )
 from mcdgs.instruments.trex.model import TRex
-from mcdgs.mcstas.builder import build_mcstas
-from mcdgs.mcstas.workspace import Workspace
+from mcdgs.mcstas import Workspace, build_mcstas
 
 
 def _save_view(path: Path, dpi: int) -> Path:

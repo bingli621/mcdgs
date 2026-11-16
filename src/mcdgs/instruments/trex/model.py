@@ -3,7 +3,7 @@
 from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING, Any
 
-from mcdgs.core.base import Instrument
+from mcdgs.core import InstrParam, Instrument, param
 from mcdgs.core.components import (
     Arm,
     Component,
@@ -12,7 +12,6 @@ from mcdgs.core.components import (
     Progress_bar,
 )
 from mcdgs.core.components.masked_source import chopper_train
-from mcdgs.core.params import InstrParam, param
 
 from .choppers import Mode, chopper, chopper_timings
 from .detectors import banana_detector

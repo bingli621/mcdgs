@@ -9,7 +9,7 @@ follows neutrons, so it shows the shape of the pulse, with Monte Carlo noise.
 
 from matplotlib.figure import Figure
 
-from mcdgs.core.base import Instrument
+from mcdgs.core import Instrument
 from mcdgs.tof.builder import build_tof
 
 

@@ -27,7 +27,7 @@ from enum import StrEnum
 from numbers import Real
 from pathlib import Path
 
-from mcdgs.core.params import InstrParam
+from mcdgs.core import InstrParam
 
 RUN_FILE = "run.json"  # the record of a run, in its folder
 DATA_FILE = "mccode.h5"  # the McStas NeXus file of a run

@@ -5,7 +5,7 @@ import pytest
 import scipp as sc
 import tof
 
-from mcdgs.core.base import Instrument
+from mcdgs.core import InstrParam, Instrument, evaluate, speed_from_wavelength
 from mcdgs.core.components import (
     Arm,
     ESS_butterfly,
@@ -14,12 +14,10 @@ from mcdgs.core.components import (
     Polygon_ESS_butterfly,
     Progress_bar,
 )
-from mcdgs.core.params import InstrParam
-from mcdgs.core.utils import evaluate, speed_from_wavelength
 from mcdgs.instruments.trex.choppers import DISKS
 from mcdgs.instruments.trex.model import TRex
 from mcdgs.samples import aluminum
-from mcdgs.tof.builder import build_tof
+from mcdgs.tof import build_tof
 
 
 @dataclass(frozen=True)

@@ -31,7 +31,7 @@ import numpy as np
 import scipp as sc
 from matplotlib.figure import Figure
 
-from mcdgs.core.params import InstrParam
+from mcdgs.core import InstrParam
 from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
 from mcdgs.diagnostics.trex.elastic_plane import pixel_solid_angle
 from mcdgs.instruments.trex.choppers import DISKS
@@ -46,8 +46,7 @@ from mcdgs.instruments.trex.detectors import (
 from mcdgs.instruments.trex.model import Params, TRex
 from mcdgs.instruments.trex.monitors import beamstop_monitor, pre_sample_monitor, sample_monitor
 from mcdgs.instruments.trex.sources import wavelength_band
-from mcdgs.mcstas.nexus_io import read_events
-from mcdgs.mcstas.simulation import Simulation
+from mcdgs.mcstas import Simulation, read_events
 from mcdgs.samples import vanadium
 
 DETECTOR = "banana_detector"

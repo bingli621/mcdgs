@@ -6,7 +6,7 @@ If one fails, run `pixi run docs-diagnostics` and commit what it changes.
 from pathlib import Path
 
 from mcdgs.instruments.trex.model import TRex
-from mcdgs.mcstas.builder import build_mcstas
+from mcdgs.mcstas import build_mcstas
 
 DOCS_INSTR = (
     Path(__file__).resolve().parents[3] / "docs" / "instruments" / "trex" / "figures" / "overview"

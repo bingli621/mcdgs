@@ -1,6 +1,6 @@
 from mcdgs.core.components import NXdisk_chopper
 from mcdgs.instruments.trex.model import TRex
-from mcdgs.tof.builder import disk_chopper, get_choppers
+from mcdgs.tof import disk_chopper, get_choppers
 
 
 def test_disk_takes_the_radius_and_the_slit_height():

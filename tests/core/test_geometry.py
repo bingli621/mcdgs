@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
+from mcdgs.core import place_absolute, rotation
 from mcdgs.core.components import Arm
-from mcdgs.core.geometry import place_absolute, rotation
 
 
 def test_a_rotation_takes_the_lab_frame_to_the_rotated_one():

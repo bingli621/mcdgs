@@ -4,7 +4,7 @@ import h5py
 import numpy as np
 import pytest
 
-from mcdgs.mcstas.nexus_io import merge_entries, numeric_parameters, read_events, read_pixels
+from mcdgs.mcstas import merge_entries, numeric_parameters, read_events, read_pixels
 
 SPLIT = Path(__file__).parents[1] / "data" / "split_run" / "split"  # from mcstas_to_sqe
 

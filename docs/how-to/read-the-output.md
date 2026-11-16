@@ -67,7 +67,7 @@ Monitor_nD(
 returns one `(parameters, pixels)` per entry:
 
 ```python
-from mcdgs.mcstas.nexus_io import read_pixels
+from mcdgs.mcstas import read_pixels
 
 points = read_pixels(run.folder, "banana_detector", "source", "sample_pos")
 for parameters, pixels in points:

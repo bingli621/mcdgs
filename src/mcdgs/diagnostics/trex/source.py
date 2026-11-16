@@ -35,16 +35,14 @@ from pathlib import Path
 
 import mcstasscript as ms
 
-from mcdgs.core.base import Instrument
+from mcdgs.core import InstrParam, Instrument, param
 from mcdgs.core.components import ESS_butterfly, Monitor_nD
-from mcdgs.core.params import InstrParam, param
 from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
 from mcdgs.diagnostics.compare import plot_comparison, print_means, read_comparison
 from mcdgs.instruments.trex.monitors import source_monitor
 from mcdgs.instruments.trex.sources import source, wavelength_band
-from mcdgs.mcstas.simulation import Simulation
-from mcdgs.tof.builder import build_tof
-from mcdgs.tof.reader import monitor_bins
+from mcdgs.mcstas import Simulation
+from mcdgs.tof import build_tof, monitor_bins
 
 NAME = "trex_source"  # the run folder of McStas, the results folder and the figure
 

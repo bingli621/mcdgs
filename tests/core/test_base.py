@@ -2,9 +2,8 @@ from dataclasses import dataclass
 
 import pytest
 
-from mcdgs.core.base import INSTRUMENTS, Instrument
+from mcdgs.core import INSTRUMENTS, InstrParam, Instrument, param
 from mcdgs.core.components import Arm, Guide_gravity, NXdisk_chopper, Progress_bar
-from mcdgs.core.params import InstrParam, param
 
 
 @dataclass(frozen=True)

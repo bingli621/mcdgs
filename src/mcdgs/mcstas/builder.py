@@ -26,9 +26,8 @@ from typing import Any
 
 from mcstasscript.interface import instr
 
-from mcdgs.core.base import Instrument
+from mcdgs.core import InstrParam, Instrument
 from mcdgs.core.components import Component, Polygon_ESS_butterfly
-from mcdgs.core.params import InstrParam
 from mcdgs.mcstas.workspace import Workspace
 
 

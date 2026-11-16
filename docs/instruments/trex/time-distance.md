@@ -15,7 +15,7 @@ its current parameters, runs it and draws the diagram. It takes any instrument:
 <!-- fmt:off -->
 ```python
 from mcdgs.instruments.trex.model import TRex
-from mcdgs.tof.time_distance import time_distance_diagram
+from mcdgs.tof import time_distance_diagram
 
 --8<-- "src/mcdgs/diagnostics/trex/time_distance.py:time_distance"
 ```

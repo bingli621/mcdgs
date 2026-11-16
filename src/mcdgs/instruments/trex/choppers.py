@@ -26,9 +26,9 @@ and the slit of each mode.
 from dataclasses import dataclass
 from typing import Literal, get_args
 
+from mcdgs.core import speed_from_wavelength
 from mcdgs.core.components import Guide_gravity, NXdisk_chopper
 from mcdgs.core.components.choppers import Disk
-from mcdgs.core.utils import speed_from_wavelength
 
 from .guides.curve import (
     ARM_BWC1_Z,

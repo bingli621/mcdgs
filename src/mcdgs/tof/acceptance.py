@@ -23,8 +23,7 @@ from matplotlib.patches import Polygon
 from scippneutron.chopper.disk_chopper import DiskChopper
 from scippneutron.tof.chopper_cascade import Chopper, FrameSequence
 
-from mcdgs.core.base import Instrument
-from mcdgs.core.utils import evaluate, speed_from_wavelength
+from mcdgs.core import Instrument, evaluate, speed_from_wavelength
 
 from .builder import beamline, get_choppers
 

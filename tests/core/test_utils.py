@@ -2,7 +2,7 @@ import math
 
 import pytest
 
-from mcdgs.core.utils import bins_from_limits, evaluate, format_value, speed_from_wavelength
+from mcdgs.core import bins_from_limits, evaluate, format_value, speed_from_wavelength
 
 PARAMS = {"omega": 30.0, "chi": 5.0, "x": 0.5}  # floats, as the params are
 

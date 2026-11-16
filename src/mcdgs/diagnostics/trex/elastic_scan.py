@@ -36,14 +36,12 @@ from matplotlib.animation import FuncAnimation, PillowWriter
 from matplotlib.artist import Artist
 from matplotlib.figure import Figure
 
+from mcdgs.core import rotation
 from mcdgs.core.components import Single_crystal
-from mcdgs.core.geometry import rotation
 from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
 from mcdgs.diagnostics.trex import elastic_plane as plane
 from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
-from mcdgs.mcstas.nexus_io import numeric_parameters, read_events
-from mcdgs.mcstas.simulation import Simulation
-from mcdgs.mcstas.workspace import Workspace
+from mcdgs.mcstas import Simulation, Workspace, numeric_parameters, read_events
 from mcdgs.reduction.binning import bin_edges
 from mcdgs.samples import la2ni7
 

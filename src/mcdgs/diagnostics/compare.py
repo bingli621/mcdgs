@@ -29,7 +29,7 @@ from matplotlib.figure import Figure
 from mcstasscript.data.data import McStasData
 from numpy.typing import NDArray
 
-from mcdgs.tof.reader import read_tof_monitor
+from mcdgs.tof import read_tof_monitor
 
 
 @dataclass(frozen=True)

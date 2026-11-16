@@ -49,18 +49,17 @@ from matplotlib.patches import Patch
 from mcstasscript.data.data import McStasData
 from scippneutron.conversion import tof as tof_kernels
 
+from mcdgs.core import bins_from_limits
 from mcdgs.core.components import Monitor_nD
-from mcdgs.core.utils import bins_from_limits
 from mcdgs.diagnostics.cli import markdown_table, output_folder, parse_out, save_figure, save_text
 from mcdgs.diagnostics.compare import MonitorComparison, plot_comparison, read_scaled_comparisons
 from mcdgs.instruments.trex.detectors import BANANA_RADIUS
 from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
 from mcdgs.instruments.trex.monitors import SAMPLE_MONITOR_HEIGHT, SAMPLE_MONITOR_WIDTH
-from mcdgs.mcstas.simulation import Simulation
+from mcdgs.mcstas import Simulation
 from mcdgs.reduction.inelastic import DEFAULT_ENERGY_TRANSFER_RATIO, arrival_window, time_at_sample
 from mcdgs.reduction.patches import find_patches, subpulse_flight
-from mcdgs.tof.builder import build_tof
-from mcdgs.tof.reader import monitor_bins, read_tof_monitor
+from mcdgs.tof import build_tof, monitor_bins, read_tof_monitor
 
 LOG_DECADES = 3  # the log color scale of the maps spans this many decades below the highest bin
 MONITORS = ("pre_sample_monitor", "beamstop_monitor")  # give the incident energy, in beam order

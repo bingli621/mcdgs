@@ -27,7 +27,7 @@ import mcstasscript as ms
 from matplotlib.figure import Figure
 from mcstasscript.interface.instr import McStas_instr
 
-from mcdgs.core.base import Instrument
+from mcdgs.core import InstrParam, Instrument, param
 from mcdgs.core.components import (
     Arm,
     ESS_butterfly,
@@ -36,7 +36,6 @@ from mcdgs.core.components import (
     Pol_bender,
     Progress_bar,
 )
-from mcdgs.core.params import InstrParam, param
 from mcdgs.diagnostics.cli import output_folder, parse_out, remove_mcdisplay_folders, save_figure
 from mcdgs.diagnostics.compare import plot_comparison, read_scaled_comparisons
 from mcdgs.instruments.trex.guides.bispectral import (
@@ -49,11 +48,8 @@ from mcdgs.instruments.trex.guides.bispectral import (
 from mcdgs.instruments.trex.guides.extraction import guides_extraction
 from mcdgs.instruments.trex.monitors import beam_monitor, source_monitor
 from mcdgs.instruments.trex.sources import source
-from mcdgs.mcstas.builder import build_mcstas
-from mcdgs.mcstas.runs import Run, RunType, recorded_instr_params
-from mcdgs.mcstas.workspace import Workspace
-from mcdgs.tof.builder import build_tof
-from mcdgs.tof.reader import monitor_bins
+from mcdgs.mcstas import Run, RunType, Workspace, build_mcstas, recorded_instr_params
+from mcdgs.tof import build_tof, monitor_bins
 
 # McStas neutrons of the run with McStasScript's diagnostics, which lists every ray at each of its
 # three positions: about 180 MB at 1e6

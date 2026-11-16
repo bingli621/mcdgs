@@ -25,7 +25,7 @@ import numpy as np
 from mcstasscript.interface.instr import McStas_instr
 from numpy.typing import ArrayLike
 
-from mcdgs.core.base import Instrument
+from mcdgs.core import Instrument
 from mcdgs.mcstas.builder import build_mcstas
 from mcdgs.mcstas.runs import BEAM_FILE, Run, RunType, recorded_instr_params
 from mcdgs.mcstas.scan import random_seed, run_points_in_parallel

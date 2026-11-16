@@ -25,7 +25,7 @@ from typing import Any
 
 import yaml
 
-from mcdgs.core.base import Instrument
+from mcdgs.core import Instrument
 
 from .dict_io import from_overrides, to_dict
 

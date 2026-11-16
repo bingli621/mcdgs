@@ -6,10 +6,10 @@ same band.
 
 from typing import Any
 
+from mcdgs.core import speed_from_wavelength
 from mcdgs.core.components import ESS_butterfly, Polygon_ESS_butterfly
 from mcdgs.core.components.masked_source import ChopperTrainParameters
 from mcdgs.core.components.source import ESS_SOURCE_FREQUENCY, ESS_SOURCE_LENGTH, L_MAX, L_MIN
-from mcdgs.core.utils import speed_from_wavelength
 
 from .guides.extraction import GUIDE_1_IN_HEIGHT, GUIDE_1_IN_Z, NBOA_FIXED_WALL_X
 from .guides.straight import SAMPLE_Z

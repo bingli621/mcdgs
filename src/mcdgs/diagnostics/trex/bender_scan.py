@@ -23,8 +23,7 @@ from numpy.typing import NDArray
 from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
 from mcdgs.diagnostics.trex.extraction import Extraction, diagnose_path
 from mcdgs.instruments.trex.guides.bispectral import BENDER_ROTATION
-from mcdgs.mcstas.simulation import Simulation
-from mcdgs.mcstas.workspace import Workspace
+from mcdgs.mcstas import Simulation, Workspace
 
 BAND_WIDTH = 0.5  # Å: the bands are centered on its multiples, 0.5, 1.0, 1.5 Å, ...
 

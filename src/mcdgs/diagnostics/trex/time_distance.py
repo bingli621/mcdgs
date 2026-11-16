@@ -13,12 +13,11 @@ It needs only mcdgs and tof. Run the module for them::
 
 from pathlib import Path
 
+from mcdgs.core import evaluate
 from mcdgs.core.components import NXdisk_chopper
-from mcdgs.core.utils import evaluate
 from mcdgs.diagnostics.cli import markdown_table, output_folder, parse_out, save_figure, save_text
 from mcdgs.instruments.trex.model import TRex
-from mcdgs.tof.builder import beamline
-from mcdgs.tof.time_distance import time_distance_diagram
+from mcdgs.tof import beamline, time_distance_diagram
 
 N_PULSES = 2
 """Pulses of the diagram."""

@@ -42,8 +42,8 @@ from mcdgs.diagnostics.compare import read_mcstas_map
 from mcdgs.diagnostics.trex.neutrons_on_sample import TRexToSample
 from mcdgs.instruments.trex.monitors import sample_monitor
 from mcdgs.instruments.trex.sources import wavelength_band
-from mcdgs.mcstas.simulation import Simulation
-from mcdgs.tof.reader import monitor_bins
+from mcdgs.mcstas import Simulation
+from mcdgs.tof import monitor_bins
 
 MONITOR = "sample_monitor"  # where both sources are compared
 LAMBDA_RESOLUTION = 0.002  # Å, the wavelength bin of its map: a tenth of that of T-Rex

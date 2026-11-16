@@ -15,8 +15,7 @@ from pathlib import Path
 
 from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure, save_text
 from mcdgs.instruments.trex.model import TRex
-from mcdgs.tof.acceptance import acceptance_diagram
-from mcdgs.tof.builder import get_choppers
+from mcdgs.tof import acceptance_diagram, get_choppers
 
 
 def main(out: Path | None = None) -> list[Path]:

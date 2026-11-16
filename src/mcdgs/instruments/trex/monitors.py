@@ -9,10 +9,10 @@ The beamstop is here too, behind its monitor: an absorbing plate on the beam axi
 of the banana detector of :mod:`.detectors`, which stops the direct beam there.
 """
 
+from mcdgs.core import bins_from_limits
 from mcdgs.core.components import Beamstop, Monitor_nD
 from mcdgs.core.components.monitors import monitor_time_limits
 from mcdgs.core.components.source import ESS_SOURCE_LENGTH, L_MAX, L_MIN
-from mcdgs.core.utils import bins_from_limits
 
 from .detectors import BANANA_RADIUS
 from .guides.bispectral import GUIDE_4_TILT, GUIDE_4A_IN_Z

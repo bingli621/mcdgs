@@ -36,9 +36,8 @@ import scipp as sc
 import tof
 from scippneutron.chopper.disk_chopper import DiskChopper
 
-from mcdgs.core.base import Instrument
+from mcdgs.core import Instrument, evaluate
 from mcdgs.core.components import Component, ESS_butterfly, Monitor_nD, NXdisk_chopper
-from mcdgs.core.utils import evaluate
 
 # tof's pulse of the ESS moderator by beam port, ``sector`` and ``beamline``; else ``"ess"``
 TOF_SOURCES = {"W7": "ess-trex", "W3": "ess-cspec"}

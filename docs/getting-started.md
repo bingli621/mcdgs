@@ -63,7 +63,7 @@ it with `pixi run python first_run.py`.
 import h5py
 
 from mcdgs.instruments.trex.model import TRex
-from mcdgs.mcstas.simulation import Simulation
+from mcdgs.mcstas import Simulation
 
 simulation = Simulation(TRex())
 run = simulation.run(ncount=1e7, bender_in=1)

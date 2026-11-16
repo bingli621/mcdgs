@@ -55,7 +55,7 @@ from dataclasses import asdict, fields
 from typing import Any
 
 from mcdgs import instruments  # noqa: F401  (adds every instrument to INSTRUMENTS)
-from mcdgs.core.base import INSTRUMENTS, Instrument
+from mcdgs.core import INSTRUMENTS, Instrument
 from mcdgs.core.components import COMPONENTS, Component
 
 FILE_KEYS = ("instrument", "name", "params", "instr_params")  # the keys that are no component

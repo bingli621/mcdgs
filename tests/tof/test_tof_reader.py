@@ -5,8 +5,7 @@ import tof
 
 from mcdgs.core.components import Monitor_nD
 from mcdgs.instruments.trex.model import TRex
-from mcdgs.tof.builder import build_tof
-from mcdgs.tof.reader import monitor_bins, read_tof_monitor
+from mcdgs.tof import build_tof, monitor_bins, read_tof_monitor
 
 
 @pytest.fixture(scope="module")

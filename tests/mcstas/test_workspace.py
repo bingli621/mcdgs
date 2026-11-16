@@ -3,8 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from mcdgs.mcstas.runs import RunType
-from mcdgs.mcstas.workspace import Workspace
+from mcdgs.mcstas import RunType, Workspace
 
 TO_SAMPLE, FROM_SAMPLE = RunType.RUN_TO_SAMPLE, RunType.SCAN_FROM_SAMPLE
 

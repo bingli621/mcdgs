@@ -16,7 +16,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 
-from mcdgs.mcstas.workspace import Workspace
+from mcdgs.mcstas import Workspace
 
 
 def parse_out(description: str | None, argv: Sequence[str] | None = None) -> Path | None:
