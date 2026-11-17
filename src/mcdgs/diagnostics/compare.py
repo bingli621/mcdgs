@@ -21,7 +21,8 @@ Scaling tof is a few small steps, on the maps of each monitor: :func:`tof_scale`
 scale where both see the same beam,
 :func:`tuned_transmission` the transmission that gives tof the total of McStas further down, and
 :func:`compare_maps` puts both maps side by side in n/s, as a :class:`MonitorComparison`.
-:func:`plot_comparison` draws a comparison and :func:`print_means` prints the mean time and
+:func:`plot_comparison` draws a comparison, its maps with :func:`plot_comparison_maps` and its
+profiles with :func:`plot_comparison_profiles`, and :func:`print_means` prints the mean time and
 wavelength of each model.
 """
 
@@ -346,6 +347,95 @@ def print_means(comparison: MonitorComparison) -> None:
         print(f"{label:>6}: mean time {mean_time:.3f} ms, mean wavelength {mean_wavelength:.3f} Å")
 
 
+def _model_labels(comparison: MonitorComparison) -> tuple[str, str]:
+    """Return the legend entries of McStas and of tof: their neutrons, and the scale of tof."""
+    c = comparison
+    mcstas_label = f"McStas, ncount = {int(c.ncount):,}"
+    tof_label = f"tof, {c.neutrons:,} neutrons × {c.scale:.3g} n/s each"
+    if c.transmission != 1:
+        tof_label += f"\ntransmission {c.transmission:.3g}"
+    return mcstas_label, tof_label
+
+
+def plot_comparison_maps(
+    fig: Figure,
+    first_ax: Axes,
+    second_ax: Axes,
+    first: sc.DataArray,
+    second: sc.DataArray,
+    first_title: str = "Map 1",
+    second_title: str = "Map 2",
+    log_decades: int | None = None,
+) -> None:
+    """Draw two maps side by side on one color scale, with a color bar.
+
+    The maps are those of a :class:`MonitorComparison`, McStas and tof, or any two on the same
+    bins, such as McStas at two settings.
+
+    Parameters
+    ----------
+    fig:
+        The figure of the axes, for the color bar.
+    first_ax, second_ax:
+        The axes of the first and the second map.
+    first, second:
+        The maps, in n/s per bin, with bin edges as coordinates. The color bar is labeled with
+        the bin widths of ``first``.
+    first_title, second_title:
+        The titles of the axes.
+    log_decades:
+        If given, the color scale is logarithmic, this many decades deep below the highest bin,
+        as in :func:`plot_map`. If ``None``, linear from 0.
+    """
+    vmax = float(max(first.values.max(), second.values.max()))
+    plot_map(first_ax, first, vmax=vmax, log_decades=log_decades)
+    mesh = plot_map(second_ax, second, vmax=vmax, log_decades=log_decades)
+    first_ax.set_title(first_title)
+    second_ax.set_title(second_title)
+    fig.colorbar(mesh, ax=[first_ax, second_ax], label=intensity_label(first))
+
+
+def plot_comparison_profiles(
+    spectrum_ax: Axes,
+    profile_ax: Axes,
+    first: sc.DataArray,
+    second: sc.DataArray,
+    first_label: str = "Map 1",
+    second_label: str = "Map 2",
+    connect: bool = False,
+    log_y: bool = False,
+) -> None:
+    """Draw the wavelength spectrum and the time profile of two maps, one over the other.
+
+    The spectrum is each map summed over time, the profile summed over wavelength, both with
+    their error bars (:func:`plot_profile`).
+
+    Parameters
+    ----------
+    spectrum_ax, profile_ax:
+        The axes of the wavelength spectrum and of the time profile.
+    first, second:
+        The maps, in n/s per bin, (time bins, wavelength bins), with bin edges as coordinates
+        and variances, such as those of a :class:`MonitorComparison`.
+    first_label, second_label:
+        Their entries in the legends.
+    connect:
+        True joins the points with lines.
+    log_y:
+        True puts the intensity on a log axis, where the empty bins are left out. False, a
+        linear one from 0.
+    """
+    time, wavelength = first.dims
+    for ax, summed in ((spectrum_ax, time), (profile_ax, wavelength)):
+        plot_profile(ax, first.sum(summed), first_label, connect=connect)
+        plot_profile(ax, second.sum(summed), second_label, connect=connect)
+        ax.legend()
+        if log_y:  # the empty bins, and the error bars below 0, are left out
+            ax.set_yscale("log", nonpositive="mask")
+        else:
+            ax.set_ylim(bottom=0)
+
+
 def plot_comparison(
     comparison: MonitorComparison,
     title: str,
@@ -380,33 +470,29 @@ def plot_comparison(
     :
         The figure.
     """
-    c = comparison
     fig, ((mcstas_ax, tof_ax), (spectrum_ax, profile_ax)) = plt.subplots(
         2, 2, figsize=(12, 9), layout="constrained"
     )
     fig.suptitle(title)
-
-    # the time and wavelength maps, on one color scale
-    vmax = float(max(c.mcstas.values.max(), c.tof.values.max()))
-    plot_map(mcstas_ax, c.mcstas, vmax=vmax, log_decades=log_decades)
-    mesh = plot_map(tof_ax, c.tof, vmax=vmax, log_decades=log_decades)
-    mcstas_ax.set_title("McStas")
-    tof_ax.set_title("tof")
-    fig.colorbar(mesh, ax=[mcstas_ax, tof_ax], label=intensity_label(c.mcstas))
-
-    mcstas_label = f"McStas, ncount = {int(c.ncount):,}"
-    tof_label = f"tof, {c.neutrons:,} neutrons × {c.scale:.3g} n/s each"
-    if c.transmission != 1:
-        tof_label += f"\ntransmission {c.transmission:.3g}"
-
-    # the wavelength spectrum, summed over time, and the time profile, summed over wavelength
-    time, wavelength = c.mcstas.dims
-    for ax, summed in ((spectrum_ax, time), (profile_ax, wavelength)):
-        plot_profile(ax, c.mcstas.sum(summed), mcstas_label, connect=connect)
-        plot_profile(ax, c.tof.sum(summed), tof_label, connect=connect)
-        ax.legend()
-        if log_y:  # the empty bins, and the error bars below 0, are left out
-            ax.set_yscale("log", nonpositive="mask")
-        else:
-            ax.set_ylim(bottom=0)
+    plot_comparison_maps(
+        fig,
+        mcstas_ax,
+        tof_ax,
+        comparison.mcstas,
+        comparison.tof,
+        first_title="McStas",
+        second_title="tof",
+        log_decades=log_decades,
+    )
+    mcstas_label, tof_label = _model_labels(comparison)
+    plot_comparison_profiles(
+        spectrum_ax,
+        profile_ax,
+        comparison.mcstas,
+        comparison.tof,
+        first_label=mcstas_label,
+        second_label=tof_label,
+        connect=connect,
+        log_y=log_y,
+    )
     return fig
