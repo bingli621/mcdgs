@@ -1,20 +1,26 @@
 """McStas and tof at one monitor, side by side.
 
-:func:`read_comparison` reads one time and wavelength map from both runs, in n/s, and
-:func:`plot_comparison` draws it, and :func:`print_means` prints the mean time and wavelength of
-each model. One run of each model can feed several monitors: :func:`read_scaled_comparisons`
-reads them all, tof scaled at the first and, at the others, with the transmission on top of it.
+Each model gives one time and wavelength map of the monitor, a scipp data array with its bin
+edges and its errors: :func:`.read_map` that of McStas, in n/s, and :func:`.read_tof_monitor`
+that of tof, in neutrons, both on the bins of the monitor (:func:`.monitor_bins`). The small
+pieces work on any such map:
 
-tof has no flux: each neutron has weight 1. :func:`read_comparison` scales its counts by
-``scale``, the n/s each tof neutron stands for. Left out, it is the total of McStas over that of
-tof at this monitor, so both have the same total and only their shapes differ. Further down the
-beam, pass the scale found where both see the same beam, at the source, for a difference in what
-the guides and choppers let through to show. ``transmission`` then scales tof on top of it, for
-what the beam loses that tof does not model, such as the guides: tof has none.
+- :func:`mean_coordinate` gives its mean time or wavelength;
+- :func:`plot_map` draws it, and :func:`plot_profile` what is left of it summed over an axis,
+  such as its wavelength spectrum, with error bars;
+- :func:`intensity_label` names its intensity, per bin.
 
-:func:`.monitor_bins` gives the bin edges of a monitor's map, read from its ``options``,
-:func:`.read_mcstas_map` reads the map of McStas on them and :func:`.read_tof_monitor` that of
-tof.
+tof has no flux: each neutron has weight 1. Its counts are scaled by ``scale``, the n/s each tof
+neutron stands for: the total of McStas over that of tof where both see the same beam, at the
+source. There both then have the same total, and only their shapes differ. Further down the
+beam, the same scale lets a difference in what the guides and choppers let through show.
+``transmission`` then scales tof on top of it, for what the beam loses that tof does not model,
+such as the guides: tof has none.
+
+:func:`read_comparison` does all of it for one monitor, into a :class:`MonitorComparison`;
+:func:`read_scaled_comparisons` for several monitors of one run of each model, tof scaled at the
+first and, at the others, with the transmission on top of it. :func:`plot_comparison` draws a
+comparison and :func:`print_means` prints the mean time and wavelength of each model.
 """
 
 from collections.abc import Mapping
@@ -24,38 +30,166 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipp as sc
 import tof
+from matplotlib.axes import Axes
+from matplotlib.collections import QuadMesh
 from matplotlib.colors import LogNorm, Normalize
 from matplotlib.figure import Figure
 from mcstasscript.data.data import McStasData
 from numpy.typing import NDArray
 
-from mcdgs.mcstas import read_mcstas_map
+from mcdgs.mcstas import read_map
 from mcdgs.tof import read_tof_monitor
+
+# how a coordinate of a map is shown, by its name: the label of its axis and its unit
+AXES: dict[str, tuple[str, str]] = {"toa": ("Time", "ms"), "wavelength": ("Wavelength", "Å")}
+
+
+def _shown(data: sc.DataArray, dim: str) -> tuple[str, sc.Variable]:
+    """Return the axis label and the bin edges of a dimension of a map, as they are shown."""
+    name, unit = AXES.get(dim, (dim, str(data.coords[dim].unit)))
+    return f"{name} [{unit}]", data.coords[dim].to(unit=unit)
+
+
+def intensity_label(data: sc.DataArray) -> str:
+    """Return the label of the intensity of a map, with the width of its bins.
+
+    Parameters
+    ----------
+    data:
+        A map in n/s per bin, with evenly spaced bin edges as coordinates.
+
+    Returns
+    -------
+    :
+        Such as ``"Intensity [n/s per 0.5 ms and 0.5 Å]"``, with each dimension in the unit it
+        is shown in.
+
+    Examples
+    --------
+    >>> edges = sc.linspace("toa", 0.0, 0.015, 31, unit="s")
+    >>> intensity_label(sc.DataArray(sc.zeros(dims=["toa"], shape=[30]), coords={"toa": edges}))
+    'Intensity [n/s per 0.5 ms]'
+    """
+    widths = []
+    for dim in data.dims:
+        edges = _shown(data, dim)[1]
+        widths.append(f"{(edges[1] - edges[0]).value:.2g} {edges.unit}")
+    return f"Intensity [n/s per {' and '.join(widths)}]"
+
+
+def mean_coordinate(data: sc.DataArray, dim: str) -> sc.Variable:
+    """Return the mean of a coordinate of a map, weighted by its intensity.
+
+    Parameters
+    ----------
+    data:
+        A map, with bin edges as coordinates.
+    dim:
+        The dimension, such as ``"toa"`` or ``"wavelength"``.
+
+    Returns
+    -------
+    :
+        The mean of the bin centers of ``dim``, each weighted by the intensity of the map
+        summed over its other dimensions, in the unit of the coordinate.
+
+    Examples
+    --------
+    >>> edges = sc.array(dims=["wavelength"], values=[1.0, 2.0, 3.0], unit="Å")
+    >>> counts = sc.array(dims=["wavelength"], values=[1.0, 3.0])
+    >>> mean = mean_coordinate(sc.DataArray(counts, coords={"wavelength": edges}), "wavelength")
+    >>> float(mean.value), str(mean.unit)
+    (2.25, 'Å')
+    """
+    weights = sc.values(data.data).sum([other for other in data.dims if other != dim])
+    return (sc.midpoints(data.coords[dim]) * weights).sum() / weights.sum()
+
+
+def plot_map(
+    ax: Axes, data: sc.DataArray, *, vmax: float | None = None, log_decades: int | None = None
+) -> QuadMesh:
+    """Draw a two-dimensional map in color, its first dimension along x.
+
+    Parameters
+    ----------
+    ax:
+        The axes to draw on. Their axis labels are set.
+    data:
+        The map, such as time by wavelength, with bin edges as coordinates.
+    vmax:
+        The top of the color scale. If ``None``, the highest bin of the map. Give two maps the
+        same one to draw them on one color scale.
+    log_decades:
+        If given, the color scale is logarithmic, this many decades deep below ``vmax``, in
+        viridis with the empty bins in white: for a beam whose bins differ by orders of
+        magnitude, such as the sub-pulses the choppers cut. Its weakest bins are dark, so they
+        stand out on the white. If ``None``, linear from 0, in turbo.
+
+    Returns
+    -------
+    :
+        The mesh, for a color bar.
+    """
+    (x_label, x_edges), (y_label, y_edges) = (_shown(data, dim) for dim in data.dims)
+    values = data.values.T  # pcolormesh has the rows along y
+    vmax = float(values.max()) if vmax is None else vmax
+    norm: Normalize = Normalize(vmin=0, vmax=vmax)
+    cmap = plt.get_cmap("turbo")
+    if log_decades is not None:  # the empty bins, masked, in white
+        values = np.ma.masked_less_equal(values, 0)
+        norm = LogNorm(vmin=vmax / 10**log_decades, vmax=vmax, clip=True)
+        cmap = plt.get_cmap("viridis").with_extremes(bad="white")
+    mesh = ax.pcolormesh(x_edges.values, y_edges.values, values, cmap=cmap, norm=norm)
+    ax.set(xlabel=x_label, ylabel=y_label)
+    return mesh
+
+
+def plot_profile(ax: Axes, data: sc.DataArray, label: str, *, connect: bool = False) -> None:
+    """Draw a one-dimensional profile as points with error bars, at the centers of its bins.
+
+    Parameters
+    ----------
+    ax:
+        The axes to draw on. Their axis labels are set.
+    data:
+        The profile, with bin edges as its coordinate and variances: a map summed over its other
+        dimension, such as the wavelength spectrum ``data.sum("toa")`` or the time profile
+        ``data.sum("wavelength")``. The errors of the bins summed add in quadrature, as the
+        variances do.
+    label:
+        Its entry in the legend.
+    connect:
+        True joins the points with a line.
+    """
+    (dim,) = data.dims
+    x_label, edges = _shown(data, dim)
+    ax.errorbar(
+        sc.midpoints(edges).values,
+        data.values,
+        yerr=sc.stddevs(data).values,
+        label=label,
+        fmt=".-" if connect else ".",  # the line only joins the points
+        markersize=3,
+        linewidth=0.8,
+        elinewidth=0.8,
+    )
+    ax.set(xlabel=x_label, ylabel=intensity_label(data))
 
 
 @dataclass(frozen=True)
 class MonitorComparison:
     """One time and wavelength map in both models, in n/s per bin.
 
-    Each map has the shape (time bins, wavelength bins).
-
     Parameters
     ----------
     name:
         The name of the monitor, in both models.
-    bins:
-        The bin edges, ``"toa"`` and ``"wavelength"``, in that order, evenly spaced, in units of
-        time and of length.
-    mcstas_intensity:
-        The intensity of McStas per bin.
-    mcstas_error:
-        Its error per bin. The bins are independent, so summed over an axis their errors add in
-        quadrature.
-    tof_intensity:
-        The intensity of tof per bin: its counts times ``scale`` and ``transmission``.
-    tof_error:
-        Its error per bin: the Poisson error of the counts, √N, times ``scale`` and
-        ``transmission``.
+    mcstas:
+        The map of McStas, as :func:`.read_map`: (time bins, wavelength bins), with its bin
+        edges, ``"toa"`` and ``"wavelength"``, evenly spaced, and its errors as variances.
+    tof:
+        The map of tof on the same bins: its counts times ``scale`` and ``transmission``, and
+        with them their Poisson errors.
     ncount:
         Number of McStas neutrons.
     neutrons:
@@ -67,15 +201,37 @@ class MonitorComparison:
     """
 
     name: str
-    bins: Mapping[str, sc.Variable]
-    mcstas_intensity: NDArray
-    mcstas_error: NDArray
-    tof_intensity: NDArray
-    tof_error: NDArray
+    mcstas: sc.DataArray
+    tof: sc.DataArray
     ncount: float
     neutrons: int
     scale: float
     transmission: float
+
+    @property
+    def bins(self) -> dict[str, sc.Variable]:
+        """The bin edges, ``"toa"`` and ``"wavelength"``, in that order."""
+        return {dim: self.mcstas.coords[dim] for dim in self.mcstas.dims}
+
+    @property
+    def mcstas_intensity(self) -> NDArray:
+        """The intensity of McStas per bin, as an array."""
+        return self.mcstas.values
+
+    @property
+    def mcstas_error(self) -> NDArray:
+        """The error of the intensity of McStas per bin, as an array."""
+        return sc.stddevs(self.mcstas).values
+
+    @property
+    def tof_intensity(self) -> NDArray:
+        """The intensity of tof per bin, as an array."""
+        return self.tof.values
+
+    @property
+    def tof_error(self) -> NDArray:
+        """The error of the intensity of tof per bin, as an array."""
+        return sc.stddevs(self.tof).values
 
 
 def read_comparison(
@@ -126,19 +282,17 @@ def read_comparison(
     """
     if scale is None and transmission != 1:
         raise ValueError(f"{name}: a transmission of {transmission} needs a given scale")
-    mcstas_intensity, mcstas_error = read_mcstas_map(name, mcstas_data, bins)
-
+    mcstas_map = read_map(name, mcstas_data, bins)
     tof_counts = read_tof_monitor(tof_result[name], bins)
     if scale is None:
-        scale = float(mcstas_intensity.sum() / tof_counts.sum())
-
+        scale = float(mcstas_map.sum().value / tof_counts.sum().value)
+    # in n/s, times the transmission; the Poisson errors are scaled as the counts
+    tof_map = tof_counts * (scale * transmission)
+    tof_map.unit = "1/s"
     return MonitorComparison(
         name=name,
-        bins=bins,
-        mcstas_intensity=mcstas_intensity,
-        mcstas_error=mcstas_error,
-        tof_intensity=tof_counts * scale * transmission,  # in n/s, times the transmission
-        tof_error=np.sqrt(tof_counts) * scale * transmission,  # Poisson, scaled as the counts
+        mcstas=mcstas_map,
+        tof=tof_map,
         ncount=ncount,
         neutrons=neutrons,
         scale=scale,
@@ -223,14 +377,9 @@ def print_means(comparison: MonitorComparison) -> None:
     comparison:
         Both maps.
     """
-    times = sc.midpoints(comparison.bins["toa"]).to(unit="ms").values
-    wavelengths = sc.midpoints(comparison.bins["wavelength"]).to(unit="Å").values
-    for label, intensity in (
-        ("McStas", comparison.mcstas_intensity),
-        ("tof", comparison.tof_intensity),
-    ):
-        mean_time = np.average(times, weights=intensity.sum(axis=1))
-        mean_wavelength = np.average(wavelengths, weights=intensity.sum(axis=0))
+    for label, data in (("McStas", comparison.mcstas), ("tof", comparison.tof)):
+        mean_time = mean_coordinate(data, "toa").to(unit="ms").value
+        mean_wavelength = mean_coordinate(data, "wavelength").to(unit="Å").value
         print(f"{label:>6}: mean time {mean_time:.3f} ms, mean wavelength {mean_wavelength:.3f} Å")
 
 
@@ -244,9 +393,9 @@ def plot_comparison(
 ) -> Figure:
     """Draw both models at one monitor, in n/s.
 
-    The top row has the time and wavelength map of each, on one color scale; the bottom row
-    the wavelength spectrum and the time profile of both, summed over the other axis, with
-    their error bars.
+    The top row has the time and wavelength map of each, on one color scale (:func:`plot_map`);
+    the bottom row the wavelength spectrum and the time profile of both, summed over the other
+    axis, with their error bars (:func:`plot_profile`).
 
     Parameters
     ----------
@@ -256,9 +405,7 @@ def plot_comparison(
         The title of the figure.
     log_decades:
         If given, the color scale of the maps is logarithmic, this many decades deep below the
-        highest bin, in viridis with the empty bins in white: for a beam whose bins differ by
-        orders of magnitude, such as the sub-pulses the choppers cut. Its weakest bins are dark,
-        so they stand out on the white. If ``None``, linear from 0, in turbo.
+        highest bin, as in :func:`plot_map`. If ``None``, linear from 0.
     connect:
         True joins the points of the spectrum and the profile with lines.
     log_y:
@@ -271,64 +418,30 @@ def plot_comparison(
         The figure.
     """
     c = comparison
-    times = c.bins["toa"].to(unit="ms").values
-    wavelengths = c.bins["wavelength"].to(unit="Å").values
-    time_bin, wavelength_bin = times[1] - times[0], wavelengths[1] - wavelengths[0]
-    vmax = max(c.mcstas_intensity.max(), c.tof_intensity.max())  # one color scale for both
-    maps = [c.mcstas_intensity.T, c.tof_intensity.T]
-    norm: Normalize = Normalize(vmin=0, vmax=vmax)
-    cmap = plt.get_cmap("turbo")
-    if log_decades is not None:  # the empty bins, masked, in white
-        maps = [np.ma.masked_less_equal(m, 0) for m in maps]
-        norm = LogNorm(vmin=vmax / 10**log_decades, vmax=vmax, clip=True)
-        cmap = plt.get_cmap("viridis").with_extremes(bad="white")
-
     fig, ((mcstas_ax, tof_ax), (spectrum_ax, profile_ax)) = plt.subplots(
         2, 2, figsize=(12, 9), layout="constrained"
     )
     fig.suptitle(title)
 
-    # the time and wavelength maps
-    mcstas_ax.pcolormesh(times, wavelengths, maps[0], cmap=cmap, norm=norm)
-    mesh = tof_ax.pcolormesh(times, wavelengths, maps[1], cmap=cmap, norm=norm)
-    mcstas_ax.set(title="McStas", xlabel="Time [ms]", ylabel="Wavelength [Å]")
-    tof_ax.set(title="tof", xlabel="Time [ms]", ylabel="Wavelength [Å]")
-    fig.colorbar(
-        mesh,
-        ax=[mcstas_ax, tof_ax],
-        label=f"Intensity [n/s per {time_bin:.2g} ms and {wavelength_bin:.2g} Å]",
-    )
+    # the time and wavelength maps, on one color scale
+    vmax = float(max(c.mcstas.values.max(), c.tof.values.max()))
+    plot_map(mcstas_ax, c.mcstas, vmax=vmax, log_decades=log_decades)
+    mesh = plot_map(tof_ax, c.tof, vmax=vmax, log_decades=log_decades)
+    mcstas_ax.set_title("McStas")
+    tof_ax.set_title("tof")
+    fig.colorbar(mesh, ax=[mcstas_ax, tof_ax], label=intensity_label(c.mcstas))
 
-    time_centers = sc.midpoints(c.bins["toa"]).to(unit="ms").values
-    wavelength_centers = sc.midpoints(c.bins["wavelength"]).to(unit="Å").values
-    errorbar_style = {
-        "fmt": ".-" if connect else ".",  # the line only joins the points
-        "markersize": 3,
-        "linewidth": 0.8,
-        "elinewidth": 0.8,
-    }
     mcstas_label = f"McStas, ncount = {int(c.ncount):,}"
     tof_label = f"tof, {c.neutrons:,} neutrons × {c.scale:.3g} n/s each"
     if c.transmission != 1:
         tof_label += f"\ntransmission {c.transmission:.3g}"
 
     # the wavelength spectrum, summed over time, and the time profile, summed over wavelength
-    for ax, centers, axis in ((spectrum_ax, wavelength_centers, 0), (profile_ax, time_centers, 1)):
-        for intensity, error, label in (
-            (c.mcstas_intensity, c.mcstas_error, mcstas_label),
-            (c.tof_intensity, c.tof_error, tof_label),
-        ):
-            ax.errorbar(
-                centers,
-                intensity.sum(axis=axis),
-                yerr=np.sqrt((error**2).sum(axis=axis)),
-                label=label,
-                **errorbar_style,
-            )
+    time, wavelength = c.mcstas.dims
+    for ax, summed in ((spectrum_ax, time), (profile_ax, wavelength)):
+        plot_profile(ax, c.mcstas.sum(summed), mcstas_label, connect=connect)
+        plot_profile(ax, c.tof.sum(summed), tof_label, connect=connect)
         ax.legend()
-    spectrum_ax.set(xlabel="Wavelength [Å]", ylabel=f"Intensity [n/s per {wavelength_bin:.2g} Å]")
-    profile_ax.set(xlabel="Time [ms]", ylabel=f"Intensity [n/s per {time_bin:.2g} ms]")
-    for ax in (spectrum_ax, profile_ax):
         if log_y:  # the empty bins, and the error bars below 0, are left out
             ax.set_yscale("log", nonpositive="mask")
         else:

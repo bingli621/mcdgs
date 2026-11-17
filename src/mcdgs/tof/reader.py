@@ -9,10 +9,11 @@ from collections.abc import Mapping
 
 import scipp as sc
 import tof
-from numpy.typing import NDArray
 
 
-def read_tof_monitor(monitor: tof.DetectorReading, bins: Mapping[str, sc.Variable]) -> NDArray:  # type: ignore
+def read_tof_monitor(  # type: ignore
+    monitor: tof.DetectorReading, bins: Mapping[str, sc.Variable]
+) -> sc.DataArray:
     """Count the neutrons of the first pulse that reach a tof monitor, on any bins.
 
     Parameters
@@ -26,10 +27,16 @@ def read_tof_monitor(monitor: tof.DetectorReading, bins: Mapping[str, sc.Variabl
     Returns
     -------
     :
-        The neutrons per bin, with one axis per entry of ``bins``, in their order.
+        The neutrons per bin, in counts, with their Poisson variances: N for a bin of N
+        neutrons, an error of √N. It has one dimension per entry of ``bins``, in their order,
+        and ``bins`` as its coordinates, in the units given.
     """
     neutrons = monitor.data["pulse", 0]
     reached = neutrons[~neutrons.masks["blocked_by_others"]]
     # scipp bins only on edges in the unit of the coordinate
     edges = {name: edge.to(unit=reached.coords[name].unit) for name, edge in bins.items()}
-    return reached.hist(edges).values
+    counts = reached.hist(edges).values
+    return sc.DataArray(
+        sc.array(dims=list(bins), values=counts, variances=counts, unit="counts"),
+        coords=dict(bins),
+    )

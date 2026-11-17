@@ -6,7 +6,15 @@ import tof
 from matplotlib.colors import LogNorm
 from mcstasscript.data.data import McStasData, McStasMetaData
 
-from mcdgs.diagnostics.compare import plot_comparison, read_comparison, read_scaled_comparisons
+from mcdgs.diagnostics.compare import (
+    intensity_label,
+    mean_coordinate,
+    plot_comparison,
+    plot_map,
+    plot_profile,
+    read_comparison,
+    read_scaled_comparisons,
+)
 from mcdgs.diagnostics.trex.source import TRexSource
 from mcdgs.tof import build_tof, read_tof_monitor
 
@@ -44,7 +52,7 @@ def test_a_given_scale_is_kept(tof_result):
     comparison = read_comparison(
         "source_monitor", _mcstas_map((20, 30)), tof_result, BINS, 1e6, NEUTRONS, scale=2.0
     )
-    counts = read_tof_monitor(tof_result["source_monitor"], BINS)
+    counts = read_tof_monitor(tof_result["source_monitor"], BINS).values
     np.testing.assert_allclose(comparison.tof_intensity, 2 * counts)
     np.testing.assert_allclose(comparison.tof_error, 2 * np.sqrt(counts))  # Poisson
 
@@ -60,7 +68,7 @@ def test_the_transmission_scales_tof_on_top_of_a_given_scale(tof_result):
         scale=2.0,
         transmission=0.25,
     )
-    counts = read_tof_monitor(tof_result["source_monitor"], BINS)
+    counts = read_tof_monitor(tof_result["source_monitor"], BINS).values
     np.testing.assert_allclose(comparison.tof_intensity, 0.5 * counts)
     np.testing.assert_allclose(comparison.tof_error, 0.5 * np.sqrt(counts))
     assert (comparison.scale, comparison.transmission) == (2.0, 0.25)
@@ -170,4 +178,52 @@ def test_the_spectrum_and_the_profile_can_be_on_a_log_axis(tof_result):
     )
     fig = plot_comparison(comparison, "A title", log_y=True)
     assert [ax.get_yscale() for ax in fig.axes[2:4]] == ["log", "log"]
+    plt.close(fig)
+
+
+def _map(values) -> sc.DataArray:
+    """A map of 2 time bins by 3 wavelength bins, with errors of 1."""
+    data = sc.array(
+        dims=["toa", "wavelength"], values=np.asarray(values, float), variances=np.ones((2, 3))
+    )
+    edges = {
+        "toa": sc.linspace("toa", 0.0, 0.002, 3, unit="s"),
+        "wavelength": sc.linspace("wavelength", 1.0, 4.0, 4, unit="Å"),
+    }
+    return sc.DataArray(data, coords=edges)
+
+
+def test_the_mean_of_a_coordinate_is_weighted_by_the_intensity():
+    data = _map([[0, 0, 0], [1, 2, 1]])  # all in the second time bin, around 2.5 Å
+    assert mean_coordinate(data, "toa").to(unit="ms").value == pytest.approx(1.5)
+    assert mean_coordinate(data, "wavelength").value == pytest.approx(2.5)
+
+
+def test_the_intensity_is_labeled_with_the_bin_widths_as_they_are_shown():
+    data = _map(np.zeros((2, 3)))
+    assert intensity_label(data) == "Intensity [n/s per 1 ms and 1 Å]"
+    assert intensity_label(data.sum("toa")) == "Intensity [n/s per 1 Å]"
+
+
+def test_a_map_is_drawn_with_its_first_dimension_along_x():
+    fig, ax = plt.subplots()
+    mesh = plot_map(ax, _map([[0, 1, 2], [3, 4, 5]]), vmax=10.0)
+    assert (ax.get_xlabel(), ax.get_ylabel()) == ("Time [ms]", "Wavelength [Å]")
+    assert mesh.get_array().shape == (3, 2)  # the rows along wavelength
+    assert (mesh.norm.vmin, mesh.norm.vmax) == (0, 10.0)
+    assert ax.get_xlim() == pytest.approx((0.0, 2.0))  # in ms
+    plt.close(fig)
+
+
+def test_a_profile_is_drawn_at_the_bin_centers_with_its_error_bars():
+    fig, ax = plt.subplots()
+    plot_profile(ax, _map([[0, 1, 2], [3, 4, 5]]).sum("toa"), "McStas")
+    points, _, (bars,) = ax.containers[0]
+    np.testing.assert_allclose(points.get_xdata(), [1.5, 2.5, 3.5])
+    np.testing.assert_allclose(points.get_ydata(), [3, 5, 7])
+    lower, upper = bars.get_segments()[0][:, 1]
+    assert upper - lower == pytest.approx(2 * 2**0.5)  # two bins of error 1, in quadrature
+    assert ax.get_xlabel() == "Wavelength [Å]"
+    assert ax.get_ylabel() == "Intensity [n/s per 1 Å]"
+    assert ax.get_legend_handles_labels()[1] == ["McStas"]
     plt.close(fig)

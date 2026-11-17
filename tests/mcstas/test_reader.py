@@ -3,7 +3,7 @@ import pytest
 import scipp as sc
 from mcstasscript.data.data import McStasData, McStasMetaData
 
-from mcdgs.mcstas import read_mcstas_map
+from mcdgs.mcstas import read_map
 
 BINS = {
     "toa": sc.linspace("toa", 0.0, 15.0, 4, unit="ms"),
@@ -24,17 +24,27 @@ def _monitor(name: str, shape: tuple[int, int]) -> McStasData:
 def test_the_map_of_the_named_monitor_is_read_as_time_by_wavelength():
     data = [_monitor("other", (2, 3)), _monitor("sample_monitor", (2, 3))]
     data[0].Intensity += 100
-    intensity, error = read_mcstas_map("sample_monitor", data, BINS)
-    assert intensity.shape == error.shape == (3, 2)  # time bins, wavelength bins
-    np.testing.assert_array_equal(intensity, [[0, 3], [1, 4], [2, 5]])
+    sample_map = read_map("sample_monitor", data, BINS)
+    assert sample_map.sizes == {"toa": 3, "wavelength": 2}  # time bins, wavelength bins
+    np.testing.assert_array_equal(sample_map.values, [[0, 3], [1, 4], [2, 5]])
+
+
+def test_the_map_is_in_n_per_s_with_its_errors_and_its_bin_edges():
+    data = [_monitor("sample_monitor", (2, 3))]
+    data[0].Error *= 2
+    sample_map = read_map("sample_monitor", data, BINS)
+    assert sample_map.unit == "1/s"
+    np.testing.assert_array_equal(sc.stddevs(sample_map).values, np.full((3, 2), 2.0))
+    assert all(sc.identical(sample_map.coords[dim], BINS[dim]) for dim in BINS)
+    assert sc.stddevs(sample_map.sum("toa")).values == pytest.approx([12**0.5] * 2)  # quadrature
 
 
 def test_a_map_on_other_bins_is_refused():
     with pytest.raises(ValueError, match=r"sample_monitor: McStas has a map of \(2, 3\) bins"):
-        read_mcstas_map("sample_monitor", [_monitor("sample_monitor", (3, 2))], BINS)
+        read_map("sample_monitor", [_monitor("sample_monitor", (3, 2))], BINS)
 
 
 def test_a_name_of_several_data_sets_is_refused():
     data = [_monitor("sample_monitor", (2, 3)), _monitor("sample_monitor", (2, 3))]
     with pytest.raises(ValueError, match="sample_monitor: 2 data sets of that name"):
-        read_mcstas_map("sample_monitor", data, BINS)
+        read_map("sample_monitor", data, BINS)

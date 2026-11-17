@@ -1,7 +1,8 @@
 """Read the data of the components of a McStas run, as McStasScript loads them.
 
-:func:`read_mcstas_map` reads the time and wavelength map of a component, in n/s per bin, on its
-bin edges (:func:`.monitor_bins`). :func:`.read_tof_monitor` reads the same map of a tof run.
+:func:`read_map` reads the time and wavelength map of a component, in n/s per bin, on its
+bin edges (:func:`.monitor_bins`), as a scipp data array with its errors.
+:func:`.read_tof_monitor` reads the same map of a tof run.
 
 The neutrons of a detector are read from the NeXus file instead: see :mod:`.nexus_io`.
 """
@@ -12,12 +13,11 @@ import mcstasscript as ms
 import numpy as np
 import scipp as sc
 from mcstasscript.data.data import McStasData
-from numpy.typing import NDArray
 
 
-def read_mcstas_map(
+def read_map(
     name: str, mcstas_data: list[McStasData], bins: Mapping[str, sc.Variable]
-) -> tuple[NDArray, NDArray]:
+) -> sc.DataArray:
     """Read the time and wavelength map of a component of one McStas run, in n/s per bin.
 
     Parameters
@@ -34,7 +34,9 @@ def read_mcstas_map(
     Returns
     -------
     :
-        The intensity and its error per bin, each of shape (time bins, wavelength bins).
+        The intensity per bin, in n/s, with the square of its error as variances. Its
+        dimensions are those of ``bins``, in their order, (time bins, wavelength bins), and its
+        coordinates the bin edges.
 
     Raises
     ------
@@ -53,4 +55,7 @@ def read_mcstas_map(
         raise ValueError(
             f"{name}: McStas has a map of {intensity.shape} bins, the bins are {shape}"
         )
-    return intensity, error
+    return sc.DataArray(
+        sc.array(dims=list(bins), values=intensity, variances=error**2, unit="1/s"),
+        coords=dict(bins),
+    )

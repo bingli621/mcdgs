@@ -5,7 +5,7 @@ The names below are imported from here, ``from mcdgs.mcstas import Simulation``.
 
 from .builder import build_mcstas
 from .nexus_io import merge_entries, numeric_parameters, read_events, read_pixels
-from .reader import read_mcstas_map
+from .reader import read_map
 from .runs import Run, RunType, monitor_file, recorded_instr_params
 from .scan import compile_instrument, random_seed, run_points_in_parallel
 from .simulation import Simulation
@@ -23,7 +23,7 @@ __all__ = [
     "numeric_parameters",
     "random_seed",
     "read_events",
-    "read_mcstas_map",
+    "read_map",
     "read_pixels",
     "recorded_instr_params",
     "run_points_in_parallel",

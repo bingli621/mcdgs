@@ -41,7 +41,7 @@ from mcdgs.diagnostics.cli import markdown_table, output_folder, parse_out, save
 from mcdgs.diagnostics.trex.neutrons_on_sample import TRexToSample
 from mcdgs.instruments.trex.monitors import sample_monitor
 from mcdgs.instruments.trex.sources import wavelength_band
-from mcdgs.mcstas import Simulation, read_mcstas_map
+from mcdgs.mcstas import Simulation, read_map
 from mcdgs.reduction.binning import monitor_bins
 
 MONITOR = "sample_monitor"  # where both sources are compared
@@ -120,9 +120,10 @@ def run_source(instrument: TRexToSample, folder_name: str, ncount: float, seed: 
     start = time.perf_counter()
     folder = Simulation(instrument).run(folder_name, ncount=ncount, seed=seed).folder
     seconds = time.perf_counter() - start
-    intensity, error = read_mcstas_map(
+    sample_map = read_map(
         MONITOR, ms.load_data(str(folder)), monitor_bins(instrument.sample_monitor.bin_limits)
     )
+    intensity, error = sample_map.values, sc.stddevs(sample_map).values
     region = folder / f"{instrument.source.name}.json"  # the masked source writes its region
     acceptance = json.loads(region.read_text())["acceptance"] if region.is_file() else None
     return SourceRun(

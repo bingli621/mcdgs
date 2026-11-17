@@ -20,20 +20,27 @@ def _reached(monitor: tof.DetectorReading) -> sc.DataArray:
 
 def test_edges_in_another_unit_bin_as_in_the_unit_of_the_coordinate(sample_monitor):
     times_ms = np.linspace(0, 140, 71)  # tof keeps the time of arrival in µs
-    counts = read_tof_monitor(
-        sample_monitor, {"toa": sc.array(dims=["toa"], values=times_ms, unit="ms")}
-    )
+    edges = sc.array(dims=["toa"], values=times_ms, unit="ms")
+    counts = read_tof_monitor(sample_monitor, {"toa": edges})
     expected, _ = np.histogram(
         _reached(sample_monitor).coords["toa"].to(unit="ms").values, times_ms
     )
-    np.testing.assert_array_equal(counts, expected)
+    np.testing.assert_array_equal(counts.values, expected)
+    assert sc.identical(counts.coords["toa"], edges)  # in the unit given
+
+
+def test_the_counts_have_their_poisson_variances(sample_monitor):
+    wavelengths = sc.linspace("wavelength", 0.0, 10.0, 51, unit="Å")
+    counts = read_tof_monitor(sample_monitor, {"wavelength": wavelengths})
+    assert counts.unit == "counts"
+    np.testing.assert_array_equal(counts.variances, counts.values)  # an error of √N
 
 
 def test_only_the_neutrons_that_get_through_are_counted(sample_monitor):
     wavelengths = sc.linspace("wavelength", 0.0, 10.0, 51, unit="Å")
     counts = read_tof_monitor(sample_monitor, {"wavelength": wavelengths})
     blocked = sample_monitor.data["pulse", 0].masks["blocked_by_others"].values
-    assert 0 < counts.sum() == np.count_nonzero(~blocked) < blocked.size
+    assert 0 < counts.values.sum() == np.count_nonzero(~blocked) < blocked.size
 
 
 def test_there_is_one_axis_per_entry_of_bins_in_their_order(sample_monitor):

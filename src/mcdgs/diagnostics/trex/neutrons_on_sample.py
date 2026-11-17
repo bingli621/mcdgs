@@ -429,7 +429,7 @@ def subpulse_windows(
     """
     positions = {name: sc.vector(xyz, unit="m") for name, xyz in instrument.positions().items()}
     start, end = (
-        find_patches(read_tof_monitor(tof_result[name], bins), bins)
+        find_patches(read_tof_monitor(tof_result[name], bins).values, bins)
         for name in MONITORS
         for bins in [monitor_bins(getattr(instrument, name).bin_limits)]
     )
