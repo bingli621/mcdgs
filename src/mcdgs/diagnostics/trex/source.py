@@ -23,9 +23,11 @@ is √N × weight. A hundred times the neutrons gives ten times the error in cou
 of the relative error, and a tenth of the error in n/s, as the weight is a hundredth. So the
 error bars shrink with more neutrons, in both models, while the intensity stays.
 
-:func:`main` runs both models, reads the intensity of each on the bins of the monitor, scales
-tof to McStas, and :func:`.plot_comparison` draws them side by side. Run the module to do all
-of it, at 1e6 and at 1e5 neutrons in both models, and with the band of ``lambda0`` = 2 Å::
+:func:`main` runs both models and reads the intensity of each on the bins of the monitor.
+:func:`.tof_scale` gives the scale of tof, :func:`.compare_mcstas_vs_tof` puts both maps side by
+side in n/s, :func:`.print_means` prints their mean time and wavelength, and
+:func:`.plot_comparison` draws them. Run the module to do all of it, at 1e6 and at 1e5 neutrons
+in both models, and with the band of ``lambda0`` = 2 Å::
 
     pixi run python -m mcdgs.diagnostics.trex.source
 """
@@ -33,17 +35,15 @@ of it, at 1e6 and at 1e5 neutrons in both models, and with the band of ``lambda0
 from dataclasses import dataclass
 from pathlib import Path
 
-import matplotlib.pyplot as plt
 import mcstasscript as ms
 
 from mcdgs.core import Instrument, param
 from mcdgs.core.components import ESS_butterfly, Monitor_nD
 from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
 from mcdgs.diagnostics.compare import (
-    intensity_label,
-    mean_coordinate,
-    plot_map,
-    plot_profile,
+    compare_mcstas_vs_tof,
+    plot_comparison,
+    print_means,
     tof_scale,
 )
 from mcdgs.instruments.trex.monitors import source_monitor
@@ -172,40 +172,20 @@ def main(
     # --8<-- [start:scale_tof]
     # tof has no flux: each of its neutrons stands for the total of McStas over that of tof
     scale = tof_scale(mcstas_map, tof_counts)  # n/s per tof neutron
-    tof_map = tof_counts * scale  # the errors are scaled along
-    tof_map.unit = "1/s"
+    # both maps side by side in n/s: tof times the scale, its Poisson errors scaled along
+    comparison = compare_mcstas_vs_tof(
+        "source_monitor", mcstas_map, tof_counts, ncount, neutrons, scale
+    )
     # --8<-- [end:scale_tof]
 
-    # the mean time and wavelength of each model, weighted by its intensity
-    for label, data in (("McStas", mcstas_map), ("tof", tof_map)):
-        mean_time = mean_coordinate(data, "toa").to(unit="ms").value
-        mean_wavelength = mean_coordinate(data, "wavelength").to(unit="Å").value
-        print(f"{label:>6}: mean time {mean_time:.3f} ms, mean wavelength {mean_wavelength:.3f} Å")
+    # the mean time and wavelength of each model, weighted by its intensity, and the scale
+    print_means(comparison)
     print(f"McStas total {mcstas_map.sum().value:.4g} n/s, {scale:.4g} n/s per tof neutron")
 
     # --8<-- [start:plot]
-    fig, ((mcstas_ax, tof_ax), (spectrum_ax, profile_ax)) = plt.subplots(
-        2, 2, figsize=(12, 9), layout="constrained"
-    )
-    fig.suptitle("T-Rex flux at the entrance of guide 1")
-
-    # top row: the time and wavelength map of each model, on one color scale
-    vmax = max(mcstas_map.max().value, tof_map.max().value)
-    plot_map(mcstas_ax, mcstas_map, vmax=vmax)
-    mesh = plot_map(tof_ax, tof_map, vmax=vmax)
-    mcstas_ax.set_title("McStas")
-    tof_ax.set_title("tof")
-    fig.colorbar(mesh, ax=[mcstas_ax, tof_ax], label=intensity_label(mcstas_map))
-
-    # bottom row: the wavelength spectrum, each map summed over time, and the time profile,
-    # summed over wavelength. Summing adds the variances, so the errors add in quadrature
-    mcstas_label = f"McStas, ncount = {int(ncount):,}"
-    tof_label = f"tof, {neutrons:,} neutrons × {scale:.3g} n/s each"
-    for ax, summed in ((spectrum_ax, "toa"), (profile_ax, "wavelength")):
-        plot_profile(ax, mcstas_map.sum(summed), mcstas_label)
-        plot_profile(ax, tof_map.sum(summed), tof_label)
-        ax.set_ylim(bottom=0)
-        ax.legend()
+    # top row: the time and wavelength map of each model, on one color scale; bottom row: the
+    # wavelength spectrum and the time profile of both, with their error bars
+    fig = plot_comparison(comparison, "T-Rex flux at the entrance of guide 1")
     # --8<-- [end:plot]
 
     return save_figure(fig, output_folder(out, "trex_source") / f"{run.name}.png")

@@ -151,7 +151,8 @@ source. Further down, keep that same scale rather than computing a new one at ea
 scaled again to the total of McStas there, tof would agree with it by construction, and a
 difference in what the guides and choppers let through would not show. Keep it with the same
 number of tof neutrons; with another number, keep `scale × neutrons`, as the scale goes as
-1/neutrons. `compare_mcstas_vs_tof` takes it as `scale`, from `tof_scale` at the source.
+1/neutrons. [`compare_mcstas_vs_tof`](../../reference/diagnostics.md#mcdgs.diagnostics.compare.compare_mcstas_vs_tof) takes it as `scale`, from [`tof_scale`](../../reference/diagnostics.md#mcdgs.diagnostics.compare.tof_scale) at the
+source.
 
 ## Error bars
 
@@ -166,10 +167,20 @@ errors add in quadrature.
 
 ## The figure
 
-`main` runs both models with the same seed, reads each monitor on the same bins, prints the mean
-time and wavelength of each and the McStas total, scales tof to McStas, and saves `<name>.png`,
-by default `trex_source.png`, to `mcdgs_workspace/results/trex_source/`, or to the folder given
-with `--out`. Run as a module, it makes three figures: `trex_source_1e6.png`, this one,
+`main` runs both models with the same seed and reads each monitor on the same bins. It then uses
+the functions of [`mcdgs.diagnostics.compare`](../../reference/diagnostics.md#mcdgs.diagnostics.compare):
+
+- [`tof_scale`](../../reference/diagnostics.md#mcdgs.diagnostics.compare.tof_scale)
+  gives the scale, the n/s each tof neutron stands for;
+- [`compare_mcstas_vs_tof`](../../reference/diagnostics.md#mcdgs.diagnostics.compare.compare_mcstas_vs_tof)
+  scales tof by it and puts both maps side by side, in n/s;
+- [`print_means`](../../reference/diagnostics.md#mcdgs.diagnostics.compare.print_means)
+  prints the mean time and wavelength of each model, and `main` the McStas total and the scale;
+- [`plot_comparison`](../../reference/diagnostics.md#mcdgs.diagnostics.compare.plot_comparison)
+  draws the figure, which `main` saves as `<name>.png`, by default `trex_source.png`, to
+  `mcdgs_workspace/results/trex_source/`, or to the folder given with `--out`.
+
+Run as a module, it makes three figures: `trex_source_1e6.png`, this one,
 `trex_source_1e5.png` and `trex_source_lambda0_2.png`, below. The figure has two rows:
 
 - **Top:** the time and wavelength map of McStas and of tof, side by side on one color scale, in
