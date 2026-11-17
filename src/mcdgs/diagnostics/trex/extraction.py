@@ -33,7 +33,13 @@ from mcdgs.core.components import (
     Progress_bar,
 )
 from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
-from mcdgs.diagnostics.compare import compare_maps, plot_comparison, read_maps, tof_scale
+from mcdgs.diagnostics.compare import (
+    MonitorComparison,
+    compare_maps,
+    plot_comparison,
+    read_maps,
+    tof_scale,
+)
 from mcdgs.diagnostics.drawing import draw_instrument, draw_intensity_diagram
 from mcdgs.instruments.trex.guides.bispectral import (
     BENDER_ROTATION,
@@ -230,18 +236,17 @@ def diagnose_mcstas(
 def diagnose_tof(
     instrument: Extraction,
     mcstas_folder: Path,
-    path: str,
-    run_name: str,
-    figure_folder: Path,
     ncount: float = 1e7,
     neutrons: int = 1_000_000,
     seed: int = 1,
     transmission: float = 0.2,
-) -> Path:
-    """Run tof on one path through guide 4, and save its comparison with McStas.
+) -> tuple[MonitorComparison, MonitorComparison]:
+    """Run tof on one path through guide 4, and scale it to McStas.
 
-    tof is scaled to the total of McStas at the source monitor, where both see the same beam,
-    and by ``transmission`` on top of it at the beam monitor. The figure is ``<run_name>.png``.
+    tof has no guides and no bender: every neutron of its pulse reaches the beam monitor, and
+    its run is the same on both paths. It is scaled to the total of McStas at the source
+    monitor, where both see the same beam, and by ``transmission`` on top of it at the beam
+    monitor.
 
     Parameters
     ----------
@@ -249,12 +254,6 @@ def diagnose_tof(
         :class:`Extraction` on the path.
     mcstas_folder:
         Folder of the McStas run of the monitors, from :func:`diagnose_mcstas`.
-    path:
-        The path, for the title and the printout, as ``"bender out, guide 4a"``.
-    run_name:
-        Name of the figure.
-    figure_folder:
-        Folder of the figure.
     ncount:
         Number of McStas neutrons of the run in ``mcstas_folder``.
     neutrons:
@@ -270,32 +269,27 @@ def diagnose_tof(
     Returns
     -------
     :
-        The path of the comparison.
+        Both models at the source monitor, then at the beam monitor.
     """
-    # --8<-- [start:scale_tof]
-    # tof has no bender: its run is the same on both paths. Each monitor of both models is read
-    # on its bins; tof is scaled to the total of McStas at the source monitor, in n/s, and by
-    # the transmission on top of that scale at the beam monitor
     tof_result = build_tof(instrument, neutrons=neutrons, seed=seed).run()
+
+    # --8<-- [start:scale_tof]
+    # at the source monitor, where both models see the same beam: the n/s each tof neutron
+    # stands for, the total of McStas over that of tof
     mcstas_data = ms.load_data(str(mcstas_folder))
     source_bins = monitor_bins(instrument.source_monitor.bin_limits)
-    beam_bins = monitor_bins(instrument.beam_monitor.bin_limits)
     mcstas_source, tof_source = read_maps("source_monitor", mcstas_data, tof_result, source_bins)
     scale = tof_scale(mcstas_source, tof_source)
     at_source = compare_maps("source_monitor", mcstas_source, tof_source, ncount, neutrons, scale)
+
+    # at the beam monitor: tof with that scale, and the transmission of the guides on top of it
+    beam_bins = monitor_bins(instrument.beam_monitor.bin_limits)
     mcstas_beam, tof_beam = read_maps("beam_monitor", mcstas_data, tof_result, beam_bins)
-    comparison = compare_maps(
+    at_beam = compare_maps(
         "beam_monitor", mcstas_beam, tof_beam, ncount, neutrons, scale, transmission
     )
     # --8<-- [end:scale_tof]
-    mcstas_total = comparison.mcstas_intensity.sum()
-    print(
-        f"{path}: McStas total {mcstas_total:.4g} n/s, "
-        f"{mcstas_total / at_source.mcstas_intensity.sum():.4g} of that at the source, "
-        f"{comparison.scale:.4g} n/s per tof neutron"
-    )
-    fig = plot_comparison(comparison, f"T-Rex flux at the beam monitor after guide 4, {path}")
-    return save_figure(fig, figure_folder / f"{run_name}.png")
+    return at_source, at_beam
 
 
 def main(
@@ -305,13 +299,14 @@ def main(
     seed: int = 1,
     transmission: float = 0.2,
 ) -> list[Path]:
-    """Draw the extraction from above, and run both paths through guide 4.
+    """Draw the extraction from above, and run and compare both paths through guide 4.
 
     The view from above is ``trex_extraction_top.png``. Each path, first with the bender out,
     through guide 4a, then with it in, through the bender and guide 4b, runs McStas with
-    :func:`diagnose_mcstas`, then tof with :func:`diagnose_tof`; its figures are
-    ``trex_extraction_bender_out_diagnose.png``, ``trex_extraction_bender_out_intensity.png``
-    and ``trex_extraction_bender_out.png``, or ``..._in``.
+    :func:`diagnose_mcstas` and tof, scaled to it, with :func:`diagnose_tof`, and draws both at
+    the beam monitor. The figures of a path are ``trex_extraction_bender_out_diagnose.png``,
+    ``trex_extraction_bender_out_intensity.png`` and ``trex_extraction_bender_out.png``, the
+    comparison, or ``..._in``.
 
     Parameters
     ----------
@@ -319,7 +314,7 @@ def main(
         Folder of the figures. If ``None``, ``trex_extraction`` in the results folder of
         :meth:`.Workspace.find`.
     ncount, seed:
-        As in :func:`diagnose_mcstas`, for both paths.
+        As in :func:`diagnose_mcstas`, for both paths; ``seed`` also of tof.
     neutrons, transmission:
         As in :func:`diagnose_tof`, for both paths.
 
@@ -352,18 +347,23 @@ def main(
         mcstas_figures, mcstas_folder = diagnose_mcstas(
             instrument, run_name, figure_folder, ncount=ncount, seed=seed
         )
-        comparison = diagnose_tof(
+        at_source, comparison = diagnose_tof(
             instrument,
             mcstas_folder,
-            path,
-            run_name,
-            figure_folder,
             ncount=ncount,
             neutrons=neutrons,
             seed=seed,
             transmission=transmission,
         )
-        figures += [*mcstas_figures, comparison]
+
+        mcstas_total = comparison.mcstas_intensity.sum()
+        print(
+            f"{path}: McStas total {mcstas_total:.4g} n/s, "
+            f"{mcstas_total / at_source.mcstas_intensity.sum():.4g} of that at the source, "
+            f"{comparison.scale:.4g} n/s per tof neutron"
+        )
+        fig = plot_comparison(comparison, f"T-Rex flux at the beam monitor after guide 4, {path}")
+        figures += [*mcstas_figures, save_figure(fig, figure_folder / f"{run_name}.png")]
     # --8<-- [end:paths]
     return figures
 
