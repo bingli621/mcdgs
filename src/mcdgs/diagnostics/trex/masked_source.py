@@ -13,7 +13,7 @@ The sample monitor of both has wavelength bins of ``LAMBDA_RESOLUTION`` and time
 :func:`find_peaks` finds the sub-pulses in the time profile, and :func:`plot_sources` draws the
 wavelength spectrum and the time profile of both, on a linear and on a log intensity axis,
 ``LOG_DECADES`` deep, and :func:`plot_peaks` the profile around each sub-pulse,
-``PEAK_HALF_WIDTH`` on each side. :func:`summary_table` lists, for each source, the total at
+``PEAK_HALF_WIDTH`` on each side, both with :func:`.plot_profile`. :func:`summary_table` lists, for each source, the total at
 the sample monitor and its relative error, the time of the run and the figure of merit, one over
 the relative error squared times the time: how much a second of each run is worth.
 
@@ -25,7 +25,6 @@ the relative error squared times the time: how much a second of each run is wort
 import json
 import math
 import time
-from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -38,6 +37,7 @@ from matplotlib.figure import Figure
 from numpy.typing import NDArray
 
 from mcdgs.diagnostics.cli import markdown_table, output_folder, parse_out, save_figure, save_text
+from mcdgs.diagnostics.compare import plot_profile
 from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
 from mcdgs.instruments.trex.monitors import sample_monitor
 from mcdgs.instruments.trex.sources import wavelength_band
@@ -142,11 +142,10 @@ class SourceRun:
         The run folder.
     seconds:
         The wall time of the run, compiling included, in s.
-    intensity:
-        The intensity per bin of the sample monitor, in n/s, of shape (time bins, wavelength
-        bins).
-    error:
-        Its error per bin.
+    sample_map:
+        The map of the sample monitor, as :func:`.read_mcstas_map`: in n/s per bin, (time bins,
+        wavelength bins), with its bin edges, ``"toa"`` and ``"wavelength"``, evenly spaced, and
+        its errors as variances.
     acceptance:
         The acceptance of the masked source, from its region file, or ``None`` for the plain one.
     """
@@ -154,19 +153,28 @@ class SourceRun:
     component: str
     folder: Path
     seconds: float
-    intensity: NDArray
-    error: NDArray
+    sample_map: sc.DataArray
     acceptance: float | None
 
     @property
     def total(self) -> float:
         """The total intensity at the sample monitor, in n/s."""
-        return float(self.intensity.sum())
+        return float(self.sample_map.sum().value)
 
     @property
     def relative_error(self) -> float:
         """The relative error of :attr:`total`: the errors of the bins add in quadrature."""
-        return float(np.sqrt((self.error**2).sum()) / self.total)
+        return float(sc.stddevs(self.sample_map.sum()).value) / self.total
+
+    @property
+    def spectrum(self) -> sc.DataArray:
+        """The wavelength spectrum: the map summed over time, its errors in quadrature."""
+        return self.sample_map.sum("toa")
+
+    @property
+    def time_profile(self) -> sc.DataArray:
+        """The time profile: the map summed over wavelength, its errors in quadrature."""
+        return self.sample_map.sum("wavelength")
 
     @property
     def figure_of_merit(self) -> float:
@@ -202,12 +210,9 @@ def run_source(
     sample_map = read_mcstas_map(
         MONITOR, ms.load_data(run.folder), monitor_bins(instrument.sample_monitor.bin_limits)
     )
-    intensity, error = sample_map.values, sc.stddevs(sample_map).values
     region = run.folder / f"{instrument.source.name}.json"  # the masked source writes its region
     acceptance = json.loads(region.read_text())["acceptance"] if region.is_file() else None
-    return SourceRun(
-        instrument.source.component_name, run.folder, seconds, intensity, error, acceptance
-    )
+    return SourceRun(instrument.source.component_name, run.folder, seconds, sample_map, acceptance)
 
 
 def summary_table(plain: SourceRun, masked: SourceRun, ncount: float) -> str:
@@ -251,31 +256,13 @@ def summary_table(plain: SourceRun, masked: SourceRun, ncount: float) -> str:
     return markdown_table(header, rows)
 
 
-def _profiles(
-    bins: Mapping[str, sc.Variable], runs: tuple[SourceRun, ...]
-) -> tuple[NDArray, list[tuple[NDArray, NDArray]]]:
-    """Return the centers of the time bins, in ms, and the time profile of each run, with its error.
-
-    Parameters
-    ----------
-    bins:
-        The bin edges of the maps, ``"toa"`` and ``"wavelength"``.
-    runs:
-        The runs.
-
-    Returns
-    -------
-    :
-        The centers, and for each run its intensity per time bin, summed over wavelength, and
-        its error: the errors of the bins add in quadrature.
-    """
-    times = sc.midpoints(bins["toa"]).to(unit="ms").values
-    return times, [(run.intensity.sum(axis=1), np.sqrt((run.error**2).sum(axis=1))) for run in runs]
+def _times(profile: sc.DataArray) -> NDArray:
+    """Return the centers of the time bins of a time profile, in ms."""
+    return sc.midpoints(profile.coords["toa"]).to(unit="ms").values
 
 
 def find_peaks(
     run: SourceRun,
-    bins: Mapping[str, sc.Variable],
     threshold: float = PEAK_THRESHOLD,
     gap: float = PEAK_GAP,
 ) -> list[float]:
@@ -288,8 +275,6 @@ def find_peaks(
     ----------
     run:
         The run, best that of the masked source, whose profile is smooth.
-    bins:
-        The bin edges of its map, ``"toa"`` and ``"wavelength"``.
     threshold:
         The fraction of the highest bin a sub-pulse rises above.
     gap:
@@ -300,7 +285,7 @@ def find_peaks(
     :
         The time of the highest bin of each sub-pulse, in ms, in order.
     """
-    times, [(profile, _)] = _profiles(bins, (run,))
+    times, profile = _times(run.time_profile), run.time_profile.values
     above = np.flatnonzero(profile > threshold * profile.max())
     groups = np.split(above, np.flatnonzero(np.diff(times[above]) > gap) + 1)
     return [float(times[group[np.argmax(profile[group])]]) for group in groups]
@@ -325,22 +310,16 @@ def _set_scale(ax: Axes, log_y: bool, highest: float) -> None:
         ax.set_ylim(bottom=0)
 
 
-def plot_sources(
-    bins: Mapping[str, sc.Variable],
-    runs: tuple[SourceRun, SourceRun],
-    title: str,
-    log_y: bool = False,
-) -> Figure:
+def plot_sources(runs: tuple[SourceRun, SourceRun], title: str, log_y: bool = False) -> Figure:
     """Draw the wavelength spectrum and the time profile of both sources.
 
-    Each is summed over the other axis, with its error bars and the points joined by lines.
+    Each is summed over the other axis, with its error bars and the points joined by lines, as
+    :func:`.plot_profile` draws them.
 
     Parameters
     ----------
-    bins:
-        The bin edges of both maps, ``"toa"`` and ``"wavelength"``, evenly spaced.
     runs:
-        The runs of both sources, plain then masked.
+        The runs of both sources, plain then masked, on the same bins.
     title:
         The title of the figure.
     log_y:
@@ -352,35 +331,15 @@ def plot_sources(
     :
         The figure.
     """
-    times, profiles = _profiles(bins, runs)
-    wavelengths = sc.midpoints(bins["wavelength"]).to(unit="Å").values
-    time_bin, wavelength_bin = times[1] - times[0], wavelengths[1] - wavelengths[0]
-
     fig, (spectrum_ax, profile_ax) = plt.subplots(1, 2, figsize=(14, 5.5), layout="constrained")
     fig.suptitle(title)
-    for run, (profile, profile_error) in zip(runs, profiles, strict=True):
+    for run in runs:
         label = f"{run.component}, error {run.relative_error:.2%}"
-        spectrum = run.intensity.sum(axis=0)
-        spectrum_error = np.sqrt((run.error**2).sum(axis=0))
-        for ax, centers, values, errors in (
-            (spectrum_ax, wavelengths, spectrum, spectrum_error),
-            (profile_ax, times, profile, profile_error),
-        ):
-            ax.errorbar(
-                centers,
-                values,
-                yerr=errors,
-                label=label,
-                fmt=".-",
-                markersize=3,
-                linewidth=0.8,
-                elinewidth=0.8,
-            )
-    spectrum_ax.set(xlabel="Wavelength [Å]", ylabel=f"Intensity [n/s per {wavelength_bin:.2g} Å]")
-    profile_ax.set(xlabel="Time [ms]", ylabel=f"Intensity [n/s per {time_bin:.2g} ms]")
+        plot_profile(spectrum_ax, run.spectrum, label, connect=True)
+        plot_profile(profile_ax, run.time_profile, label, connect=True)
     for ax, highest in (
-        (spectrum_ax, max(run.intensity.sum(axis=0).max() for run in runs)),
-        (profile_ax, max(profile.max() for profile, _ in profiles)),
+        (spectrum_ax, max(run.spectrum.values.max() for run in runs)),
+        (profile_ax, max(run.time_profile.values.max() for run in runs)),
     ):
         _set_scale(ax, log_y, highest)
         ax.legend()
@@ -388,7 +347,6 @@ def plot_sources(
 
 
 def plot_peaks(
-    bins: Mapping[str, sc.Variable],
     runs: tuple[SourceRun, SourceRun],
     title: str,
     peaks: list[float],
@@ -396,12 +354,13 @@ def plot_peaks(
 ) -> Figure:
     """Draw the time profile of both sources around each sub-pulse, a panel each.
 
+    Each panel has the time bins within ``half_width`` of its peak, as :func:`.plot_profile`
+    draws them, with their axis labels on the outer panels only.
+
     Parameters
     ----------
-    bins:
-        The bin edges of both maps, ``"toa"`` and ``"wavelength"``, evenly spaced.
     runs:
-        The runs of both sources, plain then masked.
+        The runs of both sources, plain then masked, on the same bins.
     title:
         The title of the figure.
     peaks:
@@ -414,8 +373,7 @@ def plot_peaks(
     :
         The figure, ``PEAK_COLUMNS`` panels to a row, in the order of time.
     """
-    times, profiles = _profiles(bins, runs)
-    time_bin = times[1] - times[0]
+    times = _times(runs[0].time_profile)
     rows = math.ceil(len(peaks) / PEAK_COLUMNS)
     fig, axes = plt.subplots(
         rows,
@@ -426,27 +384,19 @@ def plot_peaks(
     )
     fig.suptitle(title)
     for ax, peak in zip(axes.flat, peaks, strict=False):
-        inside = np.abs(times - peak) <= half_width
-        for run, (profile, error) in zip(runs, profiles, strict=True):
-            ax.errorbar(
-                times[inside],
-                profile[inside],
-                yerr=error[inside],
-                label=run.component,
-                fmt=".-",
-                markersize=3,
-                linewidth=0.8,
-                elinewidth=0.8,
-            )
+        inside = np.flatnonzero(np.abs(times - peak) <= half_width)  # the bins around the peak
+        for run in runs:
+            around = run.time_profile["toa", inside[0] : inside[-1] + 1]
+            plot_profile(ax, around, run.component, connect=True)
         ax.set(title=f"{peak:.2f} ms", xlim=(peak - half_width, peak + half_width))
         ax.tick_params(labelsize=7)
         ax.set_ylim(bottom=0)
+    for ax in axes[:, 1:].flat:  # the intensity is labeled on the first column only
+        ax.set_ylabel("")
+    for ax in axes[:-1, :].flat:  # and the time on the last row only
+        ax.set_xlabel("")
     for ax in axes.flat[len(peaks) :]:  # the empty panels of the last row
         ax.set_axis_off()
-    for ax in axes[:, 0]:
-        ax.set_ylabel(f"n/s per {time_bin:.2g} ms")
-    for ax in axes[-1, :]:
-        ax.set_xlabel("Time [ms]")
     axes.flat[0].legend(fontsize=7)
     return fig
 
@@ -494,13 +444,11 @@ def main(
     print(table, end="")
     folder = output_folder(out, "trex_masked_source")
 
-    bins = monitor_bins(plain_instrument.sample_monitor.bin_limits)
-    peaks = find_peaks(masked, bins)
+    peaks = find_peaks(masked)
     conditions = f"ncount = {int(ncount):,} each\n{plain_instrument.running_conditions()}"
     files = [
         save_figure(
             plot_sources(
-                bins,
                 (plain, masked),
                 f"T-Rex flux at the sample monitor, {conditions}",
                 log_y=log_y,
@@ -510,7 +458,6 @@ def main(
         for suffix, log_y in (("", False), ("_log", True))
     ]
     fig = plot_peaks(
-        bins,
         (plain, masked),
         f"The {len(peaks)} sub-pulses at the sample monitor, {conditions}",
         peaks,

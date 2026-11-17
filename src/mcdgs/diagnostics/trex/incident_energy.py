@@ -43,6 +43,7 @@ from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
 from mcdgs.diagnostics.compare import (
     MonitorComparison,
     compare_mcstas_vs_tof,
+    intensity_label,
     tof_scale,
     tuned_transmission,
 )
@@ -238,9 +239,8 @@ def plot_time_profiles(comparisons: list[MonitorComparison], title: str) -> Figu
             times, c.second.values.sum(axis=1), color=color, lw=1.2, ls="--", label=f"{label}, tof"
         )
     # the monitors have time bins of the same width
-    edges = comparisons[0].bins["toa"].to(unit="ms").values
-    time_bin = edges[1] - edges[0]
-    ax.set(title=title, xlabel="Time [ms]", ylabel=f"Intensity [n/s per {time_bin:.2g} ms]")
+    ylabel = intensity_label(comparisons[0].first.sum("wavelength"))
+    ax.set(title=title, xlabel="Time [ms]", ylabel=ylabel)
     ax.set_ylim(bottom=0)
     ax.grid(True, alpha=0.4)
     ax.legend()
