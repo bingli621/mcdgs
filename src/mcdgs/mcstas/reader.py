@@ -1,8 +1,8 @@
 """Read the data of the components of a McStas run, as McStasScript loads them.
 
-:func:`read_map` reads the time and wavelength map of a component, in n/s per bin, on its
+:func:`read_mcstas_map` reads the time and wavelength map of a component, in n/s per bin, on its
 bin edges (:func:`.monitor_bins`), as a scipp data array with its errors.
-:func:`.read_tof_monitor` reads the same map of a tof run.
+:func:`.read_tof_map` reads the same map of a tof run.
 
 The neutrons of a detector are read from the NeXus file instead: see :mod:`.nexus_io`.
 """
@@ -15,7 +15,7 @@ import scipp as sc
 from mcstasscript.data.data import McStasData
 
 
-def read_map(
+def read_mcstas_map(
     name: str, mcstas_data: list[McStasData], bins: Mapping[str, sc.Variable]
 ) -> sc.DataArray:
     """Read the time and wavelength map of a component of one McStas run, in n/s per bin.

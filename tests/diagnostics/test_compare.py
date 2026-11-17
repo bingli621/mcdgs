@@ -16,7 +16,7 @@ from mcdgs.diagnostics.compare import (
     read_scaled_comparisons,
 )
 from mcdgs.diagnostics.trex.source import TRexSource
-from mcdgs.tof import build_tof, read_tof_monitor
+from mcdgs.tof import build_tof, read_tof_map
 
 BINS = {
     "toa": sc.linspace("toa", 0.0, 15.0, 31, unit="ms"),
@@ -52,7 +52,7 @@ def test_a_given_scale_is_kept(tof_result):
     comparison = read_comparison(
         "source_monitor", _mcstas_map((20, 30)), tof_result, BINS, 1e6, NEUTRONS, scale=2.0
     )
-    counts = read_tof_monitor(tof_result["source_monitor"], BINS).values
+    counts = read_tof_map("source_monitor", tof_result, BINS).values
     np.testing.assert_allclose(comparison.tof_intensity, 2 * counts)
     np.testing.assert_allclose(comparison.tof_error, 2 * np.sqrt(counts))  # Poisson
 
@@ -68,7 +68,7 @@ def test_the_transmission_scales_tof_on_top_of_a_given_scale(tof_result):
         scale=2.0,
         transmission=0.25,
     )
-    counts = read_tof_monitor(tof_result["source_monitor"], BINS).values
+    counts = read_tof_map("source_monitor", tof_result, BINS).values
     np.testing.assert_allclose(comparison.tof_intensity, 0.5 * counts)
     np.testing.assert_allclose(comparison.tof_error, 0.5 * np.sqrt(counts))
     assert (comparison.scale, comparison.transmission) == (2.0, 0.25)

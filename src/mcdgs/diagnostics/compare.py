@@ -1,7 +1,7 @@
 """McStas and tof at one monitor, side by side.
 
 Each model gives one time and wavelength map of the monitor, a scipp data array with its bin
-edges and its errors: :func:`.read_map` that of McStas, in n/s, and :func:`.read_tof_monitor`
+edges and its errors: :func:`.read_mcstas_map` that of McStas, in n/s, and :func:`.read_tof_map`
 that of tof, in neutrons, both on the bins of the monitor (:func:`.monitor_bins`). The small
 pieces work on any such map:
 
@@ -37,8 +37,8 @@ from matplotlib.figure import Figure
 from mcstasscript.data.data import McStasData
 from numpy.typing import NDArray
 
-from mcdgs.mcstas import read_map
-from mcdgs.tof import read_tof_monitor
+from mcdgs.mcstas import read_mcstas_map
+from mcdgs.tof import read_tof_map
 
 # how a coordinate of a map is shown, by its name: the label of its axis and its unit
 AXES: dict[str, tuple[str, str]] = {"toa": ("Time", "ms"), "wavelength": ("Wavelength", "Å")}
@@ -185,7 +185,7 @@ class MonitorComparison:
     name:
         The name of the monitor, in both models.
     mcstas:
-        The map of McStas, as :func:`.read_map`: (time bins, wavelength bins), with its bin
+        The map of McStas, as :func:`.read_mcstas_map`: (time bins, wavelength bins), with its bin
         edges, ``"toa"`` and ``"wavelength"``, evenly spaced, and its errors as variances.
     tof:
         The map of tof on the same bins: its counts times ``scale`` and ``transmission``, and
@@ -282,8 +282,8 @@ def read_comparison(
     """
     if scale is None and transmission != 1:
         raise ValueError(f"{name}: a transmission of {transmission} needs a given scale")
-    mcstas_map = read_map(name, mcstas_data, bins)
-    tof_counts = read_tof_monitor(tof_result[name], bins)
+    mcstas_map = read_mcstas_map(name, mcstas_data, bins)
+    tof_counts = read_tof_map(name, tof_result, bins)
     if scale is None:
         scale = float(mcstas_map.sum().value / tof_counts.sum().value)
     # in n/s, times the transmission; the Poisson errors are scaled as the counts

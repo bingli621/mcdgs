@@ -10,7 +10,7 @@ The names below are imported from here, ``from mcdgs.tof import build_tof``.
 
 from .acceptance import acceptance_diagram, chopper_cascade
 from .builder import beamline, build_tof, disk_chopper, get_choppers
-from .reader import read_tof_monitor
+from .reader import read_tof_map
 from .time_distance import time_distance_diagram
 
 __all__ = [
@@ -20,6 +20,6 @@ __all__ = [
     "chopper_cascade",
     "disk_chopper",
     "get_choppers",
-    "read_tof_monitor",
+    "read_tof_map",
     "time_distance_diagram",
 ]

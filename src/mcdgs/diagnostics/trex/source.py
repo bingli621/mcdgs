@@ -42,9 +42,9 @@ from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
 from mcdgs.diagnostics.compare import intensity_label, mean_coordinate, plot_map, plot_profile
 from mcdgs.instruments.trex.monitors import source_monitor
 from mcdgs.instruments.trex.sources import source, wavelength_band
-from mcdgs.mcstas import Simulation, read_map
+from mcdgs.mcstas import Simulation, read_mcstas_map
 from mcdgs.reduction.binning import monitor_bins
-from mcdgs.tof import build_tof, read_tof_monitor
+from mcdgs.tof import build_tof, read_tof_map
 
 
 # --8<-- [start:trex_source]
@@ -144,10 +144,8 @@ def main(
     bins = monitor_bins(instrument.source_monitor.bin_limits)
     # the map of each model on those bins, a scipp data array with its errors as variances:
     # McStas in n/s, tof in neutrons, a bin of N neutrons with the Poisson error √N
-    mcstas_map = read_map("source_monitor", mcstas_data, bins)
-    tof_counts = read_tof_monitor(
-        tof_result["source_monitor"], bins
-    )  # TODO gnerealize read_to monitor
+    mcstas_map = read_mcstas_map("source_monitor", mcstas_data, bins)
+    tof_counts = read_tof_map("source_monitor", tof_result, bins)
     # --8<-- [end:read_maps]
 
     # --8<-- [start:scale_tof]

@@ -60,7 +60,7 @@ from mcdgs.mcstas import Simulation
 from mcdgs.reduction.binning import monitor_bins
 from mcdgs.reduction.inelastic import DEFAULT_ENERGY_TRANSFER_RATIO, arrival_window, time_at_sample
 from mcdgs.reduction.patches import find_patches, subpulse_flight
-from mcdgs.tof import build_tof, read_tof_monitor
+from mcdgs.tof import build_tof, read_tof_map
 
 LOG_DECADES = 3  # the log color scale of the maps spans this many decades below the highest bin
 MONITORS = ("pre_sample_monitor", "beamstop_monitor")  # give the incident energy, in beam order
@@ -429,7 +429,7 @@ def subpulse_windows(
     """
     positions = {name: sc.vector(xyz, unit="m") for name, xyz in instrument.positions().items()}
     start, end = (
-        find_patches(read_tof_monitor(tof_result[name], bins).values, bins)
+        find_patches(read_tof_map(name, tof_result, bins).values, bins)
         for name in MONITORS
         for bins in [monitor_bins(getattr(instrument, name).bin_limits)]
     )
