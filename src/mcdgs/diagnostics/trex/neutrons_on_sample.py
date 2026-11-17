@@ -56,14 +56,13 @@ from mcdgs.diagnostics.compare import (
     MonitorComparison,
     compare_maps,
     plot_comparison,
-    read_maps,
     tof_scale,
     tuned_transmission,
 )
 from mcdgs.instruments.trex.detectors import BANANA_RADIUS
 from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
 from mcdgs.instruments.trex.monitors import SAMPLE_MONITOR_HEIGHT, SAMPLE_MONITOR_WIDTH
-from mcdgs.mcstas import Simulation
+from mcdgs.mcstas import Simulation, read_mcstas_map
 from mcdgs.reduction.binning import monitor_bins
 from mcdgs.reduction.inelastic import DEFAULT_ENERGY_TRANSFER_RATIO, arrival_window, time_at_sample
 from mcdgs.reduction.patches import find_patches, subpulse_flight
@@ -566,19 +565,23 @@ def main(
     name = "trex_neutrons_on_sample"
 
     # run McStas and load its monitors, in n/s per bin
-    folder = Simulation(instrument).run(name, ncount=ncount, seed=seed).folder
-    mcstas_data = ms.load_data(str(folder))
+    sim = Simulation(instrument)
+    run = sim.run(folder_name=name, ncount=ncount, seed=seed)
+    mcstas_data = ms.load_data(run.folder)
 
     # run tof, then read the monitors of both on the bins of the McStas maps: time, wavelength
-    tof_result = build_tof(instrument, neutrons=neutrons, seed=seed).run()
+    tof_model = build_tof(instrument, neutrons=neutrons, seed=seed)
+    tof_result = tof_model.run()
     # tof's counts are scaled to the total of McStas at the source monitor, in n/s; at the
     # sample monitor, the same scale, and the transmission on top of it
     source_bins = monitor_bins(instrument.source_monitor.bin_limits)
     sample_bins = monitor_bins(instrument.sample_monitor.bin_limits)
-    mcstas_source, tof_source = read_maps("source_monitor", mcstas_data, tof_result, source_bins)
+    mcstas_source = read_mcstas_map("source_monitor", mcstas_data, source_bins)
+    tof_source = read_tof_map("source_monitor", tof_result, source_bins)
     scale = tof_scale(mcstas_source, tof_source)
     at_source = compare_maps("source_monitor", mcstas_source, tof_source, ncount, neutrons, scale)
-    mcstas_sample, tof_sample = read_maps("sample_monitor", mcstas_data, tof_result, sample_bins)
+    mcstas_sample = read_mcstas_map("sample_monitor", mcstas_data, sample_bins)
+    tof_sample = read_tof_map("sample_monitor", tof_result, sample_bins)
     if transmission is None:  # tuned: the transmission that gives tof the total of McStas
         transmission = tuned_transmission(mcstas_sample, tof_sample, scale)
     comparison = compare_maps(

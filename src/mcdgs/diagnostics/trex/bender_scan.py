@@ -274,10 +274,10 @@ def run_bender_scan(
         angles = np.linspace(-0.8, 0.1, 19)
 
     # --8<-- [start:run_scan]
-    simulation = Simulation(define_instrument(), workspace)
-    scan = simulation.scan("b_rot", angles, "bender_scan", ncount=ncount, seed=seed, bender_in=1)
+    sim = Simulation(define_instrument(), workspace)
+    scan = sim.scan("b_rot", angles, "bender_scan", ncount=ncount, seed=seed, bender_in=1)
     print(f"Saved {scan.data_file}")
-    bender_out = simulation.run("bender_out", ncount=ncount, seed=seed, bender_in=0)
+    bender_out = sim.run(folder_name="bender_out", ncount=ncount, seed=seed, bender_in=0)
     # --8<-- [end:run_scan]
     print(f"Saved {bender_out.data_file}")
     return scan.data_file, bender_out.data_file

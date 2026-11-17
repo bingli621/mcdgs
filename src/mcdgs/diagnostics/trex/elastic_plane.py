@@ -423,10 +423,10 @@ def simulate(ncount: float = 1e9, seed: int = 1) -> tuple[Path, Path]:
     :
         The folders of the first and the second part.
     """
-    simulation = Simulation(define_instrument())
-    to_sample = simulation.run_to_sample(TO_SAMPLE, ncount=ncount, seed=seed)
+    sim = Simulation(define_instrument())
+    to_sample = sim.run_to_sample(folder_name=TO_SAMPLE, ncount=ncount, seed=seed)
     # sample_pos -> detector, from the beam file, in the frame of sample_pos: the beam frame
-    from_sample = simulation.run_from_sample(FROM_SAMPLE, seed=seed + 1)
+    from_sample = sim.run_from_sample(folder_name=FROM_SAMPLE, seed=seed + 1)
     return to_sample.folder, from_sample.folder
 
 
@@ -447,7 +447,7 @@ def subpulse_timing_of_run(to_sample: str | Path | None = None) -> sc.DataArray:
     to_sample = Path(to_sample or Workspace.find().run_folder(TO_SAMPLE))
     instrument = define_instrument()  # as simulate runs it
     bins = {monitor: monitor_bins(getattr(instrument, monitor).bin_limits) for monitor in MONITORS}
-    return subpulse_timing(ms.load_data(str(to_sample)), bins, instrument.positions())
+    return subpulse_timing(ms.load_data(to_sample), bins, instrument.positions())
 
 
 def reduce_runs(

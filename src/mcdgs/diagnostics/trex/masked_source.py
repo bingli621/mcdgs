@@ -196,16 +196,17 @@ def run_source(
         The run.
     """
     start = time.perf_counter()
-    folder = Simulation(instrument).run(folder_name, ncount=ncount, seed=seed).folder
+    sim = Simulation(instrument)
+    run = sim.run(folder_name=folder_name, ncount=ncount, seed=seed)
     seconds = time.perf_counter() - start
     sample_map = read_mcstas_map(
-        MONITOR, ms.load_data(str(folder)), monitor_bins(instrument.sample_monitor.bin_limits)
+        MONITOR, ms.load_data(run.folder), monitor_bins(instrument.sample_monitor.bin_limits)
     )
     intensity, error = sample_map.values, sc.stddevs(sample_map).values
-    region = folder / f"{instrument.source.name}.json"  # the masked source writes its region
+    region = run.folder / f"{instrument.source.name}.json"  # the masked source writes its region
     acceptance = json.loads(region.read_text())["acceptance"] if region.is_file() else None
     return SourceRun(
-        instrument.source.component_name, folder, seconds, intensity, error, acceptance
+        instrument.source.component_name, run.folder, seconds, intensity, error, acceptance
     )
 
 

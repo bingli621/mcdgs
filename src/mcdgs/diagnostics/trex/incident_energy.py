@@ -43,17 +43,16 @@ from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
 from mcdgs.diagnostics.compare import (
     MonitorComparison,
     compare_maps,
-    read_maps,
     tof_scale,
     tuned_transmission,
 )
 from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
-from mcdgs.mcstas import Simulation
+from mcdgs.mcstas import Simulation, read_mcstas_map
 from mcdgs.reduction.binning import monitor_bins
 from mcdgs.reduction.incident_energy import EI_GRAPH, incident_flight
 from mcdgs.reduction.patches import MIN_FRACTION, find_patches, subpulse_flight
 from mcdgs.samples import la2ni7
-from mcdgs.tof import build_tof
+from mcdgs.tof import build_tof, read_tof_map
 
 MONITORS = ("pre_sample_monitor", "beamstop_monitor")  # in beam order
 MONITOR_LABELS = {
@@ -375,24 +374,27 @@ def main(
     name = "trex_determine_ei"
 
     # run McStas and load its monitors, in n/s per bin
-    folder = Simulation(instrument).run(name, ncount=ncount, seed=seed).folder
-    mcstas_data = ms.load_data(str(folder))
+    sim = Simulation(instrument)
+    run = sim.run(folder_name=name, ncount=ncount, seed=seed)
+    mcstas_data = ms.load_data(run.folder)
 
     # run tof; its counts are scaled to the total of McStas at the source monitor, in n/s, and,
     # at the pre-sample and beamstop monitors, by the transmission on top of it
-    tof_result = build_tof(instrument, neutrons=neutrons, seed=seed).run()
-    source_bins = monitor_bins(instrument.source_monitor.bin_limits)
-    scale = tof_scale(*read_maps("source_monitor", mcstas_data, tof_result, source_bins))
-    maps = {
-        name: read_maps(
-            name, mcstas_data, tof_result, monitor_bins(getattr(instrument, name).bin_limits)
-        )
-        for name in MONITORS
+    tof_model = build_tof(instrument, neutrons=neutrons, seed=seed)
+    tof_result = tof_model.run()
+    bins = {
+        name: monitor_bins(getattr(instrument, name).bin_limits)
+        for name in ("source_monitor", *MONITORS)
     }
+    mcstas_maps = {name: read_mcstas_map(name, mcstas_data, edges) for name, edges in bins.items()}
+    tof_maps = {name: read_tof_map(name, tof_result, edges) for name, edges in bins.items()}
+    scale = tof_scale(mcstas_maps["source_monitor"], tof_maps["source_monitor"])
     if transmission is None:  # tuned at the pre-sample monitor, and kept at the beamstop monitor
-        transmission = tuned_transmission(*maps[MONITORS[0]], scale)
+        first = MONITORS[0]
+        transmission = tuned_transmission(mcstas_maps[first], tof_maps[first], scale)
     comparisons = [
-        compare_maps(name, *maps[name], ncount, neutrons, scale, transmission) for name in MONITORS
+        compare_maps(name, mcstas_maps[name], tof_maps[name], ncount, neutrons, scale, transmission)
+        for name in MONITORS
     ]
     for c in comparisons:
         print(

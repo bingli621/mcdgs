@@ -386,9 +386,10 @@ def main(out: Path | None = None, ncount: float = 1e8, seed: int = 1) -> list[Pa
         The paths of the figures, in that order.
     """
     instrument = define_instrument()
-    run = Simulation(instrument).run(RUN, ncount=ncount, seed=seed).folder
+    sim = Simulation(instrument)
+    run = sim.run(folder_name=RUN, ncount=ncount, seed=seed)
 
-    binned = read_events(run, DETECTOR, SOURCE, SAMPLE)
+    binned = read_events(run.folder, DETECTOR, SOURCE, SAMPLE)
     image = detector_image(binned)
     hit = np.count_nonzero(image.values)
     print(

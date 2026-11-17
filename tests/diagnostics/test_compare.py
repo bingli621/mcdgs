@@ -14,12 +14,12 @@ from mcdgs.diagnostics.compare import (
     plot_comparison,
     plot_map,
     plot_profile,
-    read_maps,
     tof_scale,
     tuned_transmission,
 )
 from mcdgs.diagnostics.trex.source import TRexSource
-from mcdgs.tof import build_tof
+from mcdgs.mcstas import read_mcstas_map
+from mcdgs.tof import build_tof, read_tof_map
 
 BINS = {
     "toa": sc.linspace("toa", 0.0, 15.0, 31, unit="ms"),
@@ -45,20 +45,10 @@ def _mcstas_map(shape: tuple[int, int], name: str = "source_monitor") -> list[Mc
 
 def _source_comparison(tof_result: tof.Result) -> MonitorComparison:
     """source_monitor in both models, tof scaled to the total of McStas there."""
-    mcstas_map, tof_counts = read_maps("source_monitor", _mcstas_map((20, 30)), tof_result, BINS)
+    mcstas_map = read_mcstas_map("source_monitor", _mcstas_map((20, 30)), BINS)
+    tof_counts = read_tof_map("source_monitor", tof_result, BINS)
     scale = tof_scale(mcstas_map, tof_counts)
     return compare_maps("source_monitor", mcstas_map, tof_counts, 1e6, NEUTRONS, scale)
-
-
-def test_both_maps_are_read_on_the_same_bins(tof_result):
-    mcstas_map, tof_counts = read_maps("source_monitor", _mcstas_map((20, 30)), tof_result, BINS)
-    assert mcstas_map.shape == tof_counts.shape == (30, 20)  # time, wavelength
-    assert sc.identical(mcstas_map.coords["toa"], tof_counts.coords["toa"])
-
-
-def test_a_map_on_other_bins_is_refused(tof_result):
-    with pytest.raises(ValueError, match="source_monitor"):
-        read_maps("source_monitor", _mcstas_map((30, 20)), tof_result, BINS)
 
 
 def test_tof_is_scaled_to_the_total_of_mcstas(tof_result):
@@ -68,7 +58,8 @@ def test_tof_is_scaled_to_the_total_of_mcstas(tof_result):
 
 
 def test_the_scale_and_the_transmission_scale_tof_and_its_poisson_errors(tof_result):
-    mcstas_map, tof_counts = read_maps("source_monitor", _mcstas_map((20, 30)), tof_result, BINS)
+    mcstas_map = read_mcstas_map("source_monitor", _mcstas_map((20, 30)), BINS)
+    tof_counts = read_tof_map("source_monitor", tof_result, BINS)
     comparison = compare_maps(
         "source_monitor", mcstas_map, tof_counts, 1e6, NEUTRONS, scale=2.0, transmission=0.25
     )
@@ -82,8 +73,10 @@ def test_the_scale_and_the_transmission_scale_tof_and_its_poisson_errors(tof_res
 def test_the_tuned_transmission_gives_tof_the_total_of_mcstas_further_down(tof_result):
     # the same tof neutrons at both monitors, a quarter of the McStas beam at the later one
     tof_two_monitors = {"later_monitor": tof_result["source_monitor"]}
-    source_map, tof_source = read_maps("source_monitor", _two_monitors(), tof_result, BINS)
-    later_map, tof_later = read_maps("later_monitor", _two_monitors(), tof_two_monitors, BINS)
+    source_map = read_mcstas_map("source_monitor", _two_monitors(), BINS)
+    tof_source = read_tof_map("source_monitor", tof_result, BINS)
+    later_map = read_mcstas_map("later_monitor", _two_monitors(), BINS)
+    tof_later = read_tof_map("later_monitor", tof_two_monitors, BINS)
     scale = tof_scale(source_map, tof_source)
     transmission = tuned_transmission(later_map, tof_later, scale)
     later = compare_maps("later_monitor", later_map, tof_later, 1e6, NEUTRONS, scale, transmission)

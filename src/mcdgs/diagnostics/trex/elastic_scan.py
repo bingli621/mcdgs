@@ -124,10 +124,8 @@ def simulate(omegas: np.ndarray = OMEGAS, beam_run: str = plane.TO_SAMPLE, seed:
         The scan folder, ``SCAN`` in the runs folder of :meth:`.Workspace.find`, with one entry
         per angle.
     """
-    simulation = Simulation(define_instrument())
-    scan = simulation.scan_from_sample(
-        "omega", omegas, folder_name=SCAN, beam_run=beam_run, seed=seed
-    )
+    sim = Simulation(define_instrument())
+    scan = sim.scan_from_sample("omega", omegas, folder_name=SCAN, beam_run=beam_run, seed=seed)
     return scan.folder
 
 

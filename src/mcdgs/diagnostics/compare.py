@@ -17,30 +17,24 @@ beam, the same scale lets a difference in what the guides and choppers let throu
 ``transmission`` then scales tof on top of it, for what the beam loses that tof does not model,
 such as the guides: tof has none.
 
-Scaling tof is a few small steps, at each monitor on the same bins: :func:`read_maps` reads the
-map of each model, :func:`tof_scale` gives the scale where both see the same beam,
+Scaling tof is a few small steps, on the maps of each monitor: :func:`tof_scale` gives the
+scale where both see the same beam,
 :func:`tuned_transmission` the transmission that gives tof the total of McStas further down, and
 :func:`compare_maps` puts both maps side by side in n/s, as a :class:`MonitorComparison`.
 :func:`plot_comparison` draws a comparison and :func:`print_means` prints the mean time and
 wavelength of each model.
 """
 
-from collections.abc import Mapping
 from dataclasses import dataclass
 
 import matplotlib.pyplot as plt
 import numpy as np
 import scipp as sc
-import tof
 from matplotlib.axes import Axes
 from matplotlib.collections import QuadMesh
 from matplotlib.colors import LogNorm, Normalize
 from matplotlib.figure import Figure
-from mcstasscript.data.data import McStasData
 from numpy.typing import NDArray
-
-from mcdgs.mcstas import read_mcstas_map
-from mcdgs.tof import read_tof_map
 
 # how a coordinate of a map is shown, by its name: the label of its axis and its unit
 AXES: dict[str, tuple[str, str]] = {"toa": ("Time", "ms"), "wavelength": ("Wavelength", "Å")}
@@ -236,40 +230,6 @@ class MonitorComparison:
         return sc.stddevs(self.tof).values
 
 
-def read_maps(
-    name: str,
-    mcstas_data: list[McStasData],
-    tof_result: tof.Result,
-    bins: Mapping[str, sc.Variable],
-) -> tuple[sc.DataArray, sc.DataArray]:
-    """Read one monitor of a McStas and a tof run on the same bins.
-
-    Parameters
-    ----------
-    name:
-        The name of the monitor, in both models.
-    mcstas_data:
-        The monitors of the McStas run, as ``mcstasscript.load_data`` reads them. This one must
-        be a 2D map of time against wavelength, ``"time ... lambda ..."``, on ``bins``.
-    tof_result:
-        The tof run.
-    bins:
-        The bin edges of the McStas map, ``"toa"`` and ``"wavelength"``, in that order.
-
-    Returns
-    -------
-    :
-        The map of McStas in n/s, as :func:`.read_mcstas_map`, and that of tof in neutrons, as
-        :func:`.read_tof_map`, both with their errors.
-
-    Raises
-    ------
-    ValueError
-        If the map of McStas does not have the shape of ``bins``.
-    """
-    return read_mcstas_map(name, mcstas_data, bins), read_tof_map(name, tof_result, bins)
-
-
 def tof_scale(mcstas_map: sc.DataArray, tof_counts: sc.DataArray) -> float:
     """Return the n/s each tof neutron stands for: the total of McStas over that of tof.
 
@@ -341,7 +301,7 @@ def compare_maps(
     name:
         The name of the monitor, in both models.
     mcstas_map:
-        The map of McStas, in n/s, as :func:`read_maps` reads it.
+        The map of McStas, in n/s, as :func:`.read_mcstas_map` reads it.
     tof_counts:
         The map of tof on the same bins, in neutrons.
     ncount:
