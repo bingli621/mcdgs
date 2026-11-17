@@ -17,7 +17,7 @@ has a McStas `WHEN` on `bender_in`, and a run uses either guide 4a or the bender
 
 <!-- fmt:off -->
 ```python
---8<-- "src/mcdgs/diagnostics/trex/extraction.py:extraction"
+--8<-- "src/mcdgs/diagnostics/trex/extraction.py:instrument"
 ```
 <!-- fmt:on -->
 
@@ -79,8 +79,9 @@ placed relative to. Next to it, the black line is the intensity just before each
 n/s, and the dashed green line the number of rays, both on a log scale zoomed to 5e10 to
 1.5e12 n/s. Each step of the line is what one component loses. It is a McStas run of its own,
 which adds a monitor before every component; those monitors are 100 m wide, so they count every
-ray, inside an opening or not. `show_diagram` has no range for the intensity, so the range is set
-on the axes it drew, and its `plt.show()` is held back so the figure can be saved:
+ray, inside an opening or not. `show_diagram` has no range for the intensity, so
+`draw_intensity_diagram`, in [`mcdgs.diagnostics.drawing`](../../reference/diagnostics.md), sets
+the range on the axes it drew, and holds back its `plt.show()` so the figure can be saved:
 
 <!-- fmt:off -->
 ```python

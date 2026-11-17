@@ -54,6 +54,45 @@ PEAK_COLUMNS = 6  # the zooms on the sub-pulses are drawn this many to a row
 LOG_DECADES = 6  # a log axis spans this many decades below the highest point
 
 
+# --8<-- [start:instrument]
+def define_instrument(
+    source_masked: bool = False,
+    lambda_resolution: float = LAMBDA_RESOLUTION,
+    time_resolution: float = TIME_RESOLUTION,
+) -> TRexToSample:
+    """Return an instrument of this diagnostic: :class:`.TRexToSample` with one of both sources.
+
+    Its sample monitor spans the band of the source with finer bins, and the masked one has a
+    name of its own, so that each is compiled in a build folder of its own.
+
+    Parameters
+    ----------
+    source_masked:
+        True for the masked source, False for the plain one.
+    lambda_resolution:
+        The wavelength bin of the sample monitor, in Å.
+    time_resolution:
+        Its time bin, in s.
+
+    Returns
+    -------
+    :
+        The instrument.
+    """
+    instrument = TRexToSample(source_masked=source_masked)
+    if source_masked:
+        instrument.name = "trex_to_sample_masked"  # compiled in a folder of its own
+    instrument.sample_monitor = sample_monitor(  # in its place, with finer bins
+        lambda_limits=wavelength_band(instrument.params.lambda0),
+        lambda_resolution=lambda_resolution,
+        time_resolution=time_resolution,
+    )
+    return instrument
+
+
+# --8<-- [end:instrument]
+
+
 @dataclass(frozen=True)
 class SourceRun:
     """The run of one source, at the sample monitor.
@@ -405,16 +444,9 @@ def main(
         The paths of the figures, linear, log then the peaks, and of the table.
     """
     name = "trex_masked_source"
-    plain_instrument = TRexToSample()  # the default control parameters
-    masked_instrument = TRexToSample(source_masked=True)
-    masked_instrument.name = "trex_to_sample_masked"  # compiled in a folder of its own
-    band = wavelength_band(plain_instrument.params.lambda0)
-    for instrument in (plain_instrument, masked_instrument):  # in its place, with finer bins
-        instrument.sample_monitor = sample_monitor(
-            lambda_limits=band,
-            lambda_resolution=lambda_resolution,
-            time_resolution=time_resolution,
-        )
+    plain_instrument, masked_instrument = (
+        define_instrument(masked, lambda_resolution, time_resolution) for masked in (False, True)
+    )
     plain = run_source(plain_instrument, f"{name}_plain", ncount, seed)
     masked = run_source(masked_instrument, f"{name}_masked", ncount, seed)
 

@@ -21,11 +21,26 @@ from mcstastox.LoadFile import Data
 from numpy.typing import NDArray
 
 from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
-from mcdgs.diagnostics.trex.extraction import Extraction, diagnose_path
+from mcdgs.diagnostics.trex.extraction import Extraction, ExtractionParams, diagnose_path
 from mcdgs.instruments.trex.guides.bispectral import BENDER_ROTATION
 from mcdgs.mcstas import Simulation, Workspace
 
 BAND_WIDTH = 0.5  # Å: the bands are centered on its multiples, 0.5, 1.0, 1.5 Å, ...
+
+
+# --8<-- [start:instrument]
+
+
+def define_instrument() -> Extraction:
+    """Return the instrument of this diagnostic: the :class:`.Extraction` with the bender in.
+
+    Its runs still set ``bender_in`` themselves: the scan with the bender in, the run without it
+    with it out.
+    """
+    return Extraction(ExtractionParams(bender_in=True))
+
+
+# --8<-- [end:instrument]
 
 
 def transmission(
@@ -176,7 +191,7 @@ def run_bender_scan(
         angles = np.linspace(-0.8, 0.1, 19)
 
     # --8<-- [start:run_scan]
-    simulation = Simulation(Extraction(), workspace)
+    simulation = Simulation(define_instrument(), workspace)
     scan = simulation.scan("b_rot", angles, "bender_scan", ncount=ncount, seed=seed, bender_in=1)
     print(f"Saved {scan.data_file}")
     bender_out = simulation.run("bender_out", ncount=ncount, seed=seed, bender_in=0)

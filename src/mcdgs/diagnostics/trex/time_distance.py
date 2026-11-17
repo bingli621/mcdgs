@@ -24,6 +24,17 @@ N_PULSES = 2
 VISIBLE_RAYS = 2000
 """Most rays drawn per pulse, of the neutrons that reach the sample."""
 BLOCKED_RAYS = 5000
+
+
+# --8<-- [start:instrument]
+
+
+def define_instrument() -> TRex:
+    """Return the instrument of this diagnostic: :class:`.TRex` at its default parameters."""
+    return TRex()
+
+
+# --8<-- [end:instrument]
 """Most rays drawn per pulse, in gray, of the neutrons a chopper stops."""
 
 
@@ -122,7 +133,7 @@ def main(out: Path | None = None, neutrons: int = 1_000_000, seed: int = 1) -> l
     folder = output_folder(out, "trex_time_distance")
 
     # --8<-- [start:time_distance]
-    trex = TRex()  # the default control parameters
+    trex = define_instrument()
     figure = time_distance_diagram(
         trex,
         neutrons,

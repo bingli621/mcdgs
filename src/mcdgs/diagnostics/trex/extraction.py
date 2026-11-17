@@ -20,11 +20,9 @@ path with it is run by :func:`.bender_scan.main`. Run the module for it::
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from unittest.mock import patch
 
 import matplotlib.pyplot as plt
 import mcstasscript as ms
-from matplotlib.figure import Figure
 
 from mcdgs.core import InstrParam, Instrument, param
 from mcdgs.core.components import (
@@ -37,7 +35,7 @@ from mcdgs.core.components import (
 )
 from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
 from mcdgs.diagnostics.compare import plot_comparison, read_scaled_comparisons
-from mcdgs.diagnostics.drawing import draw_instrument
+from mcdgs.diagnostics.drawing import draw_instrument, draw_intensity_diagram
 from mcdgs.instruments.trex.guides.bispectral import (
     BENDER_ROTATION,
     arm_guide_4,
@@ -65,7 +63,7 @@ DIAGRAM_INTENSITY_LIMITS = (5e10, 1.5e12)
 TOP_VIEW_LIMITS = (0.0, 5.916, -0.15, 0.15)
 
 
-# --8<-- [start:extraction]
+# --8<-- [start:instrument]
 @dataclass(frozen=True)
 class ExtractionParams:
     """Control parameters of the extraction section.
@@ -132,31 +130,31 @@ class Extraction(Instrument):
             InstrParam("bender_in", int(self.params.bender_in), "", "bender in = 1, out = 0"),
             InstrParam("b_rot", self.params.b_rot, "deg", "rotation of the cold neutron bender"),
         ]
-        # --8<-- [end:extraction]
 
 
-def _zoom_intensity(diagram: Figure, limits: tuple[float, float]) -> None:
-    """Zoom the intensity axis of McStasScript's diagram, and its ray count with it.
+def define_instrument(bender_in: bool = False) -> Extraction:
+    """Return the instrument of this diagnostic.
 
-    ``show_diagram`` takes no range for the intensity: its ``limits`` are those of a
-    ``variable``. The ray count keeps its ratio to the intensity, so both share their ticks.
+    Parameters
+    ----------
+    bender_in:
+        The path through guide 4: True for the bender and guide 4b, False for guide 4a.
+
+    Returns
+    -------
+    :
+        :class:`Extraction` on that path, at the nominal rotation of the bender.
     """
-    intensity_ax = next(ax for ax in diagram.axes if ax.get_xlabel() == "Intensity [n/s]")
-    rays_ax = next(ax for ax in diagram.axes if ax.get_xlabel() == "Ray count")
-    rays_per_intensity = rays_ax.get_xlim()[1] / intensity_ax.get_xlim()[1]
-    intensity_ax.set_xlim(limits)
-    rays_ax.set_xlim(limits[0] * rays_per_intensity, limits[1] * rays_per_intensity)
+    return Extraction(ExtractionParams(bender_in=bender_in))
+
+
+# --8<-- [end:instrument]
 
 
 def save_run_record(
-    folder: Path,
-    extraction: Extraction,
-    started: datetime,
-    bender_in: bool,
-    ncount: float,
-    seed: int,
+    folder: Path, instrument: Instrument, started: datetime, ncount: float, seed: int
 ) -> Run:
-    """Save the record of a run of the extraction that McStasScript started itself.
+    """Save the record of a run that McStasScript started itself.
 
     The runs of :func:`diagnose_path` go through McStasScript's diagnostics and its diagram,
     not through a :class:`.Simulation`, which would save the record. With it the run is found
@@ -168,12 +166,11 @@ def save_run_record(
     ----------
     folder:
         The run folder, written by the run.
-    extraction:
-        The instrument.
+    instrument:
+        The instrument, with the instrument parameters of the run as its own: the McStas
+        instrument was built from it and given none.
     started:
         When the run started.
-    bender_in:
-        The path of the run: True for the bender and guide 4b.
     ncount, seed:
         The number of neutrons and the seed of the run.
 
@@ -184,10 +181,10 @@ def save_run_record(
     """
     run = Run(
         folder=folder,
-        instrument=extraction.name,
+        instrument=instrument.name,
         run_type=RunType.RUN,
         started=started,
-        instr_params=recorded_instr_params(extraction.instr_params, {"bender_in": int(bender_in)}),
+        instr_params=recorded_instr_params(instrument.instr_params, {}),
         ncount=ncount,
         seed=seed,
     )
@@ -239,22 +236,16 @@ def diagnose_path(
     :
         The paths of the diagnostics, the diagram and the comparison.
     """
-    extraction = Extraction()
+    extraction = define_instrument(bender_in)  # the path, the default of the McStas runs
     path = "bender in, guide 4b" if bender_in else "bender out, guide 4a"
     run_name = f"trex_extraction_bender_{'in' if bender_in else 'out'}"
-
-    # the bin edges of each monitor, read from it so that they cannot drift apart
-    source_bins = monitor_bins(extraction.source_monitor.bin_limits)
-    bins = monitor_bins(extraction.beam_monitor.bin_limits)
-
-    # tof has no bender: its run is the same on both paths
-    tof_result = build_tof(extraction, neutrons=neutrons, seed=seed).run()
+    workspace = Workspace.find()
+    figure_folder = output_folder(out, "trex_extraction")
 
     # --8<-- [start:diagnostics]
     # McStasScript's diagnostics: the beam after the source, guide 3 and guide 4b, its profile,
     # wavelength against x, and its spectrum
-    workspace = Workspace.find()
-    mcstas_instr = build_mcstas(extraction, input_path=workspace.build_folder(extraction.name))
+    mcstas_instr = build_mcstas(extraction)
     diag = ms.Diagnostics(mcstas_instr)  # works on a copy: mcstas_instr is left as it is
     for component in ("source", "guide_3", "guide_4b"):
         # rays="all": a limited list stops early, which leaves the intensities too low
@@ -266,7 +257,6 @@ def diagnose_path(
 
     started = datetime.now().astimezone()
     folder = workspace.new_run_folder(run_name, "diagnose")
-    diag.set_parameters(bender_in=int(bender_in))
     diag.settings(
         ncount=diagnostics_ncount,
         suppress_output=True,
@@ -275,16 +265,14 @@ def diagnose_path(
         output_path=str(folder),
     )
     diag.run()
-    save_run_record(folder, extraction, started, bender_in, diagnostics_ncount, seed)
+    save_run_record(folder, extraction, started, diagnostics_ncount, seed)
     diag.plot()  # draws on a new figure, which it does not return
-    figure_folder = output_folder(out, "trex_extraction")
     figures = [save_figure(plt.gcf(), figure_folder / f"{run_name}_diagnose.png", dpi=100)]
 
     # McStasScript's diagram of the components, with the intensity and the rays before each:
     # a McStas run of its own, in a folder of its own, which also holds the monitors
     started = datetime.now().astimezone()
     intensity_folder = workspace.new_run_folder(f"{run_name}_intensity", "diagram")
-    mcstas_instr.set_parameters(bender_in=int(bender_in))
     mcstas_instr.settings(
         ncount=ncount,
         suppress_output=True,
@@ -293,24 +281,25 @@ def diagnose_path(
         output_path=str(intensity_folder),
     )
     # --8<-- [start:diagram]
-    # show_diagram ends in plt.show(), which in a window waits for it to close, and the figure
-    # goes with it: hold it back, to save the figure as the others
-    with patch.object(plt, "show"):
-        mcstas_instr.show_diagram(analysis=True)
-    diagram = plt.gcf()
-    _zoom_intensity(diagram, DIAGRAM_INTENSITY_LIMITS)
+    diagram = draw_intensity_diagram(
+        mcstas_instr, figure_folder / f"{run_name}_intensity.png", DIAGRAM_INTENSITY_LIMITS
+    )
     # --8<-- [end:diagram]
-    save_run_record(intensity_folder, extraction, started, bender_in, ncount, seed)
-    figures.append(save_figure(diagram, figure_folder / f"{run_name}_intensity.png", dpi=100))
+    save_run_record(intensity_folder, extraction, started, ncount, seed)
+    figures.append(diagram)
 
     # --8<-- [start:scale_tof]
-    # tof's counts are scaled to the total of McStas at the source monitor, in n/s, and by the
-    # transmission on top of it at the beam monitor
-    mcstas_data = ms.load_data(str(intensity_folder))
+    # tof has no bender: its run is the same on both paths. Its counts are scaled to the total
+    # of McStas at the source monitor, in n/s, and by the transmission on top of it at the beam
+    # monitor, each read on the bins of the monitor
+    tof_result = build_tof(extraction, neutrons=neutrons, seed=seed).run()
     comparisons = read_scaled_comparisons(
-        mcstas_data,
+        ms.load_data(str(intensity_folder)),
         tof_result,
-        {"source_monitor": source_bins, "beam_monitor": bins},
+        {
+            name: monitor_bins(getattr(extraction, name).bin_limits)
+            for name in ("source_monitor", "beam_monitor")
+        },
         ncount,
         neutrons,
         transmission=transmission,
@@ -355,14 +344,11 @@ def main(
         The paths of the view from above, then of the diagnostics, the diagram and the
         comparison.
     """
-    extraction = Extraction()
-    build_folder = Workspace.find().build_folder(extraction.name)
-    # the geometry: mcdisplay draws every component, whatever its WHEN
-    mcstas_instr = build_mcstas(extraction, input_path=build_folder)
     figure_folder = output_folder(out, "trex_extraction")
-    # from above: z along the beam, x across it, 16 x 4 in, within TOP_VIEW_LIMITS
+    # from above: z along the beam, x across it, 16 x 4 in, within TOP_VIEW_LIMITS; mcdisplay
+    # draws every component, whatever its WHEN
     top = draw_instrument(
-        mcstas_instr,
+        build_mcstas(define_instrument()),
         figure_folder / "trex_extraction_top.png",
         equal_aspect=False,
         projection="zx",

@@ -98,6 +98,7 @@ def detector_window() -> dict[str, float]:
     }
 
 
+# --8<-- [start:instrument]
 class TRexWithVanadium(TRex):
     """T-Rex with a vanadium sample in the white beam: every chopper is parked open.
 
@@ -140,6 +141,14 @@ class TRexWithVanadium(TRex):
     def _chopper_instr_params(self) -> list[InstrParam]:
         """Return no instrument parameters for the choppers: they are parked."""
         return []
+
+
+def define_instrument() -> TRexWithVanadium:
+    """Return the instrument of this diagnostic: :class:`TRexWithVanadium`, in the white beam."""
+    return TRexWithVanadium()
+
+
+# --8<-- [end:instrument]
 
 
 def detector_image(binned: sc.DataArray) -> sc.DataArray:
@@ -375,7 +384,7 @@ def main(out: Path | None = None, ncount: float = 1e8, seed: int = 1) -> list[Pa
     :
         The paths of the figures, in that order.
     """
-    instrument = TRexWithVanadium()  # the white beam
+    instrument = define_instrument()
     run = Simulation(instrument).run(RUN, ncount=ncount, seed=seed).folder
 
     binned = read_events(run, DETECTOR, SOURCE, SAMPLE)

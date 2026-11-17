@@ -85,6 +85,7 @@ DIRECT_BEAM_RADIUS = 0.2  # 1/Å: the direct beam, far above the rest, is left o
 SAMPLE_SPLIT = 10  # McStas SPLIT on the crystal: each neutron reaching it is repeated this often
 
 
+# --8<-- [start:instrument]
 class TRexWithLa2Ni7(TRex):
     """T-Rex with a La2Ni7 crystal, from the source to the banana detector.
 
@@ -104,6 +105,14 @@ class TRexWithLa2Ni7(TRex):
     def __init__(self, params: Params = DEFAULT_PARAMS, source_masked: bool = True) -> None:
         sample = la2ni7(name="sample", split=SAMPLE_SPLIT)
         super().__init__(sample=sample, params=params, source_masked=source_masked)
+
+
+def define_instrument() -> TRexWithLa2Ni7:
+    """Return the instrument of this diagnostic: :class:`TRexWithLa2Ni7` at its defaults."""
+    return TRexWithLa2Ni7()
+
+
+# --8<-- [end:instrument]
 
 
 def subpulse_timing(
@@ -413,7 +422,7 @@ def simulate(ncount: float = 1e9, seed: int = 1) -> tuple[Path, Path]:
     :
         The folders of the first and the second part.
     """
-    simulation = Simulation(TRexWithLa2Ni7())  # the default control parameters
+    simulation = Simulation(define_instrument())
     to_sample = simulation.run_to_sample(TO_SAMPLE, ncount=ncount, seed=seed)
     # sample_pos -> detector, from the beam file, in the frame of sample_pos: the beam frame
     from_sample = simulation.run_from_sample(FROM_SAMPLE, seed=seed + 1)
@@ -435,7 +444,7 @@ def subpulse_timing_of_run(to_sample: str | Path | None = None) -> sc.DataArray:
         The sub-pulses of :func:`subpulse_timing`.
     """
     to_sample = Path(to_sample or Workspace.find().run_folder(TO_SAMPLE))
-    instrument = TRexWithLa2Ni7()  # the default control parameters, as simulate runs
+    instrument = define_instrument()  # as simulate runs it
     bins = {monitor: monitor_bins(getattr(instrument, monitor).bin_limits) for monitor in MONITORS}
     return subpulse_timing(ms.load_data(str(to_sample)), bins, instrument.positions())
 
@@ -496,7 +505,7 @@ def analyze(
     fig = plot_plane(
         events,
         f"T-Rex, La2Ni7: (Qx, Qz) of {pulses.sizes['subpulse']} sub-pulses\n"
-        f"{TRexWithLa2Ni7().running_conditions()}",
+        f"{define_instrument().running_conditions()}",
     )
     return save_figure(fig, output_folder(out, NAME) / f"{NAME}.png")
 

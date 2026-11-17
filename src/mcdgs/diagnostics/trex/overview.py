@@ -32,6 +32,16 @@ from mcdgs.diagnostics.drawing import (
 from mcdgs.instruments.trex.model import TRex
 from mcdgs.mcstas import build_mcstas
 
+# --8<-- [start:instrument]
+
+
+def define_instrument() -> TRex:
+    """Return the instrument of this diagnostic: :class:`.TRex` at its default parameters."""
+    return TRex()
+
+
+# --8<-- [end:instrument]
+
 
 def main(out: Path | None = None) -> list[Path]:
     """Write the printout and the instrument file of T-Rex, and draw its diagram and both views.
@@ -48,7 +58,7 @@ def main(out: Path | None = None) -> list[Path]:
         The paths of the printout, of the instrument file, of the legend and the diagram, and of
         the two views.
     """
-    trex = TRex()  # the default control parameters
+    trex = define_instrument()
     mcstas_instr = build_mcstas(trex)  # in the build folder of T-Rex in the workspace
     folder = output_folder(out, "trex_overview")
     # seen along the beam, the source and the banana detector are wide disks and arcs that

@@ -17,7 +17,7 @@ the beamstop and the banana detector after it. In their place is `sample_xy_moni
 
 <!-- fmt:off -->
 ```python
---8<-- "src/mcdgs/diagnostics/trex/neutrons_on_sample.py:trex_to_sample"
+--8<-- "src/mcdgs/diagnostics/trex/neutrons_on_sample.py:instrument"
 ```
 <!-- fmt:on -->
 

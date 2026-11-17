@@ -105,7 +105,7 @@ def sample_xy_monitor(resolution: float = SAMPLE_XY_MONITOR_RESOLUTION) -> Monit
     )
 
 
-# --8<-- [start:trex_to_sample]
+# --8<-- [start:instrument]
 class TRexToSample(TRex):
     """T-Rex from the source to the sample monitor, without a sample.
 
@@ -128,7 +128,14 @@ class TRexToSample(TRex):
         del self.beamstop
         del self.banana_detector
         self.sample_xy_monitor = sample_xy_monitor()
-        # --8<-- [end:trex_to_sample]
+
+
+def define_instrument() -> TRexToSample:
+    """Return the instrument of this diagnostic: :class:`TRexToSample` at its defaults."""
+    return TRexToSample()
+
+
+# --8<-- [end:instrument]
 
 
 def read_xy_map(monitor: Monitor_nD, mcstas_data: list[McStasData]) -> sc.DataArray:
@@ -547,7 +554,7 @@ def main(
         The paths of the figures: linear, log, then the patches; of the table of the
         arrival windows; and of the x and y map.
     """
-    instrument = TRexToSample()  # the default control parameters
+    instrument = define_instrument()
     name = "trex_neutrons_on_sample"
 
     # run McStas and load its monitors, in n/s per bin

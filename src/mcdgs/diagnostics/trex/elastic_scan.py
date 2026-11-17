@@ -58,6 +58,7 @@ FRAMES_PER_SECOND = 4  # of the GIF, one frame per angle
 QY_HALF_WIDTH = plane.QY_HALF_WIDTH
 
 
+# --8<-- [start:instrument]
 class TRexWithRotatingLa2Ni7(TRex):
     """T-Rex with a La2Ni7 crystal on a goniometer, turned by ``omega`` about the vertical.
 
@@ -95,6 +96,14 @@ def crystal(split: int = SCAN_SPLIT) -> Single_crystal:
     return la2ni7(name="sample", split=split, in_plane=IN_PLANE, rotated=[0, "omega", 0])
 
 
+def define_instrument() -> TRexWithRotatingLa2Ni7:
+    """Return the instrument of this diagnostic: :class:`TRexWithRotatingLa2Ni7` at its defaults."""
+    return TRexWithRotatingLa2Ni7()
+
+
+# --8<-- [end:instrument]
+
+
 def simulate(omegas: np.ndarray = OMEGAS, beam_run: str = plane.TO_SAMPLE, seed: int = 1) -> Path:
     """Run the scan from ``sample_pos`` to the detector, once per angle, from a beam file.
 
@@ -114,7 +123,7 @@ def simulate(omegas: np.ndarray = OMEGAS, beam_run: str = plane.TO_SAMPLE, seed:
         The scan folder, ``SCAN`` in the runs folder of :meth:`.Workspace.find`, with one entry
         per angle.
     """
-    simulation = Simulation(TRexWithRotatingLa2Ni7())  # the default control parameters
+    simulation = Simulation(define_instrument())
     scan = simulation.scan_from_sample(
         "omega", omegas, folder_name=SCAN, beam_run=beam_run, seed=seed
     )
@@ -360,7 +369,7 @@ def analyze(
     maps = crop(reduce_angles(scan, to_sample))
     hkl = " ".join(str(i) for i in IN_PLANE)
     title = (
-        f"T-Rex, La2Ni7 ({hkl}) in plane\n{TRexWithRotatingLa2Ni7().running_conditions()}\n"
+        f"T-Rex, La2Ni7 ({hkl}) in plane\n{define_instrument().running_conditions()}\n"
         f"|Qy| < {QY_HALF_WIDTH:g} 1/Å, in the frame of the crystal at omega = 0"
     )
     folder = output_folder(out, NAME)

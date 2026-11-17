@@ -17,6 +17,16 @@ from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure, save_te
 from mcdgs.instruments.trex.model import TRex
 from mcdgs.tof import acceptance_diagram, get_choppers
 
+# --8<-- [start:instrument]
+
+
+def define_instrument() -> TRex:
+    """Return the instrument of this diagnostic: :class:`.TRex` at its default parameters."""
+    return TRex()
+
+
+# --8<-- [end:instrument]
+
 
 def main(out: Path | None = None) -> list[Path]:
     """Draw every chopper of T-Rex and its acceptance diagram, at the default parameters.
@@ -36,7 +46,7 @@ def main(out: Path | None = None) -> list[Path]:
     paths = []
 
     # --8<-- [start:draw_choppers]
-    trex = TRex()  # the default control parameters
+    trex = define_instrument()
     for name, chopper in get_choppers(trex).items():
         svg = chopper.make_svg(image_size=300)
         paths.append(save_text(svg, folder / f"chopper_{name}.svg"))

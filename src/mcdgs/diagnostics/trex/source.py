@@ -47,7 +47,7 @@ from mcdgs.reduction.binning import monitor_bins
 from mcdgs.tof import build_tof, read_tof_map
 
 
-# --8<-- [start:trex_source]
+# --8<-- [start:instrument]
 @dataclass(frozen=True)
 class TRexSourceParams:
     """Control parameters of :class:`TRexSource`.
@@ -89,9 +89,24 @@ class TRexSource(Instrument):
         self.source_monitor = source_monitor()
 
 
-params = TRexSourceParams(lambda0=None)  # the default wavelength band from 0.1 Å to 10 Å
-instrument = TRexSource(params)
-# --8<-- [end:trex_source]
+def define_instrument(lambda0: float | None = None) -> TRexSource:
+    """Return the instrument of this diagnostic.
+
+    Parameters
+    ----------
+    lambda0:
+        Central wavelength of the band of the source, in Å. If ``None``, the widest band, 0.1
+        to 10 Å.
+
+    Returns
+    -------
+    :
+        :class:`TRexSource` with that band.
+    """
+    return TRexSource(TRexSourceParams(lambda0=lambda0))
+
+
+# --8<-- [end:instrument]
 
 
 def main(
@@ -125,8 +140,7 @@ def main(
     :
         The path of the figure.
     """
-    params = TRexSourceParams(lambda0=lambda0)
-    instrument = TRexSource(params)
+    instrument = define_instrument(lambda0)
     # --8<-- [start:run_mcstas]
     # run McStas and load its monitors, in n/s per bin
     sim = Simulation(instrument)

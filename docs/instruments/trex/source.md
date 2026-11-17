@@ -34,7 +34,7 @@ creates its components in beam order, with their positions.
 
 <!-- fmt:off -->
 ```python
---8<-- "src/mcdgs/diagnostics/trex/source.py:trex_source"
+--8<-- "src/mcdgs/diagnostics/trex/source.py:instrument"
 ```
 <!-- fmt:on -->
 

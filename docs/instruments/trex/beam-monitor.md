@@ -37,7 +37,7 @@ sends. Both monitors have `restore_neutron=1`, so they do not change the beam.
 
 <!-- fmt:off -->
 ```python
---8<-- "src/mcdgs/diagnostics/trex/beam_monitor.py:trex_beam_monitor"
+--8<-- "src/mcdgs/diagnostics/trex/beam_monitor.py:instrument"
 ```
 <!-- fmt:on -->
 

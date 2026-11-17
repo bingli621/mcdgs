@@ -56,6 +56,7 @@ MONITOR_LABELS = {
 }
 
 
+# --8<-- [start:instrument]
 class TRexToBeamstopMonitor(TRex):
     """T-Rex with a La2Ni7 crystal, from the source to the beamstop monitor.
 
@@ -80,6 +81,14 @@ class TRexToBeamstopMonitor(TRex):
         # after the sample: the beamstop monitor is the last one that counts
         del self.beamstop
         del self.banana_detector
+
+
+def define_instrument() -> TRexToBeamstopMonitor:
+    """Return the instrument of this diagnostic: :class:`TRexToBeamstopMonitor` at its defaults."""
+    return TRexToBeamstopMonitor()
+
+
+# --8<-- [end:instrument]
 
 
 def subpulse_flights(
@@ -355,7 +364,7 @@ def main(
     :
         The paths of the figures: the time profiles, the incident energies, then the graph.
     """
-    instrument = TRexToBeamstopMonitor()  # the default control parameters
+    instrument = define_instrument()
     name = "trex_determine_ei"
 
     # run McStas and load its monitors, in n/s per bin

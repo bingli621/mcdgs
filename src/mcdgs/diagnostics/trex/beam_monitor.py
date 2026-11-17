@@ -52,7 +52,7 @@ EFFICIENCY_PER_ANGSTROM = 5e-5
 DEAD_TIME = 100e-9  # s: the dead time of the example monitor
 
 
-# --8<-- [start:trex_beam_monitor]
+# --8<-- [start:instrument]
 @dataclass(frozen=True)
 class TRexBeamMonitorParams:
     """Control parameters of :class:`TRexBeamMonitor`: there are none."""
@@ -91,7 +91,14 @@ class TRexBeamMonitor(Instrument):
         self.arm_guide_4 = arm_guide_4()
         self.guide_4a = guide_4a()
         self.beam_monitor = beam_monitor()
-        # --8<-- [end:trex_beam_monitor]
+
+
+def define_instrument() -> TRexBeamMonitor:
+    """Return the instrument of this diagnostic: :class:`TRexBeamMonitor`."""
+    return TRexBeamMonitor()
+
+
+# --8<-- [end:instrument]
 
 
 @dataclass(frozen=True)
@@ -205,7 +212,7 @@ def main(
     :
         The path of the figure.
     """
-    instrument = TRexBeamMonitor()
+    instrument = define_instrument()
     name = "trex_beam_monitor"
 
     # --8<-- [start:run_mcstas]
