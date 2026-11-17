@@ -1,29 +1,28 @@
-"""McStas and tof at one monitor, side by side.
+"""Two time and wavelength maps of one monitor, side by side: McStas and tof, or any two.
 
 Each model gives one time and wavelength map of the monitor, a scipp data array with its bin
 edges and its errors: :func:`.read_mcstas_map` that of McStas, in n/s, and :func:`.read_tof_map`
-that of tof, in neutrons, both on the bins of the monitor (:func:`.monitor_bins`). The small
-pieces work on any such map:
+that of tof, in neutrons, both on the bins of the monitor (:func:`.monitor_bins`).
+
+One map:
 
 - :func:`mean_coordinate` gives its mean time or wavelength;
 - :func:`plot_map` draws it, and :func:`plot_profile` what is left of it summed over an axis,
   such as its wavelength spectrum, with error bars;
 - :func:`intensity_label` names its intensity, per bin.
 
-tof has no flux: each neutron has weight 1. Its counts are scaled by ``scale``, the n/s each tof
-neutron stands for: the total of McStas over that of tof where both see the same beam, at the
-source. There both then have the same total, and only their shapes differ. Further down the
-beam, the same scale lets a difference in what the guides and choppers let through show.
-``transmission`` then scales tof on top of it, for what the beam loses that tof does not model,
-such as the guides: tof has none.
+Two maps on the same bins, such as McStas and tof, or McStas at two settings, are a
+:class:`MonitorComparison`, with their names. :func:`print_means` prints the mean time and
+wavelength of each, and :func:`plot_comparison` draws their maps, spectra and time profiles.
 
-Scaling tof is a few small steps, on the maps of each monitor: :func:`tof_scale` gives the
-scale where both see the same beam,
-:func:`tuned_transmission` the transmission that gives tof the total of McStas further down, and
-:func:`compare_maps` puts both maps side by side in n/s, as a :class:`MonitorComparison`.
-:func:`plot_two_maps` draws any two maps on the same bins, their maps, spectra and time
-profiles, :func:`plot_comparison` those of a comparison, and :func:`print_means` prints the mean
-time and wavelength of each model.
+McStas and tof. tof has no flux: each neutron has weight 1. Its counts are scaled by ``scale``,
+the n/s each tof neutron stands for: the total of McStas over that of tof where both see the
+same beam, at the source. There both then have the same total, and only their shapes differ.
+Further down the beam, the same scale lets a difference in what the guides and choppers let
+through show. ``transmission`` then scales tof on top of it, for what the beam loses that tof
+does not model, such as the guides: tof has none. :func:`tof_scale` gives the scale where both
+see the same beam, :func:`tuned_transmission` the transmission that gives tof the total of
+McStas further down, and :func:`compare_mcstas_vs_tof` puts both maps side by side in n/s.
 """
 
 from dataclasses import dataclass
@@ -35,7 +34,6 @@ from matplotlib.axes import Axes
 from matplotlib.collections import QuadMesh
 from matplotlib.colors import LogNorm, Normalize
 from matplotlib.figure import Figure
-from numpy.typing import NDArray
 
 # how a coordinate of a map is shown, by its name: the label of its axis and its unit
 AXES: dict[str, tuple[str, str]] = {"toa": ("Time", "ms"), "wavelength": ("Wavelength", "Å")}
@@ -175,60 +173,123 @@ def plot_profile(ax: Axes, data: sc.DataArray, label: str, *, connect: bool = Fa
 
 @dataclass(frozen=True)
 class MonitorComparison:
-    """One time and wavelength map in both models, in n/s per bin.
+    """Two time and wavelength maps of one monitor on the same bins, in n/s per bin.
+
+    The maps are those of McStas and tof, as :func:`compare_mcstas_vs_tof` puts them side by
+    side, or any two, such as McStas at two settings.
 
     Parameters
     ----------
     name:
-        The name of the monitor, in both models.
-    mcstas:
-        The map of McStas, as :func:`.read_mcstas_map`: (time bins, wavelength bins), with its bin
-        edges, ``"toa"`` and ``"wavelength"``, evenly spaced, and its errors as variances.
-    tof:
-        The map of tof on the same bins: its counts times ``scale`` and ``transmission``, and
-        with them their Poisson errors.
-    ncount:
-        Number of McStas neutrons.
-    neutrons:
-        Number of tof neutrons.
-    scale:
-        The n/s each tof neutron stands for.
-    transmission:
-        The fraction of the beam tof is scaled to on top of ``scale``.
+        The name of the monitor.
+    first, second:
+        The maps, as :func:`.read_mcstas_map`: (time bins, wavelength bins), with their bin
+        edges, ``"toa"`` and ``"wavelength"``, evenly spaced, and their errors as variances.
+    titles:
+        Short names of the two maps, such as ``("McStas", "tof")``: the titles of the maps in
+        :func:`plot_comparison`, and the names :func:`print_means` prints.
+    labels:
+        Their entries in the legends of :func:`plot_comparison`, such as the neutrons of each.
+        If ``None``, ``titles``.
     """
 
     name: str
-    mcstas: sc.DataArray
-    tof: sc.DataArray
-    ncount: float
-    neutrons: int
-    scale: float
-    transmission: float
+    first: sc.DataArray
+    second: sc.DataArray
+    titles: tuple[str, str] = ("Map 1", "Map 2")
+    labels: tuple[str, str] | None = None
+
+    @property
+    def maps(self) -> tuple[sc.DataArray, sc.DataArray]:
+        """Both maps, ``first`` and ``second``."""
+        return self.first, self.second
+
+    @property
+    def legend(self) -> tuple[str, str]:
+        """The legend entries of both maps: ``labels``, or ``titles`` if there are none."""
+        return self.titles if self.labels is None else self.labels
 
     @property
     def bins(self) -> dict[str, sc.Variable]:
         """The bin edges, ``"toa"`` and ``"wavelength"``, in that order."""
-        return {dim: self.mcstas.coords[dim] for dim in self.mcstas.dims}
+        return {dim: self.first.coords[dim] for dim in self.first.dims}
 
-    @property
-    def mcstas_intensity(self) -> NDArray:
-        """The intensity of McStas per bin, as an array."""
-        return self.mcstas.values
 
-    @property
-    def mcstas_error(self) -> NDArray:
-        """The error of the intensity of McStas per bin, as an array."""
-        return sc.stddevs(self.mcstas).values
+def print_means(comparison: MonitorComparison) -> None:
+    """Print the mean time and wavelength of each map, weighted by its intensity.
 
-    @property
-    def tof_intensity(self) -> NDArray:
-        """The intensity of tof per bin, as an array."""
-        return self.tof.values
+    Parameters
+    ----------
+    comparison:
+        Both maps, each printed with its title.
+    """
+    width = max(len(title) for title in comparison.titles)
+    for title, data in zip(comparison.titles, comparison.maps, strict=True):
+        mean_time = mean_coordinate(data, "toa").to(unit="ms").value
+        mean_wavelength = mean_coordinate(data, "wavelength").to(unit="Å").value
+        print(
+            f"{title:>{width}}: mean time {mean_time:.3f} ms, "
+            f"mean wavelength {mean_wavelength:.3f} Å"
+        )
 
-    @property
-    def tof_error(self) -> NDArray:
-        """The error of the intensity of tof per bin, as an array."""
-        return sc.stddevs(self.tof).values
+
+def plot_comparison(
+    comparison: MonitorComparison,
+    title: str,
+    *,
+    log_decades: int | None = None,
+    connect: bool = False,
+    log_y: bool = False,
+) -> Figure:
+    """Draw both maps of one monitor, in n/s.
+
+    The top row has the time and wavelength map of each, on one color scale (:func:`plot_map`),
+    titled with its title; the bottom row the wavelength spectrum and the time profile of both,
+    summed over the other axis, with their error bars (:func:`plot_profile`) and their legend
+    entries.
+
+    Parameters
+    ----------
+    comparison:
+        Both maps, with their titles and legend entries. The color bar is labeled with the bin
+        widths of ``first``.
+    title:
+        The title of the figure.
+    log_decades:
+        If given, the color scale of the maps is logarithmic, this many decades deep below the
+        highest bin, as in :func:`plot_map`. If ``None``, linear from 0.
+    connect:
+        True joins the points of the spectrum and the profile with lines.
+    log_y:
+        True puts the intensity of the spectrum and the profile on a log axis, where the empty
+        bins are left out. False, a linear one from 0.
+
+    Returns
+    -------
+    :
+        The figure.
+    """
+    fig, (map_axes, (spectrum_ax, profile_ax)) = plt.subplots(
+        2, 2, figsize=(12, 9), layout="constrained"
+    )
+    fig.suptitle(title)
+
+    vmax = float(max(data.values.max() for data in comparison.maps))
+    for ax, data, map_title in zip(map_axes, comparison.maps, comparison.titles, strict=True):
+        mesh = plot_map(ax, data, vmax=vmax, log_decades=log_decades)
+        ax.set_title(map_title)
+    fig.colorbar(mesh, ax=list(map_axes), label=intensity_label(comparison.first))
+
+    time, wavelength = comparison.first.dims
+    for ax, summed in ((spectrum_ax, time), (profile_ax, wavelength)):
+        for data, label in zip(comparison.maps, comparison.legend, strict=True):
+            plot_profile(ax, data.sum(summed), label, connect=connect)
+        ax.legend()
+        if log_y:  # the empty bins, and the error bars below 0, are left out
+            ax.set_yscale("log", nonpositive="mask")
+        else:
+            ax.set_ylim(bottom=0)
+    return fig
 
 
 def tof_scale(mcstas_map: sc.DataArray, tof_counts: sc.DataArray) -> float:
@@ -286,7 +347,7 @@ def tuned_transmission(mcstas_map: sc.DataArray, tof_counts: sc.DataArray, scale
     return tof_scale(mcstas_map, tof_counts) / scale
 
 
-def compare_maps(
+def compare_mcstas_vs_tof(
     name: str,
     mcstas_map: sc.DataArray,
     tof_counts: sc.DataArray,
@@ -318,143 +379,19 @@ def compare_maps(
     Returns
     -------
     :
-        Both maps, tof times ``scale × transmission``, its Poisson errors scaled along.
+        McStas as ``first`` and tof as ``second``, tof times ``scale × transmission``, its
+        Poisson errors scaled along. Their legend entries give the neutrons of each, and the
+        scale and the transmission of tof.
     """
     tof_map = tof_counts * (scale * transmission)
     tof_map.unit = "1/s"
+    tof_label = f"tof, {neutrons:,} neutrons × {scale:.3g} n/s each"
+    if transmission != 1:
+        tof_label += f"\ntransmission {transmission:.3g}"
     return MonitorComparison(
         name=name,
-        mcstas=mcstas_map,
-        tof=tof_map,
-        ncount=ncount,
-        neutrons=neutrons,
-        scale=scale,
-        transmission=transmission,
-    )
-
-
-def print_means(comparison: MonitorComparison) -> None:
-    """Print the mean time and wavelength of each model, weighted by its intensity.
-
-    Parameters
-    ----------
-    comparison:
-        Both maps.
-    """
-    for label, data in (("McStas", comparison.mcstas), ("tof", comparison.tof)):
-        mean_time = mean_coordinate(data, "toa").to(unit="ms").value
-        mean_wavelength = mean_coordinate(data, "wavelength").to(unit="Å").value
-        print(f"{label:>6}: mean time {mean_time:.3f} ms, mean wavelength {mean_wavelength:.3f} Å")
-
-
-def _model_labels(comparison: MonitorComparison) -> tuple[str, str]:
-    """Return the legend entries of McStas and of tof: their neutrons, and the scale of tof."""
-    c = comparison
-    mcstas_label = f"McStas, ncount = {int(c.ncount):,}"
-    tof_label = f"tof, {c.neutrons:,} neutrons × {c.scale:.3g} n/s each"
-    if c.transmission != 1:
-        tof_label += f"\ntransmission {c.transmission:.3g}"
-    return mcstas_label, tof_label
-
-
-def plot_two_maps(
-    first: sc.DataArray,
-    second: sc.DataArray,
-    title: str,
-    *,
-    titles: tuple[str, str] = ("Map 1", "Map 2"),
-    labels: tuple[str, str] | None = None,
-    log_decades: int | None = None,
-    connect: bool = False,
-    log_y: bool = False,
-) -> Figure:
-    """Draw two maps on the same bins, such as McStas and tof, or McStas at two settings.
-
-    The top row has the time and wavelength map of each, on one color scale (:func:`plot_map`);
-    the bottom row the wavelength spectrum and the time profile of both, summed over the other
-    axis, with their error bars (:func:`plot_profile`).
-
-    Parameters
-    ----------
-    first, second:
-        The maps, in n/s per bin, (time bins, wavelength bins), with bin edges as coordinates
-        and variances. The color bar is labeled with the bin widths of ``first``.
-    title:
-        The title of the figure.
-    titles:
-        The titles of the two maps.
-    labels:
-        Their entries in the legends of the spectrum and the profile. If ``None``, ``titles``.
-    log_decades:
-        If given, the color scale of the maps is logarithmic, this many decades deep below the
-        highest bin, as in :func:`plot_map`. If ``None``, linear from 0.
-    connect:
-        True joins the points of the spectrum and the profile with lines.
-    log_y:
-        True puts the intensity of the spectrum and the profile on a log axis, where the empty
-        bins are left out. False, a linear one from 0.
-
-    Returns
-    -------
-    :
-        The figure.
-    """
-    fig, (map_axes, (spectrum_ax, profile_ax)) = plt.subplots(
-        2, 2, figsize=(12, 9), layout="constrained"
-    )
-    fig.suptitle(title)
-    maps = (first, second)
-    labels = titles if labels is None else labels
-
-    vmax = float(max(data.values.max() for data in maps))
-    for ax, data, map_title in zip(map_axes, maps, titles, strict=True):
-        mesh = plot_map(ax, data, vmax=vmax, log_decades=log_decades)
-        ax.set_title(map_title)
-    fig.colorbar(mesh, ax=list(map_axes), label=intensity_label(first))
-
-    time, wavelength = first.dims
-    for ax, summed in ((spectrum_ax, time), (profile_ax, wavelength)):
-        for data, label in zip(maps, labels, strict=True):
-            plot_profile(ax, data.sum(summed), label, connect=connect)
-        ax.legend()
-        if log_y:  # the empty bins, and the error bars below 0, are left out
-            ax.set_yscale("log", nonpositive="mask")
-        else:
-            ax.set_ylim(bottom=0)
-    return fig
-
-
-def plot_comparison(
-    comparison: MonitorComparison,
-    title: str,
-    *,
-    log_decades: int | None = None,
-    connect: bool = False,
-    log_y: bool = False,
-) -> Figure:
-    """Draw both models at one monitor, in n/s, as :func:`plot_two_maps`.
-
-    Parameters
-    ----------
-    comparison:
-        Both maps. The legends give the neutrons of each model and the scale of tof.
-    title:
-        The title of the figure.
-    log_decades, connect, log_y:
-        As in :func:`plot_two_maps`.
-
-    Returns
-    -------
-    :
-        The figure.
-    """
-    return plot_two_maps(
-        comparison.mcstas,
-        comparison.tof,
-        title,
+        first=mcstas_map,
+        second=tof_map,
         titles=("McStas", "tof"),
-        labels=_model_labels(comparison),
-        log_decades=log_decades,
-        connect=connect,
-        log_y=log_y,
+        labels=(f"McStas, ncount = {int(ncount):,}", tof_label),
     )

@@ -151,7 +151,7 @@ source. Further down, keep that same scale rather than computing a new one at ea
 scaled again to the total of McStas there, tof would agree with it by construction, and a
 difference in what the guides and choppers let through would not show. Keep it with the same
 number of tof neutrons; with another number, keep `scale × neutrons`, as the scale goes as
-1/neutrons. `compare_maps` takes it as `scale`, from `tof_scale` at the source.
+1/neutrons. `compare_mcstas_vs_tof` takes it as `scale`, from `tof_scale` at the source.
 
 ## Error bars
 

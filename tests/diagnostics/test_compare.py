@@ -8,12 +8,13 @@ from mcstasscript.data.data import McStasData, McStasMetaData
 
 from mcdgs.diagnostics.compare import (
     MonitorComparison,
-    compare_maps,
+    compare_mcstas_vs_tof,
     intensity_label,
     mean_coordinate,
     plot_comparison,
     plot_map,
     plot_profile,
+    print_means,
     tof_scale,
     tuned_transmission,
 )
@@ -48,26 +49,30 @@ def _source_comparison(tof_result: tof.Result) -> MonitorComparison:
     mcstas_map = read_mcstas_map("source_monitor", _mcstas_map((20, 30)), BINS)
     tof_counts = read_tof_map("source_monitor", tof_result, BINS)
     scale = tof_scale(mcstas_map, tof_counts)
-    return compare_maps("source_monitor", mcstas_map, tof_counts, 1e6, NEUTRONS, scale)
+    return compare_mcstas_vs_tof("source_monitor", mcstas_map, tof_counts, 1e6, NEUTRONS, scale)
 
 
 def test_tof_is_scaled_to_the_total_of_mcstas(tof_result):
     comparison = _source_comparison(tof_result)
-    assert comparison.transmission == 1.0
-    assert comparison.tof_intensity.sum() == pytest.approx(comparison.mcstas_intensity.sum())
+    assert comparison.titles == ("McStas", "tof")
+    assert comparison.labels is not None and "transmission" not in comparison.labels[1]
+    assert comparison.second.values.sum() == pytest.approx(comparison.first.values.sum())
 
 
 def test_the_scale_and_the_transmission_scale_tof_and_its_poisson_errors(tof_result):
     mcstas_map = read_mcstas_map("source_monitor", _mcstas_map((20, 30)), BINS)
     tof_counts = read_tof_map("source_monitor", tof_result, BINS)
-    comparison = compare_maps(
+    comparison = compare_mcstas_vs_tof(
         "source_monitor", mcstas_map, tof_counts, 1e6, NEUTRONS, scale=2.0, transmission=0.25
     )
     counts = tof_counts.values
-    np.testing.assert_allclose(comparison.tof_intensity, 0.5 * counts)
-    np.testing.assert_allclose(comparison.tof_error, 0.5 * np.sqrt(counts))  # Poisson
-    assert comparison.tof.unit == "1/s"
-    assert (comparison.scale, comparison.transmission) == (2.0, 0.25)
+    np.testing.assert_allclose(comparison.second.values, 0.5 * counts)
+    np.testing.assert_allclose(sc.stddevs(comparison.second).values, 0.5 * np.sqrt(counts))
+    assert comparison.second.unit == "1/s"
+    assert comparison.labels == (
+        "McStas, ncount = 1,000,000",
+        f"tof, {NEUTRONS:,} neutrons × 2 n/s each\ntransmission 0.25",
+    )
 
 
 def test_the_tuned_transmission_gives_tof_the_total_of_mcstas_further_down(tof_result):
@@ -79,10 +84,11 @@ def test_the_tuned_transmission_gives_tof_the_total_of_mcstas_further_down(tof_r
     tof_later = read_tof_map("later_monitor", tof_two_monitors, BINS)
     scale = tof_scale(source_map, tof_source)
     transmission = tuned_transmission(later_map, tof_later, scale)
-    later = compare_maps("later_monitor", later_map, tof_later, 1e6, NEUTRONS, scale, transmission)
+    later = compare_mcstas_vs_tof(
+        "later_monitor", later_map, tof_later, 1e6, NEUTRONS, scale, transmission
+    )
     assert transmission == pytest.approx(0.25)
-    assert later.scale == scale
-    assert later.tof_intensity.sum() == pytest.approx(later.mcstas_intensity.sum())
+    assert later.second.values.sum() == pytest.approx(later.first.values.sum())
 
 
 def _two_monitors() -> list[McStasData]:
@@ -105,11 +111,27 @@ def test_the_maps_can_be_drawn_on_a_log_scale(tof_result):
     comparison = _source_comparison(tof_result)
     fig = plot_comparison(comparison, "A title", log_decades=3, connect=True)
     mesh = fig.axes[0].collections[0]
-    vmax = max(comparison.mcstas_intensity.max(), comparison.tof_intensity.max())
+    vmax = max(comparison.first.values.max(), comparison.second.values.max())
     assert isinstance(mesh.norm, LogNorm)
     assert mesh.norm.vmin == pytest.approx(vmax / 1e3)
     assert mesh.get_array().mask.any()  # the empty bins, in white
     assert mesh.cmap.name.startswith("viridis")
+    plt.close(fig)
+
+
+def test_two_mcstas_maps_are_compared_with_their_own_titles(capsys):
+    first, second = (
+        read_mcstas_map(name, _two_monitors(), BINS) for name in ("source_monitor", "later_monitor")
+    )
+    comparison = MonitorComparison("monitor", first, second, titles=("Setting A", "Setting B"))
+    print_means(comparison)
+    assert capsys.readouterr().out.split()[0:2] == ["Setting", "A:"]
+    fig = plot_comparison(comparison, "A title")
+    assert [ax.get_title() for ax in fig.axes[:2]] == ["Setting A", "Setting B"]
+    assert [t.get_text() for t in fig.axes[2].get_legend().get_texts()] == [
+        "Setting A",
+        "Setting B",
+    ]
     plt.close(fig)
 
 

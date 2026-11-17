@@ -54,7 +54,7 @@ from mcdgs.core.components import Monitor_nD
 from mcdgs.diagnostics.cli import markdown_table, output_folder, parse_out, save_figure, save_text
 from mcdgs.diagnostics.compare import (
     MonitorComparison,
-    compare_maps,
+    compare_mcstas_vs_tof,
     plot_comparison,
     tof_scale,
     tuned_transmission,
@@ -310,8 +310,8 @@ def plot_patches(
     :
         The figure.
     """
-    mcstas = find_patches(comparison.mcstas_intensity, comparison.bins)
-    tof = find_patches(comparison.tof_intensity, comparison.bins)
+    mcstas = find_patches(comparison.first.values, comparison.bins)
+    tof = find_patches(comparison.second.values, comparison.bins)
     norm = LogNorm(
         vmin=min(mcstas.intensity.min(), tof.intensity.min()),
         vmax=max(mcstas.intensity.max(), tof.intensity.max()),
@@ -579,23 +579,25 @@ def main(
     mcstas_source = read_mcstas_map("source_monitor", mcstas_data, source_bins)
     tof_source = read_tof_map("source_monitor", tof_result, source_bins)
     scale = tof_scale(mcstas_source, tof_source)
-    at_source = compare_maps("source_monitor", mcstas_source, tof_source, ncount, neutrons, scale)
+    at_source = compare_mcstas_vs_tof(
+        "source_monitor", mcstas_source, tof_source, ncount, neutrons, scale
+    )
     mcstas_sample = read_mcstas_map("sample_monitor", mcstas_data, sample_bins)
     tof_sample = read_tof_map("sample_monitor", tof_result, sample_bins)
     if transmission is None:  # tuned: the transmission that gives tof the total of McStas
         transmission = tuned_transmission(mcstas_sample, tof_sample, scale)
-    comparison = compare_maps(
+    comparison = compare_mcstas_vs_tof(
         "sample_monitor", mcstas_sample, tof_sample, ncount, neutrons, scale, transmission
     )
 
     # print the totals, and the scale and transmission of tof
-    mcstas_total = comparison.mcstas_intensity.sum()
-    tof_counts = comparison.tof_intensity.sum() / comparison.scale / transmission
+    mcstas_total = comparison.first.values.sum()
+    tof_counts = comparison.second.values.sum() / scale / transmission
     print(
         f"McStas total {mcstas_total:.4g} n/s, "
-        f"{mcstas_total / at_source.mcstas_intensity.sum():.4g} of that at the source; "
+        f"{mcstas_total / at_source.first.values.sum():.4g} of that at the source; "
         f"tof {tof_counts:.0f} of {neutrons:,} neutrons, "
-        f"{comparison.scale:.4g} n/s each, transmission {transmission:.4g}"
+        f"{scale:.4g} n/s each, transmission {transmission:.4g}"
     )
 
     folder = output_folder(out, name)

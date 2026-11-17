@@ -42,7 +42,7 @@ from scippneutron.conversion import tof as tof_kernels
 from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
 from mcdgs.diagnostics.compare import (
     MonitorComparison,
-    compare_maps,
+    compare_mcstas_vs_tof,
     tof_scale,
     tuned_transmission,
 )
@@ -125,7 +125,7 @@ def subpulse_flights(
     time_on_source:
         When every sub-pulse leaves the source, for the flight to the pre-sample monitor alone.
     model:
-        ``"mcstas"`` or ``"tof"``.
+        Which map of the comparisons: ``"first"``, McStas, or ``"second"``, tof.
     min_fraction:
         The weakest patch that counts as a sub-pulse, as a fraction of the strongest.
 
@@ -145,7 +145,7 @@ def subpulse_flights(
         first.
     """
     pre_sample_patches, beamstop_patches = (
-        find_patches(getattr(comparison, f"{model}_intensity"), comparison.bins)
+        find_patches(getattr(comparison, model).values, comparison.bins)
         for comparison in (pre_sample, beamstop)
     )
     pre_sample_position = sc.vector(positions["pre_sample_monitor"], unit="m")
@@ -233,11 +233,9 @@ def plot_time_profiles(comparisons: list[MonitorComparison], title: str) -> Figu
     for color, c in zip(("tab:blue", "tab:orange"), comparisons):
         times = sc.midpoints(c.bins["toa"]).to(unit="ms").values
         label = MONITOR_LABELS.get(c.name, c.name)
+        ax.plot(times, c.first.values.sum(axis=1), color=color, lw=1.2, label=f"{label}, McStas")
         ax.plot(
-            times, c.mcstas_intensity.sum(axis=1), color=color, lw=1.2, label=f"{label}, McStas"
-        )
-        ax.plot(
-            times, c.tof_intensity.sum(axis=1), color=color, lw=1.2, ls="--", label=f"{label}, tof"
+            times, c.second.values.sum(axis=1), color=color, lw=1.2, ls="--", label=f"{label}, tof"
         )
     # the monitors have time bins of the same width
     edges = comparisons[0].bins["toa"].to(unit="ms").values
@@ -393,13 +391,15 @@ def main(
         first = MONITORS[0]
         transmission = tuned_transmission(mcstas_maps[first], tof_maps[first], scale)
     comparisons = [
-        compare_maps(name, mcstas_maps[name], tof_maps[name], ncount, neutrons, scale, transmission)
+        compare_mcstas_vs_tof(
+            name, mcstas_maps[name], tof_maps[name], ncount, neutrons, scale, transmission
+        )
         for name in MONITORS
     ]
     for c in comparisons:
         print(
-            f"{c.name}: McStas {c.mcstas_intensity.sum():.4g} n/s, "
-            f"tof {c.tof_intensity.sum():.4g} n/s, transmission {c.transmission:.4g}"
+            f"{c.name}: McStas {c.first.values.sum():.4g} n/s, "
+            f"tof {c.second.values.sum():.4g} n/s, transmission {transmission:.4g}"
         )
 
     # the incident energy of each sub-pulse, from its flight between the monitors and from the
@@ -411,7 +411,7 @@ def main(
     pre_sample, beamstop = comparisons
     flights = {
         label: subpulse_flights(pre_sample, beamstop, positions, time_on_source, model)
-        for label, model in (("McStas", "mcstas"), ("tof", "tof"))
+        for label, model in (("McStas", "first"), ("tof", "second"))
     }
     print_incident_energies(flights)
 

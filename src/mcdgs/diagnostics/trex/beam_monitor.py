@@ -38,7 +38,7 @@ from mcdgs.core.components import Arm, ESS_butterfly, Guide_gravity, Monitor_nD,
 from mcdgs.core.components.source import ESS_SOURCE_FREQUENCY
 from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
 from mcdgs.diagnostics.compare import (
-    compare_maps,
+    compare_mcstas_vs_tof,
     plot_comparison,
     print_means,
     tof_scale,
@@ -243,26 +243,28 @@ def main(
     mcstas_source = read_mcstas_map("source_monitor", mcstas_data, source_bins)
     tof_source = read_tof_map("source_monitor", tof_result, source_bins)
     scale = tof_scale(mcstas_source, tof_source)
-    at_source = compare_maps("source_monitor", mcstas_source, tof_source, ncount, neutrons, scale)
+    at_source = compare_mcstas_vs_tof(
+        "source_monitor", mcstas_source, tof_source, ncount, neutrons, scale
+    )
     mcstas_beam = read_mcstas_map("beam_monitor", mcstas_data, bins)
     tof_beam = read_tof_map("beam_monitor", tof_result, bins)
     if transmission is None:  # tuned: the transmission that gives tof the total of McStas
         transmission = tuned_transmission(mcstas_beam, tof_beam, scale)
-    comparison = compare_maps(
+    comparison = compare_mcstas_vs_tof(
         "beam_monitor", mcstas_beam, tof_beam, ncount, neutrons, scale, transmission
     )
     # --8<-- [end:transmission]
 
     # print the mean time and wavelength of each model, and the scale and transmission of tof
     print_means(comparison)
-    mcstas_total = comparison.mcstas_intensity.sum()
+    mcstas_total = comparison.first.values.sum()
     print(
         f"McStas total {mcstas_total:.4g} n/s, "
-        f"{mcstas_total / at_source.mcstas_intensity.sum():.4g} of that at the source, "
-        f"{comparison.scale:.4g} n/s per tof neutron, transmission {comparison.transmission:.4g}"
+        f"{mcstas_total / at_source.first.values.sum():.4g} of that at the source, "
+        f"{scale:.4g} n/s per tof neutron, transmission {transmission:.4g}"
     )
     monitor = instrument.beam_monitor
-    _print_rates(comparison.mcstas_intensity, bins, area=monitor.xwidth * monitor.yheight * 1e4)
+    _print_rates(comparison.first.values, bins, area=monitor.xwidth * monitor.yheight * 1e4)
 
     fig = plot_comparison(comparison, "T-Rex flux at the beam monitor after guide 4a")
     return save_figure(fig, output_folder(out, name) / f"{name}.png")
