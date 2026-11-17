@@ -5,14 +5,14 @@ with the same components as :class:`.TRex`, but for the band: its source and its
 keep the widest band, 0.1 to 10 Å, where those of :class:`.TRex` follow ``lambda0``. It also has
 the source monitor of :class:`.TRexSource`, at the entrance of guide 1.
 
-:func:`diagnose_path` compares McStas and tof at the beam monitor, on one path through guide 4.
-tof has no guides: every neutron of its pulse reaches the monitor. tof is scaled to the total of
-McStas at the source monitor, where both see the same beam, and by ``transmission`` on top of
-it, so the beam monitor shows what the guides let through in McStas against that factor. The
-McStas runs also draw McStasScript's diagnostics, the beam after the source, after guide 3 and
-at the exit of guide 4b, and its diagram of the intensity before each component. :func:`main`
-draws the extraction from above and runs both paths: without the bender, through guide 4a, and
-with it, through the bender and guide 4b. Run the module for it::
+:func:`diagnose_mcstas` runs McStas and :func:`diagnose_tof` compares tof with it at the beam
+monitor, on one path through guide 4. tof has no guides: every neutron of its pulse reaches the
+monitor. tof is scaled to the total of McStas at the source monitor, where both see the same
+beam, and by ``transmission`` on top of it, so the beam monitor shows what the guides let
+through in McStas against that factor. The McStas runs also draw McStasScript's diagnostics, the
+beam after the source, after guide 3 and at the exit of guide 4b, and its diagram of the
+intensity before each component. :func:`main` draws the extraction from above and runs both
+paths: without the bender, through guide 4a, and with it, through the bender and guide 4b. Run the module for it::
 
     pixi run python -m mcdgs.diagnostics.trex.extraction
 """
@@ -33,7 +33,7 @@ from mcdgs.core.components import (
     Progress_bar,
 )
 from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
-from mcdgs.diagnostics.compare import plot_comparison, read_scaled_comparisons
+from mcdgs.diagnostics.compare import compare_maps, plot_comparison, read_maps, tof_scale
 from mcdgs.diagnostics.drawing import draw_instrument, draw_intensity_diagram
 from mcdgs.instruments.trex.guides.bispectral import (
     BENDER_ROTATION,
@@ -151,67 +151,50 @@ def define_instrument(bender_in: bool = False) -> Extraction:
 # --8<-- [end:instrument]
 
 
-def diagnose_path(
-    bender_in: bool,
-    out: Path | None = None,
+def diagnose_mcstas(
+    instrument: Extraction,
+    run_name: str,
+    figure_folder: Path,
     ncount: float = 1e7,
-    neutrons: int = 1_000_000,
     seed: int = 1,
-    transmission: float = 0.2,
     diagnostics_ncount: float = DIAGNOSTICS_NCOUNT,
-) -> list[Path]:
-    """Run one path through guide 4 in McStas and tof, and save its three figures.
+) -> tuple[list[Path], Path]:
+    """Run McStas twice on one path through guide 4, and save its two figures.
 
-    The instrument is that of :func:`define_instrument` on the path, which the McStas runs take
-    as their default.
-
-    McStas runs twice, once with McStasScript's diagnostics, the beam after the source, after
-    guide 3 and at the exit of guide 4b, and once for its diagram of the intensity before each
-    component, which also gives the monitors; tof runs once. The diagnostics list every ray at
-    their three positions, so their run has fewer neutrons. tof is scaled to the total of
-    McStas at the source monitor, where both see the same beam, and by ``transmission`` on top
-    of it at the beam monitor. The figures, the diagnostics, the diagram and the comparison, are
-    ``trex_extraction_bender_out_diagnose.png``, ``trex_extraction_bender_out_intensity.png``
-    and ``trex_extraction_bender_out.png``, or ``..._in``; the McStas runs go to the run folders
-    of those names.
+    The first run has McStasScript's diagnostics, the beam after the source, after guide 3 and
+    at the exit of guide 4b; the second its diagram of the intensity before each component,
+    which also gives the monitors. The diagnostics list every ray at their three positions, so
+    their run has fewer neutrons. The figures are ``<run_name>_diagnose.png`` and
+    ``<run_name>_intensity.png``; the runs go to the run folders ``<run_name>`` and
+    ``<run_name>_intensity``.
 
     Parameters
     ----------
-    bender_in:
-        The path: True for the bender and guide 4b, False for guide 4a.
-    out:
-        Folder of the figures. If ``None``, ``trex_extraction`` in the results folder of
-        :meth:`.Workspace.find`.
+    instrument:
+        :class:`Extraction` on the path, which the runs take as their default.
+    run_name:
+        Name of the runs and of the figures.
+    figure_folder:
+        Folder of the figures.
     ncount:
         Number of McStas neutrons of the run of the diagram and the monitors.
-    neutrons:
-        Number of tof neutrons.
     seed:
-        Seed of the random numbers of both models.
-    transmission:
-        The factor on tof at the beam monitor, on top of the scale of the source monitor: the
-        fraction of the beam the guides would let through, which tof does not model. 0.2 is
-        an estimate, close to the 0.17 McStas has with the bender out at the defaults, and the
-        0.12 with it in.
+        Seed of the random numbers.
     diagnostics_ncount:
         Number of McStas neutrons of the run with the diagnostics.
 
     Returns
     -------
     :
-        The paths of the diagnostics, the diagram and the comparison.
+        The paths of the diagnostics and the diagram, and the folder of the run of the
+        monitors.
     """
-    instrument = define_instrument(bender_in)
-    path = "bender in, guide 4b" if bender_in else "bender out, guide 4a"
-    run_name = f"{instrument.name}_bender_{'in' if bender_in else 'out'}"
-    simulation = Simulation(instrument)
-    figure_folder = output_folder(out, instrument.name)
-
     # --8<-- [start:diagnostics]
     # McStasScript's diagnostics: the beam after the source, guide 3 and guide 4b, its profile,
     # wavelength against x, and its spectrum. McStasScript runs them itself, so the simulation
     # only prepares the run: its folder, its settings and its record, in McStas's own format,
     # which McStasScript reads
+    simulation = Simulation(instrument)
     run, mcstas_instr = simulation.prepare(
         run_name, ncount=diagnostics_ncount, seed=seed, nexus=False, mpi="auto"
     )
@@ -241,24 +224,69 @@ def diagnose_path(
     # --8<-- [end:diagram]
     run = run.finish()
     figures.append(diagram)
+    return figures, run.folder
 
+
+def diagnose_tof(
+    instrument: Extraction,
+    mcstas_folder: Path,
+    path: str,
+    run_name: str,
+    figure_folder: Path,
+    ncount: float = 1e7,
+    neutrons: int = 1_000_000,
+    seed: int = 1,
+    transmission: float = 0.2,
+) -> Path:
+    """Run tof on one path through guide 4, and save its comparison with McStas.
+
+    tof is scaled to the total of McStas at the source monitor, where both see the same beam,
+    and by ``transmission`` on top of it at the beam monitor. The figure is ``<run_name>.png``.
+
+    Parameters
+    ----------
+    instrument:
+        :class:`Extraction` on the path.
+    mcstas_folder:
+        Folder of the McStas run of the monitors, from :func:`diagnose_mcstas`.
+    path:
+        The path, for the title and the printout, as ``"bender out, guide 4a"``.
+    run_name:
+        Name of the figure.
+    figure_folder:
+        Folder of the figure.
+    ncount:
+        Number of McStas neutrons of the run in ``mcstas_folder``.
+    neutrons:
+        Number of tof neutrons.
+    seed:
+        Seed of the random numbers.
+    transmission:
+        The factor on tof at the beam monitor, on top of the scale of the source monitor: the
+        fraction of the beam the guides would let through, which tof does not model. 0.2 is
+        an estimate, close to the 0.17 McStas has with the bender out at the defaults, and the
+        0.12 with it in.
+
+    Returns
+    -------
+    :
+        The path of the comparison.
+    """
     # --8<-- [start:scale_tof]
-    # tof has no bender: its run is the same on both paths. Its counts are scaled to the total
-    # of McStas at the source monitor, in n/s, and by the transmission on top of it at the beam
-    # monitor, each read on the bins of the monitor
+    # tof has no bender: its run is the same on both paths. Each monitor of both models is read
+    # on its bins; tof is scaled to the total of McStas at the source monitor, in n/s, and by
+    # the transmission on top of that scale at the beam monitor
     tof_result = build_tof(instrument, neutrons=neutrons, seed=seed).run()
-    comparisons = read_scaled_comparisons(
-        ms.load_data(str(run.folder)),
-        tof_result,
-        {
-            name: monitor_bins(getattr(instrument, name).bin_limits)
-            for name in ("source_monitor", "beam_monitor")
-        },
-        ncount,
-        neutrons,
-        transmission=transmission,
+    mcstas_data = ms.load_data(str(mcstas_folder))
+    source_bins = monitor_bins(instrument.source_monitor.bin_limits)
+    beam_bins = monitor_bins(instrument.beam_monitor.bin_limits)
+    mcstas_source, tof_source = read_maps("source_monitor", mcstas_data, tof_result, source_bins)
+    scale = tof_scale(mcstas_source, tof_source)
+    at_source = compare_maps("source_monitor", mcstas_source, tof_source, ncount, neutrons, scale)
+    mcstas_beam, tof_beam = read_maps("beam_monitor", mcstas_data, tof_result, beam_bins)
+    comparison = compare_maps(
+        "beam_monitor", mcstas_beam, tof_beam, ncount, neutrons, scale, transmission
     )
-    at_source, comparison = comparisons["source_monitor"], comparisons["beam_monitor"]
     # --8<-- [end:scale_tof]
     mcstas_total = comparison.mcstas_intensity.sum()
     print(
@@ -267,8 +295,7 @@ def diagnose_path(
         f"{comparison.scale:.4g} n/s per tof neutron"
     )
     fig = plot_comparison(comparison, f"T-Rex flux at the beam monitor after guide 4, {path}")
-    figures.append(save_figure(fig, figure_folder / f"{run_name}.png"))
-    return figures
+    return save_figure(fig, figure_folder / f"{run_name}.png")
 
 
 def main(
@@ -280,17 +307,21 @@ def main(
 ) -> list[Path]:
     """Draw the extraction from above, and run both paths through guide 4.
 
-    The view from above is ``trex_extraction_top.png``; each path is :func:`diagnose_path`,
-    first with the bender out, through guide 4a, then with it in, through the bender and guide
-    4b.
+    The view from above is ``trex_extraction_top.png``. Each path, first with the bender out,
+    through guide 4a, then with it in, through the bender and guide 4b, runs McStas with
+    :func:`diagnose_mcstas`, then tof with :func:`diagnose_tof`; its figures are
+    ``trex_extraction_bender_out_diagnose.png``, ``trex_extraction_bender_out_intensity.png``
+    and ``trex_extraction_bender_out.png``, or ``..._in``.
 
     Parameters
     ----------
     out:
         Folder of the figures. If ``None``, ``trex_extraction`` in the results folder of
         :meth:`.Workspace.find`.
-    ncount, neutrons, seed, transmission:
-        As in :func:`diagnose_path`, for both paths.
+    ncount, seed:
+        As in :func:`diagnose_mcstas`, for both paths.
+    neutrons, transmission:
+        As in :func:`diagnose_tof`, for both paths.
 
     Returns
     -------
@@ -298,7 +329,7 @@ def main(
         The paths of the view from above, then of the diagnostics, the diagram and the
         comparison of the path with the bender out, then of those with it in.
     """
-    figure_folder = output_folder(out, "trex_extraction")
+    figure_folder = output_folder(out, Extraction.name)
     # from above: z along the beam, x across it, 16 x 4 in, within TOP_VIEW_LIMITS; mcdisplay
     # draws every component, whatever its WHEN
     top = draw_instrument(
@@ -310,26 +341,31 @@ def main(
         width=1600,
         height=400,
     )
+    figures = [top]
     # --8<-- [start:paths]
-    # each path through guide 4, with the same McStas and tof runs on its own instrument
-    bender_out = diagnose_path(  # through guide 4a
-        bender_in=False,
-        out=out,
-        ncount=ncount,
-        neutrons=neutrons,
-        seed=seed,
-        transmission=transmission,
-    )
-    bender_in = diagnose_path(  # through the bender and guide 4b
-        bender_in=True,
-        out=out,
-        ncount=ncount,
-        neutrons=neutrons,
-        seed=seed,
-        transmission=transmission,
-    )
+    # each path through guide 4, with the same McStas and tof runs on its own instrument: first
+    # through guide 4a, then through the bender and guide 4b
+    for bender_in in (False, True):
+        instrument = define_instrument(bender_in)
+        path = "bender in, guide 4b" if bender_in else "bender out, guide 4a"
+        run_name = f"{instrument.name}_bender_{'in' if bender_in else 'out'}"
+        mcstas_figures, mcstas_folder = diagnose_mcstas(
+            instrument, run_name, figure_folder, ncount=ncount, seed=seed
+        )
+        comparison = diagnose_tof(
+            instrument,
+            mcstas_folder,
+            path,
+            run_name,
+            figure_folder,
+            ncount=ncount,
+            neutrons=neutrons,
+            seed=seed,
+            transmission=transmission,
+        )
+        figures += [*mcstas_figures, comparison]
     # --8<-- [end:paths]
-    return [top, *bender_out, *bender_in]
+    return figures
 
 
 if __name__ == "__main__":

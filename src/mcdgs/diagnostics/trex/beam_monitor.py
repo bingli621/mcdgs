@@ -37,7 +37,14 @@ from mcdgs.core import Instrument
 from mcdgs.core.components import Arm, ESS_butterfly, Guide_gravity, Monitor_nD, Progress_bar
 from mcdgs.core.components.source import ESS_SOURCE_FREQUENCY
 from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
-from mcdgs.diagnostics.compare import plot_comparison, print_means, read_scaled_comparisons
+from mcdgs.diagnostics.compare import (
+    compare_maps,
+    plot_comparison,
+    print_means,
+    read_maps,
+    tof_scale,
+    tuned_transmission,
+)
 from mcdgs.instruments.trex.guides.bispectral import arm_guide_4, guide_4a
 from mcdgs.instruments.trex.guides.extraction import guides_extraction
 from mcdgs.instruments.trex.monitors import beam_monitor, source_monitor
@@ -232,15 +239,15 @@ def main(
     # --8<-- [start:transmission]
     # tof's counts are scaled to the total of McStas at the source monitor, in n/s; at the beam
     # monitor, the same scale, and the transmission on top of it, tuned if it is None
-    comparisons = read_scaled_comparisons(
-        mcstas_data,
-        tof_result,
-        {"source_monitor": source_bins, "beam_monitor": bins},
-        ncount,
-        neutrons,
-        transmission=transmission,
+    mcstas_source, tof_source = read_maps("source_monitor", mcstas_data, tof_result, source_bins)
+    scale = tof_scale(mcstas_source, tof_source)
+    at_source = compare_maps("source_monitor", mcstas_source, tof_source, ncount, neutrons, scale)
+    mcstas_beam, tof_beam = read_maps("beam_monitor", mcstas_data, tof_result, bins)
+    if transmission is None:  # tuned: the transmission that gives tof the total of McStas
+        transmission = tuned_transmission(mcstas_beam, tof_beam, scale)
+    comparison = compare_maps(
+        "beam_monitor", mcstas_beam, tof_beam, ncount, neutrons, scale, transmission
     )
-    at_source, comparison = comparisons["source_monitor"], comparisons["beam_monitor"]
     # --8<-- [end:transmission]
 
     # print the mean time and wavelength of each model, and the scale and transmission of tof

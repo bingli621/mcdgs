@@ -40,7 +40,13 @@ from matplotlib.figure import Figure
 from scippneutron.conversion import tof as tof_kernels
 
 from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
-from mcdgs.diagnostics.compare import MonitorComparison, read_scaled_comparisons
+from mcdgs.diagnostics.compare import (
+    MonitorComparison,
+    compare_maps,
+    read_maps,
+    tof_scale,
+    tuned_transmission,
+)
 from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
 from mcdgs.mcstas import Simulation
 from mcdgs.reduction.binning import monitor_bins
@@ -375,18 +381,19 @@ def main(
     # run tof; its counts are scaled to the total of McStas at the source monitor, in n/s, and,
     # at the pre-sample and beamstop monitors, by the transmission on top of it
     tof_result = build_tof(instrument, neutrons=neutrons, seed=seed).run()
-    read = read_scaled_comparisons(
-        mcstas_data,
-        tof_result,
-        {
-            name: monitor_bins(getattr(instrument, name).bin_limits)
-            for name in ("source_monitor", *MONITORS)
-        },
-        ncount,
-        neutrons,
-        transmission=transmission,
-    )
-    comparisons = [read[name] for name in MONITORS]
+    source_bins = monitor_bins(instrument.source_monitor.bin_limits)
+    scale = tof_scale(*read_maps("source_monitor", mcstas_data, tof_result, source_bins))
+    maps = {
+        name: read_maps(
+            name, mcstas_data, tof_result, monitor_bins(getattr(instrument, name).bin_limits)
+        )
+        for name in MONITORS
+    }
+    if transmission is None:  # tuned at the pre-sample monitor, and kept at the beamstop monitor
+        transmission = tuned_transmission(*maps[MONITORS[0]], scale)
+    comparisons = [
+        compare_maps(name, *maps[name], ncount, neutrons, scale, transmission) for name in MONITORS
+    ]
     for c in comparisons:
         print(
             f"{c.name}: McStas {c.mcstas_intensity.sum():.4g} n/s, "

@@ -39,11 +39,11 @@ run. The beam monitor is the thin line at 5.902 m. The thin gray lines across th
 ports.
 
 `main` draws this view and runs the path without the bender, through the thermal guide 4a, with
-`diagnose_path`: McStas twice and tof once, for three figures, McStasScript's diagnostics along
+`diagnose_mcstas` and `diagnose_tof`: McStas twice and tof once, for three figures, McStasScript's diagnostics along
 the guides, McStasScript's diagram of the intensity before each component, and McStas and tof
 side by side at the beam monitor. The path with the bender is on
-[Bender](bender-scan.md#bender-in-at-the-nominal-rotation), which runs `diagnose_path` with
-the bender in. The figures are `main` at its defaults: 1e6 McStas neutrons in the run with the
+[Bender](bender-scan.md#bender-in-at-the-nominal-rotation), which runs the same two functions
+with the bender in. The figures are `main` at its defaults: 1e6 McStas neutrons in the run with the
 diagnostics, 1e7 in the run of the diagram and the monitors, 1e6 tof neutrons and seed 1. The
 diagnostics list every ray at their three positions, so their run has fewer neutrons.
 
@@ -124,9 +124,9 @@ at the source monitor, to the McStas total there: 8.46e5 n/s per tof neutron. At
 they are scaled again by a `transmission` of 0.2, the argument of `main`, for what the guides
 would let through. That is close to the 17 % of McStas above, so where McStas is above tof the
 guides pass more than 0.2 of the beam, and where it is below, less. [Beam monitor](beam-monitor.md)
-runs the same path with the transmission tuned to McStas, 0.1734, and explains both factors. `read_scaled_comparisons`
-reads each monitor of both models on its bins, from `monitor_bins`; the scale of the source
-monitor is passed on to the beam monitor:
+runs the same path with the transmission tuned to McStas, 0.1734, and explains both factors.
+`read_maps` reads each monitor of both models on its bins, from `monitor_bins`; the scale of the
+source monitor, from `tof_scale`, is passed on to the beam monitor:
 
 <!-- fmt:off -->
 ```python

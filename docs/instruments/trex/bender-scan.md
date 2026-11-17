@@ -17,7 +17,7 @@ bender at its nominal rotation, below, is run by [Extraction guides](extraction.
 
 With the bender in at its nominal rotation, the beam goes through the bender and the cold guide
 4b. `main` of [Extraction guides](extraction.md) runs this path after the one without the bender,
-with the same function, `diagnose_path`: what is said there of the axes, the monitors and the
+with the same functions, `diagnose_mcstas` and `diagnose_tof`: what is said there of the axes, the monitors and the
 scale of tof holds here too. These figures have 1e6 McStas neutrons in the run with the
 diagnostics, 1e7 in the run of the diagram and the monitors, 1e6 tof neutrons and seed 1.
 

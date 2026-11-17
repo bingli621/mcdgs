@@ -98,8 +98,9 @@ both have the same total at the beam monitor:
 T = McStas total at the beam monitor / (tof neutrons at the beam monitor × scale)
 ```
 
-`read_scaled_comparisons` does both steps: it reads each monitor with `read_comparison`, sets the
-scale at the first, the source monitor, and tunes T at the second, unless it is given:
+Each step is a function of its own: `read_maps` reads each monitor of both models, `tof_scale`
+sets the scale at the source monitor, `tuned_transmission` tunes T at the beam monitor, unless it
+is given, and `compare_maps` scales tof by both:
 
 <!-- fmt:off -->
 ```python

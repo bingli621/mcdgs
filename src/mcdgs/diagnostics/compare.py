@@ -17,10 +17,12 @@ beam, the same scale lets a difference in what the guides and choppers let throu
 ``transmission`` then scales tof on top of it, for what the beam loses that tof does not model,
 such as the guides: tof has none.
 
-:func:`read_comparison` does all of it for one monitor, into a :class:`MonitorComparison`;
-:func:`read_scaled_comparisons` for several monitors of one run of each model, tof scaled at the
-first and, at the others, with the transmission on top of it. :func:`plot_comparison` draws a
-comparison and :func:`print_means` prints the mean time and wavelength of each model.
+Scaling tof is a few small steps, at each monitor on the same bins: :func:`read_maps` reads the
+map of each model, :func:`tof_scale` gives the scale where both see the same beam,
+:func:`tuned_transmission` the transmission that gives tof the total of McStas further down, and
+:func:`compare_maps` puts both maps side by side in n/s, as a :class:`MonitorComparison`.
+:func:`plot_comparison` draws a comparison and :func:`print_means` prints the mean time and
+wavelength of each model.
 """
 
 from collections.abc import Mapping
@@ -234,17 +236,13 @@ class MonitorComparison:
         return sc.stddevs(self.tof).values
 
 
-def read_comparison(
+def read_maps(
     name: str,
     mcstas_data: list[McStasData],
     tof_result: tof.Result,
     bins: Mapping[str, sc.Variable],
-    ncount: float,
-    neutrons: int,
-    scale: float | None = None,
-    transmission: float = 1.0,
-) -> MonitorComparison:
-    """Read one monitor from a McStas and a tof run, in n/s per bin.
+) -> tuple[sc.DataArray, sc.DataArray]:
+    """Read one monitor of a McStas and a tof run on the same bins.
 
     Parameters
     ----------
@@ -257,36 +255,110 @@ def read_comparison(
         The tof run.
     bins:
         The bin edges of the McStas map, ``"toa"`` and ``"wavelength"``, in that order.
+
+    Returns
+    -------
+    :
+        The map of McStas in n/s, as :func:`.read_mcstas_map`, and that of tof in neutrons, as
+        :func:`.read_tof_map`, both with their errors.
+
+    Raises
+    ------
+    ValueError
+        If the map of McStas does not have the shape of ``bins``.
+    """
+    return read_mcstas_map(name, mcstas_data, bins), read_tof_map(name, tof_result, bins)
+
+
+def tof_scale(mcstas_map: sc.DataArray, tof_counts: sc.DataArray) -> float:
+    """Return the n/s each tof neutron stands for: the total of McStas over that of tof.
+
+    Set it where both models see the same beam, such as the source monitor, and keep it further
+    down the beam, where a new one would hide what the guides and choppers let through.
+
+    Parameters
+    ----------
+    mcstas_map:
+        The map of McStas, in n/s.
+    tof_counts:
+        The map of tof on the same bins, in neutrons.
+
+    Returns
+    -------
+    :
+        The scale, in n/s per tof neutron.
+
+    Examples
+    --------
+    >>> mcstas_map = sc.DataArray(sc.array(dims=["toa"], values=[2.0, 4.0], unit="1/s"))
+    >>> tof_counts = sc.DataArray(sc.array(dims=["toa"], values=[1.0, 2.0]))
+    >>> tof_scale(mcstas_map, tof_counts)
+    2.0
+    """
+    return float(mcstas_map.sum().value / tof_counts.sum().value)
+
+
+def tuned_transmission(mcstas_map: sc.DataArray, tof_counts: sc.DataArray, scale: float) -> float:
+    """Return the factor on top of ``scale`` that gives tof the total of McStas at a monitor.
+
+    Parameters
+    ----------
+    mcstas_map:
+        The map of McStas, in n/s.
+    tof_counts:
+        The map of tof on the same bins, in neutrons.
+    scale:
+        The n/s each tof neutron stands for, from :func:`tof_scale` at an earlier monitor.
+
+    Returns
+    -------
+    :
+        The transmission: the total of McStas over that of tof times ``scale``.
+
+    Examples
+    --------
+    >>> mcstas_map = sc.DataArray(sc.array(dims=["toa"], values=[1.0, 2.0], unit="1/s"))
+    >>> tof_counts = sc.DataArray(sc.array(dims=["toa"], values=[1.0, 2.0]))
+    >>> tuned_transmission(mcstas_map, tof_counts, scale=4.0)
+    0.25
+    """
+    return tof_scale(mcstas_map, tof_counts) / scale
+
+
+def compare_maps(
+    name: str,
+    mcstas_map: sc.DataArray,
+    tof_counts: sc.DataArray,
+    ncount: float,
+    neutrons: int,
+    scale: float,
+    transmission: float = 1.0,
+) -> MonitorComparison:
+    """Put both maps of one monitor side by side, tof scaled to n/s.
+
+    Parameters
+    ----------
+    name:
+        The name of the monitor, in both models.
+    mcstas_map:
+        The map of McStas, in n/s, as :func:`read_maps` reads it.
+    tof_counts:
+        The map of tof on the same bins, in neutrons.
     ncount:
         Number of McStas neutrons.
     neutrons:
         Number of tof neutrons.
     scale:
-        The n/s each tof neutron stands for. If ``None``, the total of McStas over that of tof
-        at this monitor.
+        The n/s each tof neutron stands for, from :func:`tof_scale`.
     transmission:
         A factor on tof on top of ``scale``, for what the beam loses that tof does not model,
-        such as the guides. Only with a given ``scale``: with that of this monitor, tof would
-        no longer have the total of McStas.
+        such as the guides; from :func:`tuned_transmission` to give tof the total of McStas.
 
     Returns
     -------
     :
-        Both maps, with their errors.
-
-    Raises
-    ------
-    ValueError
-        If the map of McStas does not have the shape of ``bins``, or ``transmission`` is not 1
-        without a given ``scale``.
+        Both maps, tof times ``scale × transmission``, its Poisson errors scaled along.
     """
-    if scale is None and transmission != 1:
-        raise ValueError(f"{name}: a transmission of {transmission} needs a given scale")
-    mcstas_map = read_mcstas_map(name, mcstas_data, bins)
-    tof_counts = read_tof_map(name, tof_result, bins)
-    if scale is None:
-        scale = float(mcstas_map.sum().value / tof_counts.sum().value)
-    # in n/s, times the transmission; the Poisson errors are scaled as the counts
     tof_map = tof_counts * (scale * transmission)
     tof_map.unit = "1/s"
     return MonitorComparison(
@@ -298,75 +370,6 @@ def read_comparison(
         scale=scale,
         transmission=transmission,
     )
-
-
-def read_scaled_comparisons(
-    mcstas_data: list[McStasData],
-    tof_result: tof.Result,
-    bins: Mapping[str, Mapping[str, sc.Variable]],
-    ncount: float,
-    neutrons: int,
-    transmission: float | None = None,
-) -> dict[str, MonitorComparison]:
-    """Read several monitors from a McStas and a tof run, tof scaled at the first one.
-
-    The first monitor is where both models see the same beam, such as the source monitor: there
-    tof is scaled to the total of McStas. The others, further down the beam, have that scale and
-    ``transmission`` on top of it, as :func:`read_comparison` explains.
-
-    Parameters
-    ----------
-    mcstas_data:
-        The monitors of the McStas run, as ``mcstasscript.load_data`` reads them.
-    tof_result:
-        The tof run.
-    bins:
-        The bin edges of each McStas map, ``"toa"`` and ``"wavelength"``, by the name of the
-        monitor, in beam order: at least two monitors.
-    ncount:
-        Number of McStas neutrons.
-    neutrons:
-        Number of tof neutrons.
-    transmission:
-        A factor on tof at every monitor after the first, on top of the scale of the first. If
-        ``None``, tuned so that tof has the total of McStas at the second monitor.
-
-    Returns
-    -------
-    :
-        Every monitor, by name, in the order of ``bins``.
-
-    Raises
-    ------
-    ValueError
-        If ``bins`` has fewer than two monitors.
-    """
-    if len(bins) < 2:
-        raise ValueError(f"needs a monitor to scale tof at and one after it, got {list(bins)}")
-    (first, first_bins), *rest = bins.items()
-    at_first = read_comparison(first, mcstas_data, tof_result, first_bins, ncount, neutrons)
-
-    def after_first(
-        name: str, edges: Mapping[str, sc.Variable], factor: float
-    ) -> MonitorComparison:
-        """Read a monitor after the first, with its scale and a transmission."""
-        return read_comparison(
-            name,
-            mcstas_data,
-            tof_result,
-            edges,
-            ncount,
-            neutrons,
-            scale=at_first.scale,
-            transmission=factor,
-        )
-
-    if transmission is None:  # tuned: the transmission that gives tof the total of McStas
-        second = after_first(*rest[0], 1.0)
-        transmission = float(second.mcstas_intensity.sum() / second.tof_intensity.sum())
-    return {first: at_first} | {
-        name: after_first(name, edges, transmission) for name, edges in rest
-    }
 
 
 def print_means(comparison: MonitorComparison) -> None:

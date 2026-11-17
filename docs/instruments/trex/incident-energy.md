@@ -34,7 +34,7 @@ whatever the sample does.
 | `pre_sample_monitor` | 163.5 m, between `slit_mc` and the sample | 0.1 m × 0.1 m | 45.3 to 123.6 ms | 15659 of 5 µs | 1.095 to 2.915 Å, in 91 bins of 0.02 Å |
 | `beamstop_monitor` | 166.8 m, 2.999 m after `sample_pos` | 0.1 m × 0.1 m | 46.2 to 126.0 ms | 15961 of 5 µs | 1.095 to 2.915 Å, in 91 bins of 0.02 Å |
 
-tof is scaled to McStas with `read_scaled_comparisons`, as on
+tof is scaled to McStas with `tof_scale` and `tuned_transmission`, as on
 [Neutrons on sample](neutrons-on-sample.md#scale-and-transmission): a scale set at the source
 monitor, and a factor on top of it, tuned so that tof has the total of McStas at the pre-sample
 monitor, and kept at the beamstop monitor. With the masked source, the source monitor sees only

@@ -52,7 +52,14 @@ from scippneutron.conversion import tof as tof_kernels
 from mcdgs.core import bins_from_limits
 from mcdgs.core.components import Monitor_nD
 from mcdgs.diagnostics.cli import markdown_table, output_folder, parse_out, save_figure, save_text
-from mcdgs.diagnostics.compare import MonitorComparison, plot_comparison, read_scaled_comparisons
+from mcdgs.diagnostics.compare import (
+    MonitorComparison,
+    compare_maps,
+    plot_comparison,
+    read_maps,
+    tof_scale,
+    tuned_transmission,
+)
 from mcdgs.instruments.trex.detectors import BANANA_RADIUS
 from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
 from mcdgs.instruments.trex.monitors import SAMPLE_MONITOR_HEIGHT, SAMPLE_MONITOR_WIDTH
@@ -566,19 +573,17 @@ def main(
     tof_result = build_tof(instrument, neutrons=neutrons, seed=seed).run()
     # tof's counts are scaled to the total of McStas at the source monitor, in n/s; at the
     # sample monitor, the same scale, and the transmission on top of it
-    comparisons = read_scaled_comparisons(
-        mcstas_data,
-        tof_result,
-        {
-            "source_monitor": monitor_bins(instrument.source_monitor.bin_limits),
-            "sample_monitor": monitor_bins(instrument.sample_monitor.bin_limits),
-        },
-        ncount,
-        neutrons,
-        transmission=transmission,
+    source_bins = monitor_bins(instrument.source_monitor.bin_limits)
+    sample_bins = monitor_bins(instrument.sample_monitor.bin_limits)
+    mcstas_source, tof_source = read_maps("source_monitor", mcstas_data, tof_result, source_bins)
+    scale = tof_scale(mcstas_source, tof_source)
+    at_source = compare_maps("source_monitor", mcstas_source, tof_source, ncount, neutrons, scale)
+    mcstas_sample, tof_sample = read_maps("sample_monitor", mcstas_data, tof_result, sample_bins)
+    if transmission is None:  # tuned: the transmission that gives tof the total of McStas
+        transmission = tuned_transmission(mcstas_sample, tof_sample, scale)
+    comparison = compare_maps(
+        "sample_monitor", mcstas_sample, tof_sample, ncount, neutrons, scale, transmission
     )
-    at_source, comparison = comparisons["source_monitor"], comparisons["sample_monitor"]
-    transmission = comparison.transmission
 
     # print the totals, and the scale and transmission of tof
     mcstas_total = comparison.mcstas_intensity.sum()

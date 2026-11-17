@@ -39,7 +39,13 @@ import mcstasscript as ms
 from mcdgs.core import Instrument, param
 from mcdgs.core.components import ESS_butterfly, Monitor_nD
 from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
-from mcdgs.diagnostics.compare import intensity_label, mean_coordinate, plot_map, plot_profile
+from mcdgs.diagnostics.compare import (
+    intensity_label,
+    mean_coordinate,
+    plot_map,
+    plot_profile,
+    tof_scale,
+)
 from mcdgs.instruments.trex.monitors import source_monitor
 from mcdgs.instruments.trex.sources import source, wavelength_band
 from mcdgs.mcstas import Simulation, read_mcstas_map
@@ -165,7 +171,7 @@ def main(
 
     # --8<-- [start:scale_tof]
     # tof has no flux: each of its neutrons stands for the total of McStas over that of tof
-    scale = mcstas_map.sum().value / tof_counts.sum().value  # n/s per tof neutron
+    scale = tof_scale(mcstas_map, tof_counts)  # n/s per tof neutron
     tof_map = tof_counts * scale  # the errors are scaled along
     tof_map.unit = "1/s"
     # --8<-- [end:scale_tof]
