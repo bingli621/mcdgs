@@ -69,7 +69,8 @@ same object can go to both.
    run.
 3. Each run writes a folder in `mcdgs_workspace/runs/` with a McStas NeXus file, `mccode.h5`.
 4. [`read_pixels`](reference/mcstas.md) or `h5py` reads that file. See
-   [Read the output](how-to/read-the-output.md).
+   [Read the output](how-to/read-the-output.md). [`read_mcstas_map`](reference/mcstas.md) reads
+   the time and wavelength map of a monitor, in n/s per bin, from the data McStasScript loads.
 
 ### With tof
 
@@ -79,5 +80,8 @@ same object can go to both.
 2. `model.run()` follows the neutrons in memory and writes no files.
 3. `result["sample_monitor"]` holds the neutrons at the monitor at the sample position, with their
    wavelength and time of arrival. See [Simulate the choppers with tof](how-to/simulate-the-choppers-with-tof.md).
+   [`read_tof_map`](reference/tof.md) counts them on the bins of a McStas monitor, so that
+   [`mcdgs.diagnostics.compare`](reference/diagnostics.md) can put both maps side by side, as on
+   [Source](instruments/trex/source.md).
 
 [Code layout](code-layout.md) shows where each of these parts lives in the code.

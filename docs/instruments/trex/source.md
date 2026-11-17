@@ -181,7 +181,7 @@ the functions of [`mcdgs.diagnostics.compare`](../../reference/diagnostics.md#mc
   `mcdgs_workspace/results/trex_source/`, or to the folder given with `--out`.
 
 Run as a module, it makes three figures: `trex_source_1e6.png`, this one,
-`trex_source_1e5.png` and `trex_source_lambda0_2.png`, below. The figure has two rows:
+`trex_source_1e5.png` and `trex_source_lambda0_2A.png`, below. The figure has two rows:
 
 - **Top:** the time and wavelength map of McStas and of tof, side by side on one color scale, in
   n/s per 0.05 ms and 0.05 Å.
@@ -253,7 +253,7 @@ sample within one period of the source, a band of 1.81 Å around `lambda0`. At i
 `lambda0` = 2 Å, that is 1.095 to 2.905 Å. The same run with that band, 1e6 neutrons in both
 models and seed 1:
 
-![McStas and tof at the entrance of guide 1, with the band of lambda0 = 2 Å](figures/source/trex_source_lambda0_2.png)
+![McStas and tof at the entrance of guide 1, with the band of lambda0 = 2 Å](figures/source/trex_source_lambda0_2A.png)
 
 | | Widest band | Band of `lambda0` = 2 Å |
 | --- | --- | --- |

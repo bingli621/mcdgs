@@ -14,7 +14,7 @@ Both give the same intensity, but the masked source's error is ten times smaller
 `Polygon_ESS_butterfly` is a McStas component that builds on `ESS_butterfly`. It is the same
 moderator, with the same parameters, plus a description of the chopper train.
 
-A neutron leaves the moderator at a time t with a speed v. It reaches a disk L metres away at
+A neutron leaves the moderator at a time t with a speed v. It reaches a disk L meters away at
 t + L/v, and passes if the disk is open then. Before the run, the component computes, for every
 disk, which (1/v, t) pairs pass it, and keeps the region all the disks pass: a union of convex
 polygons. Nothing is binned, so the region is exact.
@@ -84,8 +84,8 @@ monitor has finer bins than that of T-Rex, to show the shape of each sub-pulse:
 - **A twelfth of the error.** From the same 1e8 rays, the plain source has an error of 2.4 % and
   the masked source 0.19 %. The plain source would need about 1.6e10 rays to do as well.
 - **No dearer per ray.** Both runs take about as long, 12 to 15 s here, which varies from run to
-  run. The figure of merit, one over the relative error squared times the time, is 137 times
-  higher with the masked source in this run.
+  run. The figure of merit, one over the relative error squared times the time, is about 135
+  times higher with the masked source; with the time, it varies a little from run to run.
 
 ## The figures
 

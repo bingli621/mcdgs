@@ -30,7 +30,7 @@ print(trex)  # every parameter and component, with its position in the lab frame
 | [Simulation with McStas](how-to/run-a-simulation.md) | Single runs, parameter scans and split runs at the sample position. |
 | [Simulation with tof](how-to/simulate-the-choppers-with-tof.md) | The source, the choppers and every monitor, with the choppers timed as in McStas. |
 | [Chopper acceptance](instruments/trex/choppers.md#acceptance-diagram) | The acceptance diagram of the choppers, exact and without neutrons, with scippneutron. |
-| Reading the output | Monitors and detector pixels from McStas NeXus files; the neutrons at each tof detector. |
+| Reading the output | Monitors and detector pixels from McStas NeXus files; the neutrons at each tof detector; the time and wavelength map of a monitor from both, on the same bins, to compare them. |
 | [Parameters files](reference/io.md) | Save an instrument to a YAML file and load it back. A file need only hold what differs from the instrument the code makes. |
 | [Reduction](reference/reduction.md) | The incident energy of each sub-pulse from two monitors, and the energy and momentum transfer of each neutron, per incident neutron and per steradian: the [elastic plane](instruments/trex/elastic-plane.md) of a crystal. S(Q,E) is not written yet. |
 
@@ -43,7 +43,8 @@ print(trex)  # every parameter and component, with its position in the lab frame
   [source](instruments/trex/source.md), the [extraction guides](instruments/trex/extraction.md),
   the [bender](instruments/trex/bender-scan.md), the
   [beam monitor](instruments/trex/beam-monitor.md), the [choppers](instruments/trex/choppers.md),
-  the [neutrons on the sample](instruments/trex/neutrons-on-sample.md), the
+  the [time-distance diagram](instruments/trex/time-distance.md), the
+  [neutrons on the sample](instruments/trex/neutrons-on-sample.md), the
   [masked source](instruments/trex/masked-source.md), the
   [incident energy](instruments/trex/incident-energy.md), and the
   [elastic plane](instruments/trex/elastic-plane.md) and

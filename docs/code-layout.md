@@ -12,10 +12,10 @@ Dependencies point inwards, so an instrument never depends on how it is simulate
 | `core` | `Instrument`, the components, parameters and geometry. It imports nothing else from `mcdgs`. |
 | `instruments`, `samples` | The instruments and ready-made crystals, built on `core`. |
 | `mcstas` | An adapter that works with any instrument: builds it, runs it, reads the output. |
-| `tof` | An adapter that works with any instrument: builds its chopper cascade as a tof model, gives its disks as scippneutron disk choppers, and draws its chopper acceptance diagram. |
+| `tof` | An adapter that works with any instrument: builds its chopper cascade as a tof model, gives its disks as scippneutron disk choppers, draws its chopper acceptance and time-distance diagrams, and counts the neutrons of a run on the bins of a McStas monitor. |
 | `io` | An adapter that saves any instrument to a YAML parameters file and loads it back. It imports `instruments` only to know every instrument class a file may name. |
-| `reduction` | Data reduction with the kernels of scippneutron: the incident energy of a straight flight, the energy and momentum transfer of each neutron, the sub-pulse it belongs to, the solid angle of the pixels and bin edges. It imports nothing else from `mcdgs`. |
-| `diagnostics` | Setups that study one part of an instrument, such as T-Rex up to guide 4, and what reads their McStas and tof results. One module per setup, in a package per instrument, such as `trex.source`, built on all the other packages; nothing else imports it. |
+| `reduction` | Data reduction with the kernels of scippneutron: the incident energy of a straight flight, the patches of a time and wavelength map, the energy and momentum transfer of each neutron, the sub-pulse it belongs to, the solid angle of the pixels and bin edges. It imports nothing else from `mcdgs`. |
+| `diagnostics` | Setups that study one part of an instrument, such as T-Rex up to guide 4, and what reads their McStas and tof results. One module per setup, in a package per instrument, such as `trex.source`, built on all the other packages; nothing else imports it. The modules share `compare`, which puts two time and wavelength maps of a monitor side by side and draws them, `drawing`, which describes and draws any instrument, and `cli`, their command line and the files they write. |
 
 Each box is a package, with the main things it offers, and each dashed arrow points to a package it
 imports from:
@@ -41,11 +41,13 @@ classDiagram
         <<package>>
         build_mcstas()
         Simulation
+        read_mcstas_map()
         read_pixels()
     }
     class tof {
         <<package>>
         build_tof()
+        read_tof_map()
         acceptance_diagram()
         time_distance_diagram()
     }
@@ -61,6 +63,7 @@ classDiagram
     }
     class diagnostics {
         <<package>>
+        compare
         trex.overview to trex.elastic_scan
     }
     instruments ..> core

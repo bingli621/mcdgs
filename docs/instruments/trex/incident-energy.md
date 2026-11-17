@@ -51,7 +51,7 @@ blue, the beamstop monitor in orange, McStas as solid lines and tof as dashed on
 sub-pulse reaches the beamstop monitor 1.1 to 2.2 ms after the pre-sample monitor, the slower
 ones later.
 
-In McStas, the beamstop monitor counts 2.277e7 n/s, 11 % less than the 2.546e7 n/s at the
+In McStas, the beamstop monitor counts 1.948e7 n/s, 23 % less than the 2.546e7 n/s at the
 pre-sample monitor: the beam spreads over the 3.3 m, and part of it misses the 0.1 m monitor.
 tof has no divergence and counts all of it. This loss hardly changes Ei: with the plain source, a
 1 m × 1 m beamstop monitor, which catches the whole beam, moved Ei by at most 0.3 %, within the
@@ -161,15 +161,15 @@ values, in McStas:
 
 | Sub-pulse | At the pre-sample monitor | Between the monitors | λi | Ei between the monitors | Ei, pre-sample monitor alone | Ei from the mean λ |
 | --------- | ------------------------- | -------------------- | -- | ----------------------- | ---------------------------- | ------------------ |
-| 0 | 56.327 ms | 1.0983 ms | 1.317 Å | 47.158 meV (−0.16 %) | 46.824 meV (−0.87 %) | 47.234 meV |
-| 7 | 84.358 ms | 1.6678 ms | 2.000 Å | 20.452 meV (−0.11 %) | 20.451 meV (−0.11 %) | 20.474 meV |
-| 14 | 112.390 ms | 2.2373 ms | 2.683 Å | 11.365 meV (−0.10 %) | 11.404 meV (+0.24 %) | 11.377 meV |
+| 0 | 56.327 ms | 1.0983 ms | 1.317 Å | 47.159 meV (−0.16 %) | 46.824 meV (−0.87 %) | 47.234 meV |
+| 7 | 84.358 ms | 1.6677 ms | 2.000 Å | 20.454 meV (−0.10 %) | 20.451 meV (−0.11 %) | 20.474 meV |
+| 14 | 112.390 ms | 2.2375 ms | 2.683 Å | 11.363 meV (−0.12 %) | 11.404 meV (+0.24 %) | 11.377 meV |
 
 Over all sub-pulses, the difference from the reference is:
 
 | Method | McStas | tof |
 | ------ | ------ | --- |
-| Between the monitors | −0.16 to +0.10 % | −0.07 to +0.08 % |
+| Between the monitors | −0.16 to +0.11 % | −0.07 to +0.08 % |
 | Pre-sample monitor alone | −0.87 to +0.24 % | −0.41 to +0.15 % |
 
 Between the monitors, both models agree with the reference to about 0.1 %, and with each other:
@@ -192,7 +192,7 @@ source:
 
 | Flight | L | t, for sub-pulse 7 | δEi / Ei for δt = 10 µs |
 | ------ | - | ------------------ | ----------------------- |
-| Between the monitors | 3.299 m | 1.667 ms | 1.2 % |
+| Between the monitors | 3.299 m | 1.668 ms | 1.2 % |
 | From the source to the pre-sample monitor | 163.499 m | 82.66 ms | 0.02 % |
 
 A sub-pulse is only about 0.02 to 0.03 ms wide, one or two bins of 0.05 ms. Its mean time is a
