@@ -151,7 +151,7 @@ def main(
     # --8<-- [start:run_mcstas]
     # run McStas and load its monitors, in n/s per bin
     sim = Simulation(instrument)
-    run = sim.run(folder_name=folder_name, ncount=ncount)
+    run = sim.run(folder_name=folder_name, ncount=ncount, seed=seed)
     mcstas_data = ms.load_data(run.folder)
     # --8<-- [end:run_mcstas]
     # --8<-- [start:run_tof]
