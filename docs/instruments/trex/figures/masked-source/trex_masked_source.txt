@@ -1,5 +1,5 @@
 | Source | Rays | At the sample | Relative error | Time | Figure of merit |
 | ------ | ---- | ------------- | -------------- | ---- | --------------- |
-| `ESS_butterfly` | 1e+08 | 2.496e+07 n/s | 2.39% | 12 s | 148 /s |
-| `Polygon_ESS_butterfly`, acceptance 0.006881 | 1e+08 | 2.546e+07 n/s | 0.19% | 14 s | 2.02e+04 /s |
-| Masked over plain | | 1.0200 | 0.0789 | 1.17 | 137 |
+| `ESS_butterfly` | 1e+08 | 2.496e+07 n/s | 2.39% | 12 s | 145 /s |
+| `Polygon_ESS_butterfly`, acceptance 0.006881 | 1e+08 | 2.546e+07 n/s | 0.19% | 14 s | 1.97e+04 /s |
+| Masked over plain | | 1.0200 | 0.0789 | 1.18 | 136 |

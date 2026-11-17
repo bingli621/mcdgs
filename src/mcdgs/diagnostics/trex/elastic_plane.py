@@ -82,7 +82,7 @@ Q_STEP = 0.02  # 1/Å, the bin width in Qx and Qz
 LOG_DECADES = 4  # the color scale spans this many decades below the highest bin
 QY_HALF_WIDTH = 0.5  # 1/Å: the plane keeps the neutrons with |Qy| below this, near horizontal
 DIRECT_BEAM_RADIUS = 0.2  # 1/Å: the direct beam, far above the rest, is left out of the scale
-SAMPLE_SPLIT = 100  # McStas SPLIT on the crystal: each neutron reaching it is repeated this often
+SAMPLE_SPLIT = 10  # McStas SPLIT on the crystal: each neutron reaching it is repeated this often
 
 
 class TRexWithLa2Ni7(TRex):
