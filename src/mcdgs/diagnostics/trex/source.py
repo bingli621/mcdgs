@@ -33,19 +33,18 @@ of it, at 1e6 and at 1e5 neutrons in both models, and with the band of ``lambda0
 from dataclasses import dataclass
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import mcstasscript as ms
 
 from mcdgs.core import Instrument, param
 from mcdgs.core.components import ESS_butterfly, Monitor_nD
 from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
-from mcdgs.diagnostics.compare import plot_comparison, print_means, read_comparison
+from mcdgs.diagnostics.compare import intensity_label, mean_coordinate, plot_map, plot_profile
 from mcdgs.instruments.trex.monitors import source_monitor
 from mcdgs.instruments.trex.sources import source, wavelength_band
-from mcdgs.mcstas import Simulation
+from mcdgs.mcstas import Simulation, read_map
 from mcdgs.reduction.binning import monitor_bins
-from mcdgs.tof import build_tof
-
-NAME = "trex_source"  # the run folder of McStas, the results folder and the figure
+from mcdgs.tof import build_tof, read_tof_monitor
 
 
 # --8<-- [start:trex_source]
@@ -88,7 +87,11 @@ class TRexSource(Instrument):
         lambda0 = self.params.lambda0
         self.source = source() if lambda0 is None else source(*wavelength_band(lambda0))
         self.source_monitor = source_monitor()
-        # --8<-- [end:trex_source]
+
+
+params = TRexSourceParams(lambda0=None)  # the default wavelength band from 0.1 Å to 10 Å
+instrument = TRexSource(params)
+# --8<-- [end:trex_source]
 
 
 def main(
@@ -96,8 +99,8 @@ def main(
     ncount: float = 1e6,
     neutrons: int = 1_000_000,
     seed: int = 1,
-    name: str = NAME,
     lambda0: float | None = None,
+    folder_name: str = "trex_source",
 ) -> Path:
     """Run both models of :class:`TRexSource`, print their means and save the figure.
 
@@ -122,37 +125,77 @@ def main(
     :
         The path of the figure.
     """
-    instrument = TRexSource(TRexSourceParams(lambda0=lambda0))
-
+    params = TRexSourceParams(lambda0=lambda0)
+    instrument = TRexSource(params)
     # --8<-- [start:run_mcstas]
     # run McStas and load its monitors, in n/s per bin
-    folder = Simulation(instrument).run(NAME, ncount=ncount, seed=seed).folder
-    mcstas_data = ms.load_data(str(folder))
+    sim = Simulation(instrument)
+    run = sim.run(folder_name=folder_name, ncount=ncount)
+    mcstas_data = ms.load_data(run.folder)
     # --8<-- [end:run_mcstas]
-
     # --8<-- [start:run_tof]
     # run tof, then read the monitor of both on the bins of the McStas map: time, wavelength
-    tof_result = build_tof(instrument, neutrons=neutrons, seed=seed).run()
-    bins = monitor_bins(instrument.source_monitor.bin_limits)  # read from the monitor
-    # tof's counts are scaled to the total of McStas, in n/s
-    comparison = read_comparison("source_monitor", mcstas_data, tof_result, bins, ncount, neutrons)
+    tof_model = build_tof(instrument, neutrons=neutrons, seed=seed)
+    tof_result = tof_model.run()
     # --8<-- [end:run_tof]
 
-    # print the mean time and wavelength of each model, and the total tof is scaled to
-    print_means(comparison)
-    print(
-        f"McStas total {comparison.mcstas_intensity.sum():.4g} n/s, "
-        f"{comparison.scale:.4g} n/s per tof neutron"
-    )
+    # --8<-- [start:read_maps]
+    # the bins of the map of the monitor, time and wavelength, read from the monitor
+    bins = monitor_bins(instrument.source_monitor.bin_limits)
+    # the map of each model on those bins, a scipp data array with its errors as variances:
+    # McStas in n/s, tof in neutrons, a bin of N neutrons with the Poisson error √N
+    mcstas_map = read_map("source_monitor", mcstas_data, bins)
+    tof_counts = read_tof_monitor(
+        tof_result["source_monitor"], bins
+    )  # TODO gnerealize read_to monitor
+    # --8<-- [end:read_maps]
 
-    fig = plot_comparison(comparison, "T-Rex flux at the entrance of guide 1")
-    return save_figure(fig, output_folder(out, NAME) / f"{name}.png")
+    # --8<-- [start:scale_tof]
+    # tof has no flux: each of its neutrons stands for the total of McStas over that of tof
+    scale = mcstas_map.sum().value / tof_counts.sum().value  # n/s per tof neutron
+    tof_map = tof_counts * scale  # the errors are scaled along
+    tof_map.unit = "1/s"
+    # --8<-- [end:scale_tof]
+
+    # the mean time and wavelength of each model, weighted by its intensity
+    for label, data in (("McStas", mcstas_map), ("tof", tof_map)):
+        mean_time = mean_coordinate(data, "toa").to(unit="ms").value
+        mean_wavelength = mean_coordinate(data, "wavelength").to(unit="Å").value
+        print(f"{label:>6}: mean time {mean_time:.3f} ms, mean wavelength {mean_wavelength:.3f} Å")
+    print(f"McStas total {mcstas_map.sum().value:.4g} n/s, {scale:.4g} n/s per tof neutron")
+
+    # --8<-- [start:plot]
+    fig, ((mcstas_ax, tof_ax), (spectrum_ax, profile_ax)) = plt.subplots(
+        2, 2, figsize=(12, 9), layout="constrained"
+    )
+    fig.suptitle("T-Rex flux at the entrance of guide 1")
+
+    # top row: the time and wavelength map of each model, on one color scale
+    vmax = max(mcstas_map.max().value, tof_map.max().value)
+    plot_map(mcstas_ax, mcstas_map, vmax=vmax)
+    mesh = plot_map(tof_ax, tof_map, vmax=vmax)
+    mcstas_ax.set_title("McStas")
+    tof_ax.set_title("tof")
+    fig.colorbar(mesh, ax=[mcstas_ax, tof_ax], label=intensity_label(mcstas_map))
+
+    # bottom row: the wavelength spectrum, each map summed over time, and the time profile,
+    # summed over wavelength. Summing adds the variances, so the errors add in quadrature
+    mcstas_label = f"McStas, ncount = {int(ncount):,}"
+    tof_label = f"tof, {neutrons:,} neutrons × {scale:.3g} n/s each"
+    for ax, summed in ((spectrum_ax, "toa"), (profile_ax, "wavelength")):
+        plot_profile(ax, mcstas_map.sum(summed), mcstas_label)
+        plot_profile(ax, tof_map.sum(summed), tof_label)
+        ax.set_ylim(bottom=0)
+        ax.legend()
+    # --8<-- [end:plot]
+
+    return save_figure(fig, output_folder(out, "trex_source") / f"{run.name}.png")
 
 
 if __name__ == "__main__":
     out_folder = parse_out(__doc__)
-    main(out=out_folder, ncount=1e6, neutrons=1_000_000, name="trex_source_1e6")
+    main(out=out_folder, ncount=1e6, neutrons=1_000_000, folder_name="trex_source_1e6")
     # a tenth of the neutrons in both models, for the scale with fewer tof neutrons
-    main(out=out_folder, ncount=1e5, neutrons=100_000, name="trex_source_1e5")
+    main(out=out_folder, ncount=1e5, neutrons=100_000, folder_name="trex_source_1e5")
     # the band of TRex at its default lambda0, 2 Å, in place of the widest band
-    main(out=out_folder, lambda0=2.0, name="trex_source_lambda0_2")
+    main(out=out_folder, lambda0=2.0, folder_name="trex_source_lambda0_2A")
