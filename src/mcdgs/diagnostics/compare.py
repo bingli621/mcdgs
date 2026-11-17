@@ -21,9 +21,9 @@ Scaling tof is a few small steps, on the maps of each monitor: :func:`tof_scale`
 scale where both see the same beam,
 :func:`tuned_transmission` the transmission that gives tof the total of McStas further down, and
 :func:`compare_maps` puts both maps side by side in n/s, as a :class:`MonitorComparison`.
-:func:`plot_comparison` draws a comparison, its maps with :func:`plot_comparison_maps` and its
-profiles with :func:`plot_comparison_profiles`, and :func:`print_means` prints the mean time and
-wavelength of each model.
+:func:`plot_two_maps` draws any two maps on the same bins, their maps, spectra and time
+profiles, :func:`plot_comparison` those of a comparison, and :func:`print_means` prints the mean
+time and wavelength of each model.
 """
 
 from dataclasses import dataclass
@@ -357,94 +357,18 @@ def _model_labels(comparison: MonitorComparison) -> tuple[str, str]:
     return mcstas_label, tof_label
 
 
-def plot_comparison_maps(
-    fig: Figure,
-    first_ax: Axes,
-    second_ax: Axes,
+def plot_two_maps(
     first: sc.DataArray,
     second: sc.DataArray,
-    first_title: str = "Map 1",
-    second_title: str = "Map 2",
-    log_decades: int | None = None,
-) -> None:
-    """Draw two maps side by side on one color scale, with a color bar.
-
-    The maps are those of a :class:`MonitorComparison`, McStas and tof, or any two on the same
-    bins, such as McStas at two settings.
-
-    Parameters
-    ----------
-    fig:
-        The figure of the axes, for the color bar.
-    first_ax, second_ax:
-        The axes of the first and the second map.
-    first, second:
-        The maps, in n/s per bin, with bin edges as coordinates. The color bar is labeled with
-        the bin widths of ``first``.
-    first_title, second_title:
-        The titles of the axes.
-    log_decades:
-        If given, the color scale is logarithmic, this many decades deep below the highest bin,
-        as in :func:`plot_map`. If ``None``, linear from 0.
-    """
-    vmax = float(max(first.values.max(), second.values.max()))
-    plot_map(first_ax, first, vmax=vmax, log_decades=log_decades)
-    mesh = plot_map(second_ax, second, vmax=vmax, log_decades=log_decades)
-    first_ax.set_title(first_title)
-    second_ax.set_title(second_title)
-    fig.colorbar(mesh, ax=[first_ax, second_ax], label=intensity_label(first))
-
-
-def plot_comparison_profiles(
-    spectrum_ax: Axes,
-    profile_ax: Axes,
-    first: sc.DataArray,
-    second: sc.DataArray,
-    first_label: str = "Map 1",
-    second_label: str = "Map 2",
-    connect: bool = False,
-    log_y: bool = False,
-) -> None:
-    """Draw the wavelength spectrum and the time profile of two maps, one over the other.
-
-    The spectrum is each map summed over time, the profile summed over wavelength, both with
-    their error bars (:func:`plot_profile`).
-
-    Parameters
-    ----------
-    spectrum_ax, profile_ax:
-        The axes of the wavelength spectrum and of the time profile.
-    first, second:
-        The maps, in n/s per bin, (time bins, wavelength bins), with bin edges as coordinates
-        and variances, such as those of a :class:`MonitorComparison`.
-    first_label, second_label:
-        Their entries in the legends.
-    connect:
-        True joins the points with lines.
-    log_y:
-        True puts the intensity on a log axis, where the empty bins are left out. False, a
-        linear one from 0.
-    """
-    time, wavelength = first.dims
-    for ax, summed in ((spectrum_ax, time), (profile_ax, wavelength)):
-        plot_profile(ax, first.sum(summed), first_label, connect=connect)
-        plot_profile(ax, second.sum(summed), second_label, connect=connect)
-        ax.legend()
-        if log_y:  # the empty bins, and the error bars below 0, are left out
-            ax.set_yscale("log", nonpositive="mask")
-        else:
-            ax.set_ylim(bottom=0)
-
-
-def plot_comparison(
-    comparison: MonitorComparison,
     title: str,
     *,
+    titles: tuple[str, str] = ("Map 1", "Map 2"),
+    labels: tuple[str, str] | None = None,
     log_decades: int | None = None,
     connect: bool = False,
     log_y: bool = False,
 ) -> Figure:
-    """Draw both models at one monitor, in n/s.
+    """Draw two maps on the same bins, such as McStas and tof, or McStas at two settings.
 
     The top row has the time and wavelength map of each, on one color scale (:func:`plot_map`);
     the bottom row the wavelength spectrum and the time profile of both, summed over the other
@@ -452,10 +376,15 @@ def plot_comparison(
 
     Parameters
     ----------
-    comparison:
-        Both maps.
+    first, second:
+        The maps, in n/s per bin, (time bins, wavelength bins), with bin edges as coordinates
+        and variances. The color bar is labeled with the bin widths of ``first``.
     title:
         The title of the figure.
+    titles:
+        The titles of the two maps.
+    labels:
+        Their entries in the legends of the spectrum and the profile. If ``None``, ``titles``.
     log_decades:
         If given, the color scale of the maps is logarithmic, this many decades deep below the
         highest bin, as in :func:`plot_map`. If ``None``, linear from 0.
@@ -470,29 +399,62 @@ def plot_comparison(
     :
         The figure.
     """
-    fig, ((mcstas_ax, tof_ax), (spectrum_ax, profile_ax)) = plt.subplots(
+    fig, (map_axes, (spectrum_ax, profile_ax)) = plt.subplots(
         2, 2, figsize=(12, 9), layout="constrained"
     )
     fig.suptitle(title)
-    plot_comparison_maps(
-        fig,
-        mcstas_ax,
-        tof_ax,
+    maps = (first, second)
+    labels = titles if labels is None else labels
+
+    vmax = float(max(data.values.max() for data in maps))
+    for ax, data, map_title in zip(map_axes, maps, titles, strict=True):
+        mesh = plot_map(ax, data, vmax=vmax, log_decades=log_decades)
+        ax.set_title(map_title)
+    fig.colorbar(mesh, ax=list(map_axes), label=intensity_label(first))
+
+    time, wavelength = first.dims
+    for ax, summed in ((spectrum_ax, time), (profile_ax, wavelength)):
+        for data, label in zip(maps, labels, strict=True):
+            plot_profile(ax, data.sum(summed), label, connect=connect)
+        ax.legend()
+        if log_y:  # the empty bins, and the error bars below 0, are left out
+            ax.set_yscale("log", nonpositive="mask")
+        else:
+            ax.set_ylim(bottom=0)
+    return fig
+
+
+def plot_comparison(
+    comparison: MonitorComparison,
+    title: str,
+    *,
+    log_decades: int | None = None,
+    connect: bool = False,
+    log_y: bool = False,
+) -> Figure:
+    """Draw both models at one monitor, in n/s, as :func:`plot_two_maps`.
+
+    Parameters
+    ----------
+    comparison:
+        Both maps. The legends give the neutrons of each model and the scale of tof.
+    title:
+        The title of the figure.
+    log_decades, connect, log_y:
+        As in :func:`plot_two_maps`.
+
+    Returns
+    -------
+    :
+        The figure.
+    """
+    return plot_two_maps(
         comparison.mcstas,
         comparison.tof,
-        first_title="McStas",
-        second_title="tof",
+        title,
+        titles=("McStas", "tof"),
+        labels=_model_labels(comparison),
         log_decades=log_decades,
-    )
-    mcstas_label, tof_label = _model_labels(comparison)
-    plot_comparison_profiles(
-        spectrum_ax,
-        profile_ax,
-        comparison.mcstas,
-        comparison.tof,
-        first_label=mcstas_label,
-        second_label=tof_label,
         connect=connect,
         log_y=log_y,
     )
-    return fig
