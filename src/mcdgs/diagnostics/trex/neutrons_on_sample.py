@@ -132,7 +132,8 @@ class TRexToSample(TRex):
 
 def define_instrument() -> TRexToSample:
     """Return the instrument of this diagnostic: :class:`TRexToSample` at its defaults."""
-    return TRexToSample()
+    params = Params()  # the default control parameters
+    return TRexToSample(params=params)
 
 
 # --8<-- [end:instrument]

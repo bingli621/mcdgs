@@ -34,7 +34,8 @@ def test_a_subclass_is_registered_by_its_class_name():
 
 def test_the_params_default_to_those_of_the_params_class():
     assert Toy().params == ToyParams()
-    assert Toy(params=ToyParams(omega=5)).params.omega == 5
+    params = ToyParams(omega=5)
+    assert Toy(params=params).params.omega == 5
 
 
 def test_update_params_replaces_the_frozen_params():
@@ -103,7 +104,8 @@ def test_an_instrument_has_no_instr_params_unless_it_implements_them():
 
 def test_equality_compares_name_params_and_components():
     assert Toy() == Toy()
-    assert Toy() != Toy(params=ToyParams(omega=1))
+    params = ToyParams(omega=1)
+    assert Toy() != Toy(params=params)
     other = Toy()
     other.detector = Arm(at=[0, 0, 4], relative="sample")
     assert Toy() != other
@@ -149,5 +151,6 @@ def test_numeric_instr_params_leave_out_strings():
         def instr_params(self) -> list[InstrParam]:
             return [*super().instr_params, InstrParam("label", "a", "", "a string")]
 
-    assert Named(params=ToyParams(omega=5)).numeric_instr_params() == {"omega": 5}
+    params = ToyParams(omega=5)
+    assert Named(params=params).numeric_instr_params() == {"omega": 5}
     del INSTRUMENTS["Named"]

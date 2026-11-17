@@ -98,7 +98,8 @@ def crystal(split: int = SCAN_SPLIT) -> Single_crystal:
 
 def define_instrument() -> TRexWithRotatingLa2Ni7:
     """Return the instrument of this diagnostic: :class:`TRexWithRotatingLa2Ni7` at its defaults."""
-    return TRexWithRotatingLa2Ni7()
+    params = Params()  # the default control parameters
+    return TRexWithRotatingLa2Ni7(params=params)
 
 
 # --8<-- [end:instrument]

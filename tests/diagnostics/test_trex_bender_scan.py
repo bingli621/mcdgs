@@ -73,3 +73,16 @@ def test_an_axis_with_no_whole_band_is_refused(tmp_path):
     _write_scan(tmp_path / "mccode.h5", [(np.ones(shape), np.ones(shape))], wavelengths)
     with pytest.raises(ValueError, match="covers no band"):
         read_spectra(tmp_path / "mccode.h5")
+
+
+def test_the_instrument_of_the_scan_is_the_extraction_with_the_bender_in():
+    from mcdgs.diagnostics.trex.bender_scan import TRexBenderScan, define_instrument
+    from mcdgs.diagnostics.trex.extraction import Extraction, ExtractionParams
+
+    instrument = define_instrument()
+    assert isinstance(instrument, TRexBenderScan) and instrument.name == "trex_bender_scan"
+    params = ExtractionParams(bender_in=True)
+    extraction = Extraction(params)
+    assert instrument.components == extraction.components
+    assert list(instrument.components) == list(extraction.components)
+    assert instrument.instr_params == extraction.instr_params  # bender_in = 1

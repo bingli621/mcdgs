@@ -14,15 +14,15 @@ It needs only mcdgs and scippneutron. Run the module for them::
 from pathlib import Path
 
 from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure, save_text
-from mcdgs.instruments.trex.model import TRex
+from mcdgs.instruments.trex.model import Params, TRex
 from mcdgs.tof import acceptance_diagram, get_choppers
 
+
 # --8<-- [start:instrument]
-
-
 def define_instrument() -> TRex:
     """Return the instrument of this diagnostic: :class:`.TRex` at its default parameters."""
-    return TRex()
+    params = Params()  # the default control parameters
+    return TRex(params=params)
 
 
 # --8<-- [end:instrument]

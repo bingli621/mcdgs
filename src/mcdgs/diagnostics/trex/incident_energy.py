@@ -85,7 +85,8 @@ class TRexToBeamstopMonitor(TRex):
 
 def define_instrument() -> TRexToBeamstopMonitor:
     """Return the instrument of this diagnostic: :class:`TRexToBeamstopMonitor` at its defaults."""
-    return TRexToBeamstopMonitor()
+    params = Params()  # the default control parameters
+    return TRexToBeamstopMonitor(params=params)
 
 
 # --8<-- [end:instrument]

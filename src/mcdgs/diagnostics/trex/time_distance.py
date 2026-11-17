@@ -16,7 +16,7 @@ from pathlib import Path
 from mcdgs.core import evaluate
 from mcdgs.core.components import NXdisk_chopper
 from mcdgs.diagnostics.cli import markdown_table, output_folder, parse_out, save_figure, save_text
-from mcdgs.instruments.trex.model import TRex
+from mcdgs.instruments.trex.model import Params, TRex
 from mcdgs.tof import beamline, time_distance_diagram
 
 N_PULSES = 2
@@ -27,11 +27,10 @@ BLOCKED_RAYS = 5000
 
 
 # --8<-- [start:instrument]
-
-
 def define_instrument() -> TRex:
     """Return the instrument of this diagnostic: :class:`.TRex` at its default parameters."""
-    return TRex()
+    params = Params()  # the default control parameters
+    return TRex(params=params)
 
 
 # --8<-- [end:instrument]

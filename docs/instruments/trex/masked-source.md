@@ -65,8 +65,8 @@ choppers will let through. For the beam the guides carry to the choppers, use th
 
 ## The setup
 
-`main` runs `TRexToSample` of [Neutrons on sample](neutrons-on-sample.md) twice, T-Rex up to its
-sample monitor at the defaults: once with each source, with 1e8 rays and seed 1. Its sample
+`main` runs `TRexToSampleMonitor` twice, T-Rex up to its sample monitor at the defaults, without
+a sample: once with each source, with 1e8 rays and seed 1. Its sample
 monitor has finer bins than that of T-Rex, to show the shape of each sub-pulse:
 
 | Axis | Range | Bins | Bin width |

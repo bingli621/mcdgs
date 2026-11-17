@@ -29,15 +29,15 @@ from mcdgs.diagnostics.drawing import (
     write_instr_file,
     write_printout,
 )
-from mcdgs.instruments.trex.model import TRex
+from mcdgs.instruments.trex.model import Params, TRex
 from mcdgs.mcstas import build_mcstas
 
+
 # --8<-- [start:instrument]
-
-
 def define_instrument() -> TRex:
     """Return the instrument of this diagnostic: :class:`.TRex` at its default parameters."""
-    return TRex()
+    params = Params()  # the default control parameters
+    return TRex(params=params)
 
 
 # --8<-- [end:instrument]

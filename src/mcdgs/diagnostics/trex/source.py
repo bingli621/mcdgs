@@ -103,7 +103,8 @@ def define_instrument(lambda0: float | None = None) -> TRexSource:
     :
         :class:`TRexSource` with that band.
     """
-    return TRexSource(TRexSourceParams(lambda0=lambda0))
+    source_params = TRexSourceParams(lambda0=lambda0)
+    return TRexSource(source_params)
 
 
 # --8<-- [end:instrument]

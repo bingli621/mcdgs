@@ -81,7 +81,7 @@ def test_the_folders_are_those_of_the_workspace(tmp_path, monkeypatch):
 
 def test_the_record_of_a_run_has_every_instrument_parameter_it_used(tmp_path):
     sim = Simulation(TRex(), Workspace(tmp_path))
-    run, _ = sim._prepare("mine", RunType.RUN, {"bender_in": 1, "omega": 30}, ncount=1e4, seed=3)
+    run, _ = sim.prepare("mine", RunType.RUN, {"bender_in": 1, "omega": 30}, ncount=1e4, seed=3)
     defaults = {p.name: p.value for p in TRex().instr_params}
     assert run.instr_params.keys() == defaults.keys()
     assert (run.instr_params["bender_in"], run.instr_params["omega"]) == (1.0, 30.0)  # as given
@@ -92,7 +92,7 @@ def test_the_record_of_a_run_has_every_instrument_parameter_it_used(tmp_path):
 
 def test_the_record_of_a_scan_has_its_variable_apart_from_the_other_parameters(tmp_path):
     sim = Simulation(TRex(), Workspace(tmp_path))
-    run, _ = sim._prepare(
+    run, _ = sim.prepare(
         None, RunType.SCAN_FROM_SAMPLE, {"bender_in": 1}, variable="omega", values=[0.0, 1.0]
     )
     assert run.folder.name.endswith("_scan_omega_from_sample")
@@ -103,5 +103,15 @@ def test_the_record_of_a_scan_has_its_variable_apart_from_the_other_parameters(t
 
 def test_the_record_of_a_run_from_the_sample_names_its_beam_run(tmp_path):
     sim = Simulation(TRex(), Workspace(tmp_path))
-    run, _ = sim._prepare("a", RunType.RUN_FROM_SAMPLE, {}, beam_run="to_sample")
+    run, _ = sim.prepare("a", RunType.RUN_FROM_SAMPLE, {}, beam_run="to_sample")
     assert run.beam_run == "to_sample" and run.ncount is None
+
+
+def test_a_run_mcstasscript_starts_itself_is_prepared_without_nexus(tmp_path):
+    sim = Simulation(TRex(), Workspace(tmp_path))
+    run, inst = sim.prepare("diagnose", ncount=1e4, seed=3, nexus=False, mpi="auto")
+    assert run.run_type is RunType.RUN and run.folder == tmp_path / "runs" / "diagnose"
+    assert run.instr_params == {p.name: float(p.value) for p in TRex().instr_params}
+    assert inst._run_settings["NeXus"] is False  # McStasScript keeps them private
+    assert inst._run_settings["output_path"] == str(run.folder)
+    assert (inst._run_settings["ncount"], inst._run_settings["seed"]) == (1e4, 3)

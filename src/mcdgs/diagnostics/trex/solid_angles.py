@@ -145,7 +145,8 @@ class TRexWithVanadium(TRex):
 
 def define_instrument() -> TRexWithVanadium:
     """Return the instrument of this diagnostic: :class:`TRexWithVanadium`, in the white beam."""
-    return TRexWithVanadium()
+    params = Params(lambda0=None)  # the white beam: no central wavelength
+    return TRexWithVanadium(params=params)
 
 
 # --8<-- [end:instrument]

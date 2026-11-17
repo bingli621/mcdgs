@@ -1,16 +1,17 @@
 """How the bender passes each band of wavelengths, from a scan of its rotation.
 
-The scan runs the :class:`.Extraction` and reads its beam monitor, after guide 4: its time and
-wavelength map, summed over time, in bands of :data:`BAND_WIDTH` centered on its multiples.
+:class:`TRexBenderScan` is T-Rex up to the beam monitor after guide 4, with the bender in, as the
+:class:`.Extraction` has it. The scan reads its beam monitor: its time and wavelength map, summed
+over time, in bands of :data:`BAND_WIDTH` centered on its multiples.
 :func:`run_bender_scan` scans ``b_rot`` with the bender in, and runs once with it out;
 :func:`plot_bender_scan` draws the intensity per band of the scan over that of the same band
 with the bender out, from :func:`transmission`. :func:`read_angles` and :func:`read_spectra`
-read the files of the scan. :func:`main` does both, and runs the path with the bender in at its
-nominal rotation with :func:`.diagnose_path`; run the module for it::
+read the files of the scan. :func:`main` does both; run the module for it::
 
     pixi run python -m mcdgs.diagnostics.trex.bender_scan
 """
 
+from dataclasses import dataclass
 from pathlib import Path
 
 import h5py
@@ -20,24 +21,106 @@ from matplotlib.figure import Figure
 from mcstastox.LoadFile import Data
 from numpy.typing import NDArray
 
+from mcdgs.core import InstrParam, Instrument, param
+from mcdgs.core.components import (
+    Arm,
+    ESS_butterfly,
+    Guide_gravity,
+    Monitor_nD,
+    Pol_bender,
+    Progress_bar,
+)
 from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
-from mcdgs.diagnostics.trex.extraction import Extraction, ExtractionParams, diagnose_path
-from mcdgs.instruments.trex.guides.bispectral import BENDER_ROTATION
+from mcdgs.instruments.trex.guides.bispectral import (
+    BENDER_ROTATION,
+    arm_guide_4,
+    bender,
+    guide_4a,
+    guide_4b,
+)
+from mcdgs.instruments.trex.guides.extraction import guides_extraction
+from mcdgs.instruments.trex.monitors import beam_monitor, source_monitor
+from mcdgs.instruments.trex.sources import source
 from mcdgs.mcstas import Simulation, Workspace
 
 BAND_WIDTH = 0.5  # Å: the bands are centered on its multiples, 0.5, 1.0, 1.5 Å, ...
 
 
 # --8<-- [start:instrument]
+@dataclass(frozen=True)
+class TRexBenderScanParams:
+    """Control parameters of :class:`TRexBenderScan`.
 
-
-def define_instrument() -> Extraction:
-    """Return the instrument of this diagnostic: the :class:`.Extraction` with the bender in.
-
-    Its runs still set ``bender_in`` themselves: the scan with the bender in, the run without it
-    with it out.
+    Parameters
+    ----------
+    bender_in:
+        True uses the bender and the cold guide 4b, False uses the thermal guide 4a.
+    b_rot:
+        Rotation of the bender about +y, in deg.
     """
-    return Extraction(ExtractionParams(bender_in=True))
+
+    bender_in: bool = param(True, "", "True = bender in, False = bender out")
+    b_rot: float = param(BENDER_ROTATION, "deg", "rotation of the cold neutron bender")
+
+
+class TRexBenderScan(Instrument):
+    """T-Rex up to the beam monitor after guide 4, with the bender in by default.
+
+    The source and the beam monitor keep the widest band, 0.1 to 10 Å. Guide 4a, the bender and
+    guide 4b are all in the instrument; ``bender_in`` chooses the path, as an instrument
+    parameter, so that a run of the scan can set it.
+
+    Parameters
+    ----------
+    params:
+        Control parameters. If ``None``, the defaults of :class:`TRexBenderScanParams`.
+    """
+
+    params_class = TRexBenderScanParams
+    name = "trex_bender_scan"  # the McStas instrument name
+
+    origin: Progress_bar
+    source: ESS_butterfly
+    source_monitor: Monitor_nD
+    arm_nboa: Arm
+    guide_1: Guide_gravity
+    guide_2: Guide_gravity
+    guide_3: Guide_gravity
+    arm_guide_4: Arm
+    guide_4a: Guide_gravity
+    bender: Pol_bender
+    guide_4b: Guide_gravity
+    beam_monitor: Monitor_nD
+
+    def __init__(self, params: TRexBenderScanParams | None = None) -> None:
+        super().__init__(params)
+        self.origin = Progress_bar(at=[0, 0, 0])
+        self.source = source()  # the widest band, as the beam monitor's default limits
+        self.source_monitor = source_monitor()
+        self.add_components(guides_extraction())
+        self.arm_guide_4 = arm_guide_4()
+        self.guide_4a = guide_4a(when="bender_in==0")
+        self.bender = bender(when="bender_in==1")
+        self.guide_4b = guide_4b(when="bender_in==1")
+        self.beam_monitor = beam_monitor()
+
+    @property
+    def instr_params(self) -> list[InstrParam]:
+        """The McStas instrument parameters: ``bender_in`` as 0 or 1, and ``b_rot``."""
+        return [
+            InstrParam("bender_in", int(self.params.bender_in), "", "bender in = 1, out = 0"),
+            InstrParam("b_rot", self.params.b_rot, "deg", "rotation of the cold neutron bender"),
+        ]
+
+
+def define_instrument() -> TRexBenderScan:
+    """Return the instrument of this diagnostic: :class:`TRexBenderScan`, the bender in.
+
+    The runs of the scan still set ``bender_in`` themselves: the scan with the bender in, the run
+    without it with it out.
+    """
+    params = TRexBenderScanParams()  # the default control parameters: the bender in
+    return TRexBenderScan(params)
 
 
 # --8<-- [end:instrument]
@@ -249,47 +332,27 @@ def plot_bender_scan(scan_file: Path, bender_out_file: Path) -> Figure:
     return fig
 
 
-def main(
-    out: Path | None = None,
-    ncount: float = 1e6,
-    seed: int = 1,
-    path_ncount: float = 1e7,
-    neutrons: int = 1_000_000,
-    transmission: float = 0.2,
-) -> list[Path]:
-    """Run the scan of the bender and save its figure, then run the path with the bender in.
+def main(out: Path | None = None, ncount: float = 1e6, seed: int = 1) -> Path:
+    """Run the scan of the bender and save its figure.
 
     Parameters
     ----------
     out:
         Folder of the figures. If ``None``, ``trex_bender_scan`` in the results folder of
-        :meth:`.Workspace.find` for ``bender_scan.png``, and ``trex_extraction`` there for
-        the others.
+        :meth:`.Workspace.find`.
     ncount:
         Number of McStas neutrons, per angle and in the run without the bender.
     seed:
         Seed of the random numbers.
-    path_ncount:
-        Number of McStas neutrons in each run of the path with the bender in, at its nominal
-        rotation: see :func:`.diagnose_path`.
-    neutrons, transmission:
-        Number of tof neutrons, and the factor on tof at the beam monitor, of that path.
 
     Returns
     -------
     :
-        The path of the figure of the scan, then those of the diagnostics, the diagram and the
-        comparison with the bender in.
+        The path of the figure, ``bender_scan.png``.
     """
     scan_file, bender_out_file = run_bender_scan(ncount=ncount, seed=seed)
     fig = plot_bender_scan(scan_file, bender_out_file)
-    figure = save_figure(fig, output_folder(out, "trex_bender_scan") / "bender_scan.png")
-    # --8<-- [start:bender_in]
-    path = diagnose_path(
-        True, out, ncount=path_ncount, neutrons=neutrons, seed=seed, transmission=transmission
-    )
-    # --8<-- [end:bender_in]
-    return [figure, *path]
+    return save_figure(fig, output_folder(out, "trex_bender_scan") / "bender_scan.png")
 
 
 if __name__ == "__main__":

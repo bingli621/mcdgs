@@ -137,7 +137,8 @@ class _Tiny(Instrument):
 
 def test_another_instrument_goes_through_the_same_io(tmp_path):
     assert INSTRUMENTS["_Tiny"] is _Tiny
-    tiny = _Tiny(_TinyParams(gap=0.05))
+    params = _TinyParams(gap=0.05)
+    tiny = _Tiny(params)
     save(tiny, tmp_path / "tiny.yaml")
     assert read_yaml(tmp_path / "tiny.yaml")["instrument"] == "_Tiny"
     assert load(tmp_path / "tiny.yaml") == tiny  # the file names its class

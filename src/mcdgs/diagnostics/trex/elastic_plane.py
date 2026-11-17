@@ -109,7 +109,8 @@ class TRexWithLa2Ni7(TRex):
 
 def define_instrument() -> TRexWithLa2Ni7:
     """Return the instrument of this diagnostic: :class:`TRexWithLa2Ni7` at its defaults."""
-    return TRexWithLa2Ni7()
+    params = Params()  # the default control parameters
+    return TRexWithLa2Ni7(params=params)
 
 
 # --8<-- [end:instrument]

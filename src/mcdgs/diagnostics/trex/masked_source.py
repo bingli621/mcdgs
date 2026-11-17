@@ -1,7 +1,7 @@
 """The neutrons that reach the sample of T-Rex, from ESS_butterfly and from Polygon_ESS_butterfly.
 
-Both runs are :class:`.TRexToSample`, T-Rex up to its sample monitor, as in
-:mod:`.diagnostics.trex.neutrons_on_sample`, with the same number of rays and the same seed. The first
+Both runs are :class:`TRexToSampleMonitor`, T-Rex up to its sample monitor, with the same number
+of rays and the same seed. The first
 has the source of :func:`.sources.source`, ``ESS_butterfly``. The second has that of
 :func:`.sources.masked_source`, ``Polygon_ESS_butterfly``, which emits only where the six
 choppers let neutrons through and multiplies each ray's weight by the acceptance, the share of
@@ -38,7 +38,7 @@ from matplotlib.figure import Figure
 from numpy.typing import NDArray
 
 from mcdgs.diagnostics.cli import markdown_table, output_folder, parse_out, save_figure, save_text
-from mcdgs.diagnostics.trex.neutrons_on_sample import TRexToSample
+from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
 from mcdgs.instruments.trex.monitors import sample_monitor
 from mcdgs.instruments.trex.sources import wavelength_band
 from mcdgs.mcstas import Simulation, read_mcstas_map
@@ -55,38 +55,75 @@ LOG_DECADES = 6  # a log axis spans this many decades below the highest point
 
 
 # --8<-- [start:instrument]
+class TRexToSampleMonitor(TRex):
+    """T-Rex from the source to its sample monitor, without a sample, with finer bins there.
+
+    The beamstop and the banana detector, after the sample, are left out. The sample monitor
+    spans the band of the source, with time and wavelength bins finer than those of T-Rex, to
+    show the shape of each sub-pulse.
+
+    Parameters
+    ----------
+    params:
+        Control parameters.
+    source_masked:
+        As in :class:`.TRex`: False for the plain source, True for the masked one.
+    lambda_resolution:
+        The wavelength bin of the sample monitor, in Å.
+    time_resolution:
+        Its time bin, in s.
+    """
+
+    name = "trex_to_sample_monitor"  # the McStas instrument name
+
+    def __init__(
+        self,
+        params: Params = DEFAULT_PARAMS,
+        source_masked: bool = False,
+        lambda_resolution: float = LAMBDA_RESOLUTION,
+        time_resolution: float = TIME_RESOLUTION,
+    ) -> None:
+        super().__init__(params=params, source_masked=source_masked)
+        # after the sample monitor
+        del self.beamstop
+        del self.banana_detector
+        self.sample_monitor = sample_monitor(  # in its place, with finer bins
+            lambda_limits=wavelength_band(params.lambda0),
+            lambda_resolution=lambda_resolution,
+            time_resolution=time_resolution,
+        )
+
+
 def define_instrument(
     source_masked: bool = False,
     lambda_resolution: float = LAMBDA_RESOLUTION,
     time_resolution: float = TIME_RESOLUTION,
-) -> TRexToSample:
-    """Return an instrument of this diagnostic: :class:`.TRexToSample` with one of both sources.
+) -> TRexToSampleMonitor:
+    """Return an instrument of this diagnostic: :class:`TRexToSampleMonitor` with one source.
 
-    Its sample monitor spans the band of the source with finer bins, and the masked one has a
-    name of its own, so that each is compiled in a build folder of its own.
+    The masked one has a name of its own, so that each is compiled in a build folder of its own.
 
     Parameters
     ----------
     source_masked:
         True for the masked source, False for the plain one.
-    lambda_resolution:
-        The wavelength bin of the sample monitor, in Å.
-    time_resolution:
-        Its time bin, in s.
+    lambda_resolution, time_resolution:
+        As in :class:`TRexToSampleMonitor`.
 
     Returns
     -------
     :
         The instrument.
     """
-    instrument = TRexToSample(source_masked=source_masked)
-    if source_masked:
-        instrument.name = "trex_to_sample_masked"  # compiled in a folder of its own
-    instrument.sample_monitor = sample_monitor(  # in its place, with finer bins
-        lambda_limits=wavelength_band(instrument.params.lambda0),
+    params = Params()  # the default control parameters
+    instrument = TRexToSampleMonitor(
+        params=params,
+        source_masked=source_masked,
         lambda_resolution=lambda_resolution,
         time_resolution=time_resolution,
     )
+    if source_masked:
+        instrument.name = "trex_to_sample_monitor_masked"
     return instrument
 
 
@@ -137,7 +174,9 @@ class SourceRun:
         return 1 / (self.relative_error**2 * self.seconds)
 
 
-def run_source(instrument: TRexToSample, folder_name: str, ncount: float, seed: int) -> SourceRun:
+def run_source(
+    instrument: TRexToSampleMonitor, folder_name: str, ncount: float, seed: int
+) -> SourceRun:
     """Run one source to the sample monitor, and read the monitor.
 
     Parameters
@@ -418,7 +457,7 @@ def main(
     lambda_resolution: float = LAMBDA_RESOLUTION,
     time_resolution: float = TIME_RESOLUTION,
 ) -> list[Path]:
-    """Run both sources of :class:`.TRexToSample`, print the table and save the files.
+    """Run both sources of :class:`TRexToSampleMonitor`, print the table and save the files.
 
     The figures are ``trex_masked_source.png`` and ``trex_masked_source_log.png``, on a linear
     and on a log intensity axis, from :func:`plot_sources`, and ``trex_masked_source_peaks.png``,

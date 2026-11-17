@@ -15,6 +15,10 @@ the outputs into one file, after compiling the instrument once: see :mod:`.mcsta
 
 Each of them returns the :class:`.Run` it made, which is also left as ``run.json`` in the
 folder of the run.
+
+``prepare`` is the step they all share, for a run that McStasScript starts itself, such as its
+``Diagnostics`` or ``show_diagram(analysis=True)``: it gives the run its folder, its settings and
+its record, which the caller finishes once McStas has run.
 """
 
 from collections.abc import Mapping
@@ -79,20 +83,25 @@ class Simulation:
         self.workspace = workspace or Workspace.find()
         self.beam_run: str | None = None
 
-    def _prepare(
+    def prepare(
         self,
         folder_name: str | None,
-        run_type: RunType,
-        instr_params: Mapping[str, float],
+        run_type: RunType = RunType.RUN,
+        instr_params: Mapping[str, float] | None = None,
         *,
         ncount: float | None = None,
         seed: int | None = None,
         variable: str | None = None,
         values: list[float] | None = None,
         beam_run: str | None = None,
+        nexus: bool = True,
         **settings: object,
     ) -> tuple[Run, McStas_instr]:
         """Pick the run folder and build the instrument with the settings every run shares.
+
+        Every method of the simulation starts with it. Call it for a run that McStasScript
+        starts itself, such as ``ms.Diagnostics(inst).run()``, which runs a copy of ``inst``
+        with its settings, then save the record with ``run.finish()``.
 
         Parameters
         ----------
@@ -104,7 +113,7 @@ class Simulation:
         instr_params:
             The instrument parameters given to the run, of a scan those other than
             ``variable``. They are recorded, and set unless the run is a scan, whose points
-            each set their own.
+            each set their own. If ``None``, none: all keep the instrument's values.
         ncount:
             Number of neutrons. If ``None``, as from the sample, it is not set.
         seed:
@@ -113,6 +122,10 @@ class Simulation:
             The instrument parameter of a scan and its values.
         beam_run:
             The name of the run to the sample a run from the sample starts from.
+        nexus:
+            True writes McStas NeXus, the ``mccode.h5`` of the record. False writes McStas's own
+            format, which McStasScript's diagnostics and diagram read, and ``ms.load_data``:
+            the record then names a ``data_file`` that does not exist.
         **settings:
             The run's other McStasScript settings, e.g. ``mpi``.
 
@@ -123,6 +136,7 @@ class Simulation:
             its folder. A scan's points write into folders of their own instead
             (:func:`.run_points_in_parallel`).
         """
+        instr_params = {} if instr_params is None else instr_params
         started = datetime.now().astimezone()
         label = (
             run_type.value
@@ -135,7 +149,7 @@ class Simulation:
         if ncount is not None:
             settings["ncount"] = ncount
         inst.settings(
-            NeXus=True,
+            NeXus=nexus,
             increment_folder_name=False,
             suppress_output=True,
             output_path=str(folder),
@@ -169,17 +183,17 @@ class Simulation:
         beam_run: str | None,
         **prepare: Any,
     ) -> tuple[Run, McStas_instr]:
-        """Prepare a run from the sample: as :meth:`_prepare`, cut to start from a beam file.
+        """Prepare a run from the sample: as :meth:`prepare`, cut to start from a beam file.
 
         Parameters
         ----------
         folder_name, run_type, instr_params:
-            As in :meth:`_prepare`.
+            As in :meth:`prepare`.
         beam_run:
             Name of the run to the sample whose beam to start from. If ``None``,
             :attr:`beam_run`.
         **prepare:
-            The other keywords of :meth:`_prepare`.
+            The other keywords of :meth:`prepare`.
 
         Returns
         -------
@@ -196,9 +210,7 @@ class Simulation:
         """
         self._check_sample_pos()  # before anything
         beam = self.find_beam_run(beam_run, folder_name)
-        run, inst = self._prepare(
-            folder_name, run_type, instr_params, beam_run=beam.name, **prepare
-        )
+        run, inst = self.prepare(folder_name, run_type, instr_params, beam_run=beam.name, **prepare)
         # in C quotes, and absolute, because mcrun runs in the build folder
         inst.run_from(SAMPLE_POS, filename=f'"{(beam.folder / BEAM_FILE).resolve()}"')
         return run, inst
@@ -332,7 +344,7 @@ class Simulation:
         :
             The run, with its file ``data_file``, ``<runs folder>/<folder>/mccode.h5``.
         """
-        run, inst = self._prepare(
+        run, inst = self.prepare(
             folder_name,
             RunType.RUN,
             instr_params,
@@ -390,7 +402,7 @@ class Simulation:
             If a name is not an instrument parameter, before anything runs.
         """
         points = self.get_scan_points(variable, values, instr_params)  # checked before anything
-        run, inst = self._prepare(
+        run, inst = self.prepare(
             folder_name,
             RunType.SCAN,
             instr_params,
@@ -444,7 +456,7 @@ class Simulation:
             If the instrument has no ``sample_pos``, before anything runs.
         """
         self._check_sample_pos()  # before anything
-        run, inst = self._prepare(
+        run, inst = self.prepare(
             folder_name, RunType.RUN_TO_SAMPLE, instr_params, ncount=ncount, seed=seed, mpi=mpi
         )
         inst.run_to(

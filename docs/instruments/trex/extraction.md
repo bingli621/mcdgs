@@ -152,13 +152,14 @@ them again, with the other files of the T-Rex pages. To make them yourself, run:
 pixi run python -m mcdgs.diagnostics.trex.extraction
 ```
 
-The view from above and the three figures of the path go to
-`mcdgs_workspace/results/trex_extraction/`. The run with the diagnostics is in
-`mcdgs_workspace/runs/trex_extraction_bender_out/`, which holds McStasScript's event lists of
-the three diagnostics positions, about 180 MB at 1e6 neutrons. The run of the diagram has a
-folder of its own, `mcdgs_workspace/runs/trex_extraction_bender_out_intensity/`, which also holds
-the monitors that McStas and tof are compared at. The two McStas runs
-take about a minute on 8 cores. Call `main` with
+The view from above and the three figures of each path go to
+`mcdgs_workspace/results/trex_extraction/`: those with the bender out here, those with it in on
+[Bender](bender-scan.md#bender-in-at-the-nominal-rotation). The run with the diagnostics is in
+`mcdgs_workspace/runs/trex_extraction_bender_out/`, or `..._bender_in/`, which holds
+McStasScript's event lists of the three diagnostics positions, about 180 MB at 1e6 neutrons. The
+run of the diagram has a folder of its own, `mcdgs_workspace/runs/trex_extraction_bender_out_intensity/`,
+or `..._bender_in_intensity/`, which also holds the monitors that McStas and tof are compared at.
+The two McStas runs of each path take about a minute on 8 cores. Call `main` with
 other numbers for finer or faster figures:
 
 ```bash
