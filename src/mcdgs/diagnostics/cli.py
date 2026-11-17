@@ -5,11 +5,9 @@ its files go into a folder of its own in the results folder of the workspace
 (:func:`output_folder`), apart from the McStas runs they are made from.
 :func:`save_figure` and :func:`save_text` write a file and say where, and
 :func:`markdown_table` lays out the tables the documentation includes.
-:func:`remove_mcdisplay_folders` clears what drawing an instrument leaves in its build folder.
 """
 
 import argparse
-import shutil
 from collections.abc import Iterable, Sequence
 from pathlib import Path
 
@@ -59,29 +57,6 @@ def output_folder(out: Path | None, name: str) -> Path:
     folder = Workspace.find().result_folder(name) if out is None else out
     folder.mkdir(parents=True, exist_ok=True)
     return folder
-
-
-def remove_mcdisplay_folders(build_folder: str | Path) -> list[Path]:
-    """Remove the folders mcdisplay left in the build folder of an instrument.
-
-    McStasScript's ``show_instrument`` runs mcdisplay, which writes a new folder
-    ``<instrument>_mcdisplay``, ``<instrument>_mcdisplay_0``, ... beside the instrument file at
-    every call. They are not needed once the instrument is drawn.
-
-    Parameters
-    ----------
-    build_folder:
-        The build folder of the instrument, McStasScript's ``input_path``.
-
-    Returns
-    -------
-    :
-        The removed folders.
-    """
-    folders = sorted(p for p in Path(build_folder).glob("*_mcdisplay*") if p.is_dir())
-    for folder in folders:
-        shutil.rmtree(folder)
-    return folders
 
 
 def save_figure(fig: Figure, path: Path, dpi: int = 150) -> Path:

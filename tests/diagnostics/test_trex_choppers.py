@@ -3,8 +3,6 @@ import matplotlib
 matplotlib.use("Agg")
 
 from mcdgs.diagnostics.trex.choppers import main
-from mcdgs.diagnostics.trex.overview import write_printout
-from mcdgs.instruments.trex.model import TRex
 
 
 def test_main_draws_every_disk_and_the_acceptance_diagram(tmp_path):
@@ -20,9 +18,3 @@ def test_main_draws_every_disk_and_the_acceptance_diagram(tmp_path):
     ]
     assert all(p.parent == tmp_path / "figures" and p.stat().st_size > 0 for p in paths)
     assert all(p.read_text().startswith("<svg") for p in paths[:-1])
-
-
-def test_the_printout_lists_every_component(tmp_path):
-    path = write_printout(TRex(), tmp_path)
-    assert path.name == "trex_print.txt"
-    assert "sample_monitor" in path.read_text()

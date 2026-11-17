@@ -25,7 +25,6 @@ from unittest.mock import patch
 import matplotlib.pyplot as plt
 import mcstasscript as ms
 from matplotlib.figure import Figure
-from mcstasscript.interface.instr import McStas_instr
 
 from mcdgs.core import InstrParam, Instrument, param
 from mcdgs.core.components import (
@@ -36,8 +35,9 @@ from mcdgs.core.components import (
     Pol_bender,
     Progress_bar,
 )
-from mcdgs.diagnostics.cli import output_folder, parse_out, remove_mcdisplay_folders, save_figure
+from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
 from mcdgs.diagnostics.compare import plot_comparison, read_scaled_comparisons
+from mcdgs.diagnostics.drawing import draw_instrument
 from mcdgs.instruments.trex.guides.bispectral import (
     BENDER_ROTATION,
     arm_guide_4,
@@ -192,37 +192,6 @@ def save_run_record(
         seed=seed,
     )
     return run.finish()
-
-
-def draw_top_view(mcstas_instr: McStas_instr, path: Path) -> Path:
-    """Draw the instrument from above with McStasScript's ``show_instrument``, and save it.
-
-    The view is mcdisplay's ``zx`` projection, z along the beam and x across it, within
-    ``TOP_VIEW_LIMITS``. show_instrument returns None and ends in ``plt.show()``, which is held
-    back, so the figure it would show is saved instead.
-
-    Parameters
-    ----------
-    mcstas_instr:
-        The McStasScript instrument.
-    path:
-        The file of the figure.
-
-    Returns
-    -------
-    :
-        ``path``.
-    """
-    with patch.object(plt, "show"):
-        mcstas_instr.show_instrument(
-            backend="matplotlib_2d",
-            projection="zx",
-            limits=list(TOP_VIEW_LIMITS),
-            width=1600,  # pixels at 100 dpi: 16 x 4 in
-            height=400,
-        )
-    remove_mcdisplay_folders(mcstas_instr.input_path)  # not needed once drawn
-    return save_figure(plt.gcf(), path)
 
 
 def diagnose_path(
@@ -391,7 +360,16 @@ def main(
     # the geometry: mcdisplay draws every component, whatever its WHEN
     mcstas_instr = build_mcstas(extraction, input_path=build_folder)
     figure_folder = output_folder(out, "trex_extraction")
-    top = draw_top_view(mcstas_instr, figure_folder / "trex_extraction_top.png")
+    # from above: z along the beam, x across it, 16 x 4 in, within TOP_VIEW_LIMITS
+    top = draw_instrument(
+        mcstas_instr,
+        figure_folder / "trex_extraction_top.png",
+        equal_aspect=False,
+        projection="zx",
+        limits=list(TOP_VIEW_LIMITS),
+        width=1600,
+        height=400,
+    )
     path = diagnose_path(
         False, out, ncount=ncount, neutrons=neutrons, seed=seed, transmission=transmission
     )

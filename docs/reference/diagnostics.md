@@ -17,6 +17,8 @@ documentation. See [Source](../instruments/trex/source.md),
 
 ::: mcdgs.diagnostics.cli
 
+::: mcdgs.diagnostics.drawing
+
 ::: mcdgs.diagnostics.trex.overview
 
 ::: mcdgs.diagnostics.trex.source
