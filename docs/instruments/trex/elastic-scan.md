@@ -17,7 +17,7 @@ defaults.
 | Crystal | La2Ni7, as on [Elastic plane](elastic-plane.md#the-setup) |
 | Orientation at omega = 0 | c* along the beam; (2 1 0) in the horizontal plane, to the left of the beam |
 | omega | −30° to 30°, in 31 steps of 2° |
-| `SPLIT` | 10, against 100 for one angle: every angle lists its own neutrons |
+| `SPLIT` | 10, as for one angle on [Elastic plane](elastic-plane.md#the-setup) |
 
 With (2 1 0) in the horizontal plane, 2a* + b* and c* span it, so turning the crystal about the
 vertical keeps that plane of reciprocal space horizontal. Each angle brings other reflections of

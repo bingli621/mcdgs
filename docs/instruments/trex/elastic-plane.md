@@ -20,7 +20,7 @@ choppers let through.
 | Crystal | La2Ni7, P6₃/mmc, a = 5.0556 Å, c = 24.598 Å, a 5 mm cube with a 30′ mosaic |
 | Orientation | c* along the beam; (1.357 1 0) in the horizontal plane, to the left of the beam |
 | Scattering | Bragg reflections from the CIF, and incoherent scattering, single scattering only |
-| `SPLIT` | 100: few neutrons reach a 5 mm crystal, so McStas repeats each one that does |
+| `SPLIT` | 10: few neutrons reach a 5 mm crystal, so McStas repeats each one that does |
 | Detector | the banana detector, 3 m from the sample, 0.625° by 16 mm pixels, 25° below the beam to 15° above |
 
 ## Two runs, split at the sample
@@ -92,21 +92,21 @@ the top.
 ## The sub-pulses
 
 `analyze` prints each sub-pulse: its Ei, its flux at the pre-sample monitor and the fraction of
-its neutrons that reach the detector within its window. Split at |Q| = 0.2 Å⁻¹, that fraction is
-the direct beam past the beamstop, and the neutrons the crystal scatters:
+its neutrons that reach the detector within its window. Split at |Q| = 0.2 Å⁻¹, as in the table,
+that fraction is the direct beam past the beamstop, and the neutrons the crystal scatters:
 
 | Sub-pulse | λi | Ei | Flux | Direct beam | Scattered |
 | --------- | -- | -- | ---- | ----------- | --------- |
-| 0 | 1.317 Å | 47.17 meV | 8.2e5 n/s | 0 | 0.13 % |
-| 1 | 1.418 Å | 40.71 meV | 2.0e6 n/s | 0 | 0.34 % |
-| 3 | 1.613 Å | 31.46 meV | 2.2e6 n/s | 0.24 % | 0.53 % |
-| 7 | 2.000 Å | 20.45 meV | 1.7e6 n/s | 8.9 % | 0.35 % |
-| 10 | 2.290 Å | 15.59 meV | 1.7e6 n/s | 19.8 % | 0.35 % |
-| 14 | 2.683 Å | 11.36 meV | 4.5e5 n/s | 36.0 % | 0.03 % |
+| 0 | 1.317 Å | 47.17 meV | 8.2e5 n/s | 1.7 % | 0.14 % |
+| 1 | 1.418 Å | 40.71 meV | 2.0e6 n/s | 4.6 % | 0.35 % |
+| 3 | 1.613 Å | 31.46 meV | 2.2e6 n/s | 9.4 % | 0.53 % |
+| 7 | 2.000 Å | 20.45 meV | 1.7e6 n/s | 22.7 % | 0.35 % |
+| 10 | 2.290 Å | 15.59 meV | 1.7e6 n/s | 36.6 % | 0.35 % |
+| 14 | 2.683 Å | 11.36 meV | 4.5e5 n/s | 59.3 % | 0.03 % |
 
-The direct beam past the beamstop grows with the wavelength: the guides pass the long
-wavelengths at larger angles, so their beam spreads more over the 3 m to the beamstop. The
-crystal scatters 0.03 to 0.6 % of each sub-pulse into the detector.
+The direct beam past the beamstop grows with the wavelength, from 1.7 % to 59 %: the guides pass
+the long wavelengths at larger angles, so their beam spreads more over the 3 m to the beamstop.
+The crystal scatters 0.03 to 0.5 % of each sub-pulse into the detector.
 
 ## Making the figures
 
