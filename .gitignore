@@ -48,6 +48,7 @@ OFF_files*/
 
 # Reference material of the instruments
 src/mcdgs/instruments/trex/reference/
+src/mcdgs/instruments/cspec/reference/
 
 # The workspace: McStas builds and runs, and the results
 mcdgs_workspace/
