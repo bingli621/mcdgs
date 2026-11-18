@@ -1,10 +1,9 @@
-"""The ISCS frame of the CSPEC specifications, in which every guide and gap is placed.
+"""The ISCS frame of CSPEC_nl-specs_1.E.xlsx, in which every guide and gap is placed.
 
-The specifications (CSPEC nl-specs 1.E, the .xlsx file in ``reference/``) give each element of
-the guide in ISCS, the frame of the insert of beamport W3, in mm: x along the insert, y across
-it, z up. ``arm_iscs`` is that frame in the McStas frame of the source, whose origin is the
-focal point of the sector and whose z is along beamline W3. The insert is 0.5 deg off the
-beamline, toward -x.
+CSPEC_nl-specs_1.E.xlsx, in ``reference/``, gives each element of the guide in ISCS, the frame of
+the insert of beamport W3, in mm: x along the insert, y across it, z up. ``arm_iscs`` is that frame
+in the McStas frame of the source, whose origin is the focal point of the sector and whose z is
+along beamline W3. The insert is 0.5 deg off the beamline, toward -x.
 
 Each element is given by its start (x, y, z) and two angles, chi and phi, in deg: the trajectory
 of the guide turns down and back up by chi (the vertical S-bender) and sideways by phi (the

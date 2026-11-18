@@ -177,7 +177,7 @@ the functions of [`mcdgs.diagnostics.compare`](../../reference/diagnostics.md#mc
 - [`print_means`](../../reference/diagnostics.md#mcdgs.diagnostics.compare.print_means)
   prints the mean time and wavelength of each model, and `main` the McStas total and the scale;
 - [`plot_comparison`](../../reference/diagnostics.md#mcdgs.diagnostics.compare.plot_comparison)
-  draws the figure, which `main` saves as `<name>.png`, by default `trex_source.png`, to
+  draws the figure, which `main` saves as `<folder_name>.png`, by default `trex_source.png`, to
   `mcdgs_workspace/results/trex_source/`, or to the folder given with `--out`.
 
 Run as a module, it makes three figures: `trex_source_1e6.png`, this one,

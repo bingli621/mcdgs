@@ -1,18 +1,20 @@
 # T-Rex
 
 The T-Rex model at the default [control parameters](details.md#control-parameters), as McStas
-draws it: from above and along the beam. Both figures have the same scale on their two axes, in m.
-[Technical details](details.md) lists every component, with its position, and describes each part.
+draws it: from above and along the beam, in m. The view along the beam has the same scale on its
+two axes; the view from above is stretched across the beam. [Technical details](details.md) lists every component, with its position, and describes each part.
 
 ## Seen from above
 
 ![T-Rex seen from above, z along the beam and x across it](figures/overview/overview_top.png)
 
-z is along the beam and x across it (projection `zx`). The circle at the origin is the drawing
+z is along the beam and x across it (projection `zx`). x is stretched: the view runs from −0.1 to
+0.9 m in x over 175 m in z, so that the curve shows. The gray lines at the origin are the drawing
 of the source. The guides follow it in alternating colors up to `sample_pos`, 163.8 m along the
-beam. Over that length the beam axis moves about 0.83 m in x, too little to see at this scale.
-The short ticks across the beam are the choppers: `bw1` near 32 m, `bw2` near 40 m, the
-pulse-shaping choppers near 108 m and the monochromatic choppers near 162 m.
+beam, and drawn as wide as they are: the curve takes the beam axis about 0.83 m across, and the
+guide narrows toward the sample. The thin lines across the beam are the chopper disks, seen edge
+on: `bw1` near 32 m, `bw2` near 40 m, the pulse-shaping choppers near 108 m and the monochromatic
+choppers near 162 m.
 
 This figure and the next need McStas, so they are not made with the site:
 [`mcdgs.diagnostics.trex.overview`](../../reference/diagnostics.md) draws them with McStasScript's

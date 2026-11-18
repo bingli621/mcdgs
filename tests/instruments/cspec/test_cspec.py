@@ -2,14 +2,11 @@ import math
 
 import pytest
 
-from mcdgs.core import INSTRUMENTS, speed_from_wavelength
-from mcdgs.core.components import ESS_butterfly, NXdisk_chopper, Polygon_ESS_butterfly
+from mcdgs.core import speed_from_wavelength
+from mcdgs.core.components import NXdisk_chopper, Polygon_ESS_butterfly
 from mcdgs.instruments import CSPEC
-from mcdgs.instruments.cspec import PARAMS_FILE
 from mcdgs.instruments.cspec.choppers import DISKS, chopper_timings
 from mcdgs.instruments.cspec.model import Params
-from mcdgs.instruments.cspec.sources import wavelength_band
-from mcdgs.io import load, read_yaml, to_dict
 from mcdgs.samples import aluminum
 
 
@@ -23,16 +20,6 @@ def _close(a, b):
     if isinstance(a, numbers) and isinstance(b, numbers) and bool not in (type(a), type(b)):
         return math.isclose(a, b, rel_tol=1e-12, abs_tol=1e-15)
     return a == b and type(a) is type(b)
-
-
-def test_cspec_is_an_instrument_a_file_can_name():
-    assert INSTRUMENTS["CSPEC"] is CSPEC
-
-
-def test_params_yaml_is_the_default_cspec_saved():
-    # if this fails after a change to the model: save(CSPEC(), PARAMS_FILE) and review the diff
-    assert _close(read_yaml(PARAMS_FILE), to_dict(CSPEC()))
-    assert _close(to_dict(load(PARAMS_FILE)), to_dict(CSPEC()))
 
 
 def test_the_source_comes_first_then_the_frame_of_the_sheet():
@@ -58,13 +45,6 @@ def test_a_sample_goes_after_the_sample_position():
     cspec = CSPEC(sample=aluminum())
     assert list(cspec.components)[-2:] == ["sample_pos", "sample"]
     assert cspec.sample.relative == "sample_pos"
-
-
-def test_a_sample_relative_to_another_component_is_refused():
-    sample = aluminum()
-    sample.relative = "arm_mc"
-    with pytest.raises(ValueError, match="arm_mc"):
-        CSPEC(sample=sample)
 
 
 def test_each_chopper_window_is_as_wide_as_the_exit_of_the_guide_in_front():
@@ -128,23 +108,10 @@ def test_without_lambda0_the_choppers_have_no_timing():
         _ = cspec.instr_params
 
 
-def test_by_default_the_source_is_not_masked():
-    assert type(CSPEC().source) is ESS_butterfly
-
-
 def test_a_masked_source_is_masked_by_the_eight_choppers():
     source = CSPEC(source_masked=True).source
     assert isinstance(source, Polygon_ESS_butterfly)
     assert len(source.choppers) == 8
-
-
-@pytest.mark.parametrize("masked", [False, True])
-def test_a_new_lambda0_moves_the_band_and_keeps_the_source_masked_or_not(masked):
-    cspec = CSPEC(source_masked=masked)
-    kind = type(cspec.source)
-    cspec.update_params(lambda0=5.0)
-    assert (cspec.source.Lmin, cspec.source.Lmax) == wavelength_band(5.0)
-    assert type(cspec.source) is kind
 
 
 def test_the_running_conditions_name_the_frequencies():

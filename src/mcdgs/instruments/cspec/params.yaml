@@ -39,7 +39,7 @@ source:
   beamline: 3
   acc_power: 2
   yheight: 0.03
-  cold_frac: 1.0
+  cold_frac: 0.9
   dist: 1.90424
   focus_xw: 0.0776
   focus_yh: 0.043

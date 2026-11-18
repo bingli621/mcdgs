@@ -1,9 +1,9 @@
 """The straight guides of CSPEC, rows 78 to 189, and the sample position.
 
-Dimensions are from the Specification sheet of CSPEC nl-specs 1.E (the .xlsx file in
-``reference/``), whose rows and cells are named in the comments, in mm and deg as the sheet gives
-them. The values are the sheet's, not rounded. Each guide and gap is placed by its own start in
-ISCS: see :mod:`.frame`. The gaps of 1 to 10 mm between the elements are left empty.
+Dimensions are from the Specification sheet of CSPEC_nl-specs_1.E.xlsx, in ``reference/``, whose
+rows and cells are named in the comments, in mm and deg as the sheet gives them. The values are the
+sheet's, not rounded. Each guide and gap is placed by its own start in ISCS: see :mod:`.frame`. The
+gaps of 1 to 10 mm between the elements are left empty.
 
 The trajectory is straight from row 77 on, 422 mm below the beamline and turned 0.745 deg from
 the insert, so every element has the same angles. The sheet approximates the ellipses of the

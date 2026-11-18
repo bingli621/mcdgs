@@ -1,9 +1,9 @@
 """The guides of CSPEC from the NBOA to the end of the S-bender, rows 14 to 76.
 
-Dimensions are from the Specification sheet of CSPEC nl-specs 1.E (the .xlsx file in
-``reference/``), whose rows and cells are named in the comments, in mm and deg as the sheet gives
-them. The values are the sheet's, not rounded. Each guide and gap is placed by its own start in
-ISCS: see :mod:`.frame`. The gaps of 1 to 12 mm between the elements are left empty.
+Dimensions are from the Specification sheet of CSPEC_nl-specs_1.E.xlsx, in ``reference/``, whose
+rows and cells are named in the comments, in mm and deg as the sheet gives them. The values are the
+sheet's, not rounded. Each guide and gap is placed by its own start in ISCS: see :mod:`.frame`. The
+gaps of 1 to 12 mm between the elements are left empty.
 
 Over these rows the trajectory turns down and back up in a vertical S-bender, 1600 m in radius,
 which takes the beam 422 mm down, and sideways in a horizontal curve, 4000 m in radius, by
@@ -24,7 +24,7 @@ GUIDE_01_011_IN_WIDTH = 45  # mm, cell X14
 GUIDE_01_011_IN_HEIGHT = 43  # mm, cell Z14
 
 # W03-01-01 is one element in two rows, 14 and 15, and the sheet gives only its entry and its
-# exit. Its middle is where a linear taper puts it. FIXME, not in CSPEC nl-specs 1.E
+# exit. Its middle is where a linear taper puts it. FIXME, not in CSPEC_nl-specs_1.E.xlsx
 GUIDE_01_012_OUT_WIDTH = 61.7  # mm, cell Y15
 GUIDE_01_012_OUT_HEIGHT = 51  # mm, cell AA15
 GUIDE_01_01_MIDDLE_WIDTH = (GUIDE_01_011_IN_WIDTH + GUIDE_01_012_OUT_WIDTH) / 2

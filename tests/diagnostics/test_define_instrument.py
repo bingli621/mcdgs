@@ -4,21 +4,27 @@ import pkgutil
 
 import pytest
 
+import mcdgs.diagnostics.cspec as cspec_diagnostics
 import mcdgs.diagnostics.trex as trex_diagnostics
 from mcdgs.core import Instrument
 
 MODULES = sorted(
-    info.name for info in pkgutil.iter_modules(trex_diagnostics.__path__) if not info.ispkg
+    f"{package.__name__}.{info.name}"
+    for package in (trex_diagnostics, cspec_diagnostics)
+    for info in pkgutil.iter_modules(package.__path__)
+    if not info.ispkg
 )
 
 
-def test_every_diagnostic_of_t_rex_is_listed():
-    assert len(MODULES) == 13
+def test_every_diagnostic_is_listed():
+    trex = [m for m in MODULES if m.startswith(trex_diagnostics.__name__)]
+    cspec = [m for m in MODULES if m.startswith(cspec_diagnostics.__name__)]
+    assert (len(trex), len(cspec)) == (13, 2)
 
 
 @pytest.mark.parametrize("name", MODULES)
 def test_each_diagnostic_defines_its_instrument_in_one_function(name):
-    module = importlib.import_module(f"mcdgs.diagnostics.trex.{name}")
+    module = importlib.import_module(name)
     define_instrument = module.define_instrument
     assert define_instrument.__module__ == module.__name__  # its own, not imported
     instrument = define_instrument()  # every argument has a default

@@ -1,11 +1,16 @@
-"""Monitors: Monitor_nD, and monitor_time_limits for the time window of its map."""
+"""Monitors: Monitor_nD, and the time window and the options of its map of time and wavelength.
+
+:func:`monitor_time_limits` gives the time window in which a band reaches a monitor, and
+:func:`time_lambda_options` the ``options`` of a monitor that maps time against wavelength.
+"""
 
 import re
 from dataclasses import dataclass
 
-from mcdgs.core.utils import speed_from_wavelength
+from mcdgs.core.utils import bins_from_limits, speed_from_wavelength
 
 from .base import Component
+from .source import ESS_SOURCE_LENGTH, L_MAX, L_MIN
 
 # one axis of ``options`` as written here: ``<variable> limits=[<start> <stop>] bins=<bins>``
 _AXIS = re.compile(r"(\w+)\s+limits=\[\s*(\S+)\s+(\S+)\s*\]\s+bins=(\d+)")
@@ -38,6 +43,49 @@ def monitor_time_limits(
     t_start = distance / speed_from_wavelength(l_start)
     t_stop = distance / speed_from_wavelength(l_stop) + pulse_length
     return (t_start, t_stop)
+
+
+def time_lambda_options(
+    distance: float,
+    time_limits: tuple[float, float] | None,
+    lambda_limits: tuple[float, float] | None,
+    lambda_resolution: float,
+    time_resolution: float,
+) -> str:
+    """Return the ``options`` of a monitor that records one 2D map of time against wavelength.
+
+    Parameters
+    ----------
+    distance:
+        Flight path from the moderator to the monitor, in m.
+    time_limits:
+        Start and stop of the time axis, in s. ``None`` takes them from
+        :func:`monitor_time_limits` at ``distance``, for ``lambda_limits`` and a pulse of
+        ``ESS_SOURCE_LENGTH``.
+    lambda_limits:
+        Start and stop of the wavelength axis, in Å. ``None`` takes the widest band the source
+        simulates, ``L_MIN`` to ``L_MAX``.
+    lambda_resolution:
+        Width of a wavelength bin, in Å. The axis has the fewest bins that cover
+        ``lambda_limits``, see :func:`.bins_from_limits`.
+    time_resolution:
+        Width of a time bin, in s, likewise.
+
+    Returns
+    -------
+    :
+        Such as ``"time limits=[0.0016 0.0078] bins=124 lambda limits=[1.095 2.915] bins=91"``.
+    """
+    if lambda_limits is None:
+        lambda_limits = (L_MIN, L_MAX)
+    if time_limits is None:
+        time_limits = monitor_time_limits(distance, lambda_limits, ESS_SOURCE_LENGTH)
+    t_start, t_stop, t_bins = bins_from_limits(time_limits, time_resolution)
+    l_start, l_stop, l_bins = bins_from_limits(lambda_limits, lambda_resolution)
+    return (  # time in s, lambda in Å: one 2D map
+        f"time limits=[{t_start} {t_stop}] bins={t_bins} "
+        f"lambda limits=[{l_start} {l_stop}] bins={l_bins}"
+    )
 
 
 @dataclass(kw_only=True, repr=False)  # repr: Component's

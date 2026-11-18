@@ -9,12 +9,13 @@ with McStasScript's ``show_instrument``, which runs mcdisplay. Each is a functio
 - ``TRex.instr``: the instrument file, copied from the build folder of T-Rex;
 - ``trex_diagram_legend.png`` and ``trex_diagram.png``: McStasScript's ``show_diagram()``, its
   legend and which component each one is placed and rotated relative to;
-- ``overview_top.png``: the instrument seen from above, z along the beam and x across it;
+- ``overview_top.png``: the instrument seen from above, z along the beam and x across it,
+  with x stretched;
 - ``overview_along_beam.png``: seen from the detector to the source, x across the beam and y up,
   with the components from after the source up to before the banana detector, which would
   hide the rest.
 
-Both views have the same scale on their two axes. Run the module for them::
+The view along the beam has the same scale on its two axes. Run the module for them::
 
     pixi run python -m mcdgs.diagnostics.trex.overview
 """
@@ -71,12 +72,15 @@ def main(out: Path | None = None) -> list[Path]:
             mcstas_instr, folder / "trex_diagram_legend.png", folder / "trex_diagram.png"
         ),
         # from above: z along the beam, x across it, 16 x 4 in; 6400 px wide, to zoom in on in
-        # the documentation
+        # the documentation. x stretched, or the 0.83 m the curve takes the beam across would
+        # not show
         draw_instrument(
             mcstas_instr,
             folder / "overview_top.png",
             dpi=400,
+            equal_aspect=False,
             projection="zx",
+            limits=[-5.0, 170.0, -0.1, 0.9],  # along, then across
             width=1600,
             height=400,
         ),

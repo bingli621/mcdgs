@@ -5,7 +5,7 @@ from the instrument parameters ``nu_<name>`` and ``delay_<name>``, which :func:`
 computes from the central wavelength and the frequencies of the monochromatic and the RRM
 choppers.
 
-The specifications give where the first disk of the pulse-shaping and of the monochromatic
+CSPEC_nl-specs_1.E.xlsx gives where the first disk of the pulse-shaping and of the monochromatic
 choppers turns, and where each bandwidth chopper turns: the distance from the start of its gap,
 "gap before" in the Definitions sheet. The second disk of each counter-rotating pair, the RRM
 chopper and the disks themselves are not in the sheet.
@@ -40,18 +40,18 @@ PSC_GAP_BEFORE = 12.71  # mm, cell E28 of Definitions
 MC_GAP_BEFORE = 48.22  # mm, cell E32 of Definitions
 
 # from the first disk of a pair to the second
-PSC_DISK_SPACING = 10  # FIXME, not in CSPEC nl-specs 1.E, in mm
-MC_DISK_SPACING = 10  # FIXME, not in CSPEC nl-specs 1.E, in mm
+PSC_DISK_SPACING = 10  # FIXME, not in CSPEC_nl-specs_1.E.xlsx, in mm
+MC_DISK_SPACING = 10  # FIXME, not in CSPEC_nl-specs_1.E.xlsx, in mm
 # the RRM chopper turns in the gap of the monochromatic choppers, halfway from its start to mc1.
 # Not at the start itself: the sheet has it 27 nm before the exit of W03-09-01, so a disk there
 # would be behind the neutrons leaving the guide
-RRM_GAP_BEFORE = MC_GAP_BEFORE / 2  # FIXME, not in CSPEC nl-specs 1.E, in mm
+RRM_GAP_BEFORE = MC_GAP_BEFORE / 2  # FIXME, not in CSPEC_nl-specs_1.E.xlsx, in mm
 
-DISK_RADIUS = 0.35  # FIXME, not in CSPEC nl-specs 1.E, in m
-SLIT_HEIGHT = 0.1  # FIXME, not in CSPEC nl-specs 1.E, in m
+DISK_RADIUS = 0.35  # FIXME, not in CSPEC_nl-specs_1.E.xlsx, in m
+SLIT_HEIGHT = 0.1  # FIXME, not in CSPEC_nl-specs_1.E.xlsx, in m
 
 # the frequency of the pulse-shaping choppers over that of the monochromatic ones, see
-# chopper_timings. FIXME, not in CSPEC nl-specs 1.E
+# chopper_timings. FIXME, not in CSPEC_nl-specs_1.E.xlsx
 PSC_FREQUENCY_RATIO = 0.5
 
 
@@ -79,9 +79,9 @@ class CSPECDisk(Disk):
 # the eight disks, in beam order
 DISKS: dict[str, CSPECDisk] = {
     "bw1": CSPECDisk(
-        slits=((0, 40.7),),  # FIXME, not in CSPEC nl-specs 1.E
+        slits=((0, 40.7),),  # FIXME, not in CSPEC_nl-specs_1.E.xlsx
         radius=DISK_RADIUS,
-        beam_angle=180,  # FIXME, not in CSPEC nl-specs 1.E
+        beam_angle=180,  # FIXME, not in CSPEC_nl-specs_1.E.xlsx
         zero_angle=0,
         slit_height=SLIT_HEIGHT,
         gap_arm="arm_bwc1",
@@ -89,9 +89,9 @@ DISKS: dict[str, CSPECDisk] = {
         z=BWC1_GAP_BEFORE / MM_PER_M,  # distance 14.93342
     ),
     "bw2": CSPECDisk(
-        slits=((0, 41.7),),  # FIXME, not in CSPEC nl-specs 1.E
+        slits=((0, 41.7),),  # FIXME, not in CSPEC_nl-specs_1.E.xlsx
         radius=DISK_RADIUS,
-        beam_angle=180,  # FIXME, not in CSPEC nl-specs 1.E
+        beam_angle=180,  # FIXME, not in CSPEC_nl-specs_1.E.xlsx
         zero_angle=0,
         slit_height=SLIT_HEIGHT,
         gap_arm="arm_bwc2",
@@ -99,9 +99,9 @@ DISKS: dict[str, CSPECDisk] = {
         z=BWC2_GAP_BEFORE / MM_PER_M,  # distance 20.45545
     ),
     "bw3": CSPECDisk(
-        slits=((0, 193),),  # FIXME, not in CSPEC nl-specs 1.E
+        slits=((0, 193),),  # FIXME, not in CSPEC_nl-specs_1.E.xlsx
         radius=DISK_RADIUS,
-        beam_angle=180,  # FIXME, not in CSPEC nl-specs 1.E
+        beam_angle=180,  # FIXME, not in CSPEC_nl-specs_1.E.xlsx
         zero_angle=0,
         slit_height=SLIT_HEIGHT,
         gap_arm="arm_bwc3",
@@ -109,9 +109,9 @@ DISKS: dict[str, CSPECDisk] = {
         z=BWC3_GAP_BEFORE / MM_PER_M,  # distance 104.61213
     ),
     "ps1": CSPECDisk(
-        slits=((0, 24.23), (120, 24.23), (240, 24.23)),  # FIXME, not in CSPEC nl-specs 1.E
+        slits=((0, 24.23), (120, 24.23), (240, 24.23)),  # FIXME, not in CSPEC_nl-specs_1.E.xlsx
         radius=DISK_RADIUS,
-        beam_angle=180,  # FIXME, not in CSPEC nl-specs 1.E
+        beam_angle=180,  # FIXME, not in CSPEC_nl-specs_1.E.xlsx
         zero_angle=0,
         slit_height=SLIT_HEIGHT,
         gap_arm="arm_psc",
@@ -119,9 +119,9 @@ DISKS: dict[str, CSPECDisk] = {
         z=PSC_GAP_BEFORE / MM_PER_M,  # distance 105.66872
     ),
     "ps2": CSPECDisk(
-        slits=((0, 24.23), (120, 24.23), (240, 24.23)),  # FIXME, not in CSPEC nl-specs 1.E
+        slits=((0, 24.23), (120, 24.23), (240, 24.23)),  # FIXME, not in CSPEC_nl-specs_1.E.xlsx
         radius=DISK_RADIUS,
-        beam_angle=0,  # FIXME, not in CSPEC nl-specs 1.E
+        beam_angle=0,  # FIXME, not in CSPEC_nl-specs_1.E.xlsx
         zero_angle=0,
         slit_height=SLIT_HEIGHT,
         gap_arm="arm_psc",
@@ -129,9 +129,9 @@ DISKS: dict[str, CSPECDisk] = {
         z=(PSC_GAP_BEFORE + PSC_DISK_SPACING) / MM_PER_M,  # distance 105.67872
     ),
     "rrm": CSPECDisk(
-        slits=((0, 4.45),),  # FIXME, not in CSPEC nl-specs 1.E
+        slits=((0, 4.45),),  # FIXME, not in CSPEC_nl-specs_1.E.xlsx
         radius=DISK_RADIUS,
-        beam_angle=0,  # FIXME, not in CSPEC nl-specs 1.E
+        beam_angle=0,  # FIXME, not in CSPEC_nl-specs_1.E.xlsx
         zero_angle=0,
         slit_height=SLIT_HEIGHT,
         gap_arm="arm_mc",
@@ -139,9 +139,9 @@ DISKS: dict[str, CSPECDisk] = {
         z=RRM_GAP_BEFORE / MM_PER_M,  # distance 158.47993
     ),
     "mc1": CSPECDisk(
-        slits=((0, 4.45),),  # FIXME, not in CSPEC nl-specs 1.E
+        slits=((0, 4.45),),  # FIXME, not in CSPEC_nl-specs_1.E.xlsx
         radius=DISK_RADIUS,
-        beam_angle=180,  # FIXME, not in CSPEC nl-specs 1.E
+        beam_angle=180,  # FIXME, not in CSPEC_nl-specs_1.E.xlsx
         zero_angle=0,
         slit_height=SLIT_HEIGHT,
         gap_arm="arm_mc",
@@ -149,9 +149,9 @@ DISKS: dict[str, CSPECDisk] = {
         z=MC_GAP_BEFORE / MM_PER_M,  # distance 158.50404
     ),
     "mc2": CSPECDisk(
-        slits=((0, 4.45),),  # FIXME, not in CSPEC nl-specs 1.E
+        slits=((0, 4.45),),  # FIXME, not in CSPEC_nl-specs_1.E.xlsx
         radius=DISK_RADIUS,
-        beam_angle=0,  # FIXME, not in CSPEC nl-specs 1.E
+        beam_angle=0,  # FIXME, not in CSPEC_nl-specs_1.E.xlsx
         zero_angle=0,
         slit_height=SLIT_HEIGHT,
         gap_arm="arm_mc",

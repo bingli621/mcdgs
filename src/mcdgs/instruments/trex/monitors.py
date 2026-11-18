@@ -9,10 +9,8 @@ The beamstop is here too, behind its monitor: an absorbing plate on the beam axi
 of the banana detector of :mod:`.detectors`, which stops the direct beam there.
 """
 
-from mcdgs.core import bins_from_limits
 from mcdgs.core.components import Beamstop, Monitor_nD
-from mcdgs.core.components.monitors import monitor_time_limits
-from mcdgs.core.components.source import ESS_SOURCE_LENGTH, L_MAX, L_MIN
+from mcdgs.core.components.monitors import time_lambda_options
 
 from .detectors import BANANA_RADIUS
 from .guides.bispectral import GUIDE_4_TILT, GUIDE_4A_IN_Z
@@ -56,49 +54,6 @@ BEAMSTOP_MONITOR_LAMBDA_RESOLUTION = 0.02  # Å, FIXME, as the beam monitor
 BEAMSTOP_MONITOR_TIME_RESOLUTION = 5e-6  # s, FIXME, as the pre-sample monitor
 
 
-def time_lambda_options(
-    distance: float,
-    time_limits: tuple[float, float] | None,
-    lambda_limits: tuple[float, float] | None,
-    lambda_resolution: float,
-    time_resolution: float,
-) -> str:
-    """Return the ``options`` of a monitor that records one 2D map of time against wavelength.
-
-    Parameters
-    ----------
-    distance:
-        Flight path from the moderator to the monitor, in m.
-    time_limits:
-        Start and stop of the time axis, in s. ``None`` takes them from
-        :func:`.monitor_time_limits` at ``distance``, for ``lambda_limits`` and a pulse of
-        ``ESS_SOURCE_LENGTH``.
-    lambda_limits:
-        Start and stop of the wavelength axis, in Å. ``None`` takes the widest band the source
-        simulates, ``L_MIN`` to ``L_MAX``.
-    lambda_resolution:
-        Width of a wavelength bin, in Å. The axis has the fewest bins that cover
-        ``lambda_limits``, see :func:`.bins_from_limits`.
-    time_resolution:
-        Width of a time bin, in s, likewise.
-
-    Returns
-    -------
-    :
-        Such as ``"time limits=[0.0016 0.0078] bins=124 lambda limits=[1.095 2.915] bins=91"``.
-    """
-    if lambda_limits is None:
-        lambda_limits = (L_MIN, L_MAX)
-    if time_limits is None:
-        time_limits = monitor_time_limits(distance, lambda_limits, ESS_SOURCE_LENGTH)
-    t_start, t_stop, t_bins = bins_from_limits(time_limits, time_resolution)
-    l_start, l_stop, l_bins = bins_from_limits(lambda_limits, lambda_resolution)
-    return (  # time in s, lambda in Å: one 2D map
-        f"time limits=[{t_start} {t_stop}] bins={t_bins} "
-        f"lambda limits=[{l_start} {l_stop}] bins={l_bins}"
-    )
-
-
 def source_monitor(
     lambda_resolution: float = SOURCE_MONITOR_LAMBDA_RESOLUTION,
     time_resolution: float = SOURCE_MONITOR_TIME_RESOLUTION,
@@ -108,7 +63,7 @@ def source_monitor(
     It is the entrance of guide 1: its opening, at the place and with the rotation of
     ``arm_nboa``, 2.0 mm off the axis of the source and turned by the taper of the extraction
     guides, so it counts what enters guide 1. It records one 2D map of time against wavelength,
-    and leaves the neutrons unchanged. Its axes are those of :func:`time_lambda_options` at
+    and leaves the neutrons unchanged. Its axes are those of :func:`.time_lambda_options` at
     ``SOURCE_MONITOR_Z``, without limits: the widest band the source simulates, ``L_MIN`` to
     ``L_MAX``, and the time window in which it reaches the monitor.
 
@@ -199,7 +154,7 @@ def pre_sample_monitor(
     Parameters
     ----------
     time_limits, lambda_limits, lambda_resolution, time_resolution:
-        As in :func:`time_lambda_options`, at ``PRE_SAMPLE_MONITOR_Z``.
+        As in :func:`.time_lambda_options`, at ``PRE_SAMPLE_MONITOR_Z``.
 
     Returns
     -------
@@ -233,7 +188,7 @@ def sample_monitor(
     Parameters
     ----------
     time_limits, lambda_limits, lambda_resolution, time_resolution:
-        As in :func:`time_lambda_options`, at ``SAMPLE_Z``.
+        As in :func:`.time_lambda_options`, at ``SAMPLE_Z``.
 
     Returns
     -------
@@ -269,7 +224,7 @@ def beamstop_monitor(
     Parameters
     ----------
     time_limits, lambda_limits, lambda_resolution, time_resolution:
-        As in :func:`time_lambda_options`, at ``SAMPLE_Z + BEAMSTOP_DISTANCE`` from the
+        As in :func:`.time_lambda_options`, at ``SAMPLE_Z + BEAMSTOP_DISTANCE`` from the
         moderator.
 
     Returns

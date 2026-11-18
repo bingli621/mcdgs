@@ -129,18 +129,18 @@ def main(
     Parameters
     ----------
     out:
-        Folder of the figure, ``<name>.png``. If ``None``, ``trex_source`` in the results folder of
-        :meth:`.Workspace.find`.
+        Folder of the figure, ``<folder_name>.png``. If ``None``, ``trex_source`` in the results
+        folder of :meth:`.Workspace.find`.
     ncount:
         Number of McStas neutrons.
     neutrons:
         Number of tof neutrons.
     seed:
         Seed of the random numbers of both models.
-    name:
-        File name of the figure, without ``.png``.
     lambda0:
         Central wavelength of the band of the source, in Å. If ``None``, the widest band.
+    folder_name:
+        Name of the McStas run folder, and file name of the figure, without ``.png``.
 
     Returns
     -------

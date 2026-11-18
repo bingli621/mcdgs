@@ -11,7 +11,8 @@ documentation. See [Source](../instruments/trex/source.md),
 [Masked source](../instruments/trex/masked-source.md),
 [Incident energy](../instruments/trex/incident-energy.md),
 [Elastic plane](../instruments/trex/elastic-plane.md) and
-[Rotation scan](../instruments/trex/elastic-scan.md) for what they show for T-Rex.
+[Rotation scan](../instruments/trex/elastic-scan.md) for what they show for T-Rex, and
+[Source](../instruments/cspec/source.md) for CSPEC.
 
 ::: mcdgs.diagnostics.compare
 
@@ -42,4 +43,8 @@ documentation. See [Source](../instruments/trex/source.md),
 ::: mcdgs.diagnostics.trex.elastic_plane
 
 ::: mcdgs.diagnostics.trex.elastic_scan
+
+::: mcdgs.diagnostics.cspec.overview
+
+::: mcdgs.diagnostics.cspec.source
 

@@ -1,0 +1,1669 @@
+/********************************************************************************
+* 
+* McStas, neutron ray-tracing package
+*         Copyright (C) 1997-2008, All rights reserved
+*         Risoe National Laboratory, Roskilde, Denmark
+*         Institut Laue Langevin, Grenoble, France
+* 
+* This file was written by McStasScript, which is a 
+* python based McStas instrument generator written by 
+* Mads Bertelsen in 2019 while employed at the 
+* European Spallation Source Data Management and 
+* Software Centre
+* 
+* Instrument: CSPEC
+* 
+* %Identification
+* Written by: Python McStas Instrument Generator
+* Date: 10:08:50 on November 18, 2026
+* Origin: ESS DMSC
+* %INSTRUMENT_SITE: Generated_instruments
+* 
+* !!Please write a short instrument description (1 line) here!!
+* 
+* %Description
+* Please write a longer instrument description here!
+* 
+* 
+* %Parameters
+* omega: [unit] rotation of the goniometer about +Y
+* nu_bw1: [unit] rotation frequency of chopper bw1
+* delay_bw1: [unit] delay of chopper bw1
+* nu_bw2: [unit] rotation frequency of chopper bw2
+* delay_bw2: [unit] delay of chopper bw2
+* nu_bw3: [unit] rotation frequency of chopper bw3
+* delay_bw3: [unit] delay of chopper bw3
+* nu_ps1: [unit] rotation frequency of chopper ps1
+* delay_ps1: [unit] delay of chopper ps1
+* nu_ps2: [unit] rotation frequency of chopper ps2
+* delay_ps2: [unit] delay of chopper ps2
+* nu_rrm: [unit] rotation frequency of chopper rrm
+* delay_rrm: [unit] delay of chopper rrm
+* nu_mc1: [unit] rotation frequency of chopper mc1
+* delay_mc1: [unit] delay of chopper mc1
+* nu_mc2: [unit] rotation frequency of chopper mc2
+* delay_mc2: [unit] delay of chopper mc2
+* 
+* %Link 
+* 
+* %End 
+********************************************************************************/
+
+DEFINE INSTRUMENT CSPEC (
+omega = 0.0, // rotation of the goniometer about +Y
+nu_bw1 = 14, // rotation frequency of chopper bw1
+delay_bw1 = -0.024389750848650027, // delay of chopper bw1
+nu_bw2 = 14, // rotation frequency of chopper bw2
+delay_bw2 = -0.020202199865776947, // delay of chopper bw2
+nu_bw3 = 14, // rotation frequency of chopper bw3
+delay_bw3 = 0.043616781679092775, // delay of chopper bw3
+nu_ps1 = 7.0, // rotation frequency of chopper ps1
+delay_ps1 = 0.008703745396712037, // delay of chopper ps1
+nu_ps2 = -7.0, // rotation frequency of chopper ps2
+delay_ps2 = 0.08013990017768985, // delay of chopper ps2
+nu_rrm = 14.0, // rotation frequency of chopper rrm
+delay_rrm = 0.12018091846898149, // delay of chopper rrm
+nu_mc1 = 14.0, // rotation frequency of chopper mc1
+delay_mc1 = 0.08448491621734752, // delay of chopper mc1
+nu_mc2 = -14.0, // rotation frequency of chopper mc2
+delay_mc2 = 0.12020678528403962 // delay of chopper mc2
+)
+
+DECLARE 
+%{
+double bw1_slit_edges[2] = {-20.35,20.35};
+double bw2_slit_edges[2] = {-20.85,20.85};
+double bw3_slit_edges[2] = {-96.5,96.5};
+double ps1_slit_edges[6] = {-12.115,12.115,107.885,132.115,227.885,252.115};
+double ps2_slit_edges[6] = {-12.115,12.115,107.885,132.115,227.885,252.115};
+double rrm_slit_edges[2] = {-2.225,2.225};
+double mc1_slit_edges[2] = {-2.225,2.225};
+double mc2_slit_edges[2] = {-2.225,2.225};
+%}
+
+INITIALIZE 
+%{
+// Start of initialize for generated CSPEC
+%}
+
+TRACE 
+COMPONENT origin = Progress_bar(
+ percent = 10)
+AT (0, 0, 0) ABSOLUTE
+ROTATED (0, 0, 0) ABSOLUTE
+
+COMPONENT source = ESS_butterfly(
+ sector = "W", beamline = 3,
+ yheight = 0.03, cold_frac = 0.9,
+ target_index = 0, dist = 1.90424,
+ focus_xw = 0.0776, focus_yh = 0.043,
+ c_performance = 1, t_performance = 1,
+ Lmin = 2.0737109801003992, Lmax = 3.9262890198996008,
+ tmax_multiplier = 3, n_pulses = 1,
+ acc_power = 2, tfocus_dist = 0,
+ tfocus_time = 0, tfocus_width = 0)
+AT (0, 0, 0) ABSOLUTE
+ROTATED (0, 0, 0) ABSOLUTE
+
+COMPONENT arm_iscs = Arm()
+AT (0.03271038285817347, 0, 0.02437274816822491) ABSOLUTE
+ROTATED (0, -0.5, 0) ABSOLUTE
+
+COMPONENT guide_01_011 = Guide_gravity(
+ w1 = 0.045, h1 = 0.043,
+ w2 = 0.05335, h2 = 0.047,
+ l = 0.4995, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 3, mright = 3.5,
+ mtop = 4, mbottom = 3.5,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (-5.029695736993744e-06, 0.0, 1.8799388780356139) RELATIVE arm_iscs
+ROTATED (0, 0, 0) RELATIVE arm_iscs
+
+COMPONENT guide_01_012 = Guide_gravity(
+ w1 = 0.05335, h1 = 0.047,
+ w2 = 0.061700000000000005, h2 = 0.051,
+ l = 0.4995, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 3, mright = 3.5,
+ mtop = 4, mbottom = 3.5,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (-5.029695736993744e-06, 0.0, 2.379438878035614) RELATIVE arm_iscs
+ROTATED (0.008943513083370195, 0.0035774052333480775, 0) RELATIVE arm_iscs
+
+COMPONENT guide_01_02 = Guide_gravity(
+ w1 = 0.061700000000000005, h1 = 0.051,
+ w2 = 0.07, h2 = 0.055,
+ l = 0.999, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 3, mright = 3.5,
+ mtop = 4, mbottom = 3.5,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (2.628283549241694e-05, -7.828132780329196e-05, 2.8799388709201144) RELATIVE arm_iscs
+ROTATED (0.03580986219567646, 0.014323944878270581, 0) RELATIVE arm_iscs
+
+COMPONENT guide_01_03 = Guide_gravity(
+ w1 = 0.07, h1 = 0.055,
+ w2 = 0.07, h2 = 0.055,
+ l = 1.48, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 3, mright = 3.5,
+ mtop = 3.5, mbottom = 3,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.0002764078328820654, -0.0007035937870165498, 3.879938644074424) RELATIVE arm_iscs
+ROTATED (0.0802319962494131, 0.032092798499765235, 0) RELATIVE arm_iscs
+
+COMPONENT guide_02_01 = Guide_gravity(
+ w1 = 0.07, h1 = 0.055,
+ w2 = 0.07, h2 = 0.055,
+ l = 0.516, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 3, mright = 3.5,
+ mtop = 3.5, mbottom = 3,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.0011068835393963988, -0.002779782482553066, 5.361936956831729) RELATIVE arm_iscs
+ROTATED (0.11604185844508956, 0.04641674337803581, 0) RELATIVE arm_iscs
+
+COMPONENT guide_03_01 = Guide_gravity(
+ w1 = 0.07, h1 = 0.055,
+ w2 = 0.07, h2 = 0.055,
+ l = 1.9412135851507357, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 3, mright = 3.5,
+ mtop = 3.5, mbottom = 3,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.0015468517408535696, -0.003879702349071492, 5.902935659397056) RELATIVE arm_iscs
+ROTATED (0.16093334493477746, 0.06437333797391095, 0) RELATIVE arm_iscs
+
+COMPONENT guide_03_02 = Guide_gravity(
+ w1 = 0.07, h1 = 0.055,
+ w2 = 0.07, h2 = 0.055,
+ l = 1.9412135851507357, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 3, mright = 3.5,
+ mtop = 3.5, mbottom = 3,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.0037292228746895503, -0.009335624155657364, 7.845140355026644) RELATIVE arm_iscs
+ROTATED (0.23048374577359604, 0.09219349830943838, 0) RELATIVE arm_iscs
+
+COMPONENT guide_04_01 = Guide_gravity(
+ w1 = 0.07, h1 = 0.055,
+ w2 = 0.07, h2 = 0.055,
+ l = 1.9412135851507357, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 3, mright = 3.5,
+ mtop = 3.5, mbottom = 3,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.006875028434485122, -0.01720012019700441, 9.79833557131201) RELATIVE arm_iscs
+ROTATED (0.30042805509656706, 0.12017122203862676, 0) RELATIVE arm_iscs
+
+COMPONENT guide_04_02 = Guide_gravity(
+ w1 = 0.07, h1 = 0.055,
+ w2 = 0.07, h2 = 0.055,
+ l = 1.9412135851507357, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 3, mright = 3.5,
+ mtop = 3.5, mbottom = 3,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.010948834932916247, -0.027384597235968932, 11.740518181289499) RELATIVE arm_iscs
+ROTATED (0.36997845593538564, 0.14799138237415418, 0) RELATIVE arm_iscs
+
+COMPONENT guide_05_01 = Guide_gravity(
+ w1 = 0.07, h1 = 0.055,
+ w2 = 0.07, h2 = 0.055,
+ l = 1.2, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 3, mright = 3.5,
+ mtop = 3.5, mbottom = 3,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.015996786550155493, -0.04000440251111285, 13.693684471934866) RELATIVE arm_iscs
+ROTATED (0.4266513870874511, 0.17066055483498035, 0) RELATIVE arm_iscs
+
+COMPONENT arm_bwc1 = Arm()
+AT (0.019571087567137116, -0.04894008568551895, 14.89365) RELATIVE arm_iscs
+ROTATED (0.44867445233779213, 0.17946978093511678, 0) RELATIVE arm_iscs
+
+COMPONENT bw1 = NXdisk_chopper(
+ slit_edges = bw1_slit_edges, n_edges = 2,
+ radius = 0.35, yheight = 0.1,
+ xwidth = 0.07, nu = nu_bw1,
+ delay = delay_bw1, park_angle = 0,
+ beam_angle = 180, zero_angle = 0,
+ jitter = 0, abs_out = 0,
+ verbose = 1)
+AT (0, 0, 0.015) RELATIVE arm_bwc1
+ROTATED (0, 0, 0) RELATIVE arm_bwc1
+
+COMPONENT guide_05_02 = Guide_gravity(
+ w1 = 0.07, h1 = 0.055,
+ w2 = 0.07, h2 = 0.055,
+ l = 0.8, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 3, mright = 3.5,
+ mtop = 3.5, mbottom = 3,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.01966505757102631, -0.04917500867839066, 14.923648933003813) RELATIVE arm_iscs
+ROTATED (0.46353554514899786, 0.1854142180595991, 0) RELATIVE arm_iscs
+
+COMPONENT guide_05_03 = Guide_gravity(
+ w1 = 0.07, h1 = 0.055,
+ w2 = 0.07, h2 = 0.055,
+ l = 1.9435155334980931, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 3, mright = 3.5,
+ mtop = 3.5, mbottom = 3,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.02226059658538164, -0.05566379674594441, 15.725618483006215) RELATIVE arm_iscs
+ROTATED (0.5127296214665215, 0.20509184858660853, 0) RELATIVE arm_iscs
+
+COMPONENT guide_05_04 = Guide_gravity(
+ w1 = 0.07, h1 = 0.055,
+ w2 = 0.07, h2 = 0.055,
+ l = 1.9435155334980931, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 3, mright = 3.5,
+ mtop = 3.5, mbottom = 3,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.029221272634885165, -0.07306529175795641, 17.670043693710763) RELATIVE arm_iscs
+ROTATED (0.5823624547584404, 0.23294498190337612, 0) RELATIVE arm_iscs
+
+COMPONENT guide_05_05 = Guide_gravity(
+ w1 = 0.07, h1 = 0.055,
+ w2 = 0.07, h2 = 0.055,
+ l = 0.8, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 3, mright = 3.5,
+ mtop = 3.5, mbottom = 3,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.037131535891290465, -0.0928406638388362, 19.615442639499257) RELATIVE arm_iscs
+ROTATED (0.631556531075964, 0.25262261243038553, 0) RELATIVE arm_iscs
+
+COMPONENT arm_bwc2 = Arm()
+AT (0.04065880154436686, -0.1016586779741183, 20.41539) RELATIVE arm_iscs
+ROTATED (0.6464176238871697, 0.2585670495548678, 0) RELATIVE arm_iscs
+
+COMPONENT bw2 = NXdisk_chopper(
+ slit_edges = bw2_slit_edges, n_edges = 2,
+ radius = 0.35, yheight = 0.1,
+ xwidth = 0.07, nu = nu_bw2,
+ delay = delay_bw2, park_angle = 0,
+ beam_angle = 180, zero_angle = 0,
+ jitter = 0, abs_out = 0,
+ verbose = 1)
+AT (0, 0, 0.015) RELATIVE arm_bwc2
+ROTATED (0, 0, 0) RELATIVE arm_bwc2
+
+COMPONENT guide_05_06 = Guide_gravity(
+ w1 = 0.07, h1 = 0.055,
+ w2 = 0.07, h2 = 0.055,
+ l = 0.8, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 3, mright = 3.5,
+ mtop = 3.5, mbottom = 3,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.04079418647538609, -0.10199713427027166, 20.4453877852614) RELATIVE arm_iscs
+ROTATED (0.6612787166983755, 0.2645114866793501, 0) RELATIVE arm_iscs
+
+COMPONENT guide_05_07 = Guide_gravity(
+ w1 = 0.07, h1 = 0.055,
+ w2 = 0.07, h2 = 0.055,
+ l = 1.4531470912265412, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 3, mright = 3.5,
+ mtop = 3.5, mbottom = 3,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.04449688409553033, -0.11125370567449024, 21.247325817546916) RELATIVE arm_iscs
+ROTATED (0.7016927798444726, 0.280677111937789, 0) RELATIVE arm_iscs
+
+COMPONENT guide_05_08 = Guide_gravity(
+ w1 = 0.07, h1 = 0.055,
+ w2 = 0.07, h2 = 0.055,
+ l = 1.4531470912265412, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 3, mright = 3.5,
+ mtop = 3.5, mbottom = 3,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.05162052551165356, -0.12906243524182656, 22.70134640648984) RELATIVE arm_iscs
+ROTATED (0.7537655867935388, 0.30150623471741556, 0) RELATIVE arm_iscs
+
+COMPONENT guide_05_09 = Guide_gravity(
+ w1 = 0.07, h1 = 0.055,
+ w2 = 0.07, h2 = 0.055,
+ l = 2.04, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 3, mright = 3.5,
+ mtop = 3.5, mbottom = 3,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.05938, -0.14815, 24.157349999999997) RELATIVE arm_iscs
+ROTATED (0.8164175743631511, 0.32656702974526053, 0) RELATIVE arm_iscs
+
+COMPONENT guide_05_10 = Guide_gravity(
+ w1 = 0.07, h1 = 0.055,
+ w2 = 0.07, h2 = 0.055,
+ l = 1.65, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 3, mright = 3.5,
+ mtop = 3.5, mbottom = 3,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.07101321839605293, -0.17723221925777868, 26.198109642698572) RELATIVE arm_iscs
+ROTATED (0.8825225799763698, 0.35300903199054806, 0) RELATIVE arm_iscs
+
+COMPONENT guide_06_011 = Guide_gravity(
+ w1 = 0.07, h1 = 0.055,
+ w2 = 0.07, h2 = 0.055,
+ l = 0.49032040994779164, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 3, mright = 3.5,
+ mtop = 3.5, mbottom = 3,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.08143397948136817, -0.20328325518691873, 27.887876714137047) RELATIVE arm_iscs
+ROTATED (0.922277263931609, 0.36891090557264367, 0) RELATIVE arm_iscs
+
+COMPONENT guide_06_012 = Guide_gravity(
+ w1 = 0.07, h1 = 0.055,
+ w2 = 0.07, h2 = 0.055,
+ l = 1.982, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2.5, mright = 3,
+ mtop = 3, mbottom = 3.5,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.08459098856952507, -0.21117549160945825, 28.378123440685478) RELATIVE arm_iscs
+ROTATED (0.8955688436516727, 0.3866175962094014, 0) RELATIVE arm_iscs
+
+COMPONENT guide_06_02 = Guide_gravity(
+ w1 = 0.07, h1 = 0.055,
+ w2 = 0.07, h2 = 0.055,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2.5, mright = 3,
+ mtop = 3, mbottom = 3.5,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.09797192314627147, -0.24216913926555841, 30.360836074238644) RELATIVE arm_iscs
+ROTATED (0.8242355981578852, 0.41515089440691644, 0) RELATIVE arm_iscs
+
+COMPONENT guide_06_03 = Guide_gravity(
+ w1 = 0.07, h1 = 0.055,
+ w2 = 0.07, h2 = 0.055,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2.5, mright = 3,
+ mtop = 3, mbottom = 3.5,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.11247828820342264, -0.2709669160572316, 32.36257639085077) RELATIVE arm_iscs
+ROTATED (0.7525442540421409, 0.4438274320532142, 0) RELATIVE arm_iscs
+
+COMPONENT guide_06_04 = Guide_gravity(
+ w1 = 0.07, h1 = 0.055,
+ w2 = 0.07, h2 = 0.055,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2.5, mright = 3,
+ mtop = 3, mbottom = 3.5,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.12797862955733744, -0.29724741952176614, 34.363343772405116) RELATIVE arm_iscs
+ROTATED (0.6808887197885923, 0.4724896457546337, 0) RELATIVE arm_iscs
+
+COMPONENT guide_06_05 = Guide_gravity(
+ w1 = 0.07, h1 = 0.055,
+ w2 = 0.07, h2 = 0.055,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2.5, mright = 3,
+ mtop = 3, mbottom = 3.5,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.1444884359197429, -0.3210368758784358, 36.36513435204425) RELATIVE arm_iscs
+ROTATED (0.609197375672848, 0.5011661834009314, 0) RELATIVE arm_iscs
+
+COMPONENT guide_06_06 = Guide_gravity(
+ w1 = 0.07, h1 = 0.055,
+ w2 = 0.07, h2 = 0.055,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2.5, mright = 3,
+ mtop = 3, mbottom = 3.5,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.16199120984653026, -0.34231148223293406, 38.36594470731319) RELATIVE arm_iscs
+ROTATED (0.5375418414192995, 0.5298283971023509, 0) RELATIVE arm_iscs
+
+COMPONENT guide_06_07 = Guide_gravity(
+ w1 = 0.07, h1 = 0.055,
+ w2 = 0.07, h2 = 0.055,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2.5, mright = 3,
+ mtop = 3, mbottom = 3.5,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.18050444097961105, -0.3610924692474658, 40.36777101425058) RELATIVE arm_iscs
+ROTATED (0.4658504973035552, 0.5585049347486487, 0) RELATIVE arm_iscs
+
+COMPONENT guide_06_08 = Guide_gravity(
+ w1 = 0.07, h1 = 0.055,
+ w2 = 0.07, h2 = 0.055,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2.5, mright = 3,
+ mtop = 3, mbottom = 3.5,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.20000962995023452, -0.3773610453261834, 42.36860981467319) RELATIVE arm_iscs
+ROTATED (0.3941949630500067, 0.5871671484500681, 0) RELATIVE arm_iscs
+
+COMPONENT guide_06_09 = Guide_gravity(
+ w1 = 0.07, h1 = 0.055,
+ w2 = 0.07, h2 = 0.055,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2.5, mright = 3,
+ mtop = 3, mbottom = 3.5,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.22052626731298072, -0.391133445441332, 44.3704573130334) RELATIVE arm_iscs
+ROTATED (0.3225036189342624, 0.615843686096366, 0) RELATIVE arm_iscs
+
+COMPONENT guide_06_10 = Guide_gravity(
+ w1 = 0.07, h1 = 0.055,
+ w2 = 0.07, h2 = 0.055,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2.5, mright = 3,
+ mtop = 3, mbottom = 3.5,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.24203385179298423, -0.4023958894131466, 46.37131002997996) RELATIVE arm_iscs
+ROTATED (0.25084808468071385, 0.6445058997977854, 0) RELATIVE arm_iscs
+
+COMPONENT guide_06_11 = Guide_gravity(
+ w1 = 0.07, h1 = 0.055,
+ w2 = 0.07, h2 = 0.055,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2.5, mright = 3,
+ mtop = 3, mbottom = 3.5,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.26455387483797377, -0.41115961642229143, 48.37316418389658) RELATIVE arm_iscs
+ROTATED (0.17915674056496955, 0.6731824374440832, 0) RELATIVE arm_iscs
+
+COMPONENT guide_06_12 = Guide_gravity(
+ w1 = 0.07, h1 = 0.055,
+ w2 = 0.07, h2 = 0.055,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2.5, mright = 3,
+ mtop = 3, mbottom = 3.5,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.288063833287501, -0.41741585779133983, 50.37401628882427) RELATIVE arm_iscs
+ROTATED (0.10750120631142096, 0.7018446511455027, 0) RELATIVE arm_iscs
+
+COMPONENT guide_06_13 = Guide_gravity(
+ w1 = 0.07, h1 = 0.055,
+ w2 = 0.07, h2 = 0.055,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2.5, mright = 3,
+ mtop = 3, mbottom = 3.5,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.31258721946092005, -0.42117085683902505, 52.37586256259569) RELATIVE arm_iscs
+ROTATED (0.035809862195676695, 0.7305211887918005, 0) RELATIVE arm_iscs
+
+COMPONENT guide_06_14 = Guide_gravity(
+ w1 = 0.06999990607313028, h1 = 0.05500290521998714,
+ w2 = 0.08410595610236263, h2 = 0.06836992967200929,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2, mright = 2,
+ mtop = 2, mbottom = 2,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.33809952820974715, -0.4224208564451449, 54.37669952720585) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_06_15 = Guide_gravity(
+ w1 = 0.08411809754957476, h1 = 0.06838160722903006,
+ w2 = 0.09663195215328302, h2 = 0.08072912641027676,
+ l = 2.4, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2, mright = 2,
+ mtop = 2, mbottom = 2,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.36412479515027485, -0.4224208564451449, 56.3785303605883) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_06_16 = Guide_gravity(
+ w1 = 0.0966364210217418, h1 = 0.08073368374955131,
+ w2 = 0.10593599257907042, h2 = 0.09060251606551463,
+ l = 2.4, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2, mright = 2,
+ mtop = 2, mbottom = 2,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.3953369159915372, -0.4224208564451449, 58.779327478945575) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_06_17 = Guide_gravity(
+ w1 = 0.10594265809386454, h1 = 0.0906099462352587,
+ w2 = 0.11076818790974775, h2 = 0.0961971675489226,
+ l = 1.6, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2, mright = 2,
+ mtop = 2, mbottom = 2,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.42656203646663593, -0.4224208564451449, 61.18112451280404) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_06_18 = Guide_gravity(
+ w1 = 0.11077090108093587, h1 = 0.09620044960214941,
+ w2 = 0.11466421844673912, h2 = 0.10115069609555333,
+ l = 1.6, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2, mright = 2,
+ mtop = 2, mbottom = 2,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.44737445023875627, -0.4224208564451449, 62.781989230209284) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_06_19 = Guide_gravity(
+ w1 = 0.11466, h1 = 0.10115652583072013,
+ w2 = 0.11466, h2 = 0.10658253334116885,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2, mright = 2,
+ mtop = 2, mbottom = 2,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.468199863644713, -0.4224208564451449, 64.38385386311572) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_06_20 = Guide_gravity(
+ w1 = 0.11466, h1 = 0.10658505486882994,
+ w2 = 0.11466, h2 = 0.11127988185917508,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2, mright = 2,
+ mtop = 2, mbottom = 2,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.4942121309514043, -0.4224208564451449, 66.38468478099698) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_06_21 = Guide_gravity(
+ w1 = 0.11466, h1 = 0.11127988185917508,
+ w2 = 0.11466, h2 = 0.11127988185917508,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2, mright = 2,
+ mtop = 2, mbottom = 2,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.5202373978919321, -0.4224208564451449, 68.38651561437943) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_06_22 = Guide_gravity(
+ w1 = 0.11466, h1 = 0.11127988185917508,
+ w2 = 0.11466, h2 = 0.11127988185917508,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2, mright = 2,
+ mtop = 2, mbottom = 2,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.5462496651986235, -0.4224208564451449, 70.3873465322607) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_06_23 = Guide_gravity(
+ w1 = 0.11466, h1 = 0.11127988185917508,
+ w2 = 0.11466, h2 = 0.11127988185917508,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2, mright = 2,
+ mtop = 2, mbottom = 2,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.5722749321391513, -0.4224208564451449, 72.38917736564315) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_06_24 = Guide_gravity(
+ w1 = 0.11466, h1 = 0.11127988185917508,
+ w2 = 0.11466, h2 = 0.11127988185917508,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2, mright = 2,
+ mtop = 2, mbottom = 2,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.5982871994458426, -0.4224208564451449, 74.39000828352441) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_06_25 = Guide_gravity(
+ w1 = 0.11466, h1 = 0.11127988185917508,
+ w2 = 0.11466, h2 = 0.11127988185917508,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2, mright = 2,
+ mtop = 2, mbottom = 2,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.6243124663863704, -0.4224208564451449, 76.39183911690687) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_06_26 = Guide_gravity(
+ w1 = 0.11466, h1 = 0.11127988185917508,
+ w2 = 0.11466, h2 = 0.11127988185917508,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2, mright = 2,
+ mtop = 2, mbottom = 2,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.6503247336930618, -0.4224208564451449, 78.39267003478813) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_06_27 = Guide_gravity(
+ w1 = 0.11466, h1 = 0.11127988185917508,
+ w2 = 0.11466, h2 = 0.11127988185917508,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2, mright = 2,
+ mtop = 2, mbottom = 2,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.6763500006335895, -0.4224208564451449, 80.39450086817058) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_06_28 = Guide_gravity(
+ w1 = 0.11466, h1 = 0.11127988185917508,
+ w2 = 0.11466, h2 = 0.11127988185917508,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2, mright = 2,
+ mtop = 2, mbottom = 2,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.7023622679402809, -0.4224208564451449, 82.39533178605184) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_06_29 = Guide_gravity(
+ w1 = 0.11466, h1 = 0.11127988185917508,
+ w2 = 0.11466, h2 = 0.11127988185917508,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2, mright = 2,
+ mtop = 2, mbottom = 2,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.7283875348808087, -0.4224208564451449, 84.3971626194343) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_06_30 = Guide_gravity(
+ w1 = 0.11466, h1 = 0.11127988185917508,
+ w2 = 0.11466, h2 = 0.11127988185917508,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2, mright = 2,
+ mtop = 2, mbottom = 2,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.7543998021875, -0.4224208564451449, 86.39799353731556) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_06_31 = Guide_gravity(
+ w1 = 0.11466, h1 = 0.11127988185917508,
+ w2 = 0.11466, h2 = 0.11127988185917508,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2, mright = 2,
+ mtop = 2, mbottom = 2,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.7804250691280278, -0.4224208564451449, 88.39982437069801) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_06_32 = Guide_gravity(
+ w1 = 0.11466, h1 = 0.11127988185917508,
+ w2 = 0.11466, h2 = 0.11127988185917508,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2, mright = 2,
+ mtop = 2, mbottom = 2,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.8064373364347192, -0.4224208564451449, 90.40065528857927) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_06_331 = Guide_gravity(
+ w1 = 0.11466, h1 = 0.11127988185917508,
+ w2 = 0.11466, h2 = 0.11127988185917508,
+ l = 1.1623599999999998, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2, mright = 2,
+ mtop = 2, mbottom = 2,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.8324626033752469, -0.4224208564451449, 92.40248612196173) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_06_332 = Guide_gravity(
+ w1 = 0.11466, h1 = 0.11127569760764854,
+ w2 = 0.11466, h2 = 0.10939139494316318,
+ l = 0.83764, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2.5, mright = 2.5,
+ mtop = 2.5, mbottom = 2.5,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.8475728577613567, -0.4224208564451449, 93.56474790392497) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_06_34 = Guide_gravity(
+ w1 = 0.11466, h1 = 0.1093890760127605,
+ w2 = 0.11466, h2 = 0.1043987616196667,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2.5, mright = 2.5,
+ mtop = 2.5, mbottom = 2.5,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.8584748706819382, -0.4224208564451449, 94.40331703984297) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_06_35 = Guide_gravity(
+ w1 = 0.11466, h1 = 0.10439340179321814,
+ w2 = 0.11466, h2 = 0.09862388829152566,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2.5, mright = 2.5,
+ mtop = 2.5, mbottom = 2.5,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.884500137622466, -0.4224208564451449, 96.40514787322543) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_06_36 = Guide_gravity(
+ w1 = 0.11466, h1 = 0.09862078679804394,
+ w2 = 0.11466, h2 = 0.09192583036609614,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2.5, mright = 2.5,
+ mtop = 2.5, mbottom = 2.5,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.9105124049291573, -0.4224208564451449, 98.40597879110669) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_06_37 = Guide_gravity(
+ w1 = 0.11466, h1 = 0.09191860728905549,
+ w2 = 0.11466, h2 = 0.08543312975229116,
+ l = 1.6770349999999998, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2.5, mright = 2.5,
+ mtop = 2.5, mbottom = 2.5,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.9365376718696852, -0.4224208564451449, 100.40780962448915) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_06_38 = Guide_gravity(
+ w1 = 0.11466, h1 = 0.08542898755223936,
+ w2 = 0.11466, h2 = 0.07793905381840913,
+ l = 1.6770349999999998, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2.5, mright = 2.5,
+ mtop = 2.5, mbottom = 2.5,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.9583515124343946, -0.4224208564451449, 102.08570283252857) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_06_39 = Guide_gravity(
+ w1 = 0.11466, h1 = 0.07792941070199981,
+ w2 = 0.11466, h2 = 0.07391482959988588,
+ l = 0.8, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2.5, mright = 2.5,
+ mtop = 2.5, mbottom = 2.5,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.9801783526329406, -0.4224208564451449, 103.76459595606917) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT arm_bwc3 = Arm()
+AT (0.9905780597020826, -0.4224208564451449, 104.56453) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT bw3 = NXdisk_chopper(
+ slit_edges = bw3_slit_edges, n_edges = 2,
+ radius = 0.35, yheight = 0.1,
+ xwidth = 0.11466, nu = nu_bw3,
+ delay = delay_bw3, park_angle = 0,
+ beam_angle = 180, zero_angle = 0,
+ jitter = 0, abs_out = 0,
+ verbose = 1)
+AT (0, 0, 0.015) RELATIVE arm_bwc3
+ROTATED (0, 0, 0) RELATIVE arm_bwc3
+
+COMPONENT guide_06_40 = Guide_gravity(
+ w1 = 0.11466, h1 = 0.07389,
+ w2 = 0.11466, h2 = 0.07389,
+ l = 0.5, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2.5, mright = 2.5,
+ mtop = 2.5, mbottom = 2.5,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.9909680487171754, -0.4224208564451449, 104.5945274650357) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_07_01 = Guide_gravity(
+ w1 = 0.11466, h1 = 0.07389,
+ w2 = 0.11466, h2 = 0.07389,
+ l = 0.51888, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2.5, mright = 2.5,
+ mtop = 2.5, mbottom = 2.5,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (0.9975978619737534, -0.4224208564451449, 105.10448437064262) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT arm_psc = Arm()
+AT (1.0043431119787989, -0.4224208564451449, 105.62331999999999) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT ps1 = NXdisk_chopper(
+ slit_edges = ps1_slit_edges, n_edges = 6,
+ radius = 0.35, yheight = 0.1,
+ xwidth = 0.11466, nu = nu_ps1,
+ delay = delay_ps1, park_angle = 0,
+ beam_angle = 180, zero_angle = 0,
+ jitter = 0, abs_out = 0,
+ verbose = 1)
+AT (0, 0, 0.01271) RELATIVE arm_psc
+ROTATED (0, 0, 0) RELATIVE arm_psc
+
+COMPONENT ps2 = NXdisk_chopper(
+ slit_edges = ps2_slit_edges, n_edges = 6,
+ radius = 0.35, yheight = 0.1,
+ xwidth = 0.11466, nu = nu_ps2,
+ delay = delay_ps2, park_angle = 0,
+ beam_angle = 0, zero_angle = 0,
+ jitter = 0, abs_out = 0,
+ verbose = 1)
+AT (0, 0, 0.02271) RELATIVE arm_psc
+ROTATED (0, 0, 0) RELATIVE arm_psc
+
+COMPONENT guide_08_01 = Guide_gravity(
+ w1 = 0.11466, h1 = 0.07389,
+ w2 = 0.11466, h2 = 0.07389,
+ l = 2.4802, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2, mright = 2,
+ mtop = 2.5, mbottom = 2.5,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (1.005738102685786, -0.4224208564451449, 105.73062093243269) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_08_02 = Guide_gravity(
+ w1 = 0.11466, h1 = 0.07389,
+ w2 = 0.11445999999999999, h2 = 0.07389,
+ l = 2.4802, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2, mright = 2,
+ mtop = 2.5, mbottom = 2.5,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (1.0379927941607299, -0.4224208564451449, 108.2116112739854) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_08_03 = Guide_gravity(
+ w1 = 0.11445999999999999, h1 = 0.07389,
+ w2 = 0.11436332854461857, h2 = 0.07389,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2, mright = 2,
+ mtop = 3, mbottom = 3,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (1.07026048526951, -0.4224208564451449, 110.69360153103929) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_08_04 = Guide_gravity(
+ w1 = 0.11436323180808596, h1 = 0.07389,
+ w2 = 0.11407262869031695, h2 = 0.07389,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2, mright = 2,
+ mtop = 3, mbottom = 3,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (1.096272752576201, -0.4224208564451449, 112.69443244892057) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_08_05 = Guide_gravity(
+ w1 = 0.11407224066064788, h1 = 0.07389,
+ w2 = 0.11358611845780289, h2 = 0.07389,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2, mright = 2,
+ mtop = 3, mbottom = 3,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (1.1222980195167287, -0.4224208564451449, 114.69626328230301) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_08_06 = Guide_gravity(
+ w1 = 0.11358582616482678, h1 = 0.07389,
+ w2 = 0.11290175655604327, h2 = 0.07389,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2, mright = 2,
+ mtop = 3, mbottom = 3,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (1.14831028682342, -0.4224208564451449, 116.69709420018428) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_08_07 = Guide_gravity(
+ w1 = 0.11290097234905937, h1 = 0.07389,
+ w2 = 0.11201522519504761, h2 = 0.07389,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2, mright = 2,
+ mtop = 3, mbottom = 3,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (1.1743355537639477, -0.4224208564451449, 118.69892503356674) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_08_08 = Guide_gravity(
+ w1 = 0.11201473117489516, h1 = 0.07389,
+ w2 = 0.11092257493063679, h2 = 0.07389,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2, mright = 2,
+ mtop = 3, mbottom = 3,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (1.2003478210706389, -0.4224208564451449, 120.699755951448) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_08_09 = Guide_gravity(
+ w1 = 0.11092137757919757, h1 = 0.07389,
+ w2 = 0.10961653170651754, h2 = 0.07389,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2, mright = 2,
+ mtop = 3, mbottom = 3,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (1.2263730880111665, -0.4224208564451449, 122.70158678483045) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_08_10 = Guide_gravity(
+ w1 = 0.10961582492278817, h1 = 0.07388999999888553,
+ w2 = 0.10809069156836285, h2 = 0.07381710248034494,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2, mright = 2,
+ mtop = 3, mbottom = 3,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (1.2523853553178579, -0.4224208564451449, 124.70241770271171) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_08_11 = Guide_gravity(
+ w1 = 0.10808905323598819, h1 = 0.07381695652218018,
+ w2 = 0.10633403194610952, h2 = 0.07359764778047657,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2, mright = 2,
+ mtop = 3, mbottom = 3,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (1.2784106222583855, -0.4224208564451449, 126.70424853609417) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_08_12 = Guide_gravity(
+ w1 = 0.1063330951562316, h1 = 0.07359750135975,
+ w2 = 0.10433669803522007, h2 = 0.07323053895082422,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2, mright = 2,
+ mtop = 3.5, mbottom = 3.5,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (1.3044228895650767, -0.4224208564451449, 128.70507945397543) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_08_13 = Guide_gravity(
+ w1 = 0.10433457640456113, h1 = 0.0732300974582292,
+ w2 = 0.10208250415790185, h2 = 0.07271316918024365,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2, mright = 2,
+ mtop = 3.5, mbottom = 3.5,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (1.3304481565056043, -0.4224208564451449, 130.70691028735789) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_08_14 = Guide_gravity(
+ w1 = 0.10208131149327282, h1 = 0.07271287274870236,
+ w2 = 0.09955633826502452, h2 = 0.07204282477714283,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2, mright = 2,
+ mtop = 3.5, mbottom = 3.5,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (1.3564604238122957, -0.4224208564451449, 132.70774120523913) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_08_15 = Guide_gravity(
+ w1 = 0.09955367002912378, h1 = 0.0720420767863721,
+ w2 = 0.09673426455533428, h2 = 0.07121450509592736,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2, mright = 2,
+ mtop = 3.5, mbottom = 3.5,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (1.3824856907528233, -0.4224208564451449, 134.7095720386216) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_08_16 = Guide_gravity(
+ w1 = 0.09673277710037342, h1 = 0.07121405107664532,
+ w2 = 0.09359247512096694, h2 = 0.07022346416347962,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2.5, mright = 2.5,
+ mtop = 3.5, mbottom = 3.5,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (1.4084979580595145, -0.4224208564451449, 136.71040295650283) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_08_17 = Guide_gravity(
+ w1 = 0.09358916378351531, h1 = 0.07022238982014789,
+ w2 = 0.09009421291990011, h2 = 0.06906168293843176,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2.5, mright = 2.5,
+ mtop = 3.5, mbottom = 3.5,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (1.4345232250000421, -0.4224208564451449, 138.71223378988526) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_08_18 = Guide_gravity(
+ w1 = 0.09009237011865104, h1 = 0.06906105869831851,
+ w2 = 0.08619981025779111, h2 = 0.06772156810630119,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 2.5, mright = 2.5,
+ mtop = 3.5, mbottom = 3.5,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (1.4605354923067335, -0.4224208564451449, 140.7130647077665) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_08_19 = Guide_gravity(
+ w1 = 0.08619570127221654, h1 = 0.06772013575606273,
+ w2 = 0.08184855186826902, h2 = 0.06619090507710686,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 3, mright = 3,
+ mtop = 3.5, mbottom = 3.5,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (1.4865607592472612, -0.4224208564451449, 142.71489554114896) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_08_20 = Guide_gravity(
+ w1 = 0.08184625294002784, h1 = 0.0661900909254975,
+ w2 = 0.07696773451499725, h2 = 0.06445770865335473,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 3, mright = 3,
+ mtop = 3.5, mbottom = 3.5,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (1.5125730265539523, -0.4224208564451449, 144.7157264590302) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_08_21 = Guide_gravity(
+ w1 = 0.07696255736786731, h1 = 0.06445586933704181,
+ w2 = 0.07144349279599015, h2 = 0.0625033225514624,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 3, mright = 3,
+ mtop = 3.5, mbottom = 3.5,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (1.53859829349448, -0.4224208564451449, 146.71755729241264) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_08_22 = Guide_gravity(
+ w1 = 0.07144054917014267, h1 = 0.06250228792073247,
+ w2 = 0.06511855344634543, h2 = 0.060308301031554615,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 3.5, mright = 3.5,
+ mtop = 3.5, mbottom = 3.5,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (1.5646105608011713, -0.4224208564451449, 148.71838821029388) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_08_23 = Guide_gravity(
+ w1 = 0.06511175419290192, h1 = 0.06030597771013691,
+ w2 = 0.05772286255488553, h2 = 0.057842927790916744,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 3.5, mright = 3.5,
+ mtop = 3.5, mbottom = 3.5,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (1.590635827741699, -0.4224208564451449, 150.72021904367634) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_08_24 = Guide_gravity(
+ w1 = 0.05771883565892217, h1 = 0.05784162345866631,
+ w2 = 0.048781029388477844, h2 = 0.05507354802617992,
+ l = 2.0, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 3.5, mright = 3.5,
+ mtop = 3.5, mbottom = 3.5,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (1.6166480950483901, -0.4224208564451449, 152.72104996155758) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_08_25 = Guide_gravity(
+ w1 = 0.04877104479333032, h1 = 0.05507061243135703,
+ w2 = 0.039786990870567446, h2 = 0.052597058959769696,
+ l = 1.6044, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 3.5, mright = 3.5,
+ mtop = 3.5, mbottom = 3.5,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (1.6426733619889178, -0.4224208564451449, 154.72288079494) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_08_26 = Guide_gravity(
+ w1 = 0.03978064694984217, h1 = 0.0525954398595165,
+ w2 = 0.027539091112840773, h2 = 0.0498606879242676,
+ l = 1.6044, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 3.5, mright = 3.5,
+ mtop = 3.5, mbottom = 3.5,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (1.6635429741499184, -0.4224208564451449, 156.3281451405505) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT guide_09_01 = Guide_gravity(
+ w1 = 0.027444048006947698, h1 = 0.04984273602025601,
+ w2 = 0.02242747203925759, h2 = 0.048973700538385324,
+ l = 0.4763, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 3.5, mright = 3.5,
+ mtop = 3.5, mbottom = 3.5,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (1.6845295830154465, -0.4224208564451449, 157.9424087256717) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT arm_mc = Arm()
+AT (1.690721308611737, -0.4224208564451449, 158.41866845151583) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT rrm = NXdisk_chopper(
+ slit_edges = rrm_slit_edges, n_edges = 2,
+ radius = 0.35, yheight = 0.1,
+ xwidth = 0.02242747203925759, nu = nu_rrm,
+ delay = delay_rrm, park_angle = 0,
+ beam_angle = 0, zero_angle = 0,
+ jitter = 0, abs_out = 0,
+ verbose = 1)
+AT (0, 0, 0.02411) RELATIVE arm_mc
+ROTATED (0, 0, 0) RELATIVE arm_mc
+
+COMPONENT mc1 = NXdisk_chopper(
+ slit_edges = mc1_slit_edges, n_edges = 2,
+ radius = 0.35, yheight = 0.1,
+ xwidth = 0.02242747203925759, nu = nu_mc1,
+ delay = delay_mc1, park_angle = 0,
+ beam_angle = 180, zero_angle = 0,
+ jitter = 0, abs_out = 0,
+ verbose = 1)
+AT (0, 0, 0.04822) RELATIVE arm_mc
+ROTATED (0, 0, 0) RELATIVE arm_mc
+
+COMPONENT mc2 = NXdisk_chopper(
+ slit_edges = mc2_slit_edges, n_edges = 2,
+ radius = 0.35, yheight = 0.1,
+ xwidth = 0.02242747203925759, nu = nu_mc2,
+ delay = delay_mc2, park_angle = 0,
+ beam_angle = 0, zero_angle = 0,
+ jitter = 0, abs_out = 0,
+ verbose = 1)
+AT (0, 0, 0.05822) RELATIVE arm_mc
+ROTATED (0, 0, 0) RELATIVE arm_mc
+
+COMPONENT guide_09_02 = Guide_gravity(
+ w1 = 0.02258, h1 = 0.049,
+ w2 = 0.02258, h2 = 0.049,
+ l = 0.3, R0 = 0.995,
+ Qc = 0.0218, alpha = 4.38,
+ m = 1.0, W = 0.003,
+ mleft = 3.5, mright = 3.5,
+ mtop = 3.5, mbottom = 3.5,
+ G = 0, aleft = -1,
+ aright = -1, atop = -1,
+ abottom = -1, wavy = 0,
+ wavy_z = 0, wavy_tb = 0,
+ wavy_lr = 0)
+AT (1.691669891892781, -0.4224208564451449, 158.49163228563768) RELATIVE arm_iscs
+ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT sample_pos = Arm()
+AT (1.7106400000000002, -0.42242, 159.96676000000002) RELATIVE arm_iscs
+ROTATED (-0.0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+FINALLY 
+%{
+// Start of finally for generated CSPEC
+%}
+
+END

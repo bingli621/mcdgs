@@ -61,7 +61,7 @@ def wavelength_band(lambda0: float | None) -> tuple[float, float]:
 
 
 # extra flight path a neutron may have, as a fraction of each disk's path: the guides are not a
-# straight line. FIXME, not in CSPEC nl-specs 1.E: Polygon_ESS_butterfly's "realistic figure"
+# straight line. FIXME, not in CSPEC_nl-specs_1.E.xlsx: Polygon_ESS_butterfly's "realistic figure"
 PATH_SPREAD_FRACTION = 1e-4
 
 
@@ -82,9 +82,8 @@ def _source(l_min: float, l_max: float) -> dict[str, Any]:
         "sector": "W",
         "beamline": 3,
         "yheight": 0.03,
-        # CSPEC is a cold instrument: every event comes from the cold moderator.
-        # FIXME, not in CSPEC nl-specs 1.E
-        "cold_frac": 1.0,
+        # FIXME, not in CSPEC_nl-specs_1.E.xlsx
+        "cold_frac": 0.9,
         # the focusing rectangle is in the plane of the entrance of the guide system: seen from
         # every point of the moderator it then covers the whole opening, so the flux into the
         # guide is right

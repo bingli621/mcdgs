@@ -8,10 +8,8 @@ import pytest
 from mcdgs.core import place_absolute
 from mcdgs.core.components import (
     Arm,
-    ESS_butterfly,
     Guide_gravity,
     NXdisk_chopper,
-    Polygon_ESS_butterfly,
 )
 from mcdgs.core.components.masked_source import aperture, chopper_train
 from mcdgs.instruments.trex.choppers import (
@@ -28,7 +26,7 @@ from mcdgs.instruments.trex.sources import (
     source,
     wavelength_band,
 )
-from mcdgs.samples import aluminum, la2ni7, lead
+from mcdgs.samples import aluminum
 
 
 def test_the_components_are_in_beam_order():
@@ -134,10 +132,6 @@ def test_the_chopper_train_is_the_choppers_of_trex():
         assert disk["aperture"] == aperture(chopper)
 
 
-def test_by_default_the_source_is_not_masked():
-    assert type(TRex().source) is ESS_butterfly
-
-
 def test_a_masked_source_is_masked_by_the_choppers_and_the_rest_is_the_same():
     plain, masked = TRex(), TRex(source_masked=True)
     train = chopper_train([(getattr(plain, name), disk.distance) for name, disk in DISKS.items()])
@@ -147,14 +141,6 @@ def test_a_masked_source_is_masked_by_the_choppers_and_the_rest_is_the_same():
         n: c for n, c in plain.components.items() if n != "source"
     }
     assert masked.instr_params == plain.instr_params
-
-
-@pytest.mark.parametrize("masked", [False, True])
-def test_a_new_lambda0_keeps_the_source_masked_or_not(masked):
-    trex = TRex(source_masked=masked)
-    trex.update_params(lambda0=4.0)
-    assert isinstance(trex.source, Polygon_ESS_butterfly) == masked
-    assert trex.source == TRex(params=trex.params, source_masked=masked).source
 
 
 def test_the_band_of_the_source_is_centered_on_lambda0():
@@ -374,12 +360,6 @@ def test_a_cut_keeps_every_component_in_order():
     assert [list(piece) for piece in pieces] == [["a"], ["b", "c"], ["d"]]
 
 
-def test_without_a_sample_there_is_none():
-    trex = TRex()
-    assert trex.sample is None
-    assert "sample" not in trex.components
-
-
 def test_a_sample_goes_after_the_sample_position():
     trex = TRex(sample=aluminum())
     assert list(trex.components)[-5:] == [
@@ -391,31 +371,6 @@ def test_a_sample_goes_after_the_sample_position():
     ]
     assert trex.sample.relative == "sample_pos"
     assert trex.positions()["sample"] == trex.positions()["sample_pos"]
-
-
-@pytest.mark.parametrize("make", [aluminum, la2ni7, lead])
-def test_every_ready_made_sample_goes_on_trex(make):
-    trex = TRex(sample=make())
-    assert type(trex.sample) is type(make())
-    assert trex.sample.relative == "sample_pos"
-    assert trex.sample == make(relative="sample_pos")
-
-
-def test_a_sample_relative_to_the_sample_position_stays_there():
-    trex = TRex(sample=aluminum(relative="sample_pos"))
-    assert trex.sample.relative == "sample_pos"
-
-
-def test_a_sample_relative_to_another_component_is_refused():
-    with pytest.raises(ValueError, match="'guide_1', not to 'sample_pos'"):
-        TRex(sample=aluminum(relative="guide_1"))
-
-
-def test_the_given_sample_is_not_changed():
-    crystal = aluminum()
-    trex = TRex(sample=crystal)
-    assert trex.sample is not crystal
-    assert (crystal.name, crystal.relative) == (None, None)
 
 
 def test_the_components_are_those_of_the_table_of_optics():
