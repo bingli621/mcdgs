@@ -128,6 +128,6 @@ def test_the_band_of_the_source_is_centered_on_lambda0():
     assert l_max - l_min == pytest.approx(1.853, abs=1e-3)
 
 
-def test_the_second_disk_of_each_pair_is_6_mm_behind_the_first():
-    assert DISKS["ps2"].distance - DISKS["ps1"].distance == pytest.approx(0.006)
-    assert DISKS["mc2"].distance - DISKS["mc1"].distance == pytest.approx(0.006)
+def test_the_second_disk_of_each_pair_is_10_mm_behind_the_first():
+    assert DISKS["ps2"].distance - DISKS["ps1"].distance == pytest.approx(0.010)
+    assert DISKS["mc2"].distance - DISKS["mc1"].distance == pytest.approx(0.010)

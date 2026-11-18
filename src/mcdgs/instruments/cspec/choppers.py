@@ -1,13 +1,18 @@
-"""The choppers of CSPEC.
+"""The choppers of CSPEC and their timing.
 
 :func:`chopper` creates one disk by name. The disks take their frequency ``nu`` and their delay
-from the instrument parameters ``nu_<name>`` and ``delay_<name>``.
+from the instrument parameters ``nu_<name>`` and ``delay_<name>``, which :func:`chopper_timings`
+computes from the central wavelength and the frequencies of the monochromatic and the RRM
+choppers.
 
-The specifications give where the first disk of each chopper turns: its distance from the start
-of its gap, "gap before" in the Definitions sheet. The second disks of the pulse-shaping and the
-monochromatic choppers, which make counter-rotating pairs with the first, are not in the sheet.
-Nor are the disks themselves: each has one slit, centered on its zero mark, with the beam at the
-top of the disk.
+The specifications give where the first disk of the pulse-shaping and of the monochromatic
+choppers turns, and where each bandwidth chopper turns: the distance from the start of its gap,
+"gap before" in the Definitions sheet. The second disk of each counter-rotating pair, the RRM
+chopper and the disks themselves are not in the sheet.
+
+Each disk's slits are centered on angles from its zero mark. A disk whose axle is above the beam
+has it at ``beam_angle`` 180, one whose axle is below at 0. :meth:`CSPECDisk.phase` is the
+angle the disk turns past its zero mark to put the center of its first slit on the beam.
 
 Each disk has a beam window as wide as the exit of the guide in front of it, on the source
 side, which the instrument gives :func:`chopper`.
@@ -15,9 +20,12 @@ side, which the instrument gives :func:`chopper`.
 The flight path to a disk is the trajectory from the moderator to the start of its gap, from
 the sheet, plus the disk's place in the gap.
 
-:data:`DISKS` describes the design of each disk as a :class:`.Disk`, with its flight path.
+:data:`DISKS` describes the design of each disk as a :class:`CSPECDisk`, with its flight path.
 """
 
+from dataclasses import dataclass
+
+from mcdgs.core import speed_from_wavelength
 from mcdgs.core.components import Guide_gravity, NXdisk_chopper
 from mcdgs.core.components.choppers import Disk
 
@@ -32,85 +40,176 @@ PSC_GAP_BEFORE = 12.71  # mm, cell E28 of Definitions
 MC_GAP_BEFORE = 48.22  # mm, cell E32 of Definitions
 
 # from the first disk of a pair to the second
-PSC_DISK_SPACING = 6  # FIXME, not in CSPEC nl-specs 1.E, in mm
-MC_DISK_SPACING = 6  # FIXME, not in CSPEC nl-specs 1.E, in mm
+PSC_DISK_SPACING = 10  # FIXME, not in CSPEC nl-specs 1.E, in mm
+MC_DISK_SPACING = 10  # FIXME, not in CSPEC nl-specs 1.E, in mm
+# the RRM chopper turns in the gap of the monochromatic choppers, halfway from its start to mc1.
+# Not at the start itself: the sheet has it 27 nm before the exit of W03-09-01, so a disk there
+# would be behind the neutrons leaving the guide
+RRM_GAP_BEFORE = MC_GAP_BEFORE / 2  # FIXME, not in CSPEC nl-specs 1.E, in mm
 
 DISK_RADIUS = 0.35  # FIXME, not in CSPEC nl-specs 1.E, in m
+SLIT_HEIGHT = 0.1  # FIXME, not in CSPEC nl-specs 1.E, in m
+
+# the frequency of the pulse-shaping choppers over that of the monochromatic ones, see
+# chopper_timings. FIXME, not in CSPEC nl-specs 1.E
+PSC_FREQUENCY_RATIO = 0.5
 
 
-# the seven disks, in beam order
-DISKS: dict[str, Disk] = {
-    "bw1": Disk(
+@dataclass(frozen=True, kw_only=True)
+class CSPECDisk(Disk):
+    """The design of one chopper disk of CSPEC: a :class:`.Disk` phased on its first slit."""
+
+    def phase(self) -> float:
+        """Compute the angle the disk turns past its zero mark to put its first slit on the beam.
+
+        Returns
+        -------
+        :
+            Angle from the center of the first slit to ``beam_angle``, in [0, 360) deg.
+
+        Examples
+        --------
+        >>> DISKS["bw1"].phase(), DISKS["mc2"].phase()
+        (180.0, 0.0)
+        """
+        center, _ = self.slits[0]
+        return float((self.beam_angle - center) % 360)
+
+
+# the eight disks, in beam order
+DISKS: dict[str, CSPECDisk] = {
+    "bw1": CSPECDisk(
         slits=((0, 40.7),),  # FIXME, not in CSPEC nl-specs 1.E
         radius=DISK_RADIUS,
-        beam_angle=0,
+        beam_angle=180,  # FIXME, not in CSPEC nl-specs 1.E
         zero_angle=0,
-        slit_height=0.055,  # FIXME, not in CSPEC nl-specs 1.E
+        slit_height=SLIT_HEIGHT,
         gap_arm="arm_bwc1",
         gap_z=ARM_BWC1_PATH,
         z=BWC1_GAP_BEFORE / MM_PER_M,  # distance 14.93342
     ),
-    "bw2": Disk(
-        slits=((0, 41.9),),  # FIXME, not in CSPEC nl-specs 1.E
+    "bw2": CSPECDisk(
+        slits=((0, 41.7),),  # FIXME, not in CSPEC nl-specs 1.E
         radius=DISK_RADIUS,
-        beam_angle=0,
+        beam_angle=180,  # FIXME, not in CSPEC nl-specs 1.E
         zero_angle=0,
-        slit_height=0.055,  # FIXME, not in CSPEC nl-specs 1.E
+        slit_height=SLIT_HEIGHT,
         gap_arm="arm_bwc2",
         gap_z=ARM_BWC2_PATH,
         z=BWC2_GAP_BEFORE / MM_PER_M,  # distance 20.45545
     ),
-    "bw3": Disk(
+    "bw3": CSPECDisk(
         slits=((0, 193),),  # FIXME, not in CSPEC nl-specs 1.E
         radius=DISK_RADIUS,
-        beam_angle=0,
+        beam_angle=180,  # FIXME, not in CSPEC nl-specs 1.E
         zero_angle=0,
-        slit_height=0.0739,  # FIXME, not in CSPEC nl-specs 1.E
+        slit_height=SLIT_HEIGHT,
         gap_arm="arm_bwc3",
         gap_z=ARM_BWC3_PATH,
         z=BWC3_GAP_BEFORE / MM_PER_M,  # distance 104.61213
     ),
-    "ps1": Disk(
-        slits=((0, 24.23),),  # FIXME, not in CSPEC nl-specs 1.E
+    "ps1": CSPECDisk(
+        slits=((0, 24.23), (120, 24.23), (240, 24.23)),  # FIXME, not in CSPEC nl-specs 1.E
         radius=DISK_RADIUS,
-        beam_angle=0,
+        beam_angle=180,  # FIXME, not in CSPEC nl-specs 1.E
         zero_angle=0,
-        slit_height=0.07389,  # FIXME, not in CSPEC nl-specs 1.E
+        slit_height=SLIT_HEIGHT,
         gap_arm="arm_psc",
         gap_z=ARM_PSC_PATH,
         z=PSC_GAP_BEFORE / MM_PER_M,  # distance 105.66872
     ),
-    "ps2": Disk(
-        slits=((0, 24.23),),  # FIXME, not in CSPEC nl-specs 1.E
+    "ps2": CSPECDisk(
+        slits=((0, 24.23), (120, 24.23), (240, 24.23)),  # FIXME, not in CSPEC nl-specs 1.E
         radius=DISK_RADIUS,
-        beam_angle=0,
+        beam_angle=0,  # FIXME, not in CSPEC nl-specs 1.E
         zero_angle=0,
-        slit_height=0.07389,  # FIXME, not in CSPEC nl-specs 1.E
+        slit_height=SLIT_HEIGHT,
         gap_arm="arm_psc",
         gap_z=ARM_PSC_PATH,
-        z=(PSC_GAP_BEFORE + PSC_DISK_SPACING) / MM_PER_M,  # distance 105.67472
+        z=(PSC_GAP_BEFORE + PSC_DISK_SPACING) / MM_PER_M,  # distance 105.67872
     ),
-    "mc1": Disk(
+    "rrm": CSPECDisk(
         slits=((0, 4.45),),  # FIXME, not in CSPEC nl-specs 1.E
         radius=DISK_RADIUS,
-        beam_angle=0,
+        beam_angle=0,  # FIXME, not in CSPEC nl-specs 1.E
         zero_angle=0,
-        slit_height=0.049,  # FIXME, not in CSPEC nl-specs 1.E
+        slit_height=SLIT_HEIGHT,
+        gap_arm="arm_mc",
+        gap_z=ARM_MC_PATH,
+        z=RRM_GAP_BEFORE / MM_PER_M,  # distance 158.47993
+    ),
+    "mc1": CSPECDisk(
+        slits=((0, 4.45),),  # FIXME, not in CSPEC nl-specs 1.E
+        radius=DISK_RADIUS,
+        beam_angle=180,  # FIXME, not in CSPEC nl-specs 1.E
+        zero_angle=0,
+        slit_height=SLIT_HEIGHT,
         gap_arm="arm_mc",
         gap_z=ARM_MC_PATH,
         z=MC_GAP_BEFORE / MM_PER_M,  # distance 158.50404
     ),
-    "mc2": Disk(
+    "mc2": CSPECDisk(
         slits=((0, 4.45),),  # FIXME, not in CSPEC nl-specs 1.E
         radius=DISK_RADIUS,
-        beam_angle=0,
+        beam_angle=0,  # FIXME, not in CSPEC nl-specs 1.E
         zero_angle=0,
-        slit_height=0.049,  # FIXME, not in CSPEC nl-specs 1.E
+        slit_height=SLIT_HEIGHT,
         gap_arm="arm_mc",
         gap_z=ARM_MC_PATH,
-        z=(MC_GAP_BEFORE + MC_DISK_SPACING) / MM_PER_M,  # distance 158.51004
+        z=(MC_GAP_BEFORE + MC_DISK_SPACING) / MM_PER_M,  # distance 158.51404
     ),
 }
+
+
+def chopper_timings(
+    lambda0: float, nu_mc: float, n: int, source_frequency: float, t0_offset: float
+) -> dict[str, tuple[float, float]]:
+    """Compute the timing of every chopper.
+
+    The bandwidth choppers turn at the source frequency, the monochromatic choppers at ``nu_mc``,
+    the pulse-shaping choppers at ``PSC_FREQUENCY_RATIO`` of it and the RRM chopper at
+    ``nu_mc / n``. Both pairs are counter-rotating: ``ps2`` and ``mc2`` turn the other way. Each
+    disk has its first slit centered on the beam when a neutron of wavelength ``lambda0``,
+    leaving at ``t0_offset``, reaches it.
+
+    Parameters
+    ----------
+    lambda0:
+        Central wavelength, in Å.
+    nu_mc:
+        Frequency of the monochromatic choppers, in Hz.
+    n:
+        The RRM chopper turns at ``nu_mc / n``.
+    source_frequency:
+        Pulse frequency of the source, in Hz.
+    t0_offset:
+        Time from the start of the pulse at which the neutrons the choppers are phased to leave
+        the moderator, in s.
+
+    Returns
+    -------
+    :
+        Signed rotation frequency in Hz, and time at which the disk's zero mark is on the beam
+        in s, by chopper name, in beam order.
+    """
+    nu_psc = PSC_FREQUENCY_RATIO * nu_mc
+    nu = {
+        "bw1": source_frequency,
+        "bw2": source_frequency,
+        "bw3": source_frequency,
+        "ps1": nu_psc,
+        "ps2": -nu_psc,
+        "rrm": nu_mc / n,
+        "mc1": nu_mc,
+        "mc2": -nu_mc,
+    }
+    speed = speed_from_wavelength(lambda0)
+    timings = {}
+    for name, disk in DISKS.items():
+        arrival = t0_offset + disk.distance / speed
+        # the zero mark passes the beam earlier, for the disk to have turned to the slit
+        timings[name] = (nu[name], arrival - disk.phase() / (360 * nu[name]))
+    return timings
 
 
 def chopper(name: str, upstream_guide: Guide_gravity | None) -> tuple[NXdisk_chopper, float]:

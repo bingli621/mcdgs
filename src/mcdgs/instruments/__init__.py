@@ -6,6 +6,7 @@ package adds every instrument to ``INSTRUMENTS``; io/ imports it, so a file can 
 To add an instrument, add a package here like trex/, and import and export its class below.
 """
 
+from .cspec.model import CSPEC
 from .trex.model import TRex
 
-__all__ = ["TRex"]
+__all__ = ["CSPEC", "TRex"]
