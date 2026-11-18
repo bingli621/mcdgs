@@ -1,4 +1,4 @@
-"""The whole of T-Rex as McStas sees it: its printout, its instrument file and two views of it.
+"""The whole of T-Rex as McStas sees it: its printout, its instrument file and its views.
 
 :func:`main` writes ``print(trex)``, the McStas instrument file of :class:`.TRex` at the default
 control parameters and McStasScript's diagram of how its components are placed, and draws it
@@ -9,13 +9,16 @@ with McStasScript's ``show_instrument``, which runs mcdisplay. Each is a functio
 - ``TRex.instr``: the instrument file, copied from the build folder of T-Rex;
 - ``trex_diagram_legend.png`` and ``trex_diagram.png``: McStasScript's ``show_diagram()``, its
   legend and which component each one is placed and rotated relative to;
-- ``overview_top.png``: the instrument seen from above, z along the beam and x across it,
-  with x stretched;
+- ``overview_top_equal.png``: the instrument seen from above, from the source to the banana detector, z
+  along the beam and x across it, with the same scale on both axes;
+- ``overview_top.png``: likewise, z along the beam and x across it,
+  with x stretched, so that the tilted guide segments look like parallelograms;
 - ``overview_along_beam.png``: seen from the detector to the source, x across the beam and y up,
   with the components from after the source up to before the banana detector, which would
   hide the rest.
 
-The view along the beam has the same scale on its two axes. Run the module for them::
+The first view from above and the view along the beam have the same scale on their two axes.
+Run the module for them::
 
     pixi run python -m mcdgs.diagnostics.trex.overview
 """
@@ -45,7 +48,7 @@ def define_instrument() -> TRex:
 
 
 def main(out: Path | None = None) -> list[Path]:
-    """Write the printout and the instrument file of T-Rex, and draw its diagram and both views.
+    """Write the printout and the instrument file of T-Rex, and draw its diagram and its views.
 
     Parameters
     ----------
@@ -57,7 +60,7 @@ def main(out: Path | None = None) -> list[Path]:
     -------
     :
         The paths of the printout, of the instrument file, of the legend and the diagram, and of
-        the two views.
+        the three views.
     """
     trex = define_instrument()
     mcstas_instr = build_mcstas(trex)  # in the build folder of T-Rex in the workspace
@@ -71,9 +74,22 @@ def main(out: Path | None = None) -> list[Path]:
         *draw_diagram(
             mcstas_instr, folder / "trex_diagram_legend.png", folder / "trex_diagram.png"
         ),
+        # from above, from the source to the banana detector, at the same scale on both axes: the guide
+        # segments keep their shape, but the guide is a thin line; 10 m before the source and from
+        # -10 to 8 m across, for the whole of the drawing of the source
+        draw_instrument(
+            mcstas_instr,
+            folder / "overview_top_equal.png",
+            dpi=800,  # 12800 px wide: the guide is a thin line, to zoom in on
+            projection="zx",
+            limits=[-10.0, 170.0, -10.0, 8.0],  # along, then across
+            width=1600,
+            height=250,
+        ),
         # from above: z along the beam, x across it, 16 x 4 in; 6400 px wide, to zoom in on in
         # the documentation. x stretched, or the 0.83 m the curve takes the beam across would
-        # not show
+        # not show; a stretch of x alone turns the tilted rectangles of the guide segments into
+        # parallelograms
         draw_instrument(
             mcstas_instr,
             folder / "overview_top.png",

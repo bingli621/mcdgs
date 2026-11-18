@@ -1,12 +1,28 @@
 # T-Rex
 
 The T-Rex model at the default [control parameters](details.md#control-parameters), as McStas
-draws it: from above and along the beam, in m. The view along the beam has the same scale on its
-two axes; the view from above is stretched across the beam. [Technical details](details.md) lists every component, with its position, and describes each part.
+draws it: from above and along the beam, in m. The first view from above and the view along the
+beam have the same scale on their two axes; the second view from above is stretched across
+the beam. [Technical details](details.md) lists every component, with its position, and describes each part.
 
 ## Seen from above
 
+![T-Rex seen from above, from the source to the detector, at the same scale on both axes](figures/overview/overview_top_equal.png)
+
+First, the whole instrument from the source to the banana detector, at the same scale on both axes: x
+from −10 to 8 m over 180 m in z. This is its true shape. The guide is a few cm wide, so it is a thin
+line, and its curve is barely visible. Each guide segment is a rectangle with its ends square to
+the beam, turned a little from the one before it to follow the curve. The next view stretches x
+so that the curve and the width of the guide show.
+
 ![T-Rex seen from above, z along the beam and x across it](figures/overview/overview_top.png)
+
+!!! note "The guide segments are rectangles, not parallelograms"
+    x is stretched about 43 times more than z in this view. A stretch along one axis does not
+    keep angles: the slanted long sides of a turned segment slant about 43 times more, while
+    its ends, almost parallel to x, stay almost vertical. So each rectangle is drawn as a
+    parallelogram, and the more the segment is turned, the more it leans. The view above
+    shows the true shape.
 
 z is along the beam and x across it (projection `zx`). x is stretched: the view runs from −0.1 to
 0.9 m in x over 175 m in z, so that the curve shows. The gray lines at the origin are the drawing

@@ -1,14 +1,31 @@
 # CSPEC
 
 The CSPEC model at the default [control parameters](details.md#control-parameters), as McStas
-draws it: from above, from the side and along the beam, in m. The view along the beam has the same
-scale on its two axes; the views from above and from the side are stretched across the beam.
+draws it: from above, from the side and along the beam, in m. The first view from above and the
+view along the beam have the same scale on their two axes; the second view from above and the
+view from the side are stretched across the beam.
 [Technical details](details.md) lists every
 component, with its position, and describes each part.
 
 ## Seen from above
 
+![CSPEC seen from above, from the source to the sample, at the same scale on both axes](figures/overview/overview_top_equal.png)
+
+First, the whole instrument from the source to the sample, at the same scale on both axes: x
+from −10 to 8 m over 175 m in z. This is its true shape. The guide is a few cm wide, so it is a thin
+line, and its curve is barely visible. Each guide segment is a rectangle with its ends square to
+the beam, turned a little from the one before it to follow the curve. The next view stretches x
+so that the curve and the width of the guide show.
+
 ![CSPEC seen from above, z along the beam and x across it](figures/overview/overview_top.png)
+
+!!! note "The guide segments are rectangles, not parallelograms"
+    x is stretched about 65 times more than z in this view. A stretch along one axis does not
+    keep angles: the slanted long sides of a turned segment slant about 65 times more, while
+    its ends, almost parallel to x, stay almost vertical. So each rectangle is drawn as a
+    parallelogram, and the more the segment is turned, the more it leans. The view above
+    shows the true shape. Where the guide widens or narrows, the segments are tapered: that
+    change of width is real, only exaggerated.
 
 z is along the beam and x across it (projection `zx`). x is stretched: the view runs from −0.2 to
 0.45 m in x over 170 m in z, so that the curve shows. The gray lines at the origin are the drawing
@@ -27,6 +44,11 @@ the instrument as of that run.
 ## Seen from the side
 
 ![CSPEC seen from the side, z along the beam and y up](figures/overview/overview_side.png)
+
+!!! note "The guide segments of the S-bender are not parallelograms"
+    y is stretched about 53 times more than z in this view, so the guide segments of the
+    S-bender, turned to follow its vertical curve, look like parallelograms too, for the same
+    reason as in the view from above.
 
 z is along the beam and y up (projection `zy`). y is stretched: the view runs from −0.6 to 0.2 m in y over 170 m in z. The guide drops 0.422 m in the vertical
 S-bender, from the entrance of the guide system at 1.9 m to 54.4 m, and is level after it.
