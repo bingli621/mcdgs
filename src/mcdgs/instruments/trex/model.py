@@ -51,9 +51,10 @@ class Params:
     lambda0:
         Central wavelength, in Å. ``None`` is the white beam: the source simulates the whole
         of ``L_MIN`` to ``L_MAX``. The choppers then have no wavelength to be phased to, so
-        only an instrument that parks them can run.
+        ``rrm`` must be 0, which parks them.
     rrm:
-        Repetition rate multiplication factor.
+        Repetition rate multiplication factor. 0 parks every chopper, the bandwidth choppers
+        too, with the slit of ``mode`` on the beam.
     mode:
         ``"FF"`` puts the wide slits of the pulse-shaping and monochromatic choppers on the beam,
         for high flux; ``"RR"`` the narrow ones, for high resolution.
@@ -216,20 +217,26 @@ class TRex(Instrument):
     def running_conditions(self) -> str:
         """Describe the settings of T-Rex in one line, such as the title of a figure.
 
-        The name, the mode, ``lambda0`` and ``rrm``, then the signed frequencies of the
-        pulse-shaping (PS) and monochromatic (MC) choppers, in beam order.
+        The name, the mode, ``lambda0`` or the white beam, then ``rrm`` and the signed
+        frequencies of the pulse-shaping (PS) and monochromatic (MC) choppers, in beam order,
+        or that the choppers are parked, with ``rrm`` 0.
 
         Returns
         -------
         :
-            Such as ``"TRex · FF · λ0 = 2 Å · RRM = 18 · PS 189/-189 Hz · MC 252/252 Hz"``.
+            Such as ``"TRex · FF · λ0 = 2 Å · RRM = 18 · PS 189/-189 Hz · MC 252/252 Hz"``, or
+            ``"TRex · RR · white beam · choppers parked"``.
         """
+        lambda0 = self.params.lambda0
         parts = [
             self.name,
             self.params.mode,
-            f"λ0 = {self.params.lambda0:g} Å",
-            f"RRM = {self.params.rrm}",
+            "white beam" if lambda0 is None else f"λ0 = {lambda0:g} Å",
         ]
+        if self.params.rrm == 0:
+            parts.append("choppers parked")
+            return " · ".join(parts)
+        parts.append(f"RRM = {self.params.rrm}")
         for group in ("ps", "mc"):
             frequencies = "/".join(f"{nu:g}" for nu in self.chopper_frequencies(group).values())
             parts.append(f"{group.upper()} {frequencies} Hz")
@@ -266,10 +273,9 @@ class TRex(Instrument):
         Raises
         ------
         ValueError
-            If ``lambda0`` is ``None``: the choppers have no wavelength to be phased to.
+            If ``lambda0`` is ``None`` while ``rrm`` is not 0: turning choppers have no
+            wavelength to be phased to.
         """
-        if self.params.lambda0 is None:
-            raise ValueError("lambda0 is None: the choppers have no wavelength to be phased to")
         timings = chopper_timings(
             self.params.lambda0,
             self.params.rrm,

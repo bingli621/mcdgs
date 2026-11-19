@@ -375,6 +375,22 @@ def test_rrm_0_parks_each_chopper_of_the_instrument_on_the_slit_of_the_mode(mode
         assert instr_param_dict[f"park_{name}"] == disk.phase_from_mode(mode)
 
 
+def test_the_white_beam_parks_every_chopper_with_rrm_0():
+    params = Params(lambda0=None, rrm=0)
+    trex = TRex(params=params)
+    instr_param_dict = {p.name: p.value for p in trex.instr_params}
+    for name, disk in DISKS.items():
+        assert (instr_param_dict[f"nu_{name}"], instr_param_dict[f"delay_{name}"]) == (0, 0)
+        assert instr_param_dict[f"park_{name}"] == disk.phase_from_mode("FF")
+
+
+def test_the_white_beam_with_turning_choppers_raises():
+    params = Params(lambda0=None)
+    trex = TRex(params=params)
+    with pytest.raises(ValueError, match="lambda0 is None"):
+        _ = trex.instr_params
+
+
 def test_the_t0_offset_delays_every_chopper_by_as_much():
     trex = TRex()
     before = {p.name: p.value for p in trex.instr_params}
@@ -755,3 +771,11 @@ def test_running_conditions_give_the_settings_and_the_chopper_frequencies():
     assert trex.running_conditions() == (
         "TRex · RR · λ0 = 4 Å · RRM = 12 · PS 126/-126 Hz · MC 168/168 Hz"
     )
+
+
+def test_running_conditions_say_the_choppers_are_parked_with_rrm_0():
+    params = Params(lambda0=None, rrm=0)
+    trex = TRex(params=params)
+    assert trex.running_conditions() == "TRex · FF · white beam · choppers parked"
+    trex.update_params(lambda0=2.0)
+    assert trex.running_conditions() == "TRex · FF · λ0 = 2 Å · choppers parked"

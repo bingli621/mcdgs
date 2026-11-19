@@ -19,14 +19,14 @@ and [Choppers](choppers.md) show what the model gives so far.
 | --------- | ------- | ------- |
 | `bender_in` | `False` | `True` uses the bender and the cold guide 4b, `False` the thermal guide 4a. |
 | `b_rot` | −0.398 deg | Rotation of the bender about +y. |
-| `lambda0` | 2.0 Å | Central wavelength. |
-| `rrm` | 18 | Repetition rate multiplication factor. |
+| `lambda0` | 2.0 Å | Central wavelength. `None` is the white beam, 0.1 to 10 Å, with `rrm` 0 only: turning choppers need a wavelength to be phased to. |
+| `rrm` | 18 | Repetition rate multiplication factor. 0 parks every chopper on the slit of the mode, the bandwidth choppers too (see [Chopper timing](#chopper-timing)). |
 | `mode` | `"FF"` | `"FF"` puts the wide slits of the pulse-shaping and monochromatic choppers on the beam, for high flux; `"RR"` the narrow ones, for high resolution. |
 | `t0_offset` | 1.7 ms | Time from the start of the pulse at which the neutrons the choppers are phased to leave the moderator. |
 | `omega` | 0.0 deg | Goniometer rotation about +y. |
 
 `bender_in`, `b_rot` and `omega` reach McStas as they are. `lambda0`, `rrm`, `mode` and
-`t0_offset` reach it through the frequency and delay of each chopper.
+`t0_offset` reach it through the frequency, delay and park angle of each chopper.
 
 ## Instrument layout
 
