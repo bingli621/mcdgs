@@ -33,12 +33,7 @@ from mcdgs.core.components import (
     Pol_bender,
     Progress_bar,
 )
-from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
-from mcdgs.diagnostics.compare import (
-    mcstas_vs_tof,
-    plot_comparison,
-    tof_scale,
-)
+from mcdgs.diagnostics import cli, compare
 from mcdgs.diagnostics.drawing import draw_instrument, draw_intensity_diagram
 from mcdgs.instruments.trex.guides.bispectral import (
     BENDER_ROTATION,
@@ -215,7 +210,7 @@ def diagnose_mcstas(
     diag.run()
     run.finish()  # the record of the run, in its folder
     diag.plot()  # draws on a new figure, which it does not return
-    figures = [save_figure(plt.gcf(), figure_folder / f"{run_name}_diagnose.png", dpi=100)]
+    figures = [cli.save_figure(plt.gcf(), figure_folder / f"{run_name}_diagnose.png", dpi=100)]
 
     # McStasScript's diagram of the components, with the intensity and the rays before each:
     # a McStas run of its own, in a folder of its own, which also holds the monitors
@@ -271,7 +266,7 @@ def main(
         The paths of the view from above, then of the diagnostics, the diagram and the
         comparison of the path with the bender out, then of those with it in.
     """
-    figure_folder = output_folder(out, Extraction.name)
+    figure_folder = cli.output_folder(out, Extraction.name)
     # from above: z along the beam, x across it, 16 x 4 in, within TOP_VIEW_LIMITS; mcdisplay
     # draws every component, whatever its WHEN
     top = draw_instrument(
@@ -307,7 +302,7 @@ def main(
         mcstas_data = ms.load_data(run.folder)
         mcstas_source = read_mcstas_map("source_monitor", mcstas_data, source_bins)
 
-        scale = tof_scale(mcstas_source, tof_source)
+        scale = compare.tof_scale(mcstas_source, tof_source)
 
         # at the beam monitor: tof with that scale, and the transmission of the guides on top
         beam_bins = monitor_bins(instrument.beam_monitor.bin_limits)
@@ -315,7 +310,7 @@ def main(
         tof_beam = read_tof_map("beam_monitor", tof_result, beam_bins)
         mcstas_beam = read_mcstas_map("beam_monitor", mcstas_data, beam_bins)
 
-        comparison = mcstas_vs_tof(
+        comparison = compare.mcstas_vs_tof(
             "beam_monitor", mcstas_beam, tof_beam, ncount, neutrons, scale, transmission
         )
         # --8<-- [end:scale_tof]
@@ -326,11 +321,13 @@ def main(
             f"{mcstas_total / mcstas_source.sum().value:.4g} of that at the source, "
             f"{scale:.4g} n/s per tof neutron"
         )
-        fig = plot_comparison(comparison, f"T-Rex flux at the beam monitor after guide 4, {path}")
-        figures += [*mcstas_figures, save_figure(fig, figure_folder / f"{run_name}.png")]
+        fig = compare.plot_comparison(
+            comparison, f"T-Rex flux at the beam monitor after guide 4, {path}"
+        )
+        figures += [*mcstas_figures, cli.save_figure(fig, figure_folder / f"{run_name}.png")]
     # --8<-- [end:paths]
     return figures
 
 
 if __name__ == "__main__":
-    main(out=parse_out(__doc__))
+    main(out=cli.parse_out(__doc__))

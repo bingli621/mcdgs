@@ -36,8 +36,7 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from numpy.typing import NDArray
 
-from mcdgs.diagnostics.cli import markdown_table, output_folder, parse_out, save_figure, save_text
-from mcdgs.diagnostics.compare import plot_profile
+from mcdgs.diagnostics import cli, compare
 from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
 from mcdgs.instruments.trex.monitors import sample_monitor
 from mcdgs.instruments.trex.sources import wavelength_band
@@ -253,7 +252,7 @@ def summary_table(plain: SourceRun, masked: SourceRun, ncount: float) -> str:
             f"{masked.figure_of_merit / plain.figure_of_merit:.3g}",
         )
     )
-    return markdown_table(header, rows)
+    return cli.markdown_table(header, rows)
 
 
 def _times(profile: sc.DataArray) -> NDArray:
@@ -335,8 +334,8 @@ def plot_sources(runs: tuple[SourceRun, SourceRun], title: str, log_y: bool = Fa
     fig.suptitle(title)
     for run in runs:
         label = f"{run.component}, error {run.relative_error:.2%}"
-        plot_profile(spectrum_ax, run.spectrum, label, connect=True)
-        plot_profile(profile_ax, run.time_profile, label, connect=True)
+        compare.plot_profile(spectrum_ax, run.spectrum, label, connect=True)
+        compare.plot_profile(profile_ax, run.time_profile, label, connect=True)
     for ax, highest in (
         (spectrum_ax, max(run.spectrum.values.max() for run in runs)),
         (profile_ax, max(run.time_profile.values.max() for run in runs)),
@@ -387,7 +386,7 @@ def plot_peaks(
         inside = np.flatnonzero(np.abs(times - peak) <= half_width)  # the bins around the peak
         for run in runs:
             around = run.time_profile["toa", inside[0] : inside[-1] + 1]
-            plot_profile(ax, around, run.component, connect=True)
+            compare.plot_profile(ax, around, run.component, connect=True)
         ax.set(title=f"{peak:.2f} ms", xlim=(peak - half_width, peak + half_width))
         ax.tick_params(labelsize=7)
         ax.set_ylim(bottom=0)
@@ -442,12 +441,12 @@ def main(
 
     table = summary_table(plain, masked, ncount)
     print(table, end="")
-    folder = output_folder(out, "trex_masked_source")
+    folder = cli.output_folder(out, "trex_masked_source")
 
     peaks = find_peaks(masked)
     conditions = f"ncount = {int(ncount):,} each\n{plain_instrument.running_conditions()}"
     files = [
-        save_figure(
+        cli.save_figure(
             plot_sources(
                 (plain, masked),
                 f"T-Rex flux at the sample monitor, {conditions}",
@@ -462,10 +461,10 @@ def main(
         f"The {len(peaks)} sub-pulses at the sample monitor, {conditions}",
         peaks,
     )
-    files.append(save_figure(fig, folder / f"{name}_peaks.png"))
-    files.append(save_text(table, folder / f"{name}.txt"))
+    files.append(cli.save_figure(fig, folder / f"{name}_peaks.png"))
+    files.append(cli.save_text(table, folder / f"{name}.txt"))
     return files
 
 
 if __name__ == "__main__":
-    main(out=parse_out(__doc__))
+    main(out=cli.parse_out(__doc__))

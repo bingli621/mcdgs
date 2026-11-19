@@ -25,7 +25,7 @@ Run the module for them::
 
 from pathlib import Path
 
-from mcdgs.diagnostics.cli import output_folder, parse_out
+from mcdgs.diagnostics import cli
 from mcdgs.diagnostics.drawing import (
     component_range,
     draw_diagram,
@@ -64,7 +64,7 @@ def main(out: Path | None = None) -> list[Path]:
     """
     trex = define_instrument()
     mcstas_instr = build_mcstas(trex)  # in the build folder of T-Rex in the workspace
-    folder = output_folder(out, "trex_overview")
+    folder = cli.output_folder(out, "trex_overview")
     # seen along the beam, the source and the banana detector are wide disks and arcs that
     # cover the guides and the choppers
     first, last = component_range(trex, after="source", before="banana_detector")
@@ -116,4 +116,4 @@ def main(out: Path | None = None) -> list[Path]:
 
 
 if __name__ == "__main__":
-    main(out=parse_out(__doc__))
+    main(out=cli.parse_out(__doc__))

@@ -55,7 +55,7 @@ from matplotlib.colors import LogNorm
 from matplotlib.figure import Figure
 from mcstasscript.data.data import McStasData
 
-from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
+from mcdgs.diagnostics import cli
 from mcdgs.instruments.trex.detectors import (
     BANANA_HEIGHT,
     BANANA_RADIUS,
@@ -508,7 +508,7 @@ def analyze(
         f"T-Rex, La2Ni7: (Qx, Qz) of {pulses.sizes['subpulse']} sub-pulses\n"
         f"{define_instrument().running_conditions()}",
     )
-    return save_figure(fig, output_folder(out, NAME) / f"{NAME}.png")
+    return cli.save_figure(fig, cli.output_folder(out, NAME) / f"{NAME}.png")
 
 
 def main(out: Path | None = None, ncount: float = 1e9, seed: int = 1) -> Path:
@@ -531,4 +531,4 @@ def main(out: Path | None = None, ncount: float = 1e9, seed: int = 1) -> Path:
 
 
 if __name__ == "__main__":
-    analyze(out=parse_out(__doc__))  # McStas runs only with main, about two minutes
+    analyze(out=cli.parse_out(__doc__))  # McStas runs only with main, about two minutes

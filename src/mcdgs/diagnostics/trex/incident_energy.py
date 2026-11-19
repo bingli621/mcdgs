@@ -39,14 +39,7 @@ import scipp as sc
 from matplotlib.figure import Figure
 from scippneutron.conversion import tof as tof_kernels
 
-from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
-from mcdgs.diagnostics.compare import (
-    MonitorComparison,
-    intensity_label,
-    mcstas_vs_tof,
-    tof_scale,
-    tuned_transmission,
-)
+from mcdgs.diagnostics import cli, compare
 from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
 from mcdgs.mcstas import Simulation, read_mcstas_map
 from mcdgs.reduction.binning import monitor_bins
@@ -99,8 +92,8 @@ def define_instrument() -> TRexToBeamstopMonitor:
 
 
 def subpulse_flights(
-    pre_sample: MonitorComparison,
-    beamstop: MonitorComparison,
+    pre_sample: compare.MonitorComparison,
+    beamstop: compare.MonitorComparison,
     positions: dict[str, list[float]],
     time_on_source: sc.Variable,
     model: str,
@@ -213,7 +206,7 @@ def print_incident_energies(flights: dict[str, sc.DataArray]) -> None:
             )
 
 
-def plot_time_profiles(comparisons: list[MonitorComparison], title: str) -> Figure:
+def plot_time_profiles(comparisons: list[compare.MonitorComparison], title: str) -> Figure:
     """Draw the intensity of each monitor against time, summed over wavelength, in both models.
 
     Each monitor has its own color; McStas is a solid line, tof a dashed one.
@@ -239,7 +232,7 @@ def plot_time_profiles(comparisons: list[MonitorComparison], title: str) -> Figu
             times, c.second.values.sum(axis=1), color=color, lw=1.2, ls="--", label=f"{label}, tof"
         )
     # the monitors have time bins of the same width
-    ylabel = intensity_label(comparisons[0].first.sum("wavelength"))
+    ylabel = compare.intensity_label(comparisons[0].first.sum("wavelength"))
     ax.set(title=title, xlabel="Time [ms]", ylabel=ylabel)
     ax.set_ylim(bottom=0)
     ax.grid(True, alpha=0.4)
@@ -386,12 +379,12 @@ def main(
     }
     mcstas_maps = {name: read_mcstas_map(name, mcstas_data, edges) for name, edges in bins.items()}
     tof_maps = {name: read_tof_map(name, tof_result, edges) for name, edges in bins.items()}
-    scale = tof_scale(mcstas_maps["source_monitor"], tof_maps["source_monitor"])
+    scale = compare.tof_scale(mcstas_maps["source_monitor"], tof_maps["source_monitor"])
     if transmission is None:  # tuned at the pre-sample monitor, and kept at the beamstop monitor
         first = MONITORS[0]
-        transmission = tuned_transmission(mcstas_maps[first], tof_maps[first], scale)
+        transmission = compare.tuned_transmission(mcstas_maps[first], tof_maps[first], scale)
     comparisons = [
-        mcstas_vs_tof(
+        compare.mcstas_vs_tof(
             name, mcstas_maps[name], tof_maps[name], ncount, neutrons, scale, transmission
         )
         for name in MONITORS
@@ -416,12 +409,12 @@ def main(
     print_incident_energies(flights)
 
     conditions = instrument.running_conditions()
-    folder = output_folder(out, "trex_incident_energy")
+    folder = cli.output_folder(out, "trex_incident_energy")
     profiles = plot_time_profiles(comparisons, f"T-Rex direct beam\n{conditions}")
     energies = plot_incident_energies(flights, f"T-Rex incident energy per sub-pulse\n{conditions}")
     files = [
-        save_figure(profiles, folder / f"{name}.png"),
-        save_figure(energies, folder / f"{name}_values.png"),
+        cli.save_figure(profiles, folder / f"{name}.png"),
+        cli.save_figure(energies, folder / f"{name}_values.png"),
         save_graph(folder / f"{name}_graph"),
     ]
     print(f"Saved {files[-1]}")
@@ -429,4 +422,4 @@ def main(
 
 
 if __name__ == "__main__":
-    main(out=parse_out(__doc__))
+    main(out=cli.parse_out(__doc__))

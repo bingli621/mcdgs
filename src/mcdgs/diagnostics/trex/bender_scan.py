@@ -30,7 +30,7 @@ from mcdgs.core.components import (
     Pol_bender,
     Progress_bar,
 )
-from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
+from mcdgs.diagnostics import cli
 from mcdgs.instruments.trex.guides.bispectral import (
     BENDER_ROTATION,
     arm_guide_4,
@@ -352,8 +352,8 @@ def main(out: Path | None = None, ncount: float = 1e6, seed: int = 1) -> Path:
     """
     scan_file, bender_out_file = run_bender_scan(ncount=ncount, seed=seed)
     fig = plot_bender_scan(scan_file, bender_out_file)
-    return save_figure(fig, output_folder(out, "trex_bender_scan") / "bender_scan.png")
+    return cli.save_figure(fig, cli.output_folder(out, "trex_bender_scan") / "bender_scan.png")
 
 
 if __name__ == "__main__":
-    main(out=parse_out(__doc__))
+    main(out=cli.parse_out(__doc__))

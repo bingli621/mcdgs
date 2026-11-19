@@ -23,7 +23,7 @@ import matplotlib.pyplot as plt
 from mcstasscript.interface.instr import McStas_instr
 
 from mcdgs.core import Instrument
-from mcdgs.diagnostics.cli import save_figure, save_text
+from mcdgs.diagnostics import cli
 
 
 def write_printout(instrument: Instrument, path: Path) -> Path:
@@ -41,7 +41,7 @@ def write_printout(instrument: Instrument, path: Path) -> Path:
     :
         ``path``.
     """
-    return save_text(f"{instrument}\n", path)
+    return cli.save_text(f"{instrument}\n", path)
 
 
 def write_instr_file(mcstas_instr: McStas_instr, folder: Path) -> Path:
@@ -137,7 +137,7 @@ def draw_instrument(
     remove_mcdisplay_folders(mcstas_instr.input_path)  # not needed once drawn
     if equal_aspect:
         plt.gca().set_aspect("equal")
-    return save_figure(plt.gcf(), path, dpi=dpi)
+    return cli.save_figure(plt.gcf(), path, dpi=dpi)
 
 
 def draw_diagram(mcstas_instr: McStas_instr, legend_path: Path, diagram_path: Path) -> list[Path]:
@@ -213,7 +213,7 @@ def draw_intensity_diagram(
         low, high = intensity_limits
         intensity_ax.set_xlim(low, high)
         rays_ax.set_xlim(low * rays_per_intensity, high * rays_per_intensity)
-    return save_figure(diagram, path, dpi=100)
+    return cli.save_figure(diagram, path, dpi=100)
 
 
 def remove_mcdisplay_folders(build_folder: str | Path) -> list[Path]:

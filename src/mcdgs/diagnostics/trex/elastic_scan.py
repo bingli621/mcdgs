@@ -38,7 +38,7 @@ from matplotlib.figure import Figure
 
 from mcdgs.core import rotation
 from mcdgs.core.components import Single_crystal
-from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
+from mcdgs.diagnostics import cli
 from mcdgs.diagnostics.trex import elastic_plane as plane
 from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
 from mcdgs.mcstas import Simulation, Workspace, numeric_parameters, read_events
@@ -371,10 +371,10 @@ def analyze(
         f"T-Rex, La2Ni7 ({hkl}) in plane\n{define_instrument().running_conditions()}\n"
         f"|Qy| < {QY_HALF_WIDTH:g} 1/Å, in the frame of the crystal at omega = 0"
     )
-    folder = output_folder(out, NAME)
+    folder = cli.output_folder(out, NAME)
     gif = animate(maps, folder / f"{NAME}.gif", title)
     print(f"Saved {gif}")
-    return [gif, save_figure(plot_scan(maps, title), folder / f"{NAME}.png")]
+    return [gif, cli.save_figure(plot_scan(maps, title), folder / f"{NAME}.png")]
 
 
 def main(out: Path | None = None) -> list[Path]:
@@ -396,4 +396,4 @@ def main(out: Path | None = None) -> list[Path]:
 
 
 if __name__ == "__main__":
-    main(out=parse_out(__doc__))
+    main(out=cli.parse_out(__doc__))

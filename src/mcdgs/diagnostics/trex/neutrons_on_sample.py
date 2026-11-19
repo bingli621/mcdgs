@@ -51,14 +51,7 @@ from scippneutron.conversion import tof as tof_kernels
 
 from mcdgs.core import bins_from_limits
 from mcdgs.core.components import Monitor_nD
-from mcdgs.diagnostics.cli import markdown_table, output_folder, parse_out, save_figure, save_text
-from mcdgs.diagnostics.compare import (
-    MonitorComparison,
-    mcstas_vs_tof,
-    plot_comparison,
-    tof_scale,
-    tuned_transmission,
-)
+from mcdgs.diagnostics import cli, compare
 from mcdgs.instruments.trex.detectors import BANANA_RADIUS
 from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
 from mcdgs.instruments.trex.monitors import SAMPLE_MONITOR_HEIGHT, SAMPLE_MONITOR_WIDTH
@@ -282,7 +275,7 @@ def full_width_at_half_maximum(centers: np.ndarray, values: np.ndarray) -> float
 
 
 def plot_patches(
-    comparison: MonitorComparison, title: str, windows: sc.DataArray | None = None
+    comparison: compare.MonitorComparison, title: str, windows: sc.DataArray | None = None
 ) -> Figure:
     """Draw the center of mass of each patch of both models, in time and wavelength.
 
@@ -519,7 +512,7 @@ def windows_table(windows: sc.DataArray) -> str:
         )
         for i in range(windows.sizes["subpulse"])
     ]
-    return markdown_table(header, rows)
+    return cli.markdown_table(header, rows)
 
 
 def main(
@@ -578,13 +571,15 @@ def main(
     sample_bins = monitor_bins(instrument.sample_monitor.bin_limits)
     mcstas_source = read_mcstas_map("source_monitor", mcstas_data, source_bins)
     tof_source = read_tof_map("source_monitor", tof_result, source_bins)
-    scale = tof_scale(mcstas_source, tof_source)
-    at_source = mcstas_vs_tof("source_monitor", mcstas_source, tof_source, ncount, neutrons, scale)
+    scale = compare.tof_scale(mcstas_source, tof_source)
+    at_source = compare.mcstas_vs_tof(
+        "source_monitor", mcstas_source, tof_source, ncount, neutrons, scale
+    )
     mcstas_sample = read_mcstas_map("sample_monitor", mcstas_data, sample_bins)
     tof_sample = read_tof_map("sample_monitor", tof_result, sample_bins)
     if transmission is None:  # tuned: the transmission that gives tof the total of McStas
-        transmission = tuned_transmission(mcstas_sample, tof_sample, scale)
-    comparison = mcstas_vs_tof(
+        transmission = compare.tuned_transmission(mcstas_sample, tof_sample, scale)
+    comparison = compare.mcstas_vs_tof(
         "sample_monitor", mcstas_sample, tof_sample, ncount, neutrons, scale, transmission
     )
 
@@ -598,11 +593,11 @@ def main(
         f"{scale:.4g} n/s each, transmission {transmission:.4g}"
     )
 
-    folder = output_folder(out, name)
+    folder = cli.output_folder(out, name)
     conditions = instrument.running_conditions()
     files = [
-        save_figure(
-            plot_comparison(
+        cli.save_figure(
+            compare.plot_comparison(
                 comparison,
                 f"T-Rex flux at the sample monitor\n{conditions}",
                 log_decades=log_decades,
@@ -616,17 +611,17 @@ def main(
 
     windows = subpulse_windows(instrument, tof_result)
     fig = plot_patches(comparison, f"Center of mass of each patch\n{conditions}", windows=windows)
-    files.append(save_figure(fig, folder / f"{name}_patches.png"))
+    files.append(cli.save_figure(fig, folder / f"{name}_patches.png"))
 
     table = windows_table(windows)
     print(table, end="")
-    files.append(save_text(table, folder / f"{name}_windows.txt"))
+    files.append(cli.save_text(table, folder / f"{name}_windows.txt"))
 
     xy_map = read_xy_map(instrument.sample_xy_monitor, mcstas_data)
     fig = plot_xy_map(xy_map, f"T-Rex beam at the sample position, McStas\n{conditions}")
-    files.append(save_figure(fig, folder / f"{name}_xy.png"))
+    files.append(cli.save_figure(fig, folder / f"{name}_xy.png"))
     return files
 
 
 if __name__ == "__main__":
-    main(out=parse_out(__doc__))
+    main(out=cli.parse_out(__doc__))

@@ -26,7 +26,7 @@ Run the module for them::
 
 from pathlib import Path
 
-from mcdgs.diagnostics.cli import output_folder, parse_out
+from mcdgs.diagnostics import cli
 from mcdgs.diagnostics.drawing import (
     component_range,
     draw_diagram,
@@ -65,7 +65,7 @@ def main(out: Path | None = None) -> list[Path]:
     """
     cspec = define_instrument()
     mcstas_instr = build_mcstas(cspec)  # in the build folder of CSPEC in the workspace
-    folder = output_folder(out, "cspec_overview")
+    folder = cli.output_folder(out, "cspec_overview")
     # seen along the beam, the source is a wide disk that covers the guides and the choppers
     first, last = component_range(cspec, after="source", before="sample_pos")
     return [
@@ -128,4 +128,4 @@ def main(out: Path | None = None) -> list[Path]:
 
 
 if __name__ == "__main__":
-    main(out=parse_out(__doc__))
+    main(out=cli.parse_out(__doc__))

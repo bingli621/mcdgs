@@ -29,13 +29,7 @@ import mcstasscript as ms
 from mcdgs.core import Instrument, param
 from mcdgs.core.components import Arm, ESS_butterfly, Monitor_nD
 from mcdgs.core.components.monitors import time_lambda_options
-from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
-from mcdgs.diagnostics.compare import (
-    mcstas_vs_tof,
-    plot_comparison,
-    print_means,
-    tof_scale,
-)
+from mcdgs.diagnostics import cli, compare
 from mcdgs.instruments.cspec.guides.bender import (
     GUIDE_01_011_IN_HEIGHT,
     GUIDE_01_011_IN_WIDTH,
@@ -212,26 +206,28 @@ def main(
 
     # --8<-- [start:scale_tof]
     # tof has no flux: each of its neutrons stands for the total of McStas over that of tof
-    scale = tof_scale(mcstas_map, tof_counts)  # n/s per tof neutron
+    scale = compare.tof_scale(mcstas_map, tof_counts)  # n/s per tof neutron
     # both maps side by side in n/s: tof times the scale, its Poisson errors scaled along
-    comparison = mcstas_vs_tof("source_monitor", mcstas_map, tof_counts, ncount, neutrons, scale)
+    comparison = compare.mcstas_vs_tof(
+        "source_monitor", mcstas_map, tof_counts, ncount, neutrons, scale
+    )
     # --8<-- [end:scale_tof]
 
     # the mean time and wavelength of each model, weighted by its intensity, and the scale
-    print_means(comparison)
+    compare.print_means(comparison)
     print(f"McStas total {mcstas_map.sum().value:.4g} n/s, {scale:.4g} n/s per tof neutron")
 
     # --8<-- [start:plot]
     # top row: the time and wavelength map of each model, on one color scale; bottom row: the
     # wavelength spectrum and the time profile of both, with their error bars
-    fig = plot_comparison(comparison, "CSPEC flux at the entrance of the guide system")
+    fig = compare.plot_comparison(comparison, "CSPEC flux at the entrance of the guide system")
     # --8<-- [end:plot]
 
-    return save_figure(fig, output_folder(out, "cspec_source") / f"{run.name}.png")
+    return cli.save_figure(fig, cli.output_folder(out, "cspec_source") / f"{run.name}.png")
 
 
 if __name__ == "__main__":
-    out_folder = parse_out(__doc__)
+    out_folder = cli.parse_out(__doc__)
     main(out=out_folder, ncount=1e6, neutrons=1_000_000, folder_name="cspec_source_1e6")
     # a tenth of the neutrons in both models, for the scale with fewer tof neutrons
     main(out=out_folder, ncount=1e5, neutrons=100_000, folder_name="cspec_source_1e5")

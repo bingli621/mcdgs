@@ -15,7 +15,7 @@ from pathlib import Path
 
 from mcdgs.core import evaluate
 from mcdgs.core.components import NXdisk_chopper
-from mcdgs.diagnostics.cli import markdown_table, output_folder, parse_out, save_figure, save_text
+from mcdgs.diagnostics import cli
 from mcdgs.instruments.trex.model import Params, TRex
 from mcdgs.tof import beamline, time_distance_diagram
 
@@ -104,9 +104,11 @@ def parameters_table(
     ]
     return "\n".join(
         [
-            markdown_table(["tof run", "Value"], run),
-            markdown_table(["Control parameter", "Value"], control),
-            markdown_table(["Chopper", "Distance from the source", "Frequency", "Delay"], choppers),
+            cli.markdown_table(["tof run", "Value"], run),
+            cli.markdown_table(["Control parameter", "Value"], control),
+            cli.markdown_table(
+                ["Chopper", "Distance from the source", "Frequency", "Delay"], choppers
+            ),
         ]
     )
 
@@ -129,7 +131,7 @@ def main(out: Path | None = None, neutrons: int = 1_000_000, seed: int = 1) -> l
     :
         The paths of the diagram and of the table of its parameters.
     """
-    folder = output_folder(out, "trex_time_distance")
+    folder = cli.output_folder(out, "trex_time_distance")
 
     # --8<-- [start:time_distance]
     trex = define_instrument()
@@ -141,7 +143,7 @@ def main(out: Path | None = None, neutrons: int = 1_000_000, seed: int = 1) -> l
         visible_rays=VISIBLE_RAYS,
         blocked_rays=BLOCKED_RAYS,
     )
-    path = save_figure(figure, folder / "trex_time_distance.png")
+    path = cli.save_figure(figure, folder / "trex_time_distance.png")
     # --8<-- [end:time_distance]
 
     table = parameters_table(
@@ -152,8 +154,8 @@ def main(out: Path | None = None, neutrons: int = 1_000_000, seed: int = 1) -> l
         visible_rays=VISIBLE_RAYS,
         blocked_rays=BLOCKED_RAYS,
     )
-    return [path, save_text(table, folder / "trex_time_distance_params.txt")]
+    return [path, cli.save_text(table, folder / "trex_time_distance_params.txt")]
 
 
 if __name__ == "__main__":
-    main(out=parse_out(__doc__))
+    main(out=cli.parse_out(__doc__))

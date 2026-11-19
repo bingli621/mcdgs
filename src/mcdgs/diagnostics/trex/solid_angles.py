@@ -32,7 +32,7 @@ import scipp as sc
 from matplotlib.figure import Figure
 
 from mcdgs.core import InstrParam
-from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
+from mcdgs.diagnostics import cli
 from mcdgs.diagnostics.trex.elastic_plane import pixel_solid_angle
 from mcdgs.instruments.trex.choppers import DISKS
 from mcdgs.instruments.trex.detectors import (
@@ -401,16 +401,16 @@ def main(out: Path | None = None, ncount: float = 1e8, seed: int = 1) -> list[Pa
         f"{instrument.name} · {instrument.params.mode} · choppers parked open · "
         f"λ = {l_min:.3f} to {l_max:.3f} Å"
     )
-    folder = output_folder(out, NAME)
+    folder = cli.output_folder(out, NAME)
     title = "T-Rex, vanadium in the white beam: the banana detector"
     image_figure = plot_detector_image(image, f"{title}\n{conditions}")
     title = "T-Rex, vanadium in the white beam: the pixels of the banana detector"
     pixels_figure = plot_pixel_intensity(pixel_intensity(binned), f"{title}\n{conditions}")
     return [
-        save_figure(image_figure, folder / f"{NAME}_detector.png"),
-        save_figure(pixels_figure, folder / f"{NAME}_pixels.png"),
+        cli.save_figure(image_figure, folder / f"{NAME}_detector.png"),
+        cli.save_figure(pixels_figure, folder / f"{NAME}_pixels.png"),
     ]
 
 
 if __name__ == "__main__":
-    main(out=parse_out(__doc__))
+    main(out=cli.parse_out(__doc__))

@@ -36,14 +36,7 @@ from numpy.typing import NDArray
 from mcdgs.core import Instrument
 from mcdgs.core.components import Arm, ESS_butterfly, Guide_gravity, Monitor_nD, Progress_bar
 from mcdgs.core.components.source import ESS_SOURCE_FREQUENCY
-from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
-from mcdgs.diagnostics.compare import (
-    mcstas_vs_tof,
-    plot_comparison,
-    print_means,
-    tof_scale,
-    tuned_transmission,
-)
+from mcdgs.diagnostics import cli, compare
 from mcdgs.instruments.trex.guides.bispectral import arm_guide_4, guide_4a
 from mcdgs.instruments.trex.guides.extraction import guides_extraction
 from mcdgs.instruments.trex.monitors import beam_monitor, source_monitor
@@ -242,19 +235,21 @@ def main(
     # monitor, the same scale, and the transmission on top of it, tuned if it is None
     mcstas_source = read_mcstas_map("source_monitor", mcstas_data, source_bins)
     tof_source = read_tof_map("source_monitor", tof_result, source_bins)
-    scale = tof_scale(mcstas_source, tof_source)
-    at_source = mcstas_vs_tof("source_monitor", mcstas_source, tof_source, ncount, neutrons, scale)
+    scale = compare.tof_scale(mcstas_source, tof_source)
+    at_source = compare.mcstas_vs_tof(
+        "source_monitor", mcstas_source, tof_source, ncount, neutrons, scale
+    )
     mcstas_beam = read_mcstas_map("beam_monitor", mcstas_data, bins)
     tof_beam = read_tof_map("beam_monitor", tof_result, bins)
     if transmission is None:  # tuned: the transmission that gives tof the total of McStas
-        transmission = tuned_transmission(mcstas_beam, tof_beam, scale)
-    comparison = mcstas_vs_tof(
+        transmission = compare.tuned_transmission(mcstas_beam, tof_beam, scale)
+    comparison = compare.mcstas_vs_tof(
         "beam_monitor", mcstas_beam, tof_beam, ncount, neutrons, scale, transmission
     )
     # --8<-- [end:transmission]
 
     # print the mean time and wavelength of each model, and the scale and transmission of tof
-    print_means(comparison)
+    compare.print_means(comparison)
     mcstas_total = comparison.first.values.sum()
     print(
         f"McStas total {mcstas_total:.4g} n/s, "
@@ -264,9 +259,9 @@ def main(
     monitor = instrument.beam_monitor
     _print_rates(comparison.first.values, bins, area=monitor.xwidth * monitor.yheight * 1e4)
 
-    fig = plot_comparison(comparison, "T-Rex flux at the beam monitor after guide 4a")
-    return save_figure(fig, output_folder(out, name) / f"{name}.png")
+    fig = compare.plot_comparison(comparison, "T-Rex flux at the beam monitor after guide 4a")
+    return cli.save_figure(fig, cli.output_folder(out, name) / f"{name}.png")
 
 
 if __name__ == "__main__":
-    main(out=parse_out(__doc__))
+    main(out=cli.parse_out(__doc__))
