@@ -245,16 +245,16 @@ def test_each_chopper_is_at_its_distance_from_the_moderator(name, distance):
 
 def test_the_choppers_turn_at_the_frequencies_of_trex_primary():
     timings = chopper_timings(lambda0=2.4, rrm=4, source_frequency=14, mode="FF", t0_offset=0.0017)
-    assert {name: nu for name, (nu, _) in timings.items()} == pytest.approx(
+    assert {name: timing.nu for name, timing in timings.items()} == pytest.approx(
         {"bw1": 14, "bw2": 14, "ps1": 42, "ps2": -42, "mc1": 56, "mc2": 56}
     )
 
 
 def test_in_rr_each_zero_mark_passes_the_beam_when_the_central_wavelength_arrives():
     timings = chopper_timings(lambda0=2.4, rrm=4, source_frequency=14, mode="RR", t0_offset=0.0017)
-    for name, (_, delay) in timings.items():
+    for name, timing in timings.items():
         arrival = 0.0017 + DISKS[name].distance * 2.4 / 3956.034
-        assert delay == pytest.approx(arrival, rel=1e-6)
+        assert timing.delay == pytest.approx(arrival, rel=1e-6)
 
 
 @pytest.mark.parametrize(
@@ -272,10 +272,10 @@ def test_the_phase_shifts_of_the_mode_are_the_shifts_of_trex_primary(mode, angle
 @pytest.mark.parametrize("mode", ["FF", "RR"])
 def test_the_slit_of_the_mode_is_centered_on_the_beam_when_the_central_wavelength_arrives(mode):
     timings = chopper_timings(lambda0=2.4, rrm=4, source_frequency=14, mode=mode, t0_offset=0.0017)
-    for name, (nu, delay) in timings.items():
+    for name, timing in timings.items():
         arrival = 0.0017 + DISKS[name].distance * 2.4 / 3956.034
         # as NXdisk_chopper: the disk angle on the beam is beam_angle minus the turn of the mark
-        mark = 360 * nu * (arrival - delay)
+        mark = 360 * timing.nu * (arrival - timing.delay)
         on_beam = DISKS[name].beam_angle - mark
         center, _ = DISKS[name].slits[DISKS[name].mode_slit[mode]]
         off_center = (on_beam - center + 180) % 360 - 180  # in [-180, 180): 359.9... is -0.0...
@@ -305,6 +305,32 @@ def test_the_slit_edges_are_the_centers_plus_and_minus_half_the_widths(name, edg
     assert TRex().components[name].slit_edges == list(edges)
 
 
+@pytest.mark.parametrize("mode", ["FF", "RR"])
+def test_rrm_0_parks_every_chopper_on_the_slit_of_the_mode(mode):
+    timings = chopper_timings(lambda0=None, rrm=0, source_frequency=14, mode=mode, t0_offset=0.0017)
+    for name, timing in timings.items():
+        assert (timing.nu, timing.delay) == (0, 0), name
+        # as NXdisk_chopper: parked, the disk angle on the beam is beam_angle minus park_angle
+        on_beam = DISKS[name].beam_angle - timing.park_angle
+        center, _ = DISKS[name].slits[DISKS[name].mode_slit[mode]]
+        assert (on_beam - center) % 360 == pytest.approx(0), name
+
+
+def test_turning_choppers_have_no_park_angle():
+    timings = chopper_timings(lambda0=2.4, rrm=4, source_frequency=14, mode="FF", t0_offset=0.0017)
+    assert {timing.park_angle for timing in timings.values()} == {0}
+
+
+def test_a_negative_rrm_raises():
+    with pytest.raises(ValueError, match="rrm -1 is negative"):
+        chopper_timings(lambda0=2.4, rrm=-1, source_frequency=14, mode="FF", t0_offset=0.0017)
+
+
+def test_turning_choppers_without_a_central_wavelength_raise():
+    with pytest.raises(ValueError, match="lambda0 is None"):
+        chopper_timings(lambda0=None, rrm=4, source_frequency=14, mode="FF", t0_offset=0.0017)
+
+
 def test_an_unknown_mode_raises():
     with pytest.raises(ValueError, match="mode 'HF' is not 'FF' or 'RR'"):
         chopper_timings(lambda0=2.4, rrm=4, source_frequency=14, mode="HF", t0_offset=0.0017)
@@ -323,7 +349,10 @@ def test_each_chopper_takes_its_timing_from_the_instrument_parameters():
     for name, timing in timings.items():
         chopper = getattr(trex, name)
         assert (chopper.nu, chopper.delay) == (f"nu_{name}", f"delay_{name}")
-        assert (instr_param_dict[chopper.nu], instr_param_dict[chopper.delay]) == timing
+        assert (instr_param_dict[chopper.nu], instr_param_dict[chopper.delay]) == (
+            timing.nu,
+            timing.delay,
+        )
 
 
 def test_the_timing_follows_the_control_parameters():
@@ -331,7 +360,7 @@ def test_the_timing_follows_the_control_parameters():
     trex.update_params(lambda0=4.0, rrm=6)
     instr_param_dict = {p.name: p.value for p in trex.instr_params}
     assert instr_param_dict["nu_mc1"] == pytest.approx(84)
-    assert instr_param_dict["delay_bw1"] == chopper_timings(4.0, 6, 14, "FF", 0.0017)["bw1"][1]
+    assert instr_param_dict["delay_bw1"] == chopper_timings(4.0, 6, 14, "FF", 0.0017)["bw1"].delay
 
 
 def test_the_t0_offset_delays_every_chopper_by_as_much():

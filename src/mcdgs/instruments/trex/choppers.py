@@ -3,6 +3,7 @@
 :func:`chopper` creates one disk by name. The disks take their frequency ``nu`` and their delay
 from the instrument parameters ``nu_<name>`` and ``delay_<name>``, which :func:`chopper_timings`
 computes from the central wavelength, the repetition rate multiplication and the mode.
+A repetition rate multiplication of 0 parks every disk on the slit of the mode.
 
 The mode chooses the slit of the pulse-shaping and monochromatic chopper disks that is on the
 beam: the wide one in ``"FF"`` (high flux), the narrow one in ``"RR"`` (high resolution). Rather
@@ -24,7 +25,7 @@ and the slit of each mode.
 """
 
 from dataclasses import dataclass
-from typing import Literal, get_args
+from typing import Literal, NamedTuple, get_args
 
 from mcdgs.core import speed_from_wavelength
 from mcdgs.core.components import Guide_gravity, NXdisk_chopper
@@ -166,9 +167,28 @@ DISKS: dict[str, TRexDisk] = {
 }
 
 
+class ChopperTiming(NamedTuple):
+    """The timing of one chopper, as the instrument parameters of its ``NXdisk_chopper``.
+
+    Attributes
+    ----------
+    nu:
+        Signed rotation frequency, in Hz. 0 parks the disk.
+    delay:
+        Time at which the disk's zero mark is on the beam, in s. 0 while parked.
+    park_angle:
+        Where the zero mark stands while parked, in deg: on the slit of the mode. 0 while
+        turning, where ``NXdisk_chopper`` does not read it.
+    """
+
+    nu: float
+    delay: float
+    park_angle: float
+
+
 def chopper_timings(
-    lambda0: float, rrm: int, source_frequency: float, mode: Mode, t0_offset: float
-) -> dict[str, tuple[float, float]]:
+    lambda0: float | None, rrm: int, source_frequency: float, mode: Mode, t0_offset: float
+) -> dict[str, ChopperTiming]:
     """Compute the timing of every chopper.
 
     The bandwidth choppers turn at the source frequency, the monochromatic choppers at ``rrm``
@@ -177,6 +197,10 @@ def chopper_timings(
     opposite sides of the beam. Each disk has the slit of ``mode`` on the beam when a neutron of
     wavelength ``lambda0``, leaving at ``t0_offset``, reaches it.
 
+    ``rrm`` 0 parks every disk, the bandwidth choppers too: each stands still with the slit of
+    ``mode`` on the beam, its zero mark turned by :meth:`TRexDisk.phase_from_mode`. Nothing is
+    then phased to a wavelength, so ``lambda0`` may be ``None``.
+
     PSC_FREQUENCY_RATIO is 3/4 because the ratio of the distances from the source to the
     monochromatic choppers and to the pulse-shaping choppers is 162/108 = 3/2, and the
     pulse-shaping choppers have two openings per rotation.
@@ -184,9 +208,9 @@ def chopper_timings(
     Parameters
     ----------
     lambda0:
-        Central wavelength, in Å.
+        Central wavelength, in Å. ``None`` only with ``rrm`` 0.
     rrm:
-        Repetition rate multiplication factor.
+        Repetition rate multiplication factor. 0 parks every chopper.
     source_frequency:
         Pulse frequency of the source, in Hz.
     mode:
@@ -198,16 +222,33 @@ def chopper_timings(
     Returns
     -------
     :
-        Signed rotation frequency in Hz, and time at which the disk's zero mark is on the beam
-        in s, by chopper name, in beam order.
+        The timing of each chopper by name, in beam order.
 
     Raises
     ------
     ValueError
-        If ``mode`` is not ``"FF"`` or ``"RR"``.
+        If ``mode`` is not ``"FF"`` or ``"RR"``, if ``rrm`` is negative, or if ``lambda0`` is
+        ``None`` while ``rrm`` is not 0.
+
+    Examples
+    --------
+    >>> timings = chopper_timings(None, 0, 14, "FF", 0.0017)
+    >>> timings["ps1"]
+    ChopperTiming(nu=0.0, delay=0.0, park_angle=55.0)
+    >>> timings["mc2"].park_angle, chopper_timings(None, 0, 14, "RR", 0.0017)["mc2"].park_angle
+    (185.0, 0.0)
     """
     if mode not in get_args(Mode):
         raise ValueError(f"mode {mode!r} is not 'FF' or 'RR'")
+    if rrm < 0:
+        raise ValueError(f"rrm {rrm} is negative")
+    if rrm == 0:
+        return {
+            name: ChopperTiming(nu=0.0, delay=0.0, park_angle=disk.phase_from_mode(mode))
+            for name, disk in DISKS.items()
+        }
+    if lambda0 is None:
+        raise ValueError("lambda0 is None: the choppers have no wavelength to be phased to")
     nu_mc = rrm * source_frequency
     nu_psc = PSC_FREQUENCY_RATIO * nu_mc
     nu = {
@@ -224,7 +265,8 @@ def chopper_timings(
         arrival = t0_offset + disk.distance / speed
         # the zero mark passes the beam earlier, for the disk to have turned to the slit
         phase = disk.phase_from_mode(mode)
-        timings[name] = (nu[name], arrival - phase / (360 * nu[name]))
+        delay = arrival - phase / (360 * nu[name])
+        timings[name] = ChopperTiming(nu=nu[name], delay=delay, park_angle=0.0)
     return timings
 
 

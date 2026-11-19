@@ -279,9 +279,9 @@ class TRex(Instrument):
         )
         return [
             p
-            for name, (nu, delay) in timings.items()
+            for name, timing in timings.items()
             for p in (
-                InstrParam(f"nu_{name}", nu, "Hz", f"rotation frequency of chopper {name}"),
-                InstrParam(f"delay_{name}", delay, "s", f"delay of chopper {name}"),
+                InstrParam(f"nu_{name}", timing.nu, "Hz", f"rotation frequency of chopper {name}"),
+                InstrParam(f"delay_{name}", timing.delay, "s", f"delay of chopper {name}"),
             )
         ]
