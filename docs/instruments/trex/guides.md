@@ -9,7 +9,9 @@ through the thermal guide 4a.
 
 It uses McStasScript's two tools: its beam diagnostics, the beam at five points along the
 instrument, and its diagram of the intensity before every component. From the rays of the
-diagnostics it also draws the transmission of the guides by wavelength.
+diagnostics it also draws the transmission of the guides by wavelength. A second module reads
+the same rays in windows of position and divergence, for the
+[brilliance transfer](#brilliance-transfer) of the guides.
 [Run McStasScript's diagnostics](../../how-to/run-mcstasscript-diagnostics.md) has the code and
 explains both tools; this page shows what they give for T-Rex. The guides themselves are listed
 in [Technical details](details.md#curved-guides).
@@ -128,6 +130,81 @@ Overall, from the source to the sample position, about 3 % pass at 1 to 4 Å, bo
 alike, and 9 % at 8 to 10 Å: the first guides favor the long wavelengths more than the rest
 favor the short ones, and the mean wavelength rises from 2.60 Å to 3.20 Å.
 
+## Brilliance transfer
+
+The transmission counts every neutron that the source sends towards guide 1. The source aims at
+the whole entrance from every point of the moderator, with far more divergence than a guide
+carries, so most of that beam is lost however good the guides are. The brilliance transfer
+asks a sharper question: of what the moderator could put into a given window of position and
+divergence at the sample, how much arrives?
+
+The brilliance of a beam is its intensity per area, per solid angle and per wavelength, in
+n/s/cm²/sr/Å. Along the beam it can only fall (Liouville's theorem), so the brilliance in a
+window over that of the moderator is at most 1.
+[`mcdgs.diagnostics.trex.brilliance_transfer`](https://github.com/bingli621/mcdgs/blob/main/src/mcdgs/diagnostics/trex/brilliance_transfer.py)
+reads it in windows of 1 × 1 cm on the beam axis, with a divergence of ±0.25°, ±0.5° or ±1°
+from the axis, both horizontally and vertically. It runs `TRex` as above, white beam, choppers
+parked and bender out, and reads the rays at two points: before the beam monitor, at the exit
+of the extraction, and before `sample_pos`.
+
+### The brilliance of the moderator
+
+The reference is the moderator itself, from a second instrument, `ModeratorView`: the source
+of T-Rex alone, aimed at a rectangle 0.14 m wide and 0.01 m high on a plane 1 m in front of it.
+A ray that crosses the plane within ±0.5° of the axis comes from the moderator within ±8.7 mm
+of the same x, so the brilliance on the plane at x is that of the moderator at x. Across x the
+moderator has two faces, each about 0.1 m wide and each flat over its middle: the thermal face
+at x < 0, the cold face at x > 0. Each face is read over its flat part, from 0.03 to 0.07 m from
+the center, and the reference is the brighter face at each wavelength: the thermal one below
+about 2 Å, the cold one above.
+
+<!-- fmt:off -->
+```python
+--8<-- "src/mcdgs/diagnostics/trex/brilliance_transfer.py:instrument"
+```
+<!-- fmt:on -->
+
+### At the exit of the extraction and at the sample position
+
+At 1e7 neutrons of T-Rex, 4e6 of the moderator and seed 1, in bins of 0.1 Å; a bin with fewer
+than 20 rays in the window has no value:
+
+![The brilliance of each face of the moderator and at the two points, and the brilliance transfer of each window](figures/guides/trex_brilliance_transfer.png)
+
+In wider bands, from the same rays:
+
+| Window | 0.5–1 Å | 1–1.5 Å | 1.5–2 Å | 2–3 Å | 3–4 Å | 4–6 Å | 6–8 Å | 8–10 Å |
+| ------ | ------- | ------- | ------- | ----- | ----- | ----- | ----- | ------ |
+| Exit of the extraction, ±0.25° | 0.311 | 0.269 | 0.433 | 0.461 | 0.494 | 0.483 | 0.485 | 0.454 |
+| Exit of the extraction, ±0.5° | 0.195 | 0.234 | 0.360 | 0.363 | 0.365 | 0.351 | 0.347 | 0.325 |
+| Exit of the extraction, ±1° | 0.065 | 0.077 | 0.116 | 0.113 | 0.127 | 0.154 | 0.170 | 0.164 |
+| Sample position, ±0.25° | 0.534 | 0.818 | 0.918 | 0.235 | 0.092 | 0.064 | 0.047 | 0.046 |
+| Sample position, ±0.5° | 0.264 | 0.473 | 0.589 | 0.191 | 0.100 | 0.078 | 0.058 | 0.059 |
+| Sample position, ±1° | 0.069 | 0.144 | 0.207 | 0.081 | 0.051 | 0.042 | 0.036 | 0.034 |
+
+- **Thermal neutrons reach the sample well.** From 1 to 2 Å the sample position has 0.8 to 0.9
+  of the brilliance of the thermal face within ±0.25°, and about half within ±0.5°. The low
+  transmission of the first guides is the divergence they cannot carry, not brilliance they
+  lose.
+- **Cold neutrons reach the middle of the sample with the brilliance of the thermal face.**
+  Above 2 Å the brilliance at the sample position follows the spectrum of the thermal face,
+  from 4 times below the cold one at 2 to 3 Å to 20 times at 8 to 10 Å, so the transfer drops
+  to 0.05 to 0.2. The cold face is off
+  the axis, at x > 0, so its neutrons enter guide 1 at an angle: at the exit of the extraction
+  they leave at about −0.5°, the thermal ones at about +0.25°. At the sample position the cold
+  neutrons lie on a band across position and divergence, from about −15 mm and −1° to +15 mm
+  and +1°, with most of them away from its middle, where the window is. This is with the
+  bender out, through the thermal guide 4a.
+- **Wide windows are mostly empty.** Within ±1° the transfer is low at both points: the beam
+  does not fill that much divergence, as the vertical divergence at the sample position reaches
+  only about ±0.7°.
+- **At the exit of the extraction the window lies between the two beams**, the thermal at
+  +0.25° and the cold at −0.5°, so the transfer there, 0.2 to 0.4 within ±0.5°, understates
+  what each beam keeps.
+
+The reference is the mean of each face over 4 cm, and the brightest part of the thermal face is
+about 20 % above its mean, so a bin can come out slightly above 1, as near 1.7 Å.
+
 ## Making the figures
 
 The figures need McStas, so they are not made with the site: `pixi run docs-diagnostics` makes
@@ -138,5 +215,13 @@ pixi run python -m mcdgs.diagnostics.trex.guides_diagnostics
 ```
 
 It saves the three figures to `mcdgs_workspace/results/trex_guides_diagnostics/`, or to the
-folder given with `--out`. The transmissions of the tables are read from the run folders it
+folder given with `--out`. The brilliance transfer is a module of its own:
+
+```bash
+pixi run python -m mcdgs.diagnostics.trex.brilliance_transfer
+```
+
+It saves its figure to `mcdgs_workspace/results/trex_brilliance_transfer/`, or to the folder
+given with `--out`, and prints the table of the bands. Its runs go to the run folders
+`trex_moderator_brilliance` and `trex_brilliance_transfer`, about 0.5 GB of rays. The transmissions of the tables are read from the run folders it
 writes, `trex_guides_diagnostics` and `trex_guides_diagnostics_analysis` in the workspace.

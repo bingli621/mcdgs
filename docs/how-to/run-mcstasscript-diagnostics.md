@@ -105,6 +105,20 @@ spectra of two points for the transmission of the guides between them:
 
 The figure is on [Guides](../instruments/trex/guides.md#by-wavelength).
 
+`rays` gives the rays themselves: for each point, a dict of the ray variables asked for, an
+array each with a value per ray, empty at a point no ray reached. Besides the variables of the
+views, `"p"` is the weight in n/s, and `"dx"` and `"dy"` the horizontal and vertical divergence
+in deg. [`brilliance_transfer`](../reference/diagnostics.md) reads them before the beam monitor
+and before `sample_pos`, and keeps the rays in a window of position and divergence:
+
+<!-- fmt:off -->
+```python
+--8<-- "src/mcdgs/diagnostics/trex/brilliance_transfer.py:trex"
+```
+<!-- fmt:on -->
+
+The figure is on [Guides](../instruments/trex/guides.md#brilliance-transfer).
+
 ### The same diagnostics on more runs
 
 The points and the views stay, so one setup runs again with other instrument parameters. Every run

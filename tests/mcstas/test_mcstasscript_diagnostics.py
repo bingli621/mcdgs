@@ -122,6 +122,28 @@ def test_histogram_sums_the_weights_or_counts_the_rays_at_each_point(tmp_path):
     assert diag.histogram("l", [0, 1, 2], weighted=False)["after source"].tolist() == [1.0, 2.0]
 
 
+def test_rays_gives_the_variables_of_every_ray_at_each_point(tmp_path):
+    diag = McStasScriptDiagnostics(TRex(), Workspace(tmp_path))
+    with pytest.raises(RuntimeError):
+        diag.rays("x")
+    points = [
+        SimpleNamespace(component="source", before=False, filename="Diag_after_source"),
+        SimpleNamespace(component="bw1", before=True, filename="Diag_before_bw1"),
+    ]
+    rays = FakeRays(x=[0.1, -0.2], dx=[0.5, 1.0], p=[1.0, 2.0])
+    diag.diagnostics = SimpleNamespace(  # bw1 reached by no ray: McStasScript has no data
+        ordered_point_list=points,
+        event_plotters=[SimpleNamespace(name="Diag_after_source", data=rays)],
+    )
+    columns = diag.rays("x", "dx")
+    assert list(columns) == ["after source", "before bw1"]
+    assert {name: values.tolist() for name, values in columns["after source"].items()} == {
+        "x": [0.1, -0.2],
+        "dx": [0.5, 1.0],
+    }
+    assert [len(values) for values in columns["before bw1"].values()] == [0, 0]
+
+
 def test_the_folders_are_those_of_the_simulation(tmp_path):
     diag = McStasScriptDiagnostics(TRex(), Workspace(tmp_path))
     assert diag.workspace is diag.simulation.workspace

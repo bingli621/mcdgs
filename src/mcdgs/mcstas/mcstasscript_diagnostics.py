@@ -207,21 +207,48 @@ class McStasScriptDiagnostics:
         RuntimeError
             If there has been no run.
         """
+        edges = np.asarray(bins, dtype=float)
+        histograms = {}
+        for label, columns in self.rays(variable, "p").items():
+            weights = columns["p"] if weighted else None
+            counts, _ = np.histogram(columns[variable], bins=edges, weights=weights)
+            histograms[label] = counts.astype(float)
+        return histograms
+
+    def rays(self, *variables: str) -> dict[str, dict[str, NDArray[np.float64]]]:
+        """Read ray variables at every point of the last run, a value per ray.
+
+        Parameters
+        ----------
+        *variables:
+            The ray variables, as for a view, e.g. ``"x"``, ``"dx"``, the horizontal divergence
+            in deg, ``"l"``, the wavelength in Å, or ``"p"``, the weight in n/s.
+
+        Returns
+        -------
+        :
+            The variables by name, by point, such as ``"after source"`` or ``"before bw1"``, in
+            the order of the instrument. At a point no ray reached, each is empty.
+
+        Raises
+        ------
+        RuntimeError
+            If there has been no run.
+        """
         if self.diagnostics is None:
             raise RuntimeError("run the diagnostics before reading their rays")
-        edges = np.asarray(bins, dtype=float)
-        rays = {plotter.name: plotter.data for plotter in self.diagnostics.event_plotters}
-        histograms = {}
+        data_by_file = {plotter.name: plotter.data for plotter in self.diagnostics.event_plotters}
+        rays = {}
         for point in self.diagnostics.ordered_point_list:
             label = f"{'before' if point.before else 'after'} {point.component}"
-            data = rays.get(point.filename)
-            if data is None:  # no ray reached it: McStasScript has no data for it
-                histograms[label] = np.zeros(len(edges) - 1)
-                continue
-            values = data.get_data_column(variable)
-            weights = data.get_data_column("p") if weighted else None
-            histograms[label] = np.histogram(values, bins=edges, weights=weights)[0].astype(float)
-        return histograms
+            data = data_by_file.get(point.filename)  # None: no ray reached it
+            rays[label] = {
+                variable: np.empty(0)
+                if data is None
+                else np.asarray(data.get_data_column(variable), dtype=float)
+                for variable in variables
+            }
+        return rays
 
     def run_analysis(
         self,
