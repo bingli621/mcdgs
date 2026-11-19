@@ -7,6 +7,7 @@ from types import SimpleNamespace
 import matplotlib.pyplot as plt
 
 from mcdgs.diagnostics.trex import guides_diagnostics
+from mcdgs.instruments.trex.choppers import DISKS
 from mcdgs.mcstas import McStasScriptDiagnostics
 
 
@@ -43,5 +44,7 @@ def test_the_instrument_is_the_white_beam_with_every_chopper_parked():
     trex = guides_diagnostics.define_instrument()
     assert trex.params.lambda0 is None
     assert (trex.source.Lmin, trex.source.Lmax) == (0.1, 10.0)
-    choppers = {p.name: p.value for p in trex.instr_params if p.name.startswith(("nu_", "delay_"))}
-    assert len(choppers) == 12 and set(choppers.values()) == {0.0}
+    instr_param_dict = {p.name: p.value for p in trex.instr_params}
+    for name, disk in DISKS.items():
+        assert (instr_param_dict[f"nu_{name}"], instr_param_dict[f"delay_{name}"]) == (0, 0)
+        assert instr_param_dict[f"park_{name}"] == disk.phase_from_mode("FF")

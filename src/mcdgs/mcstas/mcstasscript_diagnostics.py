@@ -160,6 +160,8 @@ class McStasScriptDiagnostics:
     def plot(self) -> Figure:
         """Draw the last run, a row per point and a column per view, on a new figure.
 
+        The title is the instrument's :meth:`.Instrument.running_conditions`.
+
         Returns
         -------
         :
@@ -173,7 +175,10 @@ class McStasScriptDiagnostics:
         if self.diagnostics is None:
             raise RuntimeError("run the diagnostics before plotting them")
         self.diagnostics.plot()  # draws on a new figure, which it does not return
-        return plt.gcf()
+        figure = plt.gcf()
+        figure.suptitle(self.simulation.instrument.running_conditions())
+        figure.tight_layout()  # McStasScript's axes reach the top: room for the title
+        return figure
 
     def run_analysis(
         self,

@@ -77,13 +77,16 @@ def test_nothing_runs_or_plots_without_points_and_views(tmp_path):
     assert not any(tmp_path.iterdir())  # no run folder
 
 
-def test_plot_returns_the_figure_mcstasscript_draws(tmp_path, fake_diagnostics):
+def test_plot_returns_the_figure_mcstasscript_draws_titled_with_the_running_conditions(
+    tmp_path, fake_diagnostics
+):
     diag = McStasScriptDiagnostics(TRex(), Workspace(tmp_path))
     diag.add_point(after="source")
     diag.add_view("l")
     diag.run()
     fig = diag.plot()
     assert fig is plt.gcf()
+    assert fig.get_suptitle() == TRex().running_conditions()
     plt.close(fig)
 
 

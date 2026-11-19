@@ -1,7 +1,7 @@
 """McStasScript's diagnostics of T-Rex: the beam along the guides, and the intensity before each component.
 
-:func:`main` runs T-Rex in the white beam, 0.1 to 10 Å, with every chopper parked at 0 Hz
-(:class:`ParkedTRex`), with :class:`.McStasScriptDiagnostics`, twice, and writes:
+:func:`main` runs T-Rex in the white beam, 0.1 to 10 Å, with every chopper parked at 0 Hz on
+the slit of the mode, ``rrm`` 0, with :class:`.McStasScriptDiagnostics`, twice, and writes:
 
 - ``trex_guides_diagnostics.png``: the beam after the source, before the first bandwidth chopper,
   at the end of the curved guide, at the end of the straight guide and at the sample position;
@@ -16,9 +16,7 @@ They are the figures of the how-to page on McStasScript's diagnostics. Run the m
 
 from pathlib import Path
 
-from mcdgs.core import InstrParam
 from mcdgs.diagnostics import cli
-from mcdgs.instruments.trex.choppers import DISKS
 from mcdgs.instruments.trex.model import Params, TRex
 from mcdgs.mcstas import McStasScriptDiagnostics
 
@@ -26,31 +24,11 @@ NAME = "trex_guides_diagnostics"
 
 
 # --8<-- [start:instrument]
-class ParkedTRex(TRex):
-    """:class:`.TRex` with every chopper parked, at 0 Hz.
-
-    ``NXdisk_chopper`` then stands still with its zero mark at ``park_angle``, 0, where each disk
-    of T-Rex has an opening on the beam, which passes most of it, unchopped. With no chopper to
-    phase, it runs with ``lambda0`` ``None``, the white beam.
-    """
-
-    def _chopper_instr_params(self) -> list[InstrParam]:
-        """Return the frequency, the delay and the park angle of every chopper, all 0: parked."""
-        return [
-            p
-            for name in DISKS
-            for p in (
-                InstrParam(f"nu_{name}", 0.0, "Hz", f"rotation frequency of chopper {name}"),
-                InstrParam(f"delay_{name}", 0.0, "s", f"delay of chopper {name}"),
-                InstrParam(f"park_{name}", 0.0, "deg", f"park angle of chopper {name}"),
-            )
-        ]
-
-
-def define_instrument() -> ParkedTRex:
+def define_instrument() -> TRex:
     """Return the instrument of this diagnostic: T-Rex in the white beam, its choppers parked."""
-    params = Params(lambda0=None)  # the white beam, 0.1 to 10 Å; the rest as default
-    return ParkedTRex(params=params)
+    # the white beam, 0.1 to 10 Å, every chopper parked on its wide slit (FF); the rest as default
+    params = Params(lambda0=None, rrm=0)
+    return TRex(params=params)
 
 
 # --8<-- [end:instrument]
@@ -64,8 +42,8 @@ def main(
 ) -> list[Path]:
     """Run T-Rex with McStasScript's diagnostics, then for its diagram, and save both figures.
 
-    The instrument is :class:`ParkedTRex` in the white beam, so the beam reaches the sample
-    position unchopped, but for what the parked disks block.
+    The instrument is :class:`.TRex` in the white beam with its choppers parked, ``rrm`` 0, so
+    the beam reaches the sample position unchopped, but for what the parked disks block.
     The runs go to the run folders ``trex_guides_diagnostics`` and
     ``trex_guides_diagnostics_analysis``, replaced on every run.
 

@@ -23,7 +23,6 @@ module for them::
 """
 
 import math
-from dataclasses import replace
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -31,10 +30,8 @@ import numpy as np
 import scipp as sc
 from matplotlib.figure import Figure
 
-from mcdgs.core import InstrParam
 from mcdgs.diagnostics import cli
 from mcdgs.diagnostics.trex.elastic_plane import pixel_solid_angle
-from mcdgs.instruments.trex.choppers import DISKS
 from mcdgs.instruments.trex.detectors import (
     BANANA_CENTER_Y,
     BANANA_HEIGHT,
@@ -57,7 +54,8 @@ RUN = f"{NAME}_run"  # the run folder
 FOCUS_MARGIN = 1.0  # deg, the focusing window of the sample is this much wider than the detector
 SAMPLE_RADIUS = 0.01  # m, a thin cylinder: little of what it scatters is absorbed on the way out
 SAMPLE_SPLIT = 10  # McStas SPLIT on the sample: each neutron reaching it is repeated this often
-WHITE_BEAM = Params(lambda0=None)  # no central wavelength: the band is not limited
+# no central wavelength, the band is not limited, and every chopper parked on its wide slit (FF)
+WHITE_BEAM = Params(lambda0=None, rrm=0)
 # s, the width of a time bin of the monitors near the sample: the white beam takes 0.4 s to
 # pass them, which the bins of T-Rex, made for one sub-pulse, would split into 80000
 MONITOR_TIME_RESOLUTION = 1e-3
@@ -104,10 +102,9 @@ class TRexWithVanadium(TRex):
 
     The sample is that of :func:`.vanadium`, a cylinder 10 mm high, thinned to a radius of
     ``SAMPLE_RADIUS``, which scatters towards the window of
-    :func:`detector_window` only, split ``SAMPLE_SPLIT`` times. Each disk stands still
-    (``nu = 0``) with the slit of the mode on the beam, turned by :meth:`.TRexDisk.phase_from_mode`:
-    the wide ones in ``"FF"``. There are no instrument parameters ``nu_<name>`` and
-    ``delay_<name>``.
+    :func:`detector_window` only, split ``SAMPLE_SPLIT`` times. With ``rrm`` 0, each disk stands
+    still (``nu = 0``) with the slit of the mode on the beam, turned by
+    :meth:`.TRexDisk.phase_from_mode`: the wide ones in ``"FF"``.
 
     The time and wavelength monitors near the sample (pre-sample, beamstop and sample) span the
     whole band, with time bins of ``MONITOR_TIME_RESOLUTION``.
@@ -119,12 +116,20 @@ class TRexWithVanadium(TRex):
     ----------
     params:
         Control parameters. ``lambda0`` gives the band of the beam, ``None`` for the white
-        beam, and ``mode`` the slit each disk is parked on.
+        beam, and ``mode`` the slit each disk is parked on. ``rrm`` must be 0, which parks the
+        choppers.
+
+    Raises
+    ------
+    ValueError
+        If ``rrm`` is not 0: the choppers would turn.
     """
 
     name = "trex_vanadium"  # the McStas instrument name
 
     def __init__(self, params: Params = WHITE_BEAM) -> None:
+        if params.rrm != 0:
+            raise ValueError(f"rrm {params.rrm} is not 0: the choppers would turn")
         sample = vanadium(
             name="sample", radius=SAMPLE_RADIUS, split=SAMPLE_SPLIT, **detector_window()
         )
@@ -133,19 +138,11 @@ class TRexWithVanadium(TRex):
         for monitor in (pre_sample_monitor, beamstop_monitor, sample_monitor):
             wide = monitor(lambda_limits=band, time_resolution=MONITOR_TIME_RESOLUTION)
             setattr(self, monitor.__name__, wide)
-        for name in DISKS:
-            angle = DISKS[name].phase_from_mode(params.mode)
-            parked = replace(getattr(self, name), nu=0, delay=0, park_angle=angle)
-            setattr(self, name, parked)
-
-    def _chopper_instr_params(self) -> list[InstrParam]:
-        """Return no instrument parameters for the choppers: they are parked."""
-        return []
 
 
 def define_instrument() -> TRexWithVanadium:
     """Return the instrument of this diagnostic: :class:`TRexWithVanadium`, in the white beam."""
-    params = Params(lambda0=None)  # the white beam: no central wavelength
+    params = WHITE_BEAM  # no central wavelength, every chopper parked
     return TRexWithVanadium(params=params)
 
 

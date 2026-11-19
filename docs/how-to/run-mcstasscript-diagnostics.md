@@ -15,9 +15,7 @@ of this page from `TRex` in the white beam, 0.1 to 10 Å, with every chopper par
 [extraction guides](../instruments/trex/extraction.md) show both tools on the first 6 m of T-Rex.
 
 ```python
-from mcdgs.core import InstrParam
 from mcdgs.diagnostics import cli
-from mcdgs.instruments.trex.choppers import DISKS
 from mcdgs.instruments.trex.model import Params, TRex
 from mcdgs.mcstas import McStasScriptDiagnostics
 ```
@@ -36,18 +34,18 @@ Add the points, where the rays are recorded, and the views, how each point is dr
 
 The code is that of its `main`, where `NAME` is `"trex_guides_diagnostics"`, the name of the run
 folder and of the figure, `ncount` is 1e6 and `seed` is 1, and `folder` is where the figures go.
-`ParkedTRex` gives every chopper, `nu_bw1` to `nu_mc2`, a frequency and a delay of 0, so that the
-beam reaches the sample position unchopped. With no chopper to phase, it runs with `lambda0` set
-to `None`, the white beam, where `TRex` would need a wavelength to phase its choppers to.
+`rrm` 0 parks every chopper, `bw1` to `mc2`, with the slit of the mode on the beam: the wide
+slits of `"FF"`, the default. The beam then reaches the sample position unchopped. With no
+chopper to phase, it runs with `lambda0` set to `None`, the white beam, where turning choppers
+would need a wavelength to be phased to.
 
 !!! note "A chopper at 0 Hz is parked, not open"
 
-    At 0 Hz, McStas's `NXdisk_chopper` stands still with its zero mark at `park_angle`, 0 by
-    default, and a ray passes only through an opening that happens to be in front of the beam.
-    On T-Rex an opening is there on every disk, but some parked disks still block part of the
-    beam. With `lambda0` at 2 Å and 1e5 neutrons, about 11000 rays reach `ps1` and 7200 reach
-    `mc1`; 9 reach the sample position with the choppers turning, and about 4100 with them
-    parked.
+    At 0 Hz, McStas's `NXdisk_chopper` stands still with its zero mark at `park_angle`, and a ray
+    passes only through the opening in front of the beam. `rrm` 0 sets `park_<name>` to put the
+    slit of the mode there. With `lambda0` at 2 Å and 1e5 neutrons, about 11000 rays reach `ps1`
+    and 7200 reach `mc1`; 9 reach the sample position with the choppers turning, and about 6300
+    with them parked.
 
 - A point is just `before` or just `after` a component, by its name in the instrument:
   `list(TRex().components)` gives them all. A name the instrument does not have raises a
@@ -61,8 +59,8 @@ to `None`, the white beam, where `TRex` would need a wavelength to phase its cho
 - `run` takes the instrument parameters as keywords, like
   [`Simulation.run`](run-a-simulation.md#one-run), and returns the record of the run.
 
-Then draw it, one row per point and one column per view, and save it with `save_figure`, which
-also closes it:
+Then draw it, one row per point and one column per view, under the instrument's
+`running_conditions()`, and save it with `save_figure`, which also closes it:
 
 <!-- fmt:off -->
 ```python
@@ -83,7 +81,7 @@ wavelength against time is a band. The band keeps the length of the pulse while 
 grows with the distance, so it looks thinner at every point. Before the first bandwidth chopper,
 the beam fills the guide, ±0.03 m by ±0.04 m, about 20 times lower than after the source. From
 there to the sample position, the spectrum keeps its two peaks, and drops by a factor of about
-2.5; 76260 of the 1e6 rays reach the sample position. There, the beam is a spot about 0.04 m
+2.3; 114224 of the 1e6 rays reach the sample position. There, the beam is a spot about 0.04 m
 across.
 
 !!! warning "Every ray is kept, so keep `ncount` low"
@@ -99,8 +97,8 @@ across.
     the event monitors of the instrument, such as the `banana_detector` of T-Rex. A list with
     exactly one ray fails the run as it is read. Past the turning choppers of T-Rex few rays are
     left: at 1e5 neutrons, about 9 reach `sample_pos` with the bender out, and 1 reaches the
-    detector with it in. Put the points before the choppers, park them, or run enough neutrons
-    for the detector.
+    detector with it in. Put the points before the choppers, park them with `rrm` 0, or run
+    enough neutrons for the detector.
 
 ### The same diagnostics on more runs
 
