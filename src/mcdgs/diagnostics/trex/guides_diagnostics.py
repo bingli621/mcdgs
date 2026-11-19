@@ -1,9 +1,9 @@
 """McStasScript's diagnostics of T-Rex: the beam along the guides, and the intensity before each component.
 
-:func:`main` runs T-Rex at its default control parameters, with every chopper parked at 0 Hz,
-with :class:`.McStasScriptDiagnostics`, twice, and writes:
+:func:`main` runs T-Rex in the white beam, 0.1 to 10 Å, with every chopper parked at 0 Hz
+(:class:`ParkedTRex`), with :class:`.McStasScriptDiagnostics`, twice, and writes:
 
-- ``trex_beam_diagnostics.png``: the beam after the source, before the first bandwidth chopper,
+- ``trex_guides_diagnostics.png``: the beam after the source, before the first bandwidth chopper,
   at the end of the curved guide, at the end of the straight guide and at the sample position;
   its profile, wavelength against time, and its spectra in time and in wavelength;
 - ``trex_intensity.png``: McStasScript's diagram of the components, with the intensity and the
@@ -11,30 +11,45 @@ with :class:`.McStasScriptDiagnostics`, twice, and writes:
 
 They are the figures of the how-to page on McStasScript's diagnostics. Run the module for them::
 
-    pixi run python -m mcdgs.diagnostics.trex.beam_diagnostics --out docs/how-to/figures/mcstasscript-diagnostics
+    pixi run python -m mcdgs.diagnostics.trex.guides_diagnostics --out docs/how-to/figures/mcstasscript-diagnostics
 """
 
 from pathlib import Path
-from typing import Any
 
+from mcdgs.core import InstrParam
 from mcdgs.diagnostics import cli
 from mcdgs.instruments.trex.choppers import DISKS
 from mcdgs.instruments.trex.model import Params, TRex
 from mcdgs.mcstas import McStasScriptDiagnostics
 
-NAME = "trex_beam_diagnostics"
-
-# every chopper at 0 Hz: NXdisk_chopper then parks the disk with an opening on the beam, which
-# lets most of the beam through, unchopped; Any, as pyright matches the values of keywords
-# unpacked from a dict against every parameter of the run, not only the instrument parameters
-PARKED_CHOPPERS: dict[str, Any] = {f"nu_{name}": 0.0 for name in DISKS}
+NAME = "trex_guides_diagnostics"
 
 
 # --8<-- [start:instrument]
-def define_instrument() -> TRex:
-    """Return the instrument of this diagnostic: :class:`.TRex` at its default parameters."""
-    params = Params()  # the default control parameters
-    return TRex(params=params)
+class ParkedTRex(TRex):
+    """:class:`.TRex` with every chopper parked, at 0 Hz.
+
+    ``NXdisk_chopper`` then stands still with its zero mark at ``park_angle``, 0, where each disk
+    of T-Rex has an opening on the beam, which passes most of it, unchopped. With no chopper to
+    phase, it runs with ``lambda0`` ``None``, the white beam.
+    """
+
+    def _chopper_instr_params(self) -> list[InstrParam]:
+        """Return the frequency and the delay of every chopper, all 0: parked."""
+        return [
+            p
+            for name in DISKS
+            for p in (
+                InstrParam(f"nu_{name}", 0.0, "Hz", f"rotation frequency of chopper {name}"),
+                InstrParam(f"delay_{name}", 0.0, "s", f"delay of chopper {name}"),
+            )
+        ]
+
+
+def define_instrument() -> ParkedTRex:
+    """Return the instrument of this diagnostic: T-Rex in the white beam, its choppers parked."""
+    params = Params(lambda0=None)  # the white beam, 0.1 to 10 Å; the rest as default
+    return ParkedTRex(params=params)
 
 
 # --8<-- [end:instrument]
@@ -48,15 +63,15 @@ def main(
 ) -> list[Path]:
     """Run T-Rex with McStasScript's diagnostics, then for its diagram, and save both figures.
 
-    Both runs park every chopper, at 0 Hz (:data:`PARKED_CHOPPERS`), so the beam reaches the
-    sample position unchopped, but for what the parked disks block.
-    The runs go to the run folders ``trex_beam_diagnostics`` and
-    ``trex_beam_diagnostics_analysis``, replaced on every run.
+    The instrument is :class:`ParkedTRex` in the white beam, so the beam reaches the sample
+    position unchopped, but for what the parked disks block.
+    The runs go to the run folders ``trex_guides_diagnostics`` and
+    ``trex_guides_diagnostics_analysis``, replaced on every run.
 
     Parameters
     ----------
     out:
-        Folder of the figures. If ``None``, ``trex_beam_diagnostics`` in the results folder of
+        Folder of the figures. If ``None``, ``trex_guides_diagnostics`` in the results folder of
         :meth:`.Workspace.find`.
     ncount:
         Number of McStas neutrons of the run with the diagnostics, which keeps every ray at
@@ -87,7 +102,7 @@ def main(
     diag.add_view("t")  # the time spectrum
     diag.add_view("l")  # the wavelength spectrum
 
-    run = diag.run(NAME, ncount=ncount, seed=seed, **PARKED_CHOPPERS)
+    run = diag.run(NAME, ncount=ncount, seed=seed)
     # --8<-- [end:diagnostics]
     print(f"Diagnostics in {run.folder}")
 
@@ -97,9 +112,7 @@ def main(
     # --8<-- [end:plot]
 
     # --8<-- [start:analysis]
-    run, fig = diag.run_analysis(
-        f"{NAME}_analysis", ncount=analysis_ncount, seed=seed, **PARKED_CHOPPERS
-    )
+    run, fig = diag.run_analysis(f"{NAME}_analysis", ncount=analysis_ncount, seed=seed)
     diagram = cli.save_figure(fig, folder / "trex_intensity.png", dpi=100)
     # --8<-- [end:analysis]
     return [diagnostics, diagram]

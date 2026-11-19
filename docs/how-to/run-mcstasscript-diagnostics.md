@@ -10,12 +10,14 @@ McStasScript has two tools to look inside a McStas run:
 Both run McStas themselves. A [`McStasScriptDiagnostics`](../reference/mcstas.md) runs them in the
 same [workspace](run-a-simulation.md#where-the-files-go) as a `Simulation`, with a run folder and a
 [record](run-a-simulation.md#find-and-clean-up-runs) for every run. The examples are those of
-[`mcdgs.diagnostics.trex.beam_diagnostics`](../reference/diagnostics.md), which makes the figures
-of this page from `TRex` at its default parameters, with every chopper parked; the
+[`mcdgs.diagnostics.trex.guides_diagnostics`](../reference/diagnostics.md), which makes the figures
+of this page from `TRex` in the white beam, 0.1 to 10 Å, with every chopper parked; the
 [extraction guides](../instruments/trex/extraction.md) show both tools on the first 6 m of T-Rex.
 
 ```python
+from mcdgs.core import InstrParam
 from mcdgs.diagnostics import cli
+from mcdgs.instruments.trex.choppers import DISKS
 from mcdgs.instruments.trex.model import Params, TRex
 from mcdgs.mcstas import McStasScriptDiagnostics
 ```
@@ -26,28 +28,26 @@ Add the points, where the rays are recorded, and the views, how each point is dr
 
 <!-- fmt:off -->
 ```python
---8<-- "src/mcdgs/diagnostics/trex/beam_diagnostics.py:instrument"
+--8<-- "src/mcdgs/diagnostics/trex/guides_diagnostics.py:instrument"
 
---8<-- "src/mcdgs/diagnostics/trex/beam_diagnostics.py:diagnostics"
+--8<-- "src/mcdgs/diagnostics/trex/guides_diagnostics.py:diagnostics"
 ```
 <!-- fmt:on -->
 
-The code is that of its `main`, where `NAME` is `"trex_beam_diagnostics"`, the name of the run
+The code is that of its `main`, where `NAME` is `"trex_guides_diagnostics"`, the name of the run
 folder and of the figure, `ncount` is 1e6 and `seed` is 1, and `folder` is where the figures go.
-`PARKED_CHOPPERS` sets the frequency of every chopper, `nu_bw1` to `nu_mc2`, to 0, so that the
-beam reaches the sample position unchopped:
-
-```python
-PARKED_CHOPPERS = {f"nu_{name}": 0.0 for name in DISKS}  # DISKS of mcdgs.instruments.trex.choppers
-```
+`ParkedTRex` gives every chopper, `nu_bw1` to `nu_mc2`, a frequency and a delay of 0, so that the
+beam reaches the sample position unchopped. With no chopper to phase, it runs with `lambda0` set
+to `None`, the white beam, where `TRex` would need a wavelength to phase its choppers to.
 
 !!! note "A chopper at 0 Hz is parked, not open"
 
     At 0 Hz, McStas's `NXdisk_chopper` stands still with its zero mark at `park_angle`, 0 by
     default, and a ray passes only through an opening that happens to be in front of the beam.
     On T-Rex an opening is there on every disk, but some parked disks still block part of the
-    beam: at 1e5 neutrons, about 11000 rays reach `ps1` and 7200 reach `mc1`. With the choppers
-    turning, 9 of them reach the sample position; parked, about 4100.
+    beam. With `lambda0` at 2 Å and 1e5 neutrons, about 11000 rays reach `ps1` and 7200 reach
+    `mc1`; 9 reach the sample position with the choppers turning, and about 4100 with them
+    parked.
 
 - A point is just `before` or just `after` a component, by its name in the instrument:
   `list(TRex().components)` gives them all. A name the instrument does not have raises a
@@ -66,24 +66,25 @@ also closes it:
 
 <!-- fmt:off -->
 ```python
---8<-- "src/mcdgs/diagnostics/trex/beam_diagnostics.py:plot"
+--8<-- "src/mcdgs/diagnostics/trex/guides_diagnostics.py:plot"
 ```
 <!-- fmt:on -->
 
 `plot` draws the last run. A view of two variables is drawn in the `turbo` colormap, where
 McStasScript would use `jet`; give `colormap=` to the view for another. At 1e6 neutrons and
-seed 1, with the choppers parked:
+seed 1, in the white beam with the choppers parked:
 
-![The beam after the source, before the first bandwidth chopper, at the end of the curved and of the straight guide, and at the sample position](figures/mcstasscript-diagnostics/trex_beam_diagnostics.png)
+![The beam after the source, before the first bandwidth chopper, at the end of the curved and of the straight guide, and at the sample position](figures/mcstasscript-diagnostics/trex_guides_diagnostics.png)
 
-After the source, the beam leaves the two moderators side by side within the pulse, about 3 ms
-long, at every wavelength of the band, 1.1 to 2.9 Å. Further along, a neutron arrives later the
-longer its wavelength, so wavelength against time is a band. The band keeps the length of the
-pulse while the flight time grows with the distance, so it looks thinner at every point. Before
-the first bandwidth chopper, the beam fills the guide, ±0.03 m by ±0.04 m, about 20 times lower
-than after the source. From there to the sample position, the wavelength spectrum keeps its
-shape, and drops by a factor of about 3. At the sample position, the beam is a spot about
-±0.015 m across.
+After the source, the beam leaves the two moderators side by side, brighter at x above 0,
+within the pulse, about 3 ms long. Its spectrum has two peaks, at about 1.1 and 2.5 Å, and a
+long tail to 10 Å. Further along, a neutron arrives later the longer its wavelength, so
+wavelength against time is a band. The band keeps the length of the pulse while the flight time
+grows with the distance, so it looks thinner at every point. Before the first bandwidth chopper,
+the beam fills the guide, ±0.03 m by ±0.04 m, about 20 times lower than after the source. From
+there to the sample position, the spectrum keeps its two peaks, and drops by a factor of about
+2.5; 76260 of the 1e6 rays reach the sample position. There, the beam is a spot about 0.04 m
+across.
 
 !!! warning "Every ray is kept, so keep `ncount` low"
 
@@ -125,19 +126,20 @@ each, on a log scale. Each step of the line is what one component loses:
 
 <!-- fmt:off -->
 ```python
---8<-- "src/mcdgs/diagnostics/trex/beam_diagnostics.py:analysis"
+--8<-- "src/mcdgs/diagnostics/trex/guides_diagnostics.py:analysis"
 ```
 <!-- fmt:on -->
 
-It needs no points or views. At 1e7 neutrons and seed 1, with the choppers parked:
+It needs no points or views. At 1e7 neutrons and seed 1, in the white beam with the choppers
+parked:
 
 ![The components of T-Rex and the intensity before each](figures/mcstasscript-diagnostics/trex_intensity.png)
 
 The arrows on the left go from each component to the one it is placed relative to. A component
 with a dashed box takes part only under a condition, such as guide 4a, the bender and guide 4b,
-which depend on `bender_in`; the line is not to be read there. The intensity falls from a few
-1e11 n/s after the source to a little below 1e10 n/s at the sample position. Most of it is lost
-in the first guides; the parked choppers take little. With the choppers turning, the
+which depend on `bender_in`; the line is not to be read there. The intensity falls from about
+1e12 n/s after the source to about 2e10 n/s at the sample position. Most of it is lost in the
+first guides; the parked choppers take little. With the choppers turning, the
 pulse-shaping and monochromatic choppers take the largest steps, down to about 1e7 n/s at the
 detector.
 
@@ -157,7 +159,7 @@ not. The folder of the run also holds the monitors of the instrument.
 
 Each run writes a folder in `runs/` of the workspace, like every run of a `Simulation`:
 `<time>_diagnose` for `run` and `<time>_analysis` for `run_analysis`, unless given a name, such as
-`trex_beam_diagnostics` above. A `folder_name` is replaced on every run. They are found and
+`trex_guides_diagnostics` above. A `folder_name` is replaced on every run. They are found and
 cleaned up by their type:
 
 ```python

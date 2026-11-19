@@ -14,7 +14,7 @@ documentation. See [Source](../instruments/trex/source.md),
 [Rotation scan](../instruments/trex/elastic-scan.md) for what they show for T-Rex, and
 [Source](../instruments/cspec/source.md) for CSPEC.
 [Run McStasScript's diagnostics](../how-to/run-mcstasscript-diagnostics.md) has the figures of
-`beam_diagnostics`.
+`guides_diagnostics`.
 
 ::: mcdgs.diagnostics.compare
 
@@ -46,7 +46,7 @@ documentation. See [Source](../instruments/trex/source.md),
 
 ::: mcdgs.diagnostics.trex.elastic_scan
 
-::: mcdgs.diagnostics.trex.beam_diagnostics
+::: mcdgs.diagnostics.trex.guides_diagnostics
 
 ::: mcdgs.diagnostics.cspec.overview
 
