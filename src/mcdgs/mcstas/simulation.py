@@ -16,9 +16,9 @@ the outputs into one file, after compiling the instrument once: see :mod:`.mcsta
 Each of them returns the :class:`.Run` it made, which is also left as ``run.json`` in the
 folder of the run.
 
-``prepare`` is the step they all share, for a run that McStasScript starts itself, such as its
-``Diagnostics`` or ``show_diagram(analysis=True)``: it gives the run its folder, its settings and
-its record, which the caller finishes once McStas has run.
+``prepare`` is the step they all share, for a run that McStasScript starts itself, such as
+``show_diagram(analysis=True)`` or the diagnostics of :class:`.McStasScriptDiagnostics`: it gives
+the run its folder, its settings and its record, which the caller finishes once McStas has run.
 """
 
 from collections.abc import Mapping
@@ -100,8 +100,8 @@ class Simulation:
         """Pick the run folder and build the instrument with the settings every run shares.
 
         Every method of the simulation starts with it. Call it for a run that McStasScript
-        starts itself, such as ``ms.Diagnostics(inst).run()``, which runs a copy of ``inst``
-        with its settings, then save the record with ``run.finish()``.
+        starts itself, such as ``inst.show_diagram(analysis=True)``, which runs ``inst`` with
+        its settings, then save the record with ``run.finish()``.
 
         Parameters
         ----------

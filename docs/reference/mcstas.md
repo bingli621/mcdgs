@@ -5,6 +5,8 @@ what it writes.
 
 ::: mcdgs.mcstas.simulation
 
+::: mcdgs.mcstas.mcstasscript_diagnostics
+
 ::: mcdgs.mcstas.scan
 
 ::: mcdgs.mcstas.builder

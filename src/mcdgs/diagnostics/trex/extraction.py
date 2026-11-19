@@ -45,7 +45,13 @@ from mcdgs.instruments.trex.guides.bispectral import (
 from mcdgs.instruments.trex.guides.extraction import guides_extraction
 from mcdgs.instruments.trex.monitors import beam_monitor, source_monitor
 from mcdgs.instruments.trex.sources import source
-from mcdgs.mcstas import Run, Simulation, build_mcstas, read_mcstas_map
+from mcdgs.mcstas import (
+    McStasScriptDiagnostics,
+    Run,
+    Simulation,
+    build_mcstas,
+    read_mcstas_map,
+)
 from mcdgs.reduction.binning import monitor_bins
 from mcdgs.tof import build_tof, read_tof_map
 
@@ -191,29 +197,22 @@ def diagnose_mcstas(
     """
     # --8<-- [start:diagnostics]
     # McStasScript's diagnostics: the beam after the source, guide 3 and guide 4b, its profile,
-    # wavelength against x, and its spectrum. McStasScript runs them itself, so the simulation
-    # only prepares the run: its folder, its settings and its record, in McStas's own format,
-    # which McStasScript reads
-    sim = Simulation(instrument)
-    run, mcstas_instr = sim.prepare(
-        run_name, ncount=diagnostics_ncount, seed=seed, nexus=False, mpi="auto"
-    )
-    diag = ms.Diagnostics(mcstas_instr)  # runs a copy of mcstas_instr, with its settings
+    # wavelength against x, and its spectrum
+    diag = McStasScriptDiagnostics(instrument)
     for component in ("source", "guide_3", "guide_4b"):
-        # rays="all": a limited list stops early, which leaves the intensities too low
-        diag.add_point(after=component, rays="all")  # pyright: ignore[reportArgumentType]
-    diag.add_view("x", "y", bins=100, colormap="turbo")  # McStasScript's default is jet
-    diag.add_view("x", "l", bins=100, colormap="turbo")
+        diag.add_point(after=component)  # every ray
+    diag.add_view("x", "y", bins=100)  # in turbo
+    diag.add_view("x", "l", bins=100)
     diag.add_view("l")
+    diag.run(run_name, ncount=diagnostics_ncount, seed=seed)
     # --8<-- [end:diagnostics]
 
-    diag.run()
-    run.finish()  # the record of the run, in its folder
     diag.plot()  # draws on a new figure, which it does not return
     figures = [cli.save_figure(plt.gcf(), figure_folder / f"{run_name}_diagnose.png", dpi=100)]
 
     # McStasScript's diagram of the components, with the intensity and the rays before each:
     # a McStas run of its own, in a folder of its own, which also holds the monitors
+    sim = Simulation(instrument)
     run, mcstas_instr = sim.prepare(
         f"{run_name}_intensity", ncount=ncount, seed=seed, nexus=False, mpi="auto"
     )

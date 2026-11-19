@@ -35,9 +35,13 @@ BEAM_FILE = "beam.mcpl.gz"  # the beam a run to the sample dumps
 
 
 class RunType(StrEnum):
-    """What a run does: the method of :class:`.Simulation` that made it."""
+    """What a run does: the method of :class:`.Simulation` that made it.
+
+    ``DIAGNOSE`` is a run of :meth:`.McStasScriptDiagnostics.run`.
+    """
 
     RUN = "run"
+    DIAGNOSE = "diagnose"
     SCAN = "scan"
     RUN_TO_SAMPLE = "run_to_sample"
     RUN_FROM_SAMPLE = "run_from_sample"
