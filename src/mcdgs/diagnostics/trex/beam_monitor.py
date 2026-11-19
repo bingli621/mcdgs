@@ -38,7 +38,7 @@ from mcdgs.core.components import Arm, ESS_butterfly, Guide_gravity, Monitor_nD,
 from mcdgs.core.components.source import ESS_SOURCE_FREQUENCY
 from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
 from mcdgs.diagnostics.compare import (
-    compare_mcstas_vs_tof,
+    mcstas_vs_tof,
     plot_comparison,
     print_means,
     tof_scale,
@@ -243,14 +243,12 @@ def main(
     mcstas_source = read_mcstas_map("source_monitor", mcstas_data, source_bins)
     tof_source = read_tof_map("source_monitor", tof_result, source_bins)
     scale = tof_scale(mcstas_source, tof_source)
-    at_source = compare_mcstas_vs_tof(
-        "source_monitor", mcstas_source, tof_source, ncount, neutrons, scale
-    )
+    at_source = mcstas_vs_tof("source_monitor", mcstas_source, tof_source, ncount, neutrons, scale)
     mcstas_beam = read_mcstas_map("beam_monitor", mcstas_data, bins)
     tof_beam = read_tof_map("beam_monitor", tof_result, bins)
     if transmission is None:  # tuned: the transmission that gives tof the total of McStas
         transmission = tuned_transmission(mcstas_beam, tof_beam, scale)
-    comparison = compare_mcstas_vs_tof(
+    comparison = mcstas_vs_tof(
         "beam_monitor", mcstas_beam, tof_beam, ncount, neutrons, scale, transmission
     )
     # --8<-- [end:transmission]

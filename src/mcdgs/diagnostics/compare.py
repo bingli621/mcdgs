@@ -22,7 +22,7 @@ Further down the beam, the same scale lets a difference in what the guides and c
 through show. ``transmission`` then scales tof on top of it, for what the beam loses that tof
 does not model, such as the guides: tof has none. :func:`tof_scale` gives the scale where both
 see the same beam, :func:`tuned_transmission` the transmission that gives tof the total of
-McStas further down, and :func:`compare_mcstas_vs_tof` puts both maps side by side in n/s.
+McStas further down, and :func:`mcstas_vs_tof` puts both maps side by side in n/s.
 """
 
 from dataclasses import dataclass
@@ -175,7 +175,7 @@ def plot_profile(ax: Axes, data: sc.DataArray, label: str, *, connect: bool = Fa
 class MonitorComparison:
     """Two time and wavelength maps of one monitor on the same bins, in n/s per bin.
 
-    The maps are those of McStas and tof, as :func:`compare_mcstas_vs_tof` puts them side by
+    The maps are those of McStas and tof, as :func:`mcstas_vs_tof` puts them side by
     side, or any two, such as McStas at two settings.
 
     Parameters
@@ -347,7 +347,7 @@ def tuned_transmission(mcstas_map: sc.DataArray, tof_counts: sc.DataArray, scale
     return tof_scale(mcstas_map, tof_counts) / scale
 
 
-def compare_mcstas_vs_tof(
+def mcstas_vs_tof(
     name: str,
     mcstas_map: sc.DataArray,
     tof_counts: sc.DataArray,

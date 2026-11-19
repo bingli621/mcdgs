@@ -13,7 +13,7 @@ weights of its rays itself, in n/s, while each tof neutron has weight 1, so tof 
 from McStas, the total of McStas over that of tof (:func:`.tof_scale`).
 
 :func:`main` runs both models and reads the intensity of each on the bins of the monitor.
-:func:`.tof_scale` gives the scale of tof, :func:`.compare_mcstas_vs_tof` puts both maps side by
+:func:`.tof_scale` gives the scale of tof, :func:`.mcstas_vs_tof` puts both maps side by
 side in n/s, :func:`.print_means` prints their mean time and wavelength, and
 :func:`.plot_comparison` draws them. Run the module to do all of it, at 1e6 and at 1e5 neutrons
 in both models, and with the band of ``lambda0`` = 3 Å::
@@ -31,7 +31,7 @@ from mcdgs.core.components import Arm, ESS_butterfly, Monitor_nD
 from mcdgs.core.components.monitors import time_lambda_options
 from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
 from mcdgs.diagnostics.compare import (
-    compare_mcstas_vs_tof,
+    mcstas_vs_tof,
     plot_comparison,
     print_means,
     tof_scale,
@@ -214,9 +214,7 @@ def main(
     # tof has no flux: each of its neutrons stands for the total of McStas over that of tof
     scale = tof_scale(mcstas_map, tof_counts)  # n/s per tof neutron
     # both maps side by side in n/s: tof times the scale, its Poisson errors scaled along
-    comparison = compare_mcstas_vs_tof(
-        "source_monitor", mcstas_map, tof_counts, ncount, neutrons, scale
-    )
+    comparison = mcstas_vs_tof("source_monitor", mcstas_map, tof_counts, ncount, neutrons, scale)
     # --8<-- [end:scale_tof]
 
     # the mean time and wavelength of each model, weighted by its intensity, and the scale

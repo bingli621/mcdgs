@@ -54,7 +54,7 @@ from mcdgs.core.components import Monitor_nD
 from mcdgs.diagnostics.cli import markdown_table, output_folder, parse_out, save_figure, save_text
 from mcdgs.diagnostics.compare import (
     MonitorComparison,
-    compare_mcstas_vs_tof,
+    mcstas_vs_tof,
     plot_comparison,
     tof_scale,
     tuned_transmission,
@@ -579,14 +579,12 @@ def main(
     mcstas_source = read_mcstas_map("source_monitor", mcstas_data, source_bins)
     tof_source = read_tof_map("source_monitor", tof_result, source_bins)
     scale = tof_scale(mcstas_source, tof_source)
-    at_source = compare_mcstas_vs_tof(
-        "source_monitor", mcstas_source, tof_source, ncount, neutrons, scale
-    )
+    at_source = mcstas_vs_tof("source_monitor", mcstas_source, tof_source, ncount, neutrons, scale)
     mcstas_sample = read_mcstas_map("sample_monitor", mcstas_data, sample_bins)
     tof_sample = read_tof_map("sample_monitor", tof_result, sample_bins)
     if transmission is None:  # tuned: the transmission that gives tof the total of McStas
         transmission = tuned_transmission(mcstas_sample, tof_sample, scale)
-    comparison = compare_mcstas_vs_tof(
+    comparison = mcstas_vs_tof(
         "sample_monitor", mcstas_sample, tof_sample, ncount, neutrons, scale, transmission
     )
 

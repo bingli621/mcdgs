@@ -151,7 +151,7 @@ source. Further down, keep that same scale rather than computing a new one at ea
 scaled again to the total of McStas there, tof would agree with it by construction, and a
 difference in what the guides and choppers let through would not show. Keep it with the same
 number of tof neutrons; with another number, keep `scale × neutrons`, as the scale goes as
-1/neutrons. [`compare_mcstas_vs_tof`](../../reference/diagnostics.md#mcdgs.diagnostics.compare.compare_mcstas_vs_tof) takes it as `scale`, from [`tof_scale`](../../reference/diagnostics.md#mcdgs.diagnostics.compare.tof_scale) at the
+1/neutrons. [`mcstas_vs_tof`](../../reference/diagnostics.md#mcdgs.diagnostics.compare.mcstas_vs_tof) takes it as `scale`, from [`tof_scale`](../../reference/diagnostics.md#mcdgs.diagnostics.compare.tof_scale) at the
 source.
 
 ## Error bars
@@ -172,7 +172,7 @@ the functions of [`mcdgs.diagnostics.compare`](../../reference/diagnostics.md#mc
 
 - [`tof_scale`](../../reference/diagnostics.md#mcdgs.diagnostics.compare.tof_scale)
   gives the scale, the n/s each tof neutron stands for;
-- [`compare_mcstas_vs_tof`](../../reference/diagnostics.md#mcdgs.diagnostics.compare.compare_mcstas_vs_tof)
+- [`mcstas_vs_tof`](../../reference/diagnostics.md#mcdgs.diagnostics.compare.mcstas_vs_tof)
   scales tof by it and puts both maps side by side, in n/s;
 - [`print_means`](../../reference/diagnostics.md#mcdgs.diagnostics.compare.print_means)
   prints the mean time and wavelength of each model, and `main` the McStas total and the scale;

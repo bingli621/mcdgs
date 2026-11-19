@@ -24,7 +24,7 @@ of the relative error, and a tenth of the error in n/s, as the weight is a hundr
 error bars shrink with more neutrons, in both models, while the intensity stays.
 
 :func:`main` runs both models and reads the intensity of each on the bins of the monitor.
-:func:`.tof_scale` gives the scale of tof, :func:`.compare_mcstas_vs_tof` puts both maps side by
+:func:`.tof_scale` gives the scale of tof, :func:`.mcstas_vs_tof` puts both maps side by
 side in n/s, :func:`.print_means` prints their mean time and wavelength, and
 :func:`.plot_comparison` draws them. Run the module to do all of it, at 1e6 and at 1e5 neutrons
 in both models, and with the band of ``lambda0`` = 2 Å::
@@ -39,13 +39,7 @@ import mcstasscript as ms
 
 from mcdgs.core import Instrument, param
 from mcdgs.core.components import ESS_butterfly, Monitor_nD
-from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
-from mcdgs.diagnostics.compare import (
-    compare_mcstas_vs_tof,
-    plot_comparison,
-    print_means,
-    tof_scale,
-)
+from mcdgs.diagnostics import cli, compare
 from mcdgs.instruments.trex.monitors import source_monitor
 from mcdgs.instruments.trex.sources import source, wavelength_band
 from mcdgs.mcstas import Simulation, read_mcstas_map
@@ -171,28 +165,28 @@ def main(
 
     # --8<-- [start:scale_tof]
     # tof has no flux: each of its neutrons stands for the total of McStas over that of tof
-    scale = tof_scale(mcstas_map, tof_counts)  # n/s per tof neutron
+    scale = compare.tof_scale(mcstas_map, tof_counts)  # n/s per tof neutron
     # both maps side by side in n/s: tof times the scale, its Poisson errors scaled along
-    comparison = compare_mcstas_vs_tof(
+    comparison = compare.mcstas_vs_tof(
         "source_monitor", mcstas_map, tof_counts, ncount, neutrons, scale
     )
     # --8<-- [end:scale_tof]
 
     # the mean time and wavelength of each model, weighted by its intensity, and the scale
-    print_means(comparison)
+    compare.print_means(comparison)
     print(f"McStas total {mcstas_map.sum().value:.4g} n/s, {scale:.4g} n/s per tof neutron")
 
     # --8<-- [start:plot]
     # top row: the time and wavelength map of each model, on one color scale; bottom row: the
     # wavelength spectrum and the time profile of both, with their error bars
-    fig = plot_comparison(comparison, "T-Rex flux at the entrance of guide 1")
+    fig = compare.plot_comparison(comparison, "T-Rex flux at the entrance of guide 1")
     # --8<-- [end:plot]
 
-    return save_figure(fig, output_folder(out, "trex_source") / f"{run.name}.png")
+    return cli.save_figure(fig, cli.output_folder(out, "trex_source") / f"{run.name}.png")
 
 
 if __name__ == "__main__":
-    out_folder = parse_out(__doc__)
+    out_folder = cli.parse_out(__doc__)
     main(out=out_folder, ncount=1e6, neutrons=1_000_000, folder_name="trex_source_1e6")
     # a tenth of the neutrons in both models, for the scale with fewer tof neutrons
     main(out=out_folder, ncount=1e5, neutrons=100_000, folder_name="trex_source_1e5")

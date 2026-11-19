@@ -35,7 +35,7 @@ from mcdgs.core.components import (
 )
 from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
 from mcdgs.diagnostics.compare import (
-    compare_mcstas_vs_tof,
+    mcstas_vs_tof,
     plot_comparison,
     tof_scale,
 )
@@ -315,7 +315,7 @@ def main(
         tof_beam = read_tof_map("beam_monitor", tof_result, beam_bins)
         mcstas_beam = read_mcstas_map("beam_monitor", mcstas_data, beam_bins)
 
-        comparison = compare_mcstas_vs_tof(
+        comparison = mcstas_vs_tof(
             "beam_monitor", mcstas_beam, tof_beam, ncount, neutrons, scale, transmission
         )
         # --8<-- [end:scale_tof]

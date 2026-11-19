@@ -42,8 +42,8 @@ from scippneutron.conversion import tof as tof_kernels
 from mcdgs.diagnostics.cli import output_folder, parse_out, save_figure
 from mcdgs.diagnostics.compare import (
     MonitorComparison,
-    compare_mcstas_vs_tof,
     intensity_label,
+    mcstas_vs_tof,
     tof_scale,
     tuned_transmission,
 )
@@ -391,7 +391,7 @@ def main(
         first = MONITORS[0]
         transmission = tuned_transmission(mcstas_maps[first], tof_maps[first], scale)
     comparisons = [
-        compare_mcstas_vs_tof(
+        mcstas_vs_tof(
             name, mcstas_maps[name], tof_maps[name], ncount, neutrons, scale, transmission
         )
         for name in MONITORS

@@ -8,8 +8,8 @@ from mcstasscript.data.data import McStasData, McStasMetaData
 
 from mcdgs.diagnostics.compare import (
     MonitorComparison,
-    compare_mcstas_vs_tof,
     intensity_label,
+    mcstas_vs_tof,
     mean_coordinate,
     plot_comparison,
     plot_map,
@@ -49,7 +49,7 @@ def _source_comparison(tof_result: tof.Result) -> MonitorComparison:
     mcstas_map = read_mcstas_map("source_monitor", _mcstas_map((20, 30)), BINS)
     tof_counts = read_tof_map("source_monitor", tof_result, BINS)
     scale = tof_scale(mcstas_map, tof_counts)
-    return compare_mcstas_vs_tof("source_monitor", mcstas_map, tof_counts, 1e6, NEUTRONS, scale)
+    return mcstas_vs_tof("source_monitor", mcstas_map, tof_counts, 1e6, NEUTRONS, scale)
 
 
 def test_tof_is_scaled_to_the_total_of_mcstas(tof_result):
@@ -62,7 +62,7 @@ def test_tof_is_scaled_to_the_total_of_mcstas(tof_result):
 def test_the_scale_and_the_transmission_scale_tof_and_its_poisson_errors(tof_result):
     mcstas_map = read_mcstas_map("source_monitor", _mcstas_map((20, 30)), BINS)
     tof_counts = read_tof_map("source_monitor", tof_result, BINS)
-    comparison = compare_mcstas_vs_tof(
+    comparison = mcstas_vs_tof(
         "source_monitor", mcstas_map, tof_counts, 1e6, NEUTRONS, scale=2.0, transmission=0.25
     )
     counts = tof_counts.values
@@ -84,9 +84,7 @@ def test_the_tuned_transmission_gives_tof_the_total_of_mcstas_further_down(tof_r
     tof_later = read_tof_map("later_monitor", tof_two_monitors, BINS)
     scale = tof_scale(source_map, tof_source)
     transmission = tuned_transmission(later_map, tof_later, scale)
-    later = compare_mcstas_vs_tof(
-        "later_monitor", later_map, tof_later, 1e6, NEUTRONS, scale, transmission
-    )
+    later = mcstas_vs_tof("later_monitor", later_map, tof_later, 1e6, NEUTRONS, scale, transmission)
     assert transmission == pytest.approx(0.25)
     assert later.second.values.sum() == pytest.approx(later.first.values.sum())
 
