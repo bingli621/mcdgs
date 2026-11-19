@@ -24,7 +24,7 @@ of the relative error, and a tenth of the error in n/s, as the weight is a hundr
 error bars shrink with more neutrons, in both models, while the intensity stays.
 
 :func:`main` runs both models and reads the intensity of each on the bins of the monitor.
-:func:`.tof_neutron_weight` gives the scale of tof, :func:`.mcstas_vs_tof` puts both maps side by
+:func:`.rescale_tof_to_mcstas` gives the scale of tof, :func:`.mcstas_vs_tof` puts both maps side by
 side in n/s, :func:`.print_means` prints their mean time and wavelength, and
 :func:`.plot_comparison` draws them. Run the module to do all of it, at 1e6 and at 1e5 neutrons
 in both models, and with the band of ``lambda0`` = 2 Å::
@@ -165,7 +165,7 @@ def main(
 
     # --8<-- [start:scale_tof]
     # tof has no flux: each of its neutrons stands for the total of McStas over that of tof
-    scale = compare.tof_neutron_weight(mcstas_map, tof_map)  # n/s per tof neutron
+    scale = compare.rescale_tof_to_mcstas(tof_map, mcstas_map)  # n/s per tof neutron
     # both maps side by side in n/s: tof times the scale, its Poisson errors scaled along
     comparison = compare.mcstas_vs_tof(
         "source_monitor", mcstas_map, tof_map, ncount, neutrons, scale

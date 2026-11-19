@@ -151,7 +151,7 @@ source. Further down, keep that same scale rather than computing a new one at ea
 scaled again to the total of McStas there, tof would agree with it by construction, and a
 difference in what the guides and choppers let through would not show. Keep it with the same
 number of tof neutrons; with another number, keep `scale × neutrons`, as the scale goes as
-1/neutrons. [`mcstas_vs_tof`](../../reference/diagnostics.md#mcdgs.diagnostics.compare.mcstas_vs_tof) takes it as `scale`, from [`tof_neutron_weight`](../../reference/diagnostics.md#mcdgs.diagnostics.compare.tof_neutron_weight) at the
+1/neutrons. [`mcstas_vs_tof`](../../reference/diagnostics.md#mcdgs.diagnostics.compare.mcstas_vs_tof) takes it as `scale`, from [`rescale_tof_to_mcstas`](../../reference/diagnostics.md#mcdgs.diagnostics.compare.rescale_tof_to_mcstas) at the
 source.
 
 ## Error bars
@@ -170,7 +170,7 @@ errors add in quadrature.
 `main` runs both models with the same seed and reads each monitor on the same bins. It then uses
 the functions of [`mcdgs.diagnostics.compare`](../../reference/diagnostics.md#mcdgs.diagnostics.compare):
 
-- [`tof_neutron_weight`](../../reference/diagnostics.md#mcdgs.diagnostics.compare.tof_neutron_weight)
+- [`rescale_tof_to_mcstas`](../../reference/diagnostics.md#mcdgs.diagnostics.compare.rescale_tof_to_mcstas)
   gives the scale, the n/s each tof neutron stands for;
 - [`mcstas_vs_tof`](../../reference/diagnostics.md#mcdgs.diagnostics.compare.mcstas_vs_tof)
   scales tof by it and puts both maps side by side, in n/s;

@@ -302,7 +302,7 @@ def main(
         mcstas_data = ms.load_data(run.folder)
         mcstas_source = read_mcstas_map("source_monitor", mcstas_data, source_bins)
 
-        scale = compare.tof_neutron_weight(mcstas_source, tof_source)
+        scale = compare.rescale_tof_to_mcstas(tof_source, mcstas_source)
 
         # at the beam monitor: tof with that scale, and the transmission of the guides on top
         beam_bins = monitor_bins(instrument.beam_monitor.bin_limits)

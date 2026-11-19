@@ -379,10 +379,10 @@ def main(
     }
     mcstas_maps = {name: read_mcstas_map(name, mcstas_data, edges) for name, edges in bins.items()}
     tof_maps = {name: read_tof_map(name, tof_result, edges) for name, edges in bins.items()}
-    scale = compare.tof_neutron_weight(mcstas_maps["source_monitor"], tof_maps["source_monitor"])
+    scale = compare.rescale_tof_to_mcstas(tof_maps["source_monitor"], mcstas_maps["source_monitor"])
     if transmission is None:  # tuned at the pre-sample monitor, and kept at the beamstop monitor
         first = MONITORS[0]
-        transmission = compare.tuned_transmission(mcstas_maps[first], tof_maps[first], scale)
+        transmission = compare.rescale_tof_to_mcstas(tof_maps[first], mcstas_maps[first]) / scale
     comparisons = [
         compare.mcstas_vs_tof(
             name, mcstas_maps[name], tof_maps[name], ncount, neutrons, scale, transmission

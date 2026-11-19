@@ -571,14 +571,14 @@ def main(
     sample_bins = monitor_bins(instrument.sample_monitor.bin_limits)
     mcstas_source = read_mcstas_map("source_monitor", mcstas_data, source_bins)
     tof_source = read_tof_map("source_monitor", tof_result, source_bins)
-    scale = compare.tof_neutron_weight(mcstas_source, tof_source)
+    scale = compare.rescale_tof_to_mcstas(tof_source, mcstas_source)
     at_source = compare.mcstas_vs_tof(
         "source_monitor", mcstas_source, tof_source, ncount, neutrons, scale
     )
     mcstas_sample = read_mcstas_map("sample_monitor", mcstas_data, sample_bins)
     tof_sample = read_tof_map("sample_monitor", tof_result, sample_bins)
     if transmission is None:  # tuned: the transmission that gives tof the total of McStas
-        transmission = compare.tuned_transmission(mcstas_sample, tof_sample, scale)
+        transmission = compare.rescale_tof_to_mcstas(tof_sample, mcstas_sample) / scale
     comparison = compare.mcstas_vs_tof(
         "sample_monitor", mcstas_sample, tof_sample, ncount, neutrons, scale, transmission
     )

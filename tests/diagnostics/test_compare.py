@@ -15,8 +15,7 @@ from mcdgs.diagnostics.compare import (
     plot_map,
     plot_profile,
     print_means,
-    tof_neutron_weight,
-    tuned_transmission,
+    rescale_tof_to_mcstas,
 )
 from mcdgs.diagnostics.trex.source import TRexSource
 from mcdgs.mcstas import read_mcstas_map
@@ -48,7 +47,7 @@ def _source_comparison(tof_result: tof.Result) -> MonitorComparison:
     """source_monitor in both models, tof scaled to the total of McStas there."""
     mcstas_map = read_mcstas_map("source_monitor", _mcstas_map((20, 30)), BINS)
     tof_counts = read_tof_map("source_monitor", tof_result, BINS)
-    scale = tof_neutron_weight(mcstas_map, tof_counts)
+    scale = rescale_tof_to_mcstas(tof_counts, mcstas_map)
     return mcstas_vs_tof("source_monitor", mcstas_map, tof_counts, 1e6, NEUTRONS, scale)
 
 
@@ -75,15 +74,15 @@ def test_the_scale_and_the_transmission_scale_tof_and_its_poisson_errors(tof_res
     )
 
 
-def test_the_tuned_transmission_gives_tof_the_total_of_mcstas_further_down(tof_result):
+def test_the_transmission_from_the_rescaling_gives_tof_the_total_of_mcstas_further_down(tof_result):
     # the same tof neutrons at both monitors, a quarter of the McStas beam at the later one
     tof_two_monitors = {"later_monitor": tof_result["source_monitor"]}
     source_map = read_mcstas_map("source_monitor", _two_monitors(), BINS)
     tof_source = read_tof_map("source_monitor", tof_result, BINS)
     later_map = read_mcstas_map("later_monitor", _two_monitors(), BINS)
     tof_later = read_tof_map("later_monitor", tof_two_monitors, BINS)
-    scale = tof_neutron_weight(source_map, tof_source)
-    transmission = tuned_transmission(later_map, tof_later, scale)
+    scale = rescale_tof_to_mcstas(tof_source, source_map)
+    transmission = rescale_tof_to_mcstas(tof_later, later_map) / scale
     later = mcstas_vs_tof("later_monitor", later_map, tof_later, 1e6, NEUTRONS, scale, transmission)
     assert transmission == pytest.approx(0.25)
     assert later.second.values.sum() == pytest.approx(later.first.values.sum())
