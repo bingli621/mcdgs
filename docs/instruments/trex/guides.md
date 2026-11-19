@@ -40,7 +40,9 @@ McStasScript's diagram lists the components in beam order, with the intensity ju
 in n/s, and the number of rays, on a log scale. Each step of the line is what one component
 loses. At 1e7 neutrons and seed 1:
 
-![The components of T-Rex and the intensity before each](figures/guides/trex_intensity.png)
+??? abstract "The diagram of the intensity before each component"
+
+    ![The components of T-Rex and the intensity before each](figures/guides/trex_intensity.png)
 
 The intensity falls from 8.8e11 n/s at the entrance of guide 1 to 2.5e10 n/s at the sample
 position. Most of it is lost in the first guides, up to about 20 m; the parked choppers take

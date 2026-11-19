@@ -25,6 +25,6 @@ instrument file.
 
 ![The legend of show_diagram(): the colors of the kinds of McStas component, the blue and red arrows, and the dashed box of a WHEN](figures/overview/trex_diagram_legend.png)
 
-??? abstract "show_diagram()"
+???+ abstract "show_diagram()"
 
     ![McStasScript's diagram of the components of T-Rex and what each is placed relative to](figures/overview/trex_diagram.png)
