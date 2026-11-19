@@ -41,6 +41,7 @@ nav = [
   ] },
   { "How-to guides" = [
     { "Run a McStas simulation" = "how-to/run-a-simulation.md" },
+    { "Run McStasScript's diagnostics" = "how-to/run-mcstasscript-diagnostics.md" },
     { "Simulate the choppers with tof" = "how-to/simulate-the-choppers-with-tof.md" },
     { "Read the output" = "how-to/read-the-output.md" },
   ] },

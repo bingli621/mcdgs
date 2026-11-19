@@ -1,0 +1,159 @@
+# Run McStasScript's diagnostics
+
+McStasScript has two tools to look inside a McStas run:
+
+- its **beam diagnostics**, which record the rays at points along the instrument and draw them as
+  histograms, such as the beam profile or the wavelength against x;
+- its **analysis diagram**, which draws the components in beam order with the intensity and the
+  number of rays just before each.
+
+Both run McStas themselves. A [`McStasScriptDiagnostics`](../reference/mcstas.md) runs them in the
+same [workspace](run-a-simulation.md#where-the-files-go) as a `Simulation`, with a run folder and a
+[record](run-a-simulation.md#find-and-clean-up-runs) for every run. The examples are those of
+[`mcdgs.diagnostics.trex.beam_diagnostics`](../reference/diagnostics.md), which makes the figures
+of this page from `TRex` at its default parameters; the
+[extraction guides](../instruments/trex/extraction.md) show both tools on the first 6 m of T-Rex.
+
+```python
+from mcdgs.diagnostics import cli
+from mcdgs.instruments.trex.model import Params, TRex
+from mcdgs.mcstas import McStasScriptDiagnostics
+```
+
+## The beam at points along the instrument
+
+Add the points, where the rays are recorded, and the views, how each point is drawn, then run:
+
+<!-- fmt:off -->
+```python
+--8<-- "src/mcdgs/diagnostics/trex/beam_diagnostics.py:instrument"
+
+--8<-- "src/mcdgs/diagnostics/trex/beam_diagnostics.py:diagnostics"
+```
+<!-- fmt:on -->
+
+The code is that of its `main`, where `NAME` is `"trex_beam_diagnostics"`, the name of the run
+folder and of the figure, `ncount` is 1e6 and `seed` is 1, and `folder` is where the figures go.
+
+- A point is just `before` or just `after` a component, by its name in the instrument:
+  `list(TRex().components)` gives them all. A name the instrument does not have raises a
+  `KeyError` at once.
+- A view is a histogram of one ray variable, or of one against another: `x`, `y`, `z` in m;
+  `vx`, `vy`, `vz` and `speed` in m/s; `dx`, `dy`, the divergence in deg; `t` in s; `l`, the
+  wavelength in Å; `e`, the energy in meV. Its other keywords are those of McStasScript's
+  `add_view`: `bins`; `same_scale=True` draws the view on the same ranges at every point;
+  `axis1_values` and `axis2_values` draw lines at those values; and plot options, such as
+  `log=True`.
+- `run` takes the instrument parameters as keywords, like
+  [`Simulation.run`](run-a-simulation.md#one-run), and returns the record of the run.
+
+Then draw it, one row per point and one column per view, and save it with `save_figure`, which
+also closes it:
+
+<!-- fmt:off -->
+```python
+--8<-- "src/mcdgs/diagnostics/trex/beam_diagnostics.py:plot"
+```
+<!-- fmt:on -->
+
+`plot` draws the last run. A view of two variables is drawn in the `turbo` colormap, where
+McStasScript would use `jet`; give `colormap=` to the view for another. At 1e6 neutrons and
+seed 1:
+
+![The beam after the source, before the first bandwidth chopper and after the curved guide](figures/mcstasscript-diagnostics/trex_beam_diagnostics.png)
+
+After the source, the beam leaves the two moderators side by side, so wavelength against x has
+more short wavelengths at x below 0 and more long ones above it. Before the first bandwidth
+chopper, the beam fills the guide, ±0.03 m by ±0.04 m, with a spectrum of the same shape, about 20
+times lower. After the curved guide, past both bandwidth choppers, the band is about 1.3 to
+2.8 Å.
+
+!!! warning "Every ray is kept, so keep `ncount` low"
+
+    A point records every ray that passes it, as McStasScript's limited lists stop the run early,
+    which leaves the intensities too low. Near the source, where most rays still pass, that is
+    about 60 MB per point at 1e6 neutrons, so the diagnostics run with fewer neutrons than a
+    [`Simulation`](run-a-simulation.md#one-run).
+
+!!! note "Every list of rays needs more than one ray"
+
+    McStasScript reads back every list of rays the run writes: those of the points, and those of
+    the event monitors of the instrument, such as the `banana_detector` of T-Rex. A list with
+    exactly one ray fails the run as it is read. Past the choppers of T-Rex few rays are left: at
+    1e5 neutrons, about 9 reach `sample_pos` with the bender out, and 1 reaches the detector with
+    it in. Put the points before the choppers, and run enough neutrons for the detector.
+
+### The same diagnostics on more runs
+
+The points and the views stay, so one setup runs again with other instrument parameters. Every run
+builds the instrument anew and writes its own folder:
+
+```python
+diag.run("bender_out", ncount=1e6, seed=1, bender_in=0)
+bender_out = diag.plot()
+diag.run("bender_in", ncount=1e6, seed=1, bender_in=1)
+bender_in = diag.plot()
+```
+
+For a change that is not an instrument parameter, such as another component, make a new
+instrument and a new `McStasScriptDiagnostics`, as the
+[extraction guides](../instruments/trex/extraction.md) do on each path.
+
+## The intensity before each component
+
+`run_analysis` runs McStas once more, with a monitor before every component, and draws
+McStasScript's diagram of the components with the intensity, in n/s, and the number of rays before
+each, on a log scale. Each step of the line is what one component loses:
+
+<!-- fmt:off -->
+```python
+--8<-- "src/mcdgs/diagnostics/trex/beam_diagnostics.py:analysis"
+```
+<!-- fmt:on -->
+
+It needs no points or views. At 1e7 neutrons and seed 1:
+
+![The components of T-Rex and the intensity before each](figures/mcstasscript-diagnostics/trex_intensity.png)
+
+The arrows on the left go from each component to the one it is placed relative to. A component
+with a dashed box takes part only under a condition, such as guide 4a, the bender and guide 4b,
+which depend on `bender_in`; the line is not to be read there. The intensity falls from about
+1e12 n/s after the source to about 1e7 n/s at the detector; the largest steps are at the
+pulse-shaping choppers, `ps1` and `ps2`, and the monochromatic choppers, `mc1` and `mc2`.
+
+McStasScript has no range for the intensity
+axis, so `intensity_limits`, in n/s, sets it, such as to see the losses along the guides:
+
+```python
+run, fig = diag.run_analysis(ncount=1e7, seed=1, intensity_limits=(1e10, 2e12))
+```
+
+The ray count keeps its ratio to the intensity, so both share their ticks.
+
+The monitors before the components are 100 m wide, so they count every ray, inside an opening or
+not. The folder of the run also holds the monitors of the instrument.
+
+## Where the runs go
+
+Each run writes a folder in `runs/` of the workspace, like every run of a `Simulation`:
+`<time>_diagnose` for `run` and `<time>_analysis` for `run_analysis`, unless given a name, such as
+`trex_beam_diagnostics` above. A `folder_name` is replaced on every run. They are found and cleaned up by their type:
+
+```python
+from mcdgs.mcstas import RunType
+
+workspace = diag.workspace
+workspace.latest_run(RunType.DIAGNOSE)  # the newest run with the diagnostics
+workspace.clean_runs(keep=2, run_type=RunType.ANALYSIS)
+```
+
+Both write McStas's own format, which McStasScript reads, not McStas NeXus: their record names a
+`data_file` that does not exist. Read the monitors of a run with McStasScript instead:
+
+```python
+import mcstasscript as ms
+
+data = ms.load_data(run.folder)
+```
+
+The rays of the last `run` are in `diag.diagnostics`, McStasScript's own `Diagnostics`.
