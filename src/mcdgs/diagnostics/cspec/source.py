@@ -10,10 +10,10 @@ the entrance of W03-01-011 is in :class:`.CSPEC`.
 
 Counts and intensity, scale and error bars are as at the source of T-Rex: McStas sets the
 weights of its rays itself, in n/s, while each tof neutron has weight 1, so tof takes its weight
-from McStas, the total of McStas over that of tof (:func:`.tof_scale`).
+from McStas, the total of McStas over that of tof (:func:`.tof_neutron_weight`).
 
 :func:`main` runs both models and reads the intensity of each on the bins of the monitor.
-:func:`.tof_scale` gives the scale of tof, :func:`.mcstas_vs_tof` puts both maps side by
+:func:`.tof_neutron_weight` gives the scale of tof, :func:`.mcstas_vs_tof` puts both maps side by
 side in n/s, :func:`.print_means` prints their mean time and wavelength, and
 :func:`.plot_comparison` draws them. Run the module to do all of it, at 1e6 and at 1e5 neutrons
 in both models, and with the band of ``lambda0`` = 3 Å::
@@ -206,7 +206,7 @@ def main(
 
     # --8<-- [start:scale_tof]
     # tof has no flux: each of its neutrons stands for the total of McStas over that of tof
-    scale = compare.tof_scale(mcstas_map, tof_counts)  # n/s per tof neutron
+    scale = compare.tof_neutron_weight(mcstas_map, tof_counts)  # n/s per tof neutron
     # both maps side by side in n/s: tof times the scale, its Poisson errors scaled along
     comparison = compare.mcstas_vs_tof(
         "source_monitor", mcstas_map, tof_counts, ncount, neutrons, scale

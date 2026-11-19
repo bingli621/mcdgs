@@ -20,9 +20,9 @@ the n/s each tof neutron stands for: the total of McStas over that of tof where 
 same beam, at the source. There both then have the same total, and only their shapes differ.
 Further down the beam, the same scale lets a difference in what the guides and choppers let
 through show. ``transmission`` then scales tof on top of it, for what the beam loses that tof
-does not model, such as the guides: tof has none. :func:`tof_scale` gives the scale where both
-see the same beam, :func:`tuned_transmission` the transmission that gives tof the total of
-McStas further down, and :func:`mcstas_vs_tof` puts both maps side by side in n/s.
+does not model, such as the guides: tof has none. :func:`tof_neutron_weight` gives the scale
+where both see the same beam, :func:`tuned_transmission` the transmission that gives tof the
+total of McStas further down, and :func:`mcstas_vs_tof` puts both maps side by side in n/s.
 """
 
 from dataclasses import dataclass
@@ -292,7 +292,7 @@ def plot_comparison(
     return fig
 
 
-def tof_scale(mcstas_map: sc.DataArray, tof_counts: sc.DataArray) -> float:
+def tof_neutron_weight(mcstas_map: sc.DataArray, tof_counts: sc.DataArray) -> float:
     """Return the n/s each tof neutron stands for: the total of McStas over that of tof.
 
     Set it where both models see the same beam, such as the source monitor, and keep it further
@@ -314,7 +314,7 @@ def tof_scale(mcstas_map: sc.DataArray, tof_counts: sc.DataArray) -> float:
     --------
     >>> mcstas_map = sc.DataArray(sc.array(dims=["toa"], values=[2.0, 4.0], unit="1/s"))
     >>> tof_counts = sc.DataArray(sc.array(dims=["toa"], values=[1.0, 2.0]))
-    >>> tof_scale(mcstas_map, tof_counts)
+    >>> tof_neutron_weight(mcstas_map, tof_counts)
     2.0
     """
     return float(mcstas_map.sum().value / tof_counts.sum().value)
@@ -330,7 +330,7 @@ def tuned_transmission(mcstas_map: sc.DataArray, tof_counts: sc.DataArray, scale
     tof_counts:
         The map of tof on the same bins, in neutrons.
     scale:
-        The n/s each tof neutron stands for, from :func:`tof_scale` at an earlier monitor.
+        The n/s each tof neutron stands for, from :func:`tof_neutron_weight` at an earlier monitor.
 
     Returns
     -------
@@ -344,7 +344,7 @@ def tuned_transmission(mcstas_map: sc.DataArray, tof_counts: sc.DataArray, scale
     >>> tuned_transmission(mcstas_map, tof_counts, scale=4.0)
     0.25
     """
-    return tof_scale(mcstas_map, tof_counts) / scale
+    return tof_neutron_weight(mcstas_map, tof_counts) / scale
 
 
 def mcstas_vs_tof(
@@ -371,7 +371,7 @@ def mcstas_vs_tof(
     neutrons:
         Number of tof neutrons.
     scale:
-        The n/s each tof neutron stands for, from :func:`tof_scale`.
+        The n/s each tof neutron stands for, from :func:`tof_neutron_weight`.
     transmission:
         A factor on tof on top of ``scale``, for what the beam loses that tof does not model,
         such as the guides; from :func:`tuned_transmission` to give tof the total of McStas.

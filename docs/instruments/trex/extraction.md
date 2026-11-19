@@ -127,7 +127,7 @@ guides pass more than 0.2 of the beam, and where it is below, less. [Beam monito
 runs the same path with the transmission tuned to McStas, 0.1734, and explains both factors.
 `read_mcstas_map` and `read_tof_map` read each monitor of both models on its bins, from
 `monitor_bins`; the scale of the
-source monitor, from `tof_scale`, is passed on to the beam monitor:
+source monitor, from `tof_neutron_weight`, is passed on to the beam monitor:
 
 <!-- fmt:off -->
 ```python

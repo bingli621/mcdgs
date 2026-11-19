@@ -235,7 +235,7 @@ def main(
     # monitor, the same scale, and the transmission on top of it, tuned if it is None
     mcstas_source = read_mcstas_map("source_monitor", mcstas_data, source_bins)
     tof_source = read_tof_map("source_monitor", tof_result, source_bins)
-    scale = compare.tof_scale(mcstas_source, tof_source)
+    scale = compare.tof_neutron_weight(mcstas_source, tof_source)
     at_source = compare.mcstas_vs_tof(
         "source_monitor", mcstas_source, tof_source, ncount, neutrons, scale
     )

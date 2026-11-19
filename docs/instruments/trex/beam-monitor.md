@@ -99,8 +99,8 @@ T = McStas total at the beam monitor / (tof neutrons at the beam monitor × scal
 ```
 
 Each step is a function of its own: `read_mcstas_map` and `read_tof_map` read each monitor of
-both models, `tof_scale` sets the scale at the source monitor, `tuned_transmission` tunes T at the
-beam monitor, unless it is given, and `mcstas_vs_tof` scales tof by both:
+both models, `tof_neutron_weight` sets the scale at the source monitor, `tuned_transmission`
+tunes T at the beam monitor, unless it is given, and `mcstas_vs_tof` scales tof by both:
 
 <!-- fmt:off -->
 ```python

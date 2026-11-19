@@ -15,7 +15,7 @@ from mcdgs.diagnostics.compare import (
     plot_map,
     plot_profile,
     print_means,
-    tof_scale,
+    tof_neutron_weight,
     tuned_transmission,
 )
 from mcdgs.diagnostics.trex.source import TRexSource
@@ -48,7 +48,7 @@ def _source_comparison(tof_result: tof.Result) -> MonitorComparison:
     """source_monitor in both models, tof scaled to the total of McStas there."""
     mcstas_map = read_mcstas_map("source_monitor", _mcstas_map((20, 30)), BINS)
     tof_counts = read_tof_map("source_monitor", tof_result, BINS)
-    scale = tof_scale(mcstas_map, tof_counts)
+    scale = tof_neutron_weight(mcstas_map, tof_counts)
     return mcstas_vs_tof("source_monitor", mcstas_map, tof_counts, 1e6, NEUTRONS, scale)
 
 
@@ -82,7 +82,7 @@ def test_the_tuned_transmission_gives_tof_the_total_of_mcstas_further_down(tof_r
     tof_source = read_tof_map("source_monitor", tof_result, BINS)
     later_map = read_mcstas_map("later_monitor", _two_monitors(), BINS)
     tof_later = read_tof_map("later_monitor", tof_two_monitors, BINS)
-    scale = tof_scale(source_map, tof_source)
+    scale = tof_neutron_weight(source_map, tof_source)
     transmission = tuned_transmission(later_map, tof_later, scale)
     later = mcstas_vs_tof("later_monitor", later_map, tof_later, 1e6, NEUTRONS, scale, transmission)
     assert transmission == pytest.approx(0.25)
