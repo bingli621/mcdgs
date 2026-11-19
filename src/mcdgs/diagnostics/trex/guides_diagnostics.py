@@ -9,9 +9,10 @@ the slit of the mode, ``rrm`` 0, with :class:`.McStasScriptDiagnostics`, twice, 
 - ``trex_intensity.png``: McStasScript's diagram of the components, with the intensity and the
   number of rays just before each.
 
-They are the figures of the how-to page on McStasScript's diagnostics. Run the module for them::
+They are the figures of the Guides page of T-Rex, and its code that of the how-to page on
+McStasScript's diagnostics. Run the module for them::
 
-    pixi run python -m mcdgs.diagnostics.trex.guides_diagnostics --out docs/how-to/figures/mcstasscript-diagnostics
+    pixi run python -m mcdgs.diagnostics.trex.guides_diagnostics --out docs/instruments/trex/figures/guides
 """
 
 from pathlib import Path

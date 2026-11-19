@@ -10,9 +10,10 @@ McStasScript has two tools to look inside a McStas run:
 Both run McStas themselves. A [`McStasScriptDiagnostics`](../reference/mcstas.md) runs them in the
 same [workspace](run-a-simulation.md#where-the-files-go) as a `Simulation`, with a run folder and a
 [record](run-a-simulation.md#find-and-clean-up-runs) for every run. The examples are those of
-[`mcdgs.diagnostics.trex.guides_diagnostics`](../reference/diagnostics.md), which makes the figures
-of this page from `TRex` in the white beam, 0.1 to 10 Å, with every chopper parked; the
-[extraction guides](../instruments/trex/extraction.md) show both tools on the first 6 m of T-Rex.
+[`mcdgs.diagnostics.trex.guides_diagnostics`](../reference/diagnostics.md), which runs `TRex` in
+the white beam, 0.1 to 10 Å, with every chopper parked; [Guides](../instruments/trex/guides.md)
+shows its figures and what they say about the guides of T-Rex, and the
+[extraction guides](../instruments/trex/extraction.md) show both tools on the first 6 m.
 
 ```python
 from mcdgs.diagnostics import cli
@@ -69,20 +70,8 @@ Then draw it, one row per point and one column per view, under the instrument's
 <!-- fmt:on -->
 
 `plot` draws the last run. A view of two variables is drawn in the `turbo` colormap, where
-McStasScript would use `jet`; give `colormap=` to the view for another. At 1e6 neutrons and
-seed 1, in the white beam with the choppers parked:
-
-![The beam after the source, before the first bandwidth chopper, at the end of the curved and of the straight guide, and at the sample position](figures/mcstasscript-diagnostics/trex_guides_diagnostics.png)
-
-After the source, the beam leaves the two moderators side by side, brighter at x above 0,
-within the pulse, about 3 ms long. Its spectrum has two peaks, at about 1.1 and 2.5 Å, and a
-long tail to 10 Å. Further along, a neutron arrives later the longer its wavelength, so
-wavelength against time is a band. The band keeps the length of the pulse while the flight time
-grows with the distance, so it looks thinner at every point. Before the first bandwidth chopper,
-the beam fills the guide, ±0.03 m by ±0.04 m, about 20 times lower than after the source. From
-there to the sample position, the spectrum keeps its two peaks, and drops by a factor of about
-2.3; 114224 of the 1e6 rays reach the sample position. There, the beam is a spot about 0.04 m
-across.
+McStasScript would use `jet`; give `colormap=` to the view for another. The figure of this run is
+on [Guides](../instruments/trex/guides.md#the-beam-along-the-guides).
 
 !!! warning "Every ray is kept, so keep `ncount` low"
 
@@ -128,18 +117,13 @@ each, on a log scale. Each step of the line is what one component loses:
 ```
 <!-- fmt:on -->
 
-It needs no points or views. At 1e7 neutrons and seed 1, in the white beam with the choppers
-parked:
-
-![The components of T-Rex and the intensity before each](figures/mcstasscript-diagnostics/trex_intensity.png)
+It needs no points or views. The diagram of this run is on
+[Guides](../instruments/trex/guides.md#the-intensity-before-each-component), which reads the
+transmission of each section of guide from it.
 
 The arrows on the left go from each component to the one it is placed relative to. A component
-with a dashed box takes part only under a condition, such as guide 4a, the bender and guide 4b,
-which depend on `bender_in`; the line is not to be read there. The intensity falls from about
-1e12 n/s after the source to about 2e10 n/s at the sample position. Most of it is lost in the
-first guides; the parked choppers take little. With the choppers turning, the
-pulse-shaping and monochromatic choppers take the largest steps, down to about 1e7 n/s at the
-detector.
+with a dashed box takes part only under a condition, such as guide 4a, the bender and guide 4b
+of T-Rex, which depend on `bender_in`; the line is not to be read there.
 
 McStasScript has no range for the intensity
 axis, so `intensity_limits`, in n/s, sets it, such as to see the losses along the guides:

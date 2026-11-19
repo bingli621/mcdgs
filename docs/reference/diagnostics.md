@@ -5,7 +5,8 @@ Setups that study one part of an instrument, and what reads their results. Each 
 documentation. See [Source](../instruments/trex/source.md),
 [Extraction guides](../instruments/trex/extraction.md),
 [Bender](../instruments/trex/bender-scan.md),
-[Beam monitor](../instruments/trex/beam-monitor.md), [Choppers](../instruments/trex/choppers.md),
+[Beam monitor](../instruments/trex/beam-monitor.md), [Guides](../instruments/trex/guides.md),
+[Choppers](../instruments/trex/choppers.md),
 [Time-distance diagram](../instruments/trex/time-distance.md),
 [Neutrons on sample](../instruments/trex/neutrons-on-sample.md),
 [Masked source](../instruments/trex/masked-source.md),
@@ -13,8 +14,8 @@ documentation. See [Source](../instruments/trex/source.md),
 [Elastic plane](../instruments/trex/elastic-plane.md) and
 [Rotation scan](../instruments/trex/elastic-scan.md) for what they show for T-Rex, and
 [Source](../instruments/cspec/source.md) for CSPEC.
-[Run McStasScript's diagnostics](../how-to/run-mcstasscript-diagnostics.md) has the figures of
-`guides_diagnostics`.
+[Run McStasScript's diagnostics](../how-to/run-mcstasscript-diagnostics.md) has the code of
+`guides_diagnostics`, and [Guides](../instruments/trex/guides.md) its figures.
 
 ::: mcdgs.diagnostics.compare
 
