@@ -3,7 +3,7 @@
 McStasScript has two tools to look inside a McStas run:
 
 - its **beam diagnostics**, which record the rays at points along the instrument and draw them as
-  histograms, such as the beam profile or the wavelength against x;
+  histograms, such as the beam profile or the wavelength against time;
 - its **analysis diagram**, which draws the components in beam order with the intensity and the
   number of rays just before each.
 
@@ -11,7 +11,7 @@ Both run McStas themselves. A [`McStasScriptDiagnostics`](../reference/mcstas.md
 same [workspace](run-a-simulation.md#where-the-files-go) as a `Simulation`, with a run folder and a
 [record](run-a-simulation.md#find-and-clean-up-runs) for every run. The examples are those of
 [`mcdgs.diagnostics.trex.beam_diagnostics`](../reference/diagnostics.md), which makes the figures
-of this page from `TRex` at its default parameters; the
+of this page from `TRex` at its default parameters, with every chopper parked; the
 [extraction guides](../instruments/trex/extraction.md) show both tools on the first 6 m of T-Rex.
 
 ```python
@@ -34,6 +34,20 @@ Add the points, where the rays are recorded, and the views, how each point is dr
 
 The code is that of its `main`, where `NAME` is `"trex_beam_diagnostics"`, the name of the run
 folder and of the figure, `ncount` is 1e6 and `seed` is 1, and `folder` is where the figures go.
+`PARKED_CHOPPERS` sets the frequency of every chopper, `nu_bw1` to `nu_mc2`, to 0, so that the
+beam reaches the sample position unchopped:
+
+```python
+PARKED_CHOPPERS = {f"nu_{name}": 0.0 for name in DISKS}  # DISKS of mcdgs.instruments.trex.choppers
+```
+
+!!! note "A chopper at 0 Hz is parked, not open"
+
+    At 0 Hz, McStas's `NXdisk_chopper` stands still with its zero mark at `park_angle`, 0 by
+    default, and a ray passes only through an opening that happens to be in front of the beam.
+    On T-Rex an opening is there on every disk, but some parked disks still block part of the
+    beam: at 1e5 neutrons, about 11000 rays reach `ps1` and 7200 reach `mc1`. With the choppers
+    turning, 9 of them reach the sample position; parked, about 4100.
 
 - A point is just `before` or just `after` a component, by its name in the instrument:
   `list(TRex().components)` gives them all. A name the instrument does not have raises a
@@ -58,15 +72,18 @@ also closes it:
 
 `plot` draws the last run. A view of two variables is drawn in the `turbo` colormap, where
 McStasScript would use `jet`; give `colormap=` to the view for another. At 1e6 neutrons and
-seed 1:
+seed 1, with the choppers parked:
 
-![The beam after the source, before the first bandwidth chopper and after the curved guide](figures/mcstasscript-diagnostics/trex_beam_diagnostics.png)
+![The beam after the source, before the first bandwidth chopper, at the end of the curved and of the straight guide, and at the sample position](figures/mcstasscript-diagnostics/trex_beam_diagnostics.png)
 
-After the source, the beam leaves the two moderators side by side, so wavelength against x has
-more short wavelengths at x below 0 and more long ones above it. Before the first bandwidth
-chopper, the beam fills the guide, ±0.03 m by ±0.04 m, with a spectrum of the same shape, about 20
-times lower. After the curved guide, past both bandwidth choppers, the band is about 1.3 to
-2.8 Å.
+After the source, the beam leaves the two moderators side by side within the pulse, about 3 ms
+long, at every wavelength of the band, 1.1 to 2.9 Å. Further along, a neutron arrives later the
+longer its wavelength, so wavelength against time is a band. The band keeps the length of the
+pulse while the flight time grows with the distance, so it looks thinner at every point. Before
+the first bandwidth chopper, the beam fills the guide, ±0.03 m by ±0.04 m, about 20 times lower
+than after the source. From there to the sample position, the wavelength spectrum keeps its
+shape, and drops by a factor of about 3. At the sample position, the beam is a spot about
+±0.015 m across.
 
 !!! warning "Every ray is kept, so keep `ncount` low"
 
@@ -79,9 +96,10 @@ times lower. After the curved guide, past both bandwidth choppers, the band is a
 
     McStasScript reads back every list of rays the run writes: those of the points, and those of
     the event monitors of the instrument, such as the `banana_detector` of T-Rex. A list with
-    exactly one ray fails the run as it is read. Past the choppers of T-Rex few rays are left: at
-    1e5 neutrons, about 9 reach `sample_pos` with the bender out, and 1 reaches the detector with
-    it in. Put the points before the choppers, and run enough neutrons for the detector.
+    exactly one ray fails the run as it is read. Past the turning choppers of T-Rex few rays are
+    left: at 1e5 neutrons, about 9 reach `sample_pos` with the bender out, and 1 reaches the
+    detector with it in. Put the points before the choppers, park them, or run enough neutrons
+    for the detector.
 
 ### The same diagnostics on more runs
 
@@ -111,15 +129,17 @@ each, on a log scale. Each step of the line is what one component loses:
 ```
 <!-- fmt:on -->
 
-It needs no points or views. At 1e7 neutrons and seed 1:
+It needs no points or views. At 1e7 neutrons and seed 1, with the choppers parked:
 
 ![The components of T-Rex and the intensity before each](figures/mcstasscript-diagnostics/trex_intensity.png)
 
 The arrows on the left go from each component to the one it is placed relative to. A component
 with a dashed box takes part only under a condition, such as guide 4a, the bender and guide 4b,
-which depend on `bender_in`; the line is not to be read there. The intensity falls from about
-1e12 n/s after the source to about 1e7 n/s at the detector; the largest steps are at the
-pulse-shaping choppers, `ps1` and `ps2`, and the monochromatic choppers, `mc1` and `mc2`.
+which depend on `bender_in`; the line is not to be read there. The intensity falls from a few
+1e11 n/s after the source to a little below 1e10 n/s at the sample position. Most of it is lost
+in the first guides; the parked choppers take little. With the choppers turning, the
+pulse-shaping and monochromatic choppers take the largest steps, down to about 1e7 n/s at the
+detector.
 
 McStasScript has no range for the intensity
 axis, so `intensity_limits`, in n/s, sets it, such as to see the losses along the guides:
@@ -137,7 +157,8 @@ not. The folder of the run also holds the monitors of the instrument.
 
 Each run writes a folder in `runs/` of the workspace, like every run of a `Simulation`:
 `<time>_diagnose` for `run` and `<time>_analysis` for `run_analysis`, unless given a name, such as
-`trex_beam_diagnostics` above. A `folder_name` is replaced on every run. They are found and cleaned up by their type:
+`trex_beam_diagnostics` above. A `folder_name` is replaced on every run. They are found and
+cleaned up by their type:
 
 ```python
 from mcdgs.mcstas import RunType

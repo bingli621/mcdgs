@@ -28,6 +28,13 @@ def test_main_saves_the_diagnostics_and_the_diagram(tmp_path, monkeypatch):
     assert [p.name for p in paths] == ["trex_beam_diagnostics.png", "trex_intensity.png"]
     assert all(p.stat().st_size > 0 for p in paths)
     (name, kwargs, points), analysis = runs
-    assert (name, kwargs) == ("trex_beam_diagnostics", {"ncount": 1e3, "seed": 2})
-    assert [p["after"] or p["before"] for p in points] == ["source", "bw1", "guide_29"]
-    assert analysis == ("trex_beam_diagnostics_analysis", {"ncount": 1e4, "seed": 2})
+    parked = {f"nu_{name}": 0.0 for name in ("bw1", "bw2", "ps1", "ps2", "mc1", "mc2")}
+    assert (name, kwargs) == ("trex_beam_diagnostics", {"ncount": 1e3, "seed": 2, **parked})
+    assert [p["after"] or p["before"] for p in points] == [
+        "source",
+        "bw1",
+        "guide_29",
+        "guide_50a",
+        "sample_pos",
+    ]
+    assert analysis == ("trex_beam_diagnostics_analysis", {"ncount": 1e4, "seed": 2, **parked})
