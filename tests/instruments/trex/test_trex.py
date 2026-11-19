@@ -19,7 +19,7 @@ from mcdgs.instruments.trex.choppers import (
 )
 from mcdgs.instruments.trex.guides.extraction import half_taper_angle
 from mcdgs.instruments.trex.guides.sections import split_after
-from mcdgs.instruments.trex.model import TRex
+from mcdgs.instruments.trex.model import Params, TRex
 from mcdgs.instruments.trex.sources import (
     PATH_SPREAD_FRACTION,
     masked_source,
@@ -348,11 +348,13 @@ def test_each_chopper_takes_its_timing_from_the_instrument_parameters():
     )
     for name, timing in timings.items():
         chopper = getattr(trex, name)
-        assert (chopper.nu, chopper.delay) == (f"nu_{name}", f"delay_{name}")
-        assert (instr_param_dict[chopper.nu], instr_param_dict[chopper.delay]) == (
-            timing.nu,
-            timing.delay,
+        assert (chopper.nu, chopper.delay, chopper.park_angle) == (
+            f"nu_{name}",
+            f"delay_{name}",
+            f"park_{name}",
         )
+        values = (chopper.nu, chopper.delay, chopper.park_angle)
+        assert tuple(instr_param_dict[value] for value in values) == timing
 
 
 def test_the_timing_follows_the_control_parameters():
@@ -361,6 +363,16 @@ def test_the_timing_follows_the_control_parameters():
     instr_param_dict = {p.name: p.value for p in trex.instr_params}
     assert instr_param_dict["nu_mc1"] == pytest.approx(84)
     assert instr_param_dict["delay_bw1"] == chopper_timings(4.0, 6, 14, "FF", 0.0017)["bw1"].delay
+
+
+@pytest.mark.parametrize("mode", ["FF", "RR"])
+def test_rrm_0_parks_each_chopper_of_the_instrument_on_the_slit_of_the_mode(mode):
+    params = Params(rrm=0, mode=mode)
+    trex = TRex(params=params)
+    instr_param_dict = {p.name: p.value for p in trex.instr_params}
+    for name, disk in DISKS.items():
+        assert (instr_param_dict[f"nu_{name}"], instr_param_dict[f"delay_{name}"]) == (0, 0)
+        assert instr_param_dict[f"park_{name}"] == disk.phase_from_mode(mode)
 
 
 def test_the_t0_offset_delays_every_chopper_by_as_much():

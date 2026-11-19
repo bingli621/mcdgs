@@ -240,8 +240,9 @@ banana detector is 3 m beyond the sample, where its neutrons arrive.
 
 ## Chopper timing
 
-Each chopper takes its frequency and delay from the McStas instrument parameters `nu_<name>` and
-`delay_<name>`, computed from `lambda0`, `rrm`, `mode` and `t0_offset`:
+Each chopper takes its frequency, delay and park angle from the McStas instrument parameters
+`nu_<name>`, `delay_<name>` and `park_<name>`, computed from `lambda0`, `rrm`, `mode` and
+`t0_offset`:
 
 | Choppers | Frequency |
 | -------- | --------- |
@@ -263,6 +264,11 @@ so the delay is the arrival time. In `"FF"` the disk is phased to the wide slit 
 turned past its zero mark by the angle from the center of the wide slit to the beam, 55° for the
 pulse-shaping choppers, 175° for `mc1` and 185° for `mc2`. The model keeps the disks as they are
 and changes the delay, which is the same as shifting the slit edges.
+
+`rrm` 0 parks every chopper, the bandwidth choppers too: `nu_<name>` and `delay_<name>` are 0,
+and `park_<name>` stands the disk still with the slit of the mode centered on the beam, turned by
+the same angle, 55°, 175° or 185° in `"FF"` and 0 in `"RR"`. While a disk turns, `park_<name>`
+is 0, and McStas does not read it.
 [Choppers](choppers.md#delays) gives the delay of each disk at the default parameters.
 
 [Choppers](choppers.md) draws each disk and the acceptance diagram of the cascade, and

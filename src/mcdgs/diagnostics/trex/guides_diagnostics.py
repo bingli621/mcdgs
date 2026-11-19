@@ -35,13 +35,14 @@ class ParkedTRex(TRex):
     """
 
     def _chopper_instr_params(self) -> list[InstrParam]:
-        """Return the frequency and the delay of every chopper, all 0: parked."""
+        """Return the frequency, the delay and the park angle of every chopper, all 0: parked."""
         return [
             p
             for name in DISKS
             for p in (
                 InstrParam(f"nu_{name}", 0.0, "Hz", f"rotation frequency of chopper {name}"),
                 InstrParam(f"delay_{name}", 0.0, "s", f"delay of chopper {name}"),
+                InstrParam(f"park_{name}", 0.0, "deg", f"park angle of chopper {name}"),
             )
         ]
 

@@ -14,16 +14,22 @@ instr_params:
   omega: {value: 0.0, unit: deg, comment: rotation of the goniometer about +Y}
   nu_bw1: {value: 14, unit: Hz, comment: rotation frequency of chopper bw1}
   delay_bw1: {value: 0.017859638643427243, unit: s, comment: delay of chopper bw1}
+  park_bw1: {value: 0.0, unit: deg, comment: park angle of chopper bw1}
   nu_bw2: {value: 14, unit: Hz, comment: rotation frequency of chopper bw2}
   delay_bw2: {value: 0.021899543248715785, unit: s, comment: delay of chopper bw2}
+  park_bw2: {value: 0.0, unit: deg, comment: park angle of chopper bw2}
   nu_ps1: {value: 189.0, unit: Hz, comment: rotation frequency of chopper ps1}
   delay_ps1: {value: 0.05546651145396207, unit: s, comment: delay of chopper ps1}
+  park_ps1: {value: 0.0, unit: deg, comment: park angle of chopper ps1}
   nu_ps2: {value: -189.0, unit: Hz, comment: rotation frequency of chopper ps2}
   delay_ps2: {value: 0.05713376319781174, unit: s, comment: delay of chopper ps2}
+  park_ps2: {value: 0.0, unit: deg, comment: park angle of chopper ps2}
   nu_mc1: {value: 252, unit: Hz, comment: rotation frequency of chopper mc1}
   delay_mc1: {value: 0.08168509645589636, unit: s, comment: delay of chopper mc1}
+  park_mc1: {value: 0.0, unit: deg, comment: park angle of chopper mc1}
   nu_mc2: {value: 252, unit: Hz, comment: rotation frequency of chopper mc2}
   delay_mc2: {value: 0.08157992274727134, unit: s, comment: delay of chopper mc2}
+  park_mc2: {value: 0.0, unit: deg, comment: park angle of chopper mc2}
 origin:
   component: Progress_bar
   percent: 10
@@ -567,7 +573,7 @@ bw1:
   xwidth: 0.06
   nu: nu_bw1
   delay: delay_bw1
-  park_angle: 0
+  park_angle: park_bw1
   beam_angle: 0
   zero_angle: 0
   jitter: 0
@@ -707,7 +713,7 @@ bw2:
   xwidth: 0.06
   nu: nu_bw2
   delay: delay_bw2
-  park_angle: 0
+  park_angle: park_bw2
   beam_angle: 0
   zero_angle: 0
   jitter: 0
@@ -1265,7 +1271,7 @@ ps1:
   xwidth: 0.06
   nu: nu_ps1
   delay: delay_ps1
-  park_angle: 0
+  park_angle: park_ps1
   beam_angle: 180
   zero_angle: 0
   jitter: 0
@@ -1283,7 +1289,7 @@ ps2:
   xwidth: 0.06
   nu: nu_ps2
   delay: delay_ps2
-  park_angle: 0
+  park_angle: park_ps2
   beam_angle: 180
   zero_angle: 0
   jitter: 0
@@ -1771,7 +1777,7 @@ mc1:
   xwidth: 0.022433235171385017
   nu: nu_mc1
   delay: delay_mc1
-  park_angle: 0
+  park_angle: park_mc1
   beam_angle: 180
   zero_angle: 0
   jitter: 0
@@ -1789,7 +1795,7 @@ mc2:
   xwidth: 0.022433235171385017
   nu: nu_mc2
   delay: delay_mc2
-  park_angle: 0
+  park_angle: park_mc2
   beam_angle: 0
   zero_angle: 0
   jitter: 0

@@ -39,8 +39,8 @@ The control parameters are the settings of the instrument as it is operated, suc
 repetition rate multiplication `rrm` and the chopper mode `mode` of T-Rex.
 
 The McStas instrument parameters are the ones McStas knows about, and the instrument computes them
-from its control parameters. For T-Rex, the frequency `nu_<chopper>` and delay `delay_<chopper>`
-of each chopper follow from `lambda0`, `rrm`, `mode` and `t0_offset`. Their values in
+from its control parameters. For T-Rex, the frequency `nu_<chopper>`, delay `delay_<chopper>`
+and park angle `park_<chopper>` of each chopper follow from `lambda0`, `rrm`, `mode` and `t0_offset`. Their values in
 `instr_params` are the defaults of a run, and a keyword of a run overrides them for that run only,
 without changing the instrument, as in `simulation.run(bender_in=1)`.
 

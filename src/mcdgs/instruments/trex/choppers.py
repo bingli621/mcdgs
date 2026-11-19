@@ -1,9 +1,10 @@
 """The choppers of T-Rex and their timing.
 
-:func:`chopper` creates one disk by name. The disks take their frequency ``nu`` and their delay
-from the instrument parameters ``nu_<name>`` and ``delay_<name>``, which :func:`chopper_timings`
-computes from the central wavelength, the repetition rate multiplication and the mode.
-A repetition rate multiplication of 0 parks every disk on the slit of the mode.
+:func:`chopper` creates one disk by name. The disks take their frequency ``nu``, their delay and
+their ``park_angle`` from the instrument parameters ``nu_<name>``, ``delay_<name>`` and
+``park_<name>``, which :func:`chopper_timings` computes from the central wavelength, the
+repetition rate multiplication and the mode. A repetition rate multiplication of 0 parks every
+disk on the slit of the mode.
 
 The mode chooses the slit of the pulse-shaping and monochromatic chopper disks that is on the
 beam: the wide one in ``"FF"`` (high flux), the narrow one in ``"RR"`` (high resolution). Rather
@@ -284,8 +285,9 @@ def chopper(name: str, upstream_guide: Guide_gravity | None) -> tuple[NXdisk_cho
     Returns
     -------
     :
-        A new chopper, relative to the arm of its gap, with its frequency and delay given by
-        the instrument parameters ``nu_<name>`` and ``delay_<name>``, and a beam window of
+        A new chopper, relative to the arm of its gap, with its frequency, delay and park
+        angle given by the instrument parameters ``nu_<name>``, ``delay_<name>`` and
+        ``park_<name>``, and a beam window of
         ``upstream_guide.w2``, or 0 without a guide; and the disk's distance from the
         moderator along the beam axis, in m, which the chopper does not know.
     """
@@ -297,6 +299,7 @@ def chopper(name: str, upstream_guide: Guide_gravity | None) -> tuple[NXdisk_cho
         xwidth=0.0 if upstream_guide is None else float(upstream_guide.w2),
         nu=f"nu_{name}",
         delay=f"delay_{name}",
+        park_angle=f"park_{name}",
         beam_angle=disk.beam_angle,
         zero_angle=disk.zero_angle,
         abs_out=0,

@@ -255,13 +255,13 @@ class TRex(Instrument):
     def _chopper_instr_params(self) -> list[InstrParam]:
         """Return the McStas instrument parameters of the choppers.
 
-        The frequency and delay of each chopper, computed from ``lambda0``, ``rrm``, ``mode``
-        and ``t0_offset`` with :func:`.chopper_timings`.
+        The frequency, delay and park angle of each chopper, computed from ``lambda0``,
+        ``rrm``, ``mode`` and ``t0_offset`` with :func:`.chopper_timings`.
 
         Returns
         -------
         :
-            ``nu_<name>`` and ``delay_<name>`` of each chopper, in beam order.
+            ``nu_<name>``, ``delay_<name>`` and ``park_<name>`` of each chopper, in beam order.
 
         Raises
         ------
@@ -283,5 +283,8 @@ class TRex(Instrument):
             for p in (
                 InstrParam(f"nu_{name}", timing.nu, "Hz", f"rotation frequency of chopper {name}"),
                 InstrParam(f"delay_{name}", timing.delay, "s", f"delay of chopper {name}"),
+                InstrParam(
+                    f"park_{name}", timing.park_angle, "deg", f"park angle of chopper {name}"
+                ),
             )
         ]

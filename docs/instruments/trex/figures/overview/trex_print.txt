@@ -19,16 +19,22 @@ b_rot      -0.397881  deg     rotation of the cold neutron bender
 omega      0          deg     rotation of the goniometer about +Y
 nu_bw1     14         Hz      rotation frequency of chopper bw1
 delay_bw1  0.0178596  s       delay of chopper bw1
+park_bw1   0          deg     park angle of chopper bw1
 nu_bw2     14         Hz      rotation frequency of chopper bw2
 delay_bw2  0.0218995  s       delay of chopper bw2
+park_bw2   0          deg     park angle of chopper bw2
 nu_ps1     189        Hz      rotation frequency of chopper ps1
 delay_ps1  0.0554665  s       delay of chopper ps1
+park_ps1   0          deg     park angle of chopper ps1
 nu_ps2     -189       Hz      rotation frequency of chopper ps2
 delay_ps2  0.0571338  s       delay of chopper ps2
+park_ps2   0          deg     park angle of chopper ps2
 nu_mc1     252        Hz      rotation frequency of chopper mc1
 delay_mc1  0.0816851  s       delay of chopper mc1
+park_mc1   0          deg     park angle of chopper mc1
 nu_mc2     252        Hz      rotation frequency of chopper mc2
 delay_mc2  0.0815799  s       delay of chopper mc2
+park_mc2   0          deg     park angle of chopper mc2
 
 Components, in the order of the beam (m, deg):
 name                component       at                         rotated             relative            position
