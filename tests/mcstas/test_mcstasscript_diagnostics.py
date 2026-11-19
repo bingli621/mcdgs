@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import pytest
 
 from mcdgs.instruments.trex.model import TRex
@@ -21,6 +22,9 @@ class FakeDiagnostics:
     def run(self):
         Path(self.inst._run_settings["output_path"]).mkdir()  # as McStas does
         self.ran = True
+
+    def plot(self):
+        plt.figure()  # as McStasScript draws, without returning it
 
 
 @pytest.fixture
@@ -71,3 +75,19 @@ def test_nothing_runs_or_plots_without_points_and_views(tmp_path):
     with pytest.raises(ValueError, match="view"):
         diag.run()
     assert not any(tmp_path.iterdir())  # no run folder
+
+
+def test_plot_returns_the_figure_mcstasscript_draws(tmp_path, fake_diagnostics):
+    diag = McStasScriptDiagnostics(TRex(), Workspace(tmp_path))
+    diag.add_point(after="source")
+    diag.add_view("l")
+    diag.run()
+    fig = diag.plot()
+    assert fig is plt.gcf()
+    plt.close(fig)
+
+
+def test_the_folders_are_those_of_the_simulation(tmp_path):
+    diag = McStasScriptDiagnostics(TRex(), Workspace(tmp_path))
+    assert diag.workspace is diag.simulation.workspace
+    assert diag.workspace.root == tmp_path

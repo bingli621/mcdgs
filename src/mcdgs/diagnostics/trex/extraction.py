@@ -5,13 +5,13 @@ with the same components as :class:`.TRex`, but for the band: its source and its
 keep the widest band, 0.1 to 10 Å, where those of :class:`.TRex` follow ``lambda0``. It also has
 the source monitor of :class:`.TRexSource`, at the entrance of guide 1.
 
-:func:`main` compares McStas and tof at the beam monitor, on each path through guide 4, with the
-McStas runs of :func:`diagnose_mcstas`. tof has no guides: every neutron of its pulse reaches
+:func:`main` compares McStas and tof at the beam monitor, on each path through guide 4. tof has no guides: every neutron of its pulse reaches
 the monitor. tof is scaled to the total of McStas at the source monitor, where both see the same
 beam, and by ``transmission`` on top of it, so the beam monitor shows what the guides let
-through in McStas against that factor. The McStas runs also draw McStasScript's diagnostics, the
-beam after the source, after guide 3 and at the exit of guide 4b, and its diagram of the
-intensity before each component. :func:`main` draws the extraction from above and runs both
+through in McStas against that factor. McStas runs twice on each path: once with McStasScript's
+diagnostics, the beam after the source, after guide 3 and at the exit of guide 4b, which list
+every ray there, so with fewer neutrons; then for its diagram of the intensity before each
+component, which also gives the monitors. :func:`main` draws the extraction from above and runs both
 paths: without the bender, through guide 4a, and with it, through the bender and guide 4b. Run
 the module for it::
 
@@ -21,7 +21,6 @@ the module for it::
 from dataclasses import dataclass
 from pathlib import Path
 
-import matplotlib.pyplot as plt
 import mcstasscript as ms
 
 from mcdgs.core import InstrParam, Instrument, param
@@ -47,7 +46,6 @@ from mcdgs.instruments.trex.monitors import beam_monitor, source_monitor
 from mcdgs.instruments.trex.sources import source
 from mcdgs.mcstas import (
     McStasScriptDiagnostics,
-    Run,
     Simulation,
     build_mcstas,
     read_mcstas_map,
@@ -157,75 +155,6 @@ def define_instrument(bender_in: bool = False) -> Extraction:
 # --8<-- [end:instrument]
 
 
-def diagnose_mcstas(
-    instrument: Extraction,
-    run_name: str,
-    figure_folder: Path,
-    ncount: float = 1e7,
-    seed: int = 1,
-    diagnostics_ncount: float = DIAGNOSTICS_NCOUNT,
-) -> tuple[list[Path], Run]:
-    """Run McStas twice on one path through guide 4, and save its two figures.
-
-    The first run has McStasScript's diagnostics, the beam after the source, after guide 3 and
-    at the exit of guide 4b; the second its diagram of the intensity before each component,
-    which also gives the monitors. The diagnostics list every ray at their three positions, so
-    their run has fewer neutrons. The figures are ``<run_name>_diagnose.png`` and
-    ``<run_name>_intensity.png``; the runs go to the run folders ``<run_name>`` and
-    ``<run_name>_intensity``.
-
-    Parameters
-    ----------
-    instrument:
-        :class:`Extraction` on the path, which the runs take as their default.
-    run_name:
-        Name of the runs and of the figures.
-    figure_folder:
-        Folder of the figures.
-    ncount:
-        Number of McStas neutrons of the run of the diagram and the monitors.
-    seed:
-        Seed of the random numbers.
-    diagnostics_ncount:
-        Number of McStas neutrons of the run with the diagnostics.
-
-    Returns
-    -------
-    :
-        The paths of the diagnostics and the diagram, and the finished run of the diagram, whose
-        folder holds the monitors.
-    """
-    # --8<-- [start:diagnostics]
-    # McStasScript's diagnostics: the beam after the source, guide 3 and guide 4b, its profile,
-    # wavelength against x, and its spectrum
-    diag = McStasScriptDiagnostics(instrument)
-    for component in ("source", "guide_3", "guide_4b"):
-        diag.add_point(after=component)  # every ray
-    diag.add_view("x", "y", bins=100)  # in turbo
-    diag.add_view("x", "l", bins=100)
-    diag.add_view("l")
-    diag.run(run_name, ncount=diagnostics_ncount, seed=seed)
-    # --8<-- [end:diagnostics]
-
-    diag.plot()  # draws on a new figure, which it does not return
-    figures = [cli.save_figure(plt.gcf(), figure_folder / f"{run_name}_diagnose.png", dpi=100)]
-
-    # McStasScript's diagram of the components, with the intensity and the rays before each:
-    # a McStas run of its own, in a folder of its own, which also holds the monitors
-    sim = Simulation(instrument)
-    run, mcstas_instr = sim.prepare(
-        f"{run_name}_intensity", ncount=ncount, seed=seed, nexus=False, mpi="auto"
-    )
-    # --8<-- [start:diagram]
-    diagram = draw_intensity_diagram(
-        mcstas_instr, figure_folder / f"{run_name}_intensity.png", DIAGRAM_INTENSITY_LIMITS
-    )
-    # --8<-- [end:diagram]
-    run = run.finish()
-    figures.append(diagram)
-    return figures, run
-
-
 def main(
     out: Path | None = None,
     ncount: float = 1e7,
@@ -236,21 +165,26 @@ def main(
     """Draw the extraction from above, and run and compare both paths through guide 4.
 
     The view from above is ``trex_extraction_top.png``. Each path, first with the bender out,
-    through guide 4a, then with it in, through the bender and guide 4b, runs McStas with
-    :func:`diagnose_mcstas` and tof, and draws both at the beam monitor. tof has no guides and
+    through guide 4a, then with it in, through the bender and guide 4b, runs McStas twice,
+    with McStasScript's diagnostics and for its diagram of the intensity, and tof once, and
+    draws McStas and tof at the beam monitor. tof has no guides and
     no bender: every neutron of its pulse reaches the beam monitor, and its run is the same on
     both paths. It is scaled to the total of McStas at the source monitor, where both see the
-    same beam, and by ``transmission`` on top of it at the beam monitor. The figures of a path are ``trex_extraction_bender_out_diagnose.png``,
-    ``trex_extraction_bender_out_intensity.png`` and ``trex_extraction_bender_out.png``, the
-    comparison, or ``..._in``.
+    same beam, and by ``transmission`` on top of it at the beam monitor. The figures of a path
+    are ``trex_extraction_bender_out_diagnose.png``, ``trex_extraction_bender_out_intensity.png``
+    and ``trex_extraction_bender_out.png``, the comparison, or ``..._in``; its McStas runs go to
+    the run folders ``trex_extraction_bender_out`` and ``trex_extraction_bender_out_intensity``.
 
     Parameters
     ----------
     out:
         Folder of the figures. If ``None``, ``trex_extraction`` in the results folder of
         :meth:`.Workspace.find`.
-    ncount, seed:
-        As in :func:`diagnose_mcstas`, for both paths; ``seed`` also of tof.
+    ncount:
+        Number of McStas neutrons of the run of the diagram and the monitors, on each path. The
+        run with the diagnostics has ``DIAGNOSTICS_NCOUNT``.
+    seed:
+        Seed of the random numbers, of McStas and tof.
     neutrons:
         Number of tof neutrons.
     transmission:
@@ -285,9 +219,34 @@ def main(
         instrument = define_instrument(bender_in)
         path = "bender in, guide 4b" if bender_in else "bender out, guide 4a"
         run_name = f"{instrument.name}_bender_{'in' if bender_in else 'out'}"
-        mcstas_figures, run = diagnose_mcstas(
-            instrument, run_name, figure_folder, ncount=ncount, seed=seed
+
+        # --8<-- [start:diagnostics]
+        # McStasScript's diagnostics: the beam after the source, guide 3 and guide 4b, its
+        # profile, wavelength against x, and its spectrum
+        diag = McStasScriptDiagnostics(instrument)
+        for component in ("source", "guide_3", "guide_4b"):
+            diag.add_point(after=component)  # every ray
+        diag.add_view("x", "y", bins=100)  # in turbo
+        diag.add_view("x", "l", bins=100)
+        diag.add_view("l")
+        diag.run(run_name, ncount=DIAGNOSTICS_NCOUNT, seed=seed)
+        # --8<-- [end:diagnostics]
+        diagnostics = cli.save_figure(
+            diag.plot(), figure_folder / f"{run_name}_diagnose.png", dpi=100
         )
+
+        # McStasScript's diagram of the components, with the intensity and the rays before
+        # each: a McStas run of its own, in a folder of its own, which also holds the monitors
+        sim = Simulation(instrument)
+        run, mcstas_instr = sim.prepare(
+            f"{run_name}_intensity", ncount=ncount, seed=seed, nexus=False, mpi="auto"
+        )
+        # --8<-- [start:diagram]
+        diagram = draw_intensity_diagram(
+            mcstas_instr, figure_folder / f"{run_name}_intensity.png", DIAGRAM_INTENSITY_LIMITS
+        )
+        # --8<-- [end:diagram]
+        run = run.finish()
 
         # --8<-- [start:scale_tof]
         # at the source monitor, where both models see the same beam: the n/s each tof neutron
@@ -323,7 +282,7 @@ def main(
         fig = compare.plot_comparison(
             comparison, f"T-Rex flux at the beam monitor after guide 4, {path}"
         )
-        figures += [*mcstas_figures, cli.save_figure(fig, figure_folder / f"{run_name}.png")]
+        figures += [diagnostics, diagram, cli.save_figure(fig, figure_folder / f"{run_name}.png")]
     # --8<-- [end:paths]
     return figures
 

@@ -8,7 +8,9 @@ a new ``Diagnostics`` of the run that :meth:`.Simulation.prepare` makes.
 
 from typing import Any, Literal
 
+import matplotlib.pyplot as plt
 import mcstasscript as ms
+from matplotlib.figure import Figure
 
 from mcdgs.core import Instrument
 from mcdgs.mcstas.runs import Run, RunType
@@ -42,6 +44,11 @@ class McStasScriptDiagnostics:
         self.diagnostics: ms.Diagnostics | None = None
         self._points: list[dict[str, Any]] = []
         self._views: list[tuple[str, str | None, dict[str, Any]]] = []
+
+    @property
+    def workspace(self) -> Workspace:
+        """The folders the runs write into: those of :attr:`simulation`."""
+        return self.simulation.workspace
 
     def add_point(
         self,
@@ -146,10 +153,13 @@ class McStasScriptDiagnostics:
         self.diagnostics = diagnostics
         return run.finish()
 
-    def plot(self) -> None:
+    def plot(self) -> Figure:
         """Draw the last run, a row per point and a column per view, on a new figure.
 
-        McStasScript does not return the figure: ``plt.gcf()`` gives it.
+        Returns
+        -------
+        :
+            The figure.
 
         Raises
         ------
@@ -158,4 +168,5 @@ class McStasScriptDiagnostics:
         """
         if self.diagnostics is None:
             raise RuntimeError("run the diagnostics before plotting them")
-        self.diagnostics.plot()
+        self.diagnostics.plot()  # draws on a new figure, which it does not return
+        return plt.gcf()

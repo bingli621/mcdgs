@@ -39,7 +39,7 @@ run. The beam monitor is the thin line at 5.902 m. The thin gray lines across th
 ports.
 
 `main` draws this view and runs the path without the bender, through the thermal guide 4a, with
-McStas twice, in `diagnose_mcstas`, and tof once, for three figures, McStasScript's diagnostics
+McStas twice and tof once, for three figures, McStasScript's diagnostics
 along the guides, McStasScript's diagram of the intensity before each component, and McStas and
 tof side by side at the beam monitor. The path with the bender is on
 [Bender](bender-scan.md#bender-in-at-the-nominal-rotation), which runs the same with the bender
