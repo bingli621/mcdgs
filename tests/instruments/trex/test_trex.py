@@ -26,6 +26,7 @@ from mcdgs.instruments.trex.sources import (
     source,
     wavelength_band,
 )
+from mcdgs.io import from_dict, to_dict
 from mcdgs.samples import aluminum
 
 
@@ -141,6 +142,27 @@ def test_a_masked_source_is_masked_by_the_choppers_and_the_rest_is_the_same():
         n: c for n, c in plain.components.items() if n != "source"
     }
     assert masked.instr_params == plain.instr_params
+
+
+def test_a_masked_source_with_the_choppers_parked_raises():
+    params = Params(rrm=0)
+    with pytest.raises(ValueError, match="masked source needs them turning"):
+        TRex(params=params, source_masked=True)
+
+
+def test_parking_the_choppers_of_a_masked_source_raises_and_keeps_the_parameters():
+    trex = TRex(source_masked=True)
+    with pytest.raises(ValueError, match="masked source needs them turning"):
+        trex.update_params(rrm=0)
+    assert trex.params.rrm == 18
+
+
+def test_a_masked_source_read_with_the_choppers_parked_raises_as_it_builds():
+    data = to_dict(TRex(source_masked=True))
+    data["params"]["rrm"] = 0
+    trex = from_dict(data)
+    with pytest.raises(ValueError, match="masked source needs them turning"):
+        _ = trex.instr_params
 
 
 def test_the_band_of_the_source_is_centered_on_lambda0():

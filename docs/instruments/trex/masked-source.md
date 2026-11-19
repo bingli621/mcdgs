@@ -59,6 +59,11 @@ trex = TRex(source_masked=True)
 The source stays masked when `update_params` changes `lambda0`, and when the instrument is saved
 to a parameters file and loaded again.
 
+The masked source needs the choppers turning, so it does not take `rrm` 0, which parks them:
+`TRex(params=Params(rrm=0), source_masked=True)` and `update_params(rrm=0)` raise a `ValueError`,
+and so does a masked instrument loaded with `rrm` 0, as it is built for a run. Parked choppers
+take the plain source.
+
 Every component after the choppers sees the beam it would see with the plain source. The
 components before them do not: the source monitor and the beam monitor see only the neutrons the
 choppers will let through. For the beam the guides carry to the choppers, use the plain source.

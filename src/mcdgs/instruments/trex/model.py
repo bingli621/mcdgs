@@ -11,7 +11,7 @@ from mcdgs.core.components import (
     NXdisk_chopper,
     Progress_bar,
 )
-from mcdgs.core.components.masked_source import chopper_train
+from mcdgs.core.components.masked_source import Polygon_ESS_butterfly, chopper_train
 
 from .choppers import Mode, chopper, chopper_timings
 from .detectors import banana_detector
@@ -81,6 +81,9 @@ class Params:
 
 DEFAULT_PARAMS = Params()  # frozen, so one shared default is safe
 
+# the masked source emits where the choppers open as they turn: parked, they do not
+MASKED_PARKED = "rrm 0 parks the choppers, and the masked source needs them turning"
+
 
 class TRex(Instrument):
     """The T-Rex instrument.
@@ -96,12 +99,14 @@ class TRex(Instrument):
         Control parameters.
     source_masked:
         True uses :func:`.sources.masked_source`, the source masked by the six choppers, for
-        many more neutrons through them per ray; False uses :func:`.sources.source`.
+        many more neutrons through them per ray; False uses :func:`.sources.source`. Not with
+        ``rrm`` 0: the masked source needs the choppers turning.
 
     Raises
     ------
     ValueError
-        If ``sample`` is relative to a component other than ``sample_pos``.
+        If ``sample`` is relative to a component other than ``sample_pos``, or if
+        ``source_masked`` is True while ``rrm`` is 0.
     """
 
     params_class = Params
@@ -121,6 +126,8 @@ class TRex(Instrument):
     ) -> None:
         if sample is not None and sample.relative not in (None, "sample_pos"):
             raise ValueError(f"the sample is relative to {sample.relative!r}, not to 'sample_pos'")
+        if source_masked and params.rrm == 0:
+            raise ValueError(MASKED_PARKED)
         super().__init__(params)
 
         to_bwc1, to_bwc2, to_end_of_curve = guides_curve()
@@ -204,7 +211,12 @@ class TRex(Instrument):
         ------
         TypeError
             If a name is not a field of :class:`Params`.
+        ValueError
+            If ``rrm`` becomes 0 with the masked source; the parameters are then left as they
+            were.
         """
+        if values.get("rrm") == 0 and isinstance(self.source, Polygon_ESS_butterfly):
+            raise ValueError(MASKED_PARKED)
         super().update_params(**values)
         if "lambda0" in values:
             band = wavelength_band(self.params.lambda0)
@@ -274,8 +286,11 @@ class TRex(Instrument):
         ------
         ValueError
             If ``lambda0`` is ``None`` while ``rrm`` is not 0: turning choppers have no
-            wavelength to be phased to.
+            wavelength to be phased to; or if ``rrm`` is 0 with the masked source, as an
+            instrument read from a file can have.
         """
+        if self.params.rrm == 0 and isinstance(self.source, Polygon_ESS_butterfly):
+            raise ValueError(MASKED_PARKED)
         timings = chopper_timings(
             self.params.lambda0,
             self.params.rrm,
