@@ -1,6 +1,8 @@
 from pathlib import Path
+from types import SimpleNamespace
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pytest
 
 from mcdgs.instruments.trex.model import TRex
@@ -88,6 +90,36 @@ def test_plot_returns_the_figure_mcstasscript_draws_titled_with_the_running_cond
     assert fig is plt.gcf()
     assert fig.get_suptitle() == TRex().running_conditions()
     plt.close(fig)
+
+
+class FakeRays:
+    """McStasScript's event data of one point: a column per ray variable."""
+
+    def __init__(self, **columns):
+        self.columns = columns
+
+    def get_data_column(self, axis):
+        return np.asarray(self.columns[axis])
+
+
+def test_histogram_sums_the_weights_or_counts_the_rays_at_each_point(tmp_path):
+    diag = McStasScriptDiagnostics(TRex(), Workspace(tmp_path))
+    with pytest.raises(RuntimeError):
+        diag.histogram("l", [0, 1])
+    points = [
+        SimpleNamespace(component="source", before=False, filename="Diag_after_source"),
+        SimpleNamespace(component="bw1", before=True, filename="Diag_before_bw1"),
+    ]
+    rays = FakeRays(l=[0.5, 1.5, 1.6], p=[1.0, 2.0, 3.0])
+    diag.diagnostics = SimpleNamespace(  # bw1 reached by no ray: McStasScript has no data
+        ordered_point_list=points,
+        event_plotters=[SimpleNamespace(name="Diag_after_source", data=rays)],
+    )
+    intensity = diag.histogram("l", [0, 1, 2])
+    assert list(intensity) == ["after source", "before bw1"]
+    assert intensity["after source"].tolist() == [1.0, 5.0]
+    assert intensity["before bw1"].tolist() == [0.0, 0.0]
+    assert diag.histogram("l", [0, 1, 2], weighted=False)["after source"].tolist() == [1.0, 2.0]
 
 
 def test_the_folders_are_those_of_the_simulation(tmp_path):

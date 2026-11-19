@@ -13,7 +13,9 @@ from unittest.mock import patch
 
 import matplotlib.pyplot as plt
 import mcstasscript as ms
+import numpy as np
 from matplotlib.figure import Figure
+from numpy.typing import ArrayLike, NDArray
 
 from mcdgs.core import Instrument
 from mcdgs.mcstas.runs import Run, RunType
@@ -179,6 +181,47 @@ class McStasScriptDiagnostics:
         figure.suptitle(self.simulation.instrument.running_conditions())
         figure.tight_layout()  # McStasScript's axes reach the top: room for the title
         return figure
+
+    def histogram(
+        self, variable: str, bins: ArrayLike, weighted: bool = True
+    ) -> dict[str, NDArray[np.float64]]:
+        """Histogram one ray variable at every point of the last run.
+
+        Parameters
+        ----------
+        variable:
+            The ray variable, as for a view, e.g. ``"l"``, the wavelength in Å.
+        bins:
+            The edges of the bins, in the unit of ``variable``.
+        weighted:
+            True sums the weights of the rays, in n/s per bin; False counts the rays.
+
+        Returns
+        -------
+        :
+            The histogram by point, such as ``"after source"`` or ``"before bw1"``, in the order
+            of the instrument. A point no ray reached has 0 in every bin.
+
+        Raises
+        ------
+        RuntimeError
+            If there has been no run.
+        """
+        if self.diagnostics is None:
+            raise RuntimeError("run the diagnostics before reading their rays")
+        edges = np.asarray(bins, dtype=float)
+        rays = {plotter.name: plotter.data for plotter in self.diagnostics.event_plotters}
+        histograms = {}
+        for point in self.diagnostics.ordered_point_list:
+            label = f"{'before' if point.before else 'after'} {point.component}"
+            data = rays.get(point.filename)
+            if data is None:  # no ray reached it: McStasScript has no data for it
+                histograms[label] = np.zeros(len(edges) - 1)
+                continue
+            values = data.get_data_column(variable)
+            weights = data.get_data_column("p") if weighted else None
+            histograms[label] = np.histogram(values, bins=edges, weights=weights)[0].astype(float)
+        return histograms
 
     def run_analysis(
         self,

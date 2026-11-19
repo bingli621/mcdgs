@@ -8,7 +8,8 @@ the guides take out, and the little the parked disks block. The bender is out, s
 through the thermal guide 4a.
 
 It uses McStasScript's two tools: its beam diagnostics, the beam at five points along the
-instrument, and its diagram of the intensity before every component.
+instrument, and its diagram of the intensity before every component. From the rays of the
+diagnostics it also draws the transmission of the guides by wavelength.
 [Run McStasScript's diagnostics](../../how-to/run-mcstasscript-diagnostics.md) has the code and
 explains both tools; this page shows what they give for T-Rex. The guides themselves are listed
 in [Technical details](details.md#curved-guides).
@@ -87,8 +88,15 @@ The losses are not spread evenly:
 
 ### By wavelength
 
-The rays of the beam diagnostics give the transmission in bands of wavelength, as the ratio of
-the intensities at two points, at 1e6 neutrons:
+The rays of the beam diagnostics give the transmission by wavelength, as the ratio of the
+intensities at two points, in bins of 0.1 Å, at 1e6 neutrons. On the left are the sections
+between the points, on the right the whole way to the sample position, on a log scale. A bin
+that fewer than 20 rays reach has no value, which leaves out most wavelengths below 0.4 Å:
+
+![The transmission by wavelength of the sections of guide, and from the source and from bw1 to the sample position](figures/guides/trex_guides_transmission.png)
+
+The end of the straight guide, after guide 50a, is left out: the beam reaches the sample
+position from there unchanged. In wider bands, from the same rays:
 
 | From → to | 0.1–0.5 Å | 0.5–1 Å | 1–1.5 Å | 1.5–2 Å | 2–3 Å | 3–4 Å | 4–6 Å | 6–8 Å | 8–10 Å |
 | --------- | --------- | ------- | ------- | ------- | ----- | ----- | ----- | ----- | ------ |
@@ -127,5 +135,6 @@ them again, with the other files of the T-Rex pages. To make them yourself, run:
 pixi run python -m mcdgs.diagnostics.trex.guides_diagnostics
 ```
 
-The transmissions above are read from the run folders it writes, `trex_guides_diagnostics` and
-`trex_guides_diagnostics_analysis` in the workspace.
+It saves the three figures to `mcdgs_workspace/results/trex_guides_diagnostics/`, or to the
+folder given with `--out`. The transmissions of the tables are read from the run folders it
+writes, `trex_guides_diagnostics` and `trex_guides_diagnostics_analysis` in the workspace.

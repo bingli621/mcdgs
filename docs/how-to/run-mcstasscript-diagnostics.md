@@ -17,6 +17,7 @@ shows its figures and what they say about the guides of T-Rex, and the
 
 ```python
 from mcdgs.diagnostics import cli
+from mcdgs.diagnostics.trex.guides_diagnostics import WAVELENGTH_BINS, plot_transmission
 from mcdgs.instruments.trex.model import Params, TRex
 from mcdgs.mcstas import McStasScriptDiagnostics
 ```
@@ -88,6 +89,21 @@ on [Guides](../instruments/trex/guides.md#the-beam-along-the-guides).
     left: at 1e5 neutrons, about 9 reach `sample_pos` with the bender out, and 1 reaches the
     detector with it in. Put the points before the choppers, park them with `rrm` 0, or run
     enough neutrons for the detector.
+
+### Histograms of the rays
+
+`histogram` sums the rays of the last run at each point into bins of one ray variable, in n/s per
+bin, or counts them with `weighted=False`. It gives a dict by point, such as `"after source"` or
+`"before bw1"`, in the order of the instrument. `guides_diagnostics` divides the wavelength
+spectra of two points for the transmission of the guides between them:
+
+<!-- fmt:off -->
+```python
+--8<-- "src/mcdgs/diagnostics/trex/guides_diagnostics.py:transmission"
+```
+<!-- fmt:on -->
+
+The figure is on [Guides](../instruments/trex/guides.md#by-wavelength).
 
 ### The same diagnostics on more runs
 
