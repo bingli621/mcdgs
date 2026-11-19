@@ -143,9 +143,10 @@ n/s/cm²/sr/Å. Along the beam it can only fall (Liouville's theorem), so the br
 window over that of the moderator is at most 1.
 [`mcdgs.diagnostics.trex.brilliance_transfer`](https://github.com/bingli621/mcdgs/blob/main/src/mcdgs/diagnostics/trex/brilliance_transfer.py)
 reads it in windows of 1 × 1 cm on the beam axis, with a divergence of ±0.25°, ±0.5° or ±1°
-from the axis, both horizontally and vertically. It runs `TRex` as above, white beam, choppers
-parked and bender out, and reads the rays at two points: before the beam monitor, at the exit
-of the extraction, and before `sample_pos`.
+from the axis, both horizontally and vertically. It runs `TRex` as above, white beam and
+choppers parked, on both paths through guide 4: first with the bender out, through guide 4a,
+then with it in, through the bender and guide 4b. On each it reads the rays at two points:
+before the beam monitor, at the exit of the extraction, and before `sample_pos`.
 
 ### The brilliance of the moderator
 
@@ -164,10 +165,10 @@ about 2 Å, the cold one above.
 ```
 <!-- fmt:on -->
 
-### At the exit of the extraction and at the sample position
+### Bender out, through guide 4a
 
-At 1e7 neutrons of T-Rex, 4e6 of the moderator and seed 1, in bins of 0.1 Å; a bin with fewer
-than 20 rays in the window has no value:
+At 1e7 neutrons of T-Rex on each path, 4e6 of the moderator and seed 1, in bins of 0.1 Å; a bin
+with fewer than 20 rays in the window has no value:
 
 ![The brilliance of each face of the moderator and at the two points, and the brilliance transfer of each window](figures/guides/trex_brilliance_transfer.png)
 
@@ -189,12 +190,11 @@ In wider bands, from the same rays:
 - **Cold neutrons reach the middle of the sample with the brilliance of the thermal face.**
   Above 2 Å the brilliance at the sample position follows the spectrum of the thermal face,
   from 4 times below the cold one at 2 to 3 Å to 20 times at 8 to 10 Å, so the transfer drops
-  to 0.05 to 0.2. The cold face is off
-  the axis, at x > 0, so its neutrons enter guide 1 at an angle: at the exit of the extraction
-  they leave at about −0.5°, the thermal ones at about +0.25°. At the sample position the cold
-  neutrons lie on a band across position and divergence, from about −15 mm and −1° to +15 mm
-  and +1°, with most of them away from its middle, where the window is. This is with the
-  bender out, through the thermal guide 4a.
+  to 0.05 to 0.2. The cold face is off the axis, at x > 0, so its neutrons enter guide 1 at an
+  angle: at the exit of the extraction they leave at about −0.5°, the thermal ones at about
+  +0.25°. At the sample position the cold neutrons lie on a band across position and
+  divergence, from about −15 mm and −1° to +15 mm and +1°, with most of them away from its
+  middle, where the window is.
 - **Wide windows are mostly empty.** Within ±1° the transfer is low at both points: the beam
   does not fill that much divergence, as the vertical divergence at the sample position reaches
   only about ±0.7°.
@@ -204,6 +204,43 @@ In wider bands, from the same rays:
 
 The reference is the mean of each face over 4 cm, and the brightest part of the thermal face is
 about 20 % above its mean, so a bin can come out slightly above 1, as near 1.7 Å.
+
+### Bender in, through the bender and guide 4b
+
+With the bender in, from the same run of the moderator:
+
+![The brilliance of each face of the moderator and at the two points, and the brilliance transfer of each window, with the bender in](figures/guides/trex_brilliance_transfer_bender_in.png)
+
+| Window | 0.5–1 Å | 1–1.5 Å | 1.5–2 Å | 2–3 Å | 3–4 Å | 4–6 Å | 6–8 Å | 8–10 Å |
+| ------ | ------- | ------- | ------- | ----- | ----- | ----- | ----- | ------ |
+| Exit of the extraction, ±0.25° | 0.106 | 0.099 | 0.292 | 0.610 | 0.782 | 0.756 | 0.765 | 0.727 |
+| Exit of the extraction, ±0.5° | 0.033 | 0.052 | 0.200 | 0.385 | 0.469 | 0.531 | 0.560 | 0.533 |
+| Exit of the extraction, ±1° | 0.008 | 0.013 | 0.058 | 0.105 | 0.124 | 0.149 | 0.179 | 0.182 |
+| Sample position, ±0.25° | 0.037 | 0.125 | 0.448 | 0.734 | 0.799 | 0.847 | 0.778 | 0.780 |
+| Sample position, ±0.5° | 0.018 | 0.084 | 0.309 | 0.540 | 0.570 | 0.597 | 0.578 | 0.574 |
+| Sample position, ±1° | 0.005 | 0.027 | 0.106 | 0.213 | 0.242 | 0.242 | 0.243 | 0.239 |
+
+- **Cold neutrons now reach the middle of the sample with the brilliance of the cold face.**
+  Above 2 Å the brilliance at the sample position follows the spectrum of the cold face, at
+  0.73 to 0.85 of it within ±0.25° and about 0.55 to 0.6 within ±0.5°, against 0.05 to 0.24
+  and 0.06 to 0.19 with the bender out. The bender turns the cold beam onto the axis: at the
+  exit of the extraction it is centered within 0.02° of it, where without the bender it left at
+  about −0.5°. At the sample position the cold neutrons fill the middle of position and
+  divergence, where the window is.
+- **The thermal neutrons are gone.** Below 1.5 Å the transfer is 0.13 or less at the sample
+  position: the bender does not pass them, as [Bender](bender-scan.md) shows band by band. From
+  1.5 to 2 Å, where the thermal face is still the brighter, the transfer is about half that
+  above 2 Å.
+- **Most of the cold brilliance the sample position gets, it already has at the exit of the
+  extraction.** Within ±0.5° the exit keeps 0.39 to 0.56 of the cold face, and the sample
+  position 0.54 to 0.6. The two windows do not hold the same rays: the guides after the
+  extraction, which narrow the beam onto the sample, bring into the window at the sample
+  position rays that were outside the window at the exit, so its transfer can be the higher.
+- **Wide windows are still mostly empty**, at about 0.24 within ±1°, for the same reason as
+  without the bender.
+
+Within ±0.25° a bin of 0.1 Å holds few rays, so single bins scatter by up to 20 % and some
+come out above 1; the bands of the table, of 5 to 20 bins each, average that out.
 
 ## Making the figures
 
@@ -215,13 +252,16 @@ pixi run python -m mcdgs.diagnostics.trex.guides_diagnostics
 ```
 
 It saves the three figures to `mcdgs_workspace/results/trex_guides_diagnostics/`, or to the
-folder given with `--out`. The brilliance transfer is a module of its own:
+folder given with `--out`. The transmissions of the tables are read from the run folders it
+writes, `trex_guides_diagnostics` and `trex_guides_diagnostics_analysis` in the workspace. The
+brilliance transfer is a module of its own:
 
 ```bash
 pixi run python -m mcdgs.diagnostics.trex.brilliance_transfer
 ```
 
-It saves its figure to `mcdgs_workspace/results/trex_brilliance_transfer/`, or to the folder
-given with `--out`, and prints the table of the bands. Its runs go to the run folders
-`trex_moderator_brilliance` and `trex_brilliance_transfer`, about 0.5 GB of rays. The transmissions of the tables are read from the run folders it
-writes, `trex_guides_diagnostics` and `trex_guides_diagnostics_analysis` in the workspace.
+It saves its two figures, bender out and bender in, to
+`mcdgs_workspace/results/trex_brilliance_transfer/`, or to the folder given with `--out`, and
+prints the table of the bands of each path. Its runs go to the run folders
+`trex_moderator_brilliance`, `trex_brilliance_transfer` and
+`trex_brilliance_transfer_bender_in`, about 1 GB of rays.

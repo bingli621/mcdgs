@@ -91,11 +91,15 @@ def test_the_moderator_view_is_the_source_of_trex_aimed_at_its_plane():
     assert reach < bt.COLD_FACE[0] < bt.COLD_FACE[1] <= bt.REFERENCE_WIDTH / 2
 
 
-def test_main_runs_the_moderator_then_trex_and_saves_the_figure(tmp_path, monkeypatch):
+def test_main_runs_the_moderator_then_trex_on_each_path_and_saves_the_figures(
+    tmp_path, monkeypatch
+):
     runs = []
 
     def run(self, folder_name, **kwargs):
-        runs.append((self.simulation.instrument.name, folder_name, kwargs, list(self._points)))
+        instrument = self.simulation.instrument
+        bender_in = getattr(instrument.params, "bender_in", None)
+        runs.append((instrument.name, bender_in, folder_name, kwargs, list(self._points)))
         return SimpleNamespace(folder=tmp_path / folder_name)
 
     def rays(self, *variables):
@@ -105,22 +109,26 @@ def test_main_runs_the_moderator_then_trex_and_saves_the_figure(tmp_path, monkey
 
     monkeypatch.setattr(McStasScriptDiagnostics, "run", run)
     monkeypatch.setattr(McStasScriptDiagnostics, "rays", rays)
-    path = bt.main(out=tmp_path, ncount=1e3, reference_ncount=1e2, seed=2)
-    assert path == tmp_path / "trex_brilliance_transfer.png"
-    assert path.stat().st_size > 0
-    (view, view_folder, view_kwargs, view_points), (trex, folder, kwargs, points) = runs
-    assert (view, view_folder, view_kwargs) == (
+    paths = bt.main(out=tmp_path, ncount=1e3, reference_ncount=1e2, seed=2)
+    assert paths == [
+        tmp_path / "trex_brilliance_transfer.png",
+        tmp_path / "trex_brilliance_transfer_bender_in.png",
+    ]
+    assert all(path.stat().st_size > 0 for path in paths)
+    view, *trex = runs
+    assert view[:4] == (
         "trex_moderator_view",
+        None,
         "trex_moderator_brilliance",
         {"ncount": 1e2, "seed": 2},
     )
-    assert [p["before"] for p in view_points] == ["plane"]
-    assert (trex, folder, kwargs) == (
-        "TRex",
-        "trex_brilliance_transfer",
-        {"ncount": 1e3, "seed": 2},
-    )
-    assert [p["before"] for p in points] == ["beam_monitor", "sample_pos"]
+    assert [p["before"] for p in view[4]] == ["plane"]
+    assert [run[:4] for run in trex] == [
+        ("TRex", False, "trex_brilliance_transfer", {"ncount": 1e3, "seed": 2}),
+        ("TRex", True, "trex_brilliance_transfer_bender_in", {"ncount": 1e3, "seed": 2}),
+    ]
+    for run in trex:
+        assert [p["before"] for p in run[4]] == ["beam_monitor", "sample_pos"]
 
 
 def test_the_instrument_is_that_of_guides_diagnostics():

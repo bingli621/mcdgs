@@ -7,9 +7,9 @@ could give there the guides deliver: 1 at most.
 
 A :class:`Window` is an area across the beam, centered on its axis, and a divergence of
 ± its half divergence from the axis, both horizontally and vertically. :func:`main` reads
-windows at two points of T-Rex, in the white beam with its choppers parked and the bender out,
-as :mod:`.guides_diagnostics` runs it: before the beam monitor, at the exit of the extraction,
-and before ``sample_pos``.
+windows at two points of T-Rex, in the white beam with its choppers parked, as
+:mod:`.guides_diagnostics` runs it, first with the bender out, then with it in: before the beam
+monitor, at the exit of the extraction, and before ``sample_pos``.
 
 The brilliance of the moderator comes from :class:`ModeratorView`: the source alone, and a plane
 ``REFERENCE_DISTANCE`` in front of it on its axis. A ray that crosses the plane at x within
@@ -18,8 +18,8 @@ brilliance there is that of the moderator at x. The thermal face, at x < 0, and 
 at x > 0, are each flat over ``THERMAL_FACE`` and ``COLD_FACE``; the reference is, at each
 wavelength, the brighter of the two, averaged over that span.
 
-The figure is on the Guides page of T-Rex, next to those of :mod:`.guides_diagnostics`. Run the
-module for it::
+The figures are on the Guides page of T-Rex, next to those of :mod:`.guides_diagnostics`. Run
+the module for them::
 
     pixi run python -m mcdgs.diagnostics.trex.brilliance_transfer --out docs/instruments/trex/figures/guides
 """
@@ -422,20 +422,23 @@ def main(
     ncount: float = 1e7,
     reference_ncount: float = 4e6,
     seed: int = 1,
-) -> Path:
-    """Run the moderator alone and T-Rex, and save the brilliance and its transfer.
+) -> list[Path]:
+    """Run the moderator alone, then T-Rex on each path, and save the brilliance and its transfer.
 
-    The figure is ``trex_brilliance_transfer.png``. The runs go to the run folders
-    ``trex_moderator_brilliance`` and ``trex_brilliance_transfer``, replaced on every run. It
-    also prints the brilliance transfer in the ``BANDS``.
+    T-Rex runs twice, first with the bender out, through guide 4a, then with it in, through the
+    bender and guide 4b. The figures are ``trex_brilliance_transfer.png`` and
+    ``trex_brilliance_transfer_bender_in.png``. The runs go to the run folders
+    ``trex_moderator_brilliance``, ``trex_brilliance_transfer`` and
+    ``trex_brilliance_transfer_bender_in``, replaced on every run. It also prints the
+    brilliance transfer of each path in the ``BANDS``.
 
     Parameters
     ----------
     out:
-        Folder of the figure. If ``None``, ``trex_brilliance_transfer`` in the results folder
+        Folder of the figures. If ``None``, ``trex_brilliance_transfer`` in the results folder
         of :meth:`.Workspace.find`.
     ncount:
-        Number of McStas neutrons of T-Rex, which keeps every ray at both points.
+        Number of McStas neutrons of T-Rex on each path, which keeps every ray at both points.
     reference_ncount:
         Number of McStas neutrons of the moderator alone, which keeps every ray on its plane.
     seed:
@@ -444,7 +447,7 @@ def main(
     Returns
     -------
     :
-        The path of the figure.
+        The paths of the figures, bender out, then bender in.
     """
     # --8<-- [start:reference]
     moderator = McStasScriptDiagnostics(define_moderator_view())
@@ -455,19 +458,28 @@ def main(
     faces = moderator_brilliance(plane, WAVELENGTH_BINS)
     # --8<-- [end:reference]
 
-    # --8<-- [start:trex]
-    diag = McStasScriptDiagnostics(define_instrument())
-    for label in POINT_NAMES:  # before each component: in its frame, on its axis
-        diag.add_point(before=label.removeprefix("before "))
-    diag.add_view("x", "y", bins=100)
-    diag.run(NAME, ncount=ncount, seed=seed)
-    points = diag.rays(*RAY_VARIABLES)
-    # --8<-- [end:trex]
+    folder = cli.output_folder(out, NAME)
+    figures = []
+    for bender_in in (False, True):
+        run_name = f"{NAME}_bender_in" if bender_in else NAME
+        instrument = define_instrument()
+        instrument.update_params(bender_in=bender_in)
+        # --8<-- [start:trex]
+        diag = McStasScriptDiagnostics(instrument)
+        for label in POINT_NAMES:  # before each component: in its frame, on its axis
+            diag.add_point(before=label.removeprefix("before "))
+        diag.add_view("x", "y", bins=100)
+        diag.run(run_name, ncount=ncount, seed=seed)
+        points = diag.rays(*RAY_VARIABLES)
+        # --8<-- [end:trex]
 
-    _print_bands(faces, points, WAVELENGTH_BINS)
-    title = diag.simulation.instrument.running_conditions()
-    fig = plot_brilliance_transfer(faces, points, WAVELENGTH_BINS, title)
-    return cli.save_figure(fig, cli.output_folder(out, NAME) / f"{NAME}.png", dpi=100)
+        path = "bender in, guide 4b" if bender_in else "bender out, guide 4a"
+        print(path)
+        _print_bands(faces, points, WAVELENGTH_BINS)
+        title = f"{instrument.running_conditions()} · {path}"
+        fig = plot_brilliance_transfer(faces, points, WAVELENGTH_BINS, title)
+        figures.append(cli.save_figure(fig, folder / f"{run_name}.png", dpi=100))
+    return figures
 
 
 if __name__ == "__main__":
