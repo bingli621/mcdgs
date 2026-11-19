@@ -16,9 +16,9 @@ the outputs into one file, after compiling the instrument once: see :mod:`.mcsta
 Each of them returns the :class:`.Run` it made, which is also left as ``run.json`` in the
 folder of the run.
 
-``prepare`` is the step they all share, for a run that McStasScript starts itself, such as
-``show_diagram(analysis=True)`` or the diagnostics of :class:`.McStasScriptDiagnostics`: it gives
-the run its folder, its settings and its record, which the caller finishes once McStas has run.
+``_prepare`` is the step they all share: it gives the run its folder, its settings and its
+record, which the caller finishes once McStas has run. :class:`.McStasScriptDiagnostics` starts
+with it too, for the runs that McStasScript starts itself.
 """
 
 from collections.abc import Mapping
@@ -83,7 +83,7 @@ class Simulation:
         self.workspace = workspace or Workspace.find()
         self.beam_run: str | None = None
 
-    def prepare(
+    def _prepare(
         self,
         folder_name: str | None,
         run_type: RunType = RunType.RUN,
@@ -99,9 +99,9 @@ class Simulation:
     ) -> tuple[Run, McStas_instr]:
         """Pick the run folder and build the instrument with the settings every run shares.
 
-        Every method of the simulation starts with it. Call it for a run that McStasScript
-        starts itself, such as ``inst.show_diagram(analysis=True)``, which runs ``inst`` with
-        its settings, then save the record with ``run.finish()``.
+        Every method of the simulation starts with it, and so does every run of
+        :class:`.McStasScriptDiagnostics`, which McStasScript starts itself. The caller runs
+        ``inst``, then saves the record with ``run.finish()``.
 
         Parameters
         ----------
@@ -183,17 +183,17 @@ class Simulation:
         beam_run: str | None,
         **prepare: Any,
     ) -> tuple[Run, McStas_instr]:
-        """Prepare a run from the sample: as :meth:`prepare`, cut to start from a beam file.
+        """Prepare a run from the sample: as :meth:`_prepare`, cut to start from a beam file.
 
         Parameters
         ----------
         folder_name, run_type, instr_params:
-            As in :meth:`prepare`.
+            As in :meth:`_prepare`.
         beam_run:
             Name of the run to the sample whose beam to start from. If ``None``,
             :attr:`beam_run`.
         **prepare:
-            The other keywords of :meth:`prepare`.
+            The other keywords of :meth:`_prepare`.
 
         Returns
         -------
@@ -210,7 +210,9 @@ class Simulation:
         """
         self._check_sample_pos()  # before anything
         beam = self.find_beam_run(beam_run, folder_name)
-        run, inst = self.prepare(folder_name, run_type, instr_params, beam_run=beam.name, **prepare)
+        run, inst = self._prepare(
+            folder_name, run_type, instr_params, beam_run=beam.name, **prepare
+        )
         # in C quotes, and absolute, because mcrun runs in the build folder
         inst.run_from(SAMPLE_POS, filename=f'"{(beam.folder / BEAM_FILE).resolve()}"')
         return run, inst
@@ -344,7 +346,7 @@ class Simulation:
         :
             The run, with its file ``data_file``, ``<runs folder>/<folder>/mccode.h5``.
         """
-        run, inst = self.prepare(
+        run, inst = self._prepare(
             folder_name,
             RunType.RUN,
             instr_params,
@@ -402,7 +404,7 @@ class Simulation:
             If a name is not an instrument parameter, before anything runs.
         """
         points = self.get_scan_points(variable, values, instr_params)  # checked before anything
-        run, inst = self.prepare(
+        run, inst = self._prepare(
             folder_name,
             RunType.SCAN,
             instr_params,
@@ -456,7 +458,7 @@ class Simulation:
             If the instrument has no ``sample_pos``, before anything runs.
         """
         self._check_sample_pos()  # before anything
-        run, inst = self.prepare(
+        run, inst = self._prepare(
             folder_name, RunType.RUN_TO_SAMPLE, instr_params, ncount=ncount, seed=seed, mpi=mpi
         )
         inst.run_to(

@@ -69,6 +69,7 @@ def main(
     diag.add_point(after="source")
     diag.add_point(before="bw1")  # the first bandwidth chopper
     diag.add_point(after="guide_29")  # the end of the curved guide
+    diag.add_point(after="guide_29")
 
     diag.add_view("x", "y", bins=100)  # the beam profile
     diag.add_view("t", "l", bins=100)  # wavelength against x

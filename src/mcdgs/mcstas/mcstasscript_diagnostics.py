@@ -4,7 +4,7 @@ McStasScript's ``Diagnostics`` records the rays at points along the instrument a
 views: histograms of one ray variable, or of one against another. Its ``show_diagram`` with
 ``analysis=True`` draws the components with the intensity before each. Both run McStas
 themselves, so a :class:`McStasScriptDiagnostics` hands them the run that
-:meth:`.Simulation.prepare` makes, and finishes its record once they have run. It keeps the
+the :class:`.Simulation` prepares, and finishes its record once they have run. It keeps the
 points and views, and on every ``run`` gives them to a new ``Diagnostics``.
 """
 
@@ -139,7 +139,7 @@ class McStasScriptDiagnostics:
         """
         if not self._points or not self._views:
             raise ValueError("add a point and a view before the run")
-        run, inst = self.simulation.prepare(
+        run, inst = self.simulation._prepare(
             folder_name,
             RunType.DIAGNOSE,
             instr_params,
@@ -215,7 +215,7 @@ class McStasScriptDiagnostics:
         :
             The run, and the figure of the diagram.
         """
-        run, inst = self.simulation.prepare(
+        run, inst = self.simulation._prepare(
             folder_name,
             RunType.ANALYSIS,
             instr_params,
