@@ -1,12 +1,15 @@
 """Run McStasScript's diagnostics of the beam, with the folders and records of a :class:`.Simulation`.
 
 McStasScript's ``Diagnostics`` records the rays at points along the instrument and draws them in
-views: histograms of one ray variable, or of one against another. It runs McStas itself, so a
-:class:`McStasScriptDiagnostics` keeps its points and views, and on every ``run`` gives them to
-a new ``Diagnostics`` of the run that :meth:`.Simulation.prepare` makes.
+views: histograms of one ray variable, or of one against another. Its ``show_diagram`` with
+``analysis=True`` draws the components with the intensity before each. Both run McStas
+themselves, so a :class:`McStasScriptDiagnostics` hands them the run that
+:meth:`.Simulation.prepare` makes, and finishes its record once they have run. It keeps the
+points and views, and on every ``run`` gives them to a new ``Diagnostics``.
 """
 
 from typing import Any, Literal
+from unittest.mock import patch
 
 import matplotlib.pyplot as plt
 import mcstasscript as ms
@@ -22,7 +25,8 @@ class McStasScriptDiagnostics:
     """McStasScript's diagnostics of the beam of an instrument.
 
     Add the points and the views, then ``run``, as often as needed, and ``plot`` the last run.
-    Every run builds the instrument anew, as a run of :class:`.Simulation` does, so a change to
+    :meth:`run_analysis` runs and draws the diagram of the intensity, without them. Every
+    run builds the instrument anew, as a run of :class:`.Simulation` does, so a change to
     the instrument applies to the next run.
 
     Parameters
@@ -170,3 +174,64 @@ class McStasScriptDiagnostics:
             raise RuntimeError("run the diagnostics before plotting them")
         self.diagnostics.plot()  # draws on a new figure, which it does not return
         return plt.gcf()
+
+    def run_analysis(
+        self,
+        folder_name: str | None = None,
+        ncount: float = 1e7,
+        seed: int | None = None,
+        mpi: int | str = "auto",
+        intensity_limits: tuple[float, float] | None = None,
+        **instr_params: float,
+    ) -> tuple[Run, Figure]:
+        """Simulate once, and draw McStasScript's diagram with the intensity before each component.
+
+        ``show_diagram(analysis=True)`` runs McStas with a monitor before every component, then
+        draws the diagram of the components, with arrows from each to the one it is placed
+        relative to, and next to it the intensity just before each component, in n/s, and the
+        number of rays, on a log scale. The points and views play no part. The run writes
+        McStas's own format, as :meth:`run` does, and its folder holds the monitors of the
+        instrument too.
+
+        Parameters
+        ----------
+        folder_name:
+            Run folder name. If ``None``, ``<time>_analysis``.
+        ncount:
+            Number of neutrons.
+        seed:
+            Random seed. If ``None``, McStas picks one.
+        mpi:
+            Number of MPI processes, or ``"auto"``.
+        intensity_limits:
+            The range of the intensity axis, in n/s, which ``show_diagram`` has no option for:
+            its ``limits`` are those of a ``variable``. The ray count keeps its ratio to the
+            intensity, so both share their ticks. If ``None``, as McStasScript draws it.
+        **instr_params:
+            Instrument parameters by McStas name.
+
+        Returns
+        -------
+        :
+            The run, and the figure of the diagram.
+        """
+        run, inst = self.simulation.prepare(
+            folder_name,
+            RunType.ANALYSIS,
+            instr_params,
+            ncount=ncount,
+            seed=seed,
+            nexus=False,
+            mpi=mpi,
+        )
+        with patch.object(plt, "show"):  # McStasScript shows the figure and returns None
+            inst.show_diagram(analysis=True)
+        diagram = plt.gcf()
+        if intensity_limits is not None:  # the ray count zoomed with it, keeping its ratio
+            intensity_ax = next(ax for ax in diagram.axes if ax.get_xlabel() == "Intensity [n/s]")
+            rays_ax = next(ax for ax in diagram.axes if ax.get_xlabel() == "Ray count")
+            rays_per_intensity = rays_ax.get_xlim()[1] / intensity_ax.get_xlim()[1]
+            low, high = intensity_limits
+            intensity_ax.set_xlim(low, high)
+            rays_ax.set_xlim(low * rays_per_intensity, high * rays_per_intensity)
+        return run.finish(), diagram

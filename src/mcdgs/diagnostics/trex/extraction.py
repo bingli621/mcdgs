@@ -33,7 +33,7 @@ from mcdgs.core.components import (
     Progress_bar,
 )
 from mcdgs.diagnostics import cli, compare
-from mcdgs.diagnostics.drawing import draw_instrument, draw_intensity_diagram
+from mcdgs.diagnostics.drawing import draw_instrument
 from mcdgs.instruments.trex.guides.bispectral import (
     BENDER_ROTATION,
     arm_guide_4,
@@ -46,7 +46,6 @@ from mcdgs.instruments.trex.monitors import beam_monitor, source_monitor
 from mcdgs.instruments.trex.sources import source
 from mcdgs.mcstas import (
     McStasScriptDiagnostics,
-    Simulation,
     build_mcstas,
     read_mcstas_map,
 )
@@ -231,40 +230,37 @@ def main(
         diag.add_view("l")
         diag.run(run_name, ncount=DIAGNOSTICS_NCOUNT, seed=seed)
         # --8<-- [end:diagnostics]
-        diagnostics = cli.save_figure(
-            diag.plot(), figure_folder / f"{run_name}_diagnose.png", dpi=100
-        )
+        figures += [
+            cli.save_figure(diag.plot(), figure_folder / f"{run_name}_diagnose.png", dpi=100)
+        ]
 
         # McStasScript's diagram of the components, with the intensity and the rays before
         # each: a McStas run of its own, in a folder of its own, which also holds the monitors
-        sim = Simulation(instrument)
-        run, mcstas_instr = sim.prepare(
-            f"{run_name}_intensity", ncount=ncount, seed=seed, nexus=False, mpi="auto"
-        )
         # --8<-- [start:diagram]
-        diagram = draw_intensity_diagram(
-            mcstas_instr, figure_folder / f"{run_name}_intensity.png", DIAGRAM_INTENSITY_LIMITS
+        run, fig = diag.run_analysis(
+            f"{run_name}_intensity",
+            ncount=ncount,
+            seed=seed,
+            intensity_limits=DIAGRAM_INTENSITY_LIMITS,
         )
         # --8<-- [end:diagram]
-        run = run.finish()
+        figures += [cli.save_figure(fig, figure_folder / f"{run_name}_intensity.png", dpi=100)]
 
         # --8<-- [start:scale_tof]
         # at the source monitor, where both models see the same beam: the n/s each tof neutron
         # stands for, the total of McStas over that of tof
-        source_bins = monitor_bins(instrument.source_monitor.bin_limits)
 
         tof_model = build_tof(instrument, neutrons=neutrons, seed=seed)
         tof_result = tof_model.run()
-        tof_source = read_tof_map("source_monitor", tof_result, source_bins)
-
         mcstas_data = ms.load_data(run.folder)
-        mcstas_source = read_mcstas_map("source_monitor", mcstas_data, source_bins)
 
+        source_bins = monitor_bins(instrument.source_monitor.bin_limits)
+        tof_source = read_tof_map("source_monitor", tof_result, source_bins)
+        mcstas_source = read_mcstas_map("source_monitor", mcstas_data, source_bins)
         scale = compare.rescale_tof_to_mcstas(tof_source, mcstas_source)
 
         # at the beam monitor: tof with that scale, and the transmission of the guides on top
         beam_bins = monitor_bins(instrument.beam_monitor.bin_limits)
-
         tof_beam = read_tof_map("beam_monitor", tof_result, beam_bins)
         mcstas_beam = read_mcstas_map("beam_monitor", mcstas_data, beam_bins)
 
@@ -273,16 +269,17 @@ def main(
         )
         # --8<-- [end:scale_tof]
 
+        fig = compare.plot_comparison(
+            comparison, f"T-Rex flux at the beam monitor after guide 4, {path}"
+        )
+        figures += [cli.save_figure(fig, figure_folder / f"{run_name}.png")]
+
         mcstas_total = mcstas_beam.sum().value
         print(
             f"{path}: McStas total {mcstas_total:.4g} n/s, "
             f"{mcstas_total / mcstas_source.sum().value:.4g} of that at the source, "
             f"{scale:.4g} n/s per tof neutron"
         )
-        fig = compare.plot_comparison(
-            comparison, f"T-Rex flux at the beam monitor after guide 4, {path}"
-        )
-        figures += [diagnostics, diagram, cli.save_figure(fig, figure_folder / f"{run_name}.png")]
     # --8<-- [end:paths]
     return figures
 

@@ -6,8 +6,9 @@
   it to where the other files go.
 - :func:`draw_instrument` draws the instrument with McStasScript's ``show_instrument``, which runs
   mcdisplay, in any projection, and :func:`component_range` gives the components a view draws.
-- :func:`draw_diagram` draws McStasScript's diagram of how the components are placed, and
-  :func:`draw_intensity_diagram` the same with the intensity before each component, from a run.
+- :func:`draw_diagram` draws McStasScript's diagram of how the components are placed; the same
+  with the intensity before each component is :meth:`.McStasScriptDiagnostics.run_analysis`,
+  as it runs McStas.
 - :func:`remove_mcdisplay_folders` clears what mcdisplay leaves in the build folder.
 
 McStasScript's drawings end in ``plt.show()`` and return None, so they are drawn with
@@ -173,47 +174,6 @@ def draw_diagram(mcstas_instr: McStas_instr, legend_path: Path, diagram_path: Pa
         print(f"Saved {path}")
     plt.close("all")
     return paths
-
-
-def draw_intensity_diagram(
-    mcstas_instr: McStas_instr,
-    path: Path,
-    intensity_limits: tuple[float, float] | None = None,
-) -> Path:
-    """Run the instrument and draw McStasScript's diagram with the intensity before each component.
-
-    ``show_diagram(analysis=True)`` runs McStas with the settings of ``mcstas_instr``, into its
-    ``output_path``, with a monitor before every component. It then draws the diagram of
-    :func:`draw_diagram`, and next to it the intensity just before each component, in n/s, and
-    the number of rays, on a log scale.
-
-    Parameters
-    ----------
-    mcstas_instr:
-        The McStasScript instrument, with the settings of the run.
-    path:
-        The file of the figure.
-    intensity_limits:
-        The range of the intensity axis, in n/s, which ``show_diagram`` has no option for: its
-        ``limits`` are those of a ``variable``. The ray count keeps its ratio to the
-        intensity, so both share their ticks. If ``None``, as McStasScript draws it.
-
-    Returns
-    -------
-    :
-        ``path``.
-    """
-    with patch.object(plt, "show"):
-        mcstas_instr.show_diagram(analysis=True)
-    diagram = plt.gcf()
-    if intensity_limits is not None:  # the ray count zoomed with it, keeping its ratio
-        intensity_ax = next(ax for ax in diagram.axes if ax.get_xlabel() == "Intensity [n/s]")
-        rays_ax = next(ax for ax in diagram.axes if ax.get_xlabel() == "Ray count")
-        rays_per_intensity = rays_ax.get_xlim()[1] / intensity_ax.get_xlim()[1]
-        low, high = intensity_limits
-        intensity_ax.set_xlim(low, high)
-        rays_ax.set_xlim(low * rays_per_intensity, high * rays_per_intensity)
-    return cli.save_figure(diagram, path, dpi=100)
 
 
 def remove_mcdisplay_folders(build_folder: str | Path) -> list[Path]:

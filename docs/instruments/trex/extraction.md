@@ -80,8 +80,8 @@ n/s, and the dashed green line the number of rays, both on a log scale zoomed to
 1.5e12 n/s. Each step of the line is what one component loses. It is a McStas run of its own,
 which adds a monitor before every component; those monitors are 100 m wide, so they count every
 ray, inside an opening or not. `show_diagram` has no range for the intensity, so
-`draw_intensity_diagram`, in [`mcdgs.diagnostics.drawing`](../../reference/diagnostics.md), sets
-the range on the axes it drew, and holds back its `plt.show()` so the figure can be saved:
+`run_analysis` of `McStasScriptDiagnostics`, in [`mcdgs.mcstas`](../../reference/mcstas.md),
+sets the range on the axes it drew, and holds back its `plt.show()` so the figure can be saved:
 
 <!-- fmt:off -->
 ```python

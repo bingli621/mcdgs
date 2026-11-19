@@ -91,3 +91,24 @@ def test_the_folders_are_those_of_the_simulation(tmp_path):
     diag = McStasScriptDiagnostics(TRex(), Workspace(tmp_path))
     assert diag.workspace is diag.simulation.workspace
     assert diag.workspace.root == tmp_path
+
+
+def test_run_analysis_is_a_run_of_its_own_with_the_intensity_zoomed(tmp_path, monkeypatch):
+    def show_diagram(inst, analysis):
+        """McStasScript's show_diagram without McStas: the intensity and ray count axes."""
+        assert analysis and inst._run_settings["NeXus"] is False
+        Path(inst._run_settings["output_path"]).mkdir()  # as McStas does
+        _, (_, intensity, rays) = plt.subplots(1, 3)
+        intensity.set(xlabel="Intensity [n/s]", xlim=(1, 1e12))
+        rays.set(xlabel="Ray count", xlim=(1, 1e6))
+        plt.show()  # held back
+
+    monkeypatch.setattr("mcstasscript.interface.instr.McStas_instr.show_diagram", show_diagram)
+    monkeypatch.setattr(plt, "show", lambda: pytest.fail("shown"), raising=True)
+    diag = McStasScriptDiagnostics(TRex(), Workspace(tmp_path))
+    run, fig = diag.run_analysis("a", ncount=1e4, intensity_limits=(1e10, 1e11))
+    assert run.run_type is RunType.ANALYSIS and (run.folder / "run.json").is_file()
+    _, intensity, rays = fig.axes
+    assert intensity.get_xlim() == (1e10, 1e11)
+    assert rays.get_xlim() == pytest.approx((1e4, 1e5))  # the same ratio to the intensity
+    plt.close(fig)

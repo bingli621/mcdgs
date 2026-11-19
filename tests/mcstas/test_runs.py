@@ -30,6 +30,7 @@ def test_a_run_type_is_the_name_of_the_method_that_made_the_run():
     assert [run_type.value for run_type in RunType] == [
         "run",
         "diagnose",
+        "analysis",
         "scan",
         "run_to_sample",
         "run_from_sample",
