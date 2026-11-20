@@ -440,14 +440,12 @@ def main(
     :
         The paths of the figures: bender out, bender in, then the sweep of ``lambda0``.
     """
-    # --8<-- [start:reference]
     moderator = McStasScriptDiagnostics(define_moderator_view())
     moderator.add_point(before="plane")
     moderator.add_view("x", "l", bins=100)  # every run needs a view
     moderator.run(REFERENCE_NAME, ncount=reference_ncount, seed=seed)
     plane = moderator.rays(*RAY_VARIABLES)["before plane"]
     faces = moderator_brilliance(plane, WAVELENGTH_BINS)
-    # --8<-- [end:reference]
 
     folder = cli.output_folder(out, NAME)
     figures = []
@@ -473,12 +471,10 @@ def main(
         figures.append(cli.save_figure(fig, folder / f"{run_name}.png", dpi=100))
         sample[path] = points["before sample_pos"]
 
-    # --8<-- [start:lambda0]
     _print_lambda0(sample, WAVELENGTH_BINS)
     title = "Intensity on the sample over the band of lambda0 ± 0.905 Å"
     fig = plot_lambda0_flux(sample, LAMBDA0_VALUES, WAVELENGTH_BINS, title)
     figures.append(cli.save_figure(fig, folder / f"{NAME}_lambda0.png", dpi=100))
-    # --8<-- [end:lambda0]
     return figures
 
 

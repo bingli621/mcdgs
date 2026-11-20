@@ -126,12 +126,6 @@ from the same rays at the sample position as above. It leaves out what the turni
 take, which depends on `rrm` and on the mode, so it compares the two paths and the central
 wavelengths, not the flux of a measurement.
 
-<!-- fmt:off -->
-```python
---8<-- "src/mcdgs/diagnostics/trex/brilliance_transfer.py:lambda0"
-```
-<!-- fmt:on -->
-
 ![The intensity on the sample over the band of each lambda0, with the bender out and in](figures/brilliance-transfer/trex_brilliance_transfer_lambda0.png)
 
 Intensity on 1 × 1 cm, in n/s, over the band of each `lambda0`:
