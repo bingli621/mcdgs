@@ -5,11 +5,11 @@ n/s/cm²/sr/Å. Along the beam it can only fall (Liouville's theorem), so the br
 window over that of the moderator, the brilliance transfer, says how much of what the moderator
 could give there the guides deliver: 1 at most.
 
-A :class:`Window` is an area across the beam, centered on its axis, and a divergence of
-± its half divergence from the axis, both horizontally and vertically. :func:`main` reads
-windows at two points of T-Rex, in the white beam with its choppers parked, as
-:mod:`.guides_diagnostics` runs it, first with the bender out, then with it in: before the beam
-monitor, at the exit of the extraction, and before ``sample_pos``.
+A :class:`.Window`, from :mod:`.diagnostics.phase_space`, is an area across the beam, centered
+on its axis, and a divergence of ± its half divergence from the axis, both horizontally and
+vertically. :func:`main` reads windows at two points of T-Rex, in the white beam with its
+choppers parked, as :mod:`.guides_diagnostics` runs it, first with the bender out, then with it
+in: before the beam monitor, at the exit of the extraction, and before ``sample_pos``.
 
 The brilliance of the moderator comes from :class:`ModeratorView`: the source alone, and a plane
 ``REFERENCE_DISTANCE`` in front of it on its axis. A ray that crosses the plane at x within
@@ -27,7 +27,6 @@ The figures are on the Brilliance transfer page of T-Rex. Run the module for the
     pixi run python -m mcdgs.diagnostics.trex.brilliance_transfer --out docs/instruments/trex/figures/brilliance-transfer
 """
 
-import math
 from collections.abc import Mapping
 from dataclasses import dataclass, replace
 from pathlib import Path
@@ -40,15 +39,21 @@ from numpy.typing import NDArray
 from mcdgs.core import Instrument
 from mcdgs.core.components import Arm, ESS_butterfly, Progress_bar
 from mcdgs.diagnostics import cli
+from mcdgs.diagnostics.phase_space import (
+    RAY_VARIABLES,
+    Rays,
+    Window,
+    band_transfer,
+    brilliance,
+    brilliance_transfer,
+    window_intensity,
+)
 from mcdgs.instruments.trex.model import Params, TRex
 from mcdgs.instruments.trex.sources import source, wavelength_band
 from mcdgs.mcstas import McStasScriptDiagnostics
 
 NAME = "trex_brilliance_transfer"  # the run folder of T-Rex, and the folder of the figure
 REFERENCE_NAME = "trex_moderator_brilliance"  # the run folder of the moderator
-
-# the variables of a ray: position in m, divergence in deg, wavelength in Å and weight in n/s
-RAY_VARIABLES = ("x", "y", "dx", "dy", "l", "p")
 
 # the plane of ModeratorView, in front of the moderator, and the rectangle the source aims at on
 # it: the width of both faces, and the height of the reference area
@@ -88,87 +93,6 @@ BANDS = (
     (0.5, 1.0), (1.0, 1.5), (1.5, 2.0), (2.0, 3.0), (3.0, 4.0), (4.0, 6.0), (6.0, 8.0), (8.0, 10.0),
 )  # fmt: skip
 
-Rays = Mapping[str, NDArray[np.float64]]  # the RAY_VARIABLES of every ray at one point
-
-
-@dataclass(frozen=True)
-class Window:
-    """An area across the beam, and a divergence from its axis, both ways.
-
-    Parameters
-    ----------
-    half_width, half_height:
-        Half the size of the area, in m.
-    half_divergence:
-        The largest angle from the axis, horizontally and vertically, in deg.
-    x_center:
-        x of the center of the area, in m.
-    """
-
-    half_width: float
-    half_height: float
-    half_divergence: float
-    x_center: float = 0.0
-
-    @property
-    def area(self) -> float:
-        """The area, in cm²."""
-        return 4 * self.half_width * self.half_height * 1e4
-
-    @property
-    def solid_angle(self) -> float:
-        """The solid angle of the divergence, in sr: a square pyramid, 4 asin(sin² a).
-
-        Examples
-        --------
-        >>> round(Window(0.005, 0.005, 0.5).solid_angle, 9)
-        0.00030461
-        """
-        return 4 * math.asin(math.sin(math.radians(self.half_divergence)) ** 2)
-
-    def contains(self, rays: Rays) -> NDArray[np.bool_]:
-        """Tell which rays are in the window, in its area and its divergence."""
-        return (
-            (np.abs(rays["x"] - self.x_center) <= self.half_width)
-            & (np.abs(rays["y"]) <= self.half_height)
-            & (np.abs(rays["dx"]) <= self.half_divergence)
-            & (np.abs(rays["dy"]) <= self.half_divergence)
-        )
-
-
-def brilliance(
-    rays: Rays, window: Window, bins: NDArray[np.float64]
-) -> tuple[NDArray[np.float64], NDArray[np.float64]]:
-    """Compute the brilliance in a window, in each wavelength bin.
-
-    Parameters
-    ----------
-    rays:
-        The rays at the point, with the ``RAY_VARIABLES``, in the frame of the point.
-    window:
-        The window.
-    bins:
-        The edges of the wavelength bins, in Å.
-
-    Returns
-    -------
-    :
-        The brilliance, in n/s/cm²/sr/Å, and the number of rays in the window, in each bin.
-
-    Examples
-    --------
-    >>> rays = {"x": np.zeros(3), "y": np.zeros(3), "dx": np.array([0.0, 0.1, 2.0]),
-    ...         "dy": np.zeros(3), "l": np.array([1.5, 1.5, 1.5]), "p": np.ones(3)}
-    >>> window = Window(0.005, 0.005, 0.5)
-    >>> b, n = brilliance(rays, window, np.array([1.0, 2.0]))
-    >>> n.tolist(), bool(np.isclose(b[0], 2 / window.area / window.solid_angle))
-    ([2.0], True)
-    """
-    inside = window.contains(rays)
-    intensity, _ = np.histogram(rays["l"][inside], bins=bins, weights=rays["p"][inside])
-    counts, _ = np.histogram(rays["l"][inside], bins=bins)
-    return intensity / (window.area * window.solid_angle * np.diff(bins)), counts.astype(float)
-
 
 def moderator_brilliance(
     rays: Rays, bins: NDArray[np.float64]
@@ -185,7 +109,7 @@ def moderator_brilliance(
     Returns
     -------
     :
-        The brilliance and the number of rays, as :func:`brilliance` gives them, of
+        The brilliance and the number of rays, as :func:`.brilliance` gives them, of
         ``"thermal"``, over ``THERMAL_FACE``, and ``"cold"``, over ``COLD_FACE``.
     """
     faces = {"thermal": THERMAL_FACE, "cold": COLD_FACE}
@@ -233,65 +157,6 @@ def reference_brilliance(
     return values[brightest, columns], counts[brightest, columns]
 
 
-def brilliance_transfer(
-    value: NDArray[np.float64],
-    rays: NDArray[np.float64],
-    reference: NDArray[np.float64],
-    reference_rays: NDArray[np.float64],
-) -> NDArray[np.float64]:
-    """Divide a brilliance by that of the moderator, in each bin.
-
-    Parameters
-    ----------
-    value, rays:
-        The brilliance in a window, and its number of rays, from :func:`brilliance`.
-    reference, reference_rays:
-        The brilliance of the moderator, and its number of rays, from
-        :func:`reference_brilliance`.
-
-    Returns
-    -------
-    :
-        The ratio; NaN where either has fewer than ``MIN_RAYS`` rays.
-
-    Examples
-    --------
-    >>> brilliance_transfer(np.array([1.0, 1.0]), np.array([50.0, 5.0]),
-    ...                     np.array([4.0, 4.0]), np.array([100.0, 100.0]))
-    array([0.25,  nan])
-    """
-    enough = (rays >= MIN_RAYS) & (reference_rays >= MIN_RAYS) & (reference > 0)
-    return np.divide(value, reference, out=np.full_like(value, np.nan), where=enough)
-
-
-def band_transfer(
-    value: NDArray[np.float64],
-    reference: NDArray[np.float64],
-    bins: NDArray[np.float64],
-    band: tuple[float, float],
-) -> float:
-    """Divide the brilliance in a band of wavelengths by that of the moderator.
-
-    Parameters
-    ----------
-    value, reference:
-        The brilliance in a window and that of the moderator, in each bin.
-    bins:
-        The edges of the bins, in Å.
-    band:
-        The band, in Å: the bins whose centers are in it.
-
-    Returns
-    -------
-    :
-        The ratio of their sums over the band; NaN if the moderator has nothing there.
-    """
-    centers = (bins[:-1] + bins[1:]) / 2
-    in_band = (centers > band[0]) & (centers < band[1])
-    total = float(reference[in_band].sum())
-    return float(value[in_band].sum()) / total if total > 0 else math.nan
-
-
 def lambda0_flux(
     rays: Rays,
     window: Window,
@@ -325,8 +190,7 @@ def lambda0_flux(
     ...              np.linspace(0.1, 10.0, 100)).tolist()
     [2.0, 1.0]
     """
-    inside = window.contains(rays)
-    intensity, _ = np.histogram(rays["l"][inside], bins=bins, weights=rays["p"][inside])
+    intensity, _ = window_intensity(rays, window, bins)
     centers = (bins[:-1] + bins[1:]) / 2
     flux = []
     for lambda0 in lambda0s:
@@ -431,7 +295,7 @@ def plot_brilliance_transfer(
             value, counts = brilliance(rays, window, bins)
             at_sample = label == "before sample_pos"
             right.stairs(
-                brilliance_transfer(value, counts, reference, reference_rays),
+                brilliance_transfer(value, counts, reference, reference_rays, MIN_RAYS),
                 bins,
                 label=f"{POINT_NAMES[label]}, ±{half_divergence:g}°",
                 color=f"C{color}",

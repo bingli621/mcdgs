@@ -24,6 +24,8 @@ documentation. See [Source](../instruments/trex/source.md),
 
 ::: mcdgs.diagnostics.drawing
 
+::: mcdgs.diagnostics.phase_space
+
 ::: mcdgs.diagnostics.trex.overview
 
 ::: mcdgs.diagnostics.trex.source

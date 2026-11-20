@@ -8,6 +8,7 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 
+from mcdgs.diagnostics.phase_space import RAY_VARIABLES, Window
 from mcdgs.diagnostics.trex import brilliance_transfer as bt
 from mcdgs.instruments.trex.sources import source
 from mcdgs.mcstas import McStasScriptDiagnostics
@@ -24,28 +25,6 @@ def uniform_rays(n, x=(-0.07, 0.07), divergence=2.0, seed=0):
         "l": rng.uniform(0.1, 10.0, n),
         "p": np.ones(n),
     }
-
-
-def test_a_window_holds_the_rays_in_its_area_and_its_divergence():
-    window = bt.Window(half_width=0.01, half_height=0.005, half_divergence=0.5, x_center=0.05)
-    rays = {
-        "x": np.array([0.05, 0.065, 0.05, 0.05]),
-        "y": np.zeros(4),
-        "dx": np.array([0.0, 0.0, 0.6, 0.0]),
-        "dy": np.array([0.0, 0.0, 0.0, -0.6]),
-    }
-    assert window.contains(rays).tolist() == [True, False, False, False]
-    assert window.area == pytest.approx(2.0)  # cm²: 2 × 1 cm
-
-
-def test_the_brilliance_of_an_even_beam_is_its_intensity_over_its_phase_space():
-    # 2 cm × 1 cm, ±2° both ways, 9.9 Å: every window inside it has the same brilliance
-    rays = uniform_rays(400_000, x=(-0.01, 0.01))
-    full = 2.0 * np.radians(4.0) ** 2 * 9.9  # cm² sr Å, small angles
-    expected = rays["p"].sum() / full
-    value, counts = bt.brilliance(rays, bt.Window(0.005, 0.005, 1.0), np.array([0.1, 10.0]))
-    assert value[0] == pytest.approx(expected, rel=0.03)
-    assert counts[0] == pytest.approx(400_000 / 2 / 4, rel=0.03)
 
 
 def test_each_face_is_read_over_its_span_on_the_plane():
@@ -65,13 +44,6 @@ def test_the_reference_is_the_brighter_face_in_each_bin():
     value, counts = bt.reference_brilliance(faces)
     assert value.tolist() == [3.0, 2.0]
     assert counts.tolist() == [30.0, 40.0]
-
-
-def test_a_band_sums_the_bins_whose_centers_are_in_it():
-    bins = np.array([0.0, 1.0, 2.0, 3.0])
-    value, reference = np.array([1.0, 2.0, 4.0]), np.array([4.0, 4.0, 4.0])
-    assert bt.band_transfer(value, reference, bins, (0.0, 2.0)) == pytest.approx(3.0 / 8.0)
-    assert np.isnan(bt.band_transfer(value, np.zeros(3), bins, (0.0, 2.0)))
 
 
 def test_the_moderator_view_is_the_source_of_trex_aimed_at_its_plane():
@@ -103,7 +75,7 @@ def test_main_runs_the_moderator_then_trex_on_each_path_and_saves_the_figures(
         return SimpleNamespace(folder=tmp_path / folder_name)
 
     def rays(self, *variables):
-        assert variables == bt.RAY_VARIABLES
+        assert variables == RAY_VARIABLES
         labels = [f"before {point['before']}" for point in self._points]
         return {label: uniform_rays(50_000, seed=i) for i, label in enumerate(labels)}
 
@@ -144,7 +116,7 @@ def test_the_sweep_sums_the_band_of_trex_around_each_lambda0():
     rays = uniform_rays(100_000)
     rays["dx"] = np.zeros(100_000)  # every ray within ±0.5°, on the area or not
     rays["dy"] = np.zeros(100_000)
-    window = bt.Window(bt.AREA_WIDTH / 2, bt.AREA_HEIGHT / 2, 0.5)
+    window = Window(bt.AREA_WIDTH / 2, bt.AREA_HEIGHT / 2, 0.5)
     on_area = window.contains(rays)
     flux = bt.lambda0_flux(rays, window, np.array([2.0, 9.5]), bt.WAVELENGTH_BINS)
     for lambda0, value in zip((2.0, 9.5), flux, strict=True):
@@ -157,5 +129,5 @@ def test_the_sweep_sums_the_band_of_trex_around_each_lambda0():
 
 def test_every_direction_is_a_half_divergence_of_90_degrees():
     rays = uniform_rays(10_000, x=(-0.004, 0.004), divergence=10.0)
-    window = bt.Window(bt.AREA_WIDTH / 2, bt.AREA_HEIGHT / 2, bt.LAMBDA0_HALF_DIVERGENCES[-1])
+    window = Window(bt.AREA_WIDTH / 2, bt.AREA_HEIGHT / 2, bt.LAMBDA0_HALF_DIVERGENCES[-1])
     assert window.contains(rays).all()
