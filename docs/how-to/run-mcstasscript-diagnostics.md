@@ -117,7 +117,7 @@ and before `sample_pos`, and keeps the rays in a window of position and divergen
 ```
 <!-- fmt:on -->
 
-The figure is on [Guides](../instruments/trex/guides.md#brilliance-transfer).
+The figures are on [Brilliance transfer](../instruments/trex/brilliance-transfer.md).
 
 ### The same diagnostics on more runs
 

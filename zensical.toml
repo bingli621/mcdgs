@@ -23,6 +23,7 @@ nav = [
       { "Source" ="instruments/trex/source.md" },
       { "Extraction guides" = "instruments/trex/extraction.md" },
       { "Bender" = "instruments/trex/bender-scan.md" },
+      { "Brilliance transfer" = "instruments/trex/brilliance-transfer.md" },
       { "Beam monitor" = "instruments/trex/beam-monitor.md" },
       { "Guides" = "instruments/trex/guides.md" },
       { "Choppers" = "instruments/trex/choppers.md" },

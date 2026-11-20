@@ -18,10 +18,13 @@ brilliance there is that of the moderator at x. The thermal face, at x < 0, and 
 at x > 0, are each flat over ``THERMAL_FACE`` and ``COLD_FACE``; the reference is, at each
 wavelength, the brighter of the two, averaged over that span.
 
-The figures are on the Guides page of T-Rex, next to those of :mod:`.guides_diagnostics`. Run
-the module for them::
+From the same rays, :func:`lambda0_flux` sums the intensity on the sample over the band T-Rex
+passes around a central wavelength ``lambda0``, on each path, to show which ``lambda0`` gives
+the most with the bender out and with it in.
 
-    pixi run python -m mcdgs.diagnostics.trex.brilliance_transfer --out docs/instruments/trex/figures/guides
+The figures are on the Brilliance transfer page of T-Rex. Run the module for them::
+
+    pixi run python -m mcdgs.diagnostics.trex.brilliance_transfer --out docs/instruments/trex/figures/brilliance-transfer
 """
 
 import math
@@ -38,7 +41,7 @@ from mcdgs.core import Instrument
 from mcdgs.core.components import Arm, ESS_butterfly, Progress_bar
 from mcdgs.diagnostics import cli
 from mcdgs.instruments.trex.model import Params, TRex
-from mcdgs.instruments.trex.sources import source
+from mcdgs.instruments.trex.sources import source, wavelength_band
 from mcdgs.mcstas import McStasScriptDiagnostics
 
 NAME = "trex_brilliance_transfer"  # the run folder of T-Rex, and the folder of the figure
@@ -74,6 +77,13 @@ WAVELENGTH_BINS = np.linspace(0.1, 10.0, 100)
 # a bin with fewer rays in a window has no brilliance transfer: too few to be read
 MIN_RAYS = 20
 # the bands of the table that main prints, in Å
+# the central wavelengths of the sweep, in Å: the band of each, lambda0 ± 0.905 Å, is that of
+# T-Rex, from wavelength_band
+LAMBDA0_VALUES = np.round(np.arange(1.0, 9.01, 0.1), 1)
+# the half divergences of the sweep, in deg: ±0.5°, and 90°, which keeps every direction
+LAMBDA0_HALF_DIVERGENCES = (0.5, 90.0)
+# the central wavelengths of the table that main prints, in Å
+LAMBDA0_TABLE = (1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0)
 BANDS = (
     (0.5, 1.0), (1.0, 1.5), (1.5, 2.0), (2.0, 3.0), (3.0, 4.0), (4.0, 6.0), (6.0, 8.0), (8.0, 10.0),
 )  # fmt: skip
@@ -282,6 +292,49 @@ def band_transfer(
     return float(value[in_band].sum()) / total if total > 0 else math.nan
 
 
+def lambda0_flux(
+    rays: Rays,
+    window: Window,
+    lambda0s: NDArray[np.float64],
+    bins: NDArray[np.float64],
+) -> NDArray[np.float64]:
+    """Compute the intensity in a window over the band of each central wavelength.
+
+    Parameters
+    ----------
+    rays:
+        The rays at the point, with the ``RAY_VARIABLES``.
+    window:
+        The window. A half divergence of 90° keeps every direction: the intensity on its area.
+    lambda0s:
+        The central wavelengths, in Å. The band of each is that of T-Rex, from
+        :func:`.wavelength_band`.
+    bins:
+        The edges of the wavelength bins, in Å: a bin counts if its center is in the band.
+
+    Returns
+    -------
+    :
+        The intensity in the window over each band, in n/s.
+
+    Examples
+    --------
+    >>> rays = {"x": np.zeros(3), "y": np.zeros(3), "dx": np.zeros(3), "dy": np.zeros(3),
+    ...         "l": np.array([1.5, 2.5, 5.0]), "p": np.ones(3)}
+    >>> lambda0_flux(rays, Window(0.005, 0.005, 0.5), np.array([2.0, 5.0]),
+    ...              np.linspace(0.1, 10.0, 100)).tolist()
+    [2.0, 1.0]
+    """
+    inside = window.contains(rays)
+    intensity, _ = np.histogram(rays["l"][inside], bins=bins, weights=rays["p"][inside])
+    centers = (bins[:-1] + bins[1:]) / 2
+    flux = []
+    for lambda0 in lambda0s:
+        start, stop = wavelength_band(float(lambda0))
+        flux.append(intensity[(centers > start) & (centers < stop)].sum())
+    return np.array(flux)
+
+
 # --8<-- [start:instrument]
 @dataclass(frozen=True)
 class ModeratorViewParams:
@@ -398,6 +451,76 @@ def plot_brilliance_transfer(
     return fig
 
 
+def plot_lambda0_flux(
+    sample: Mapping[str, Rays],
+    lambda0s: NDArray[np.float64],
+    bins: NDArray[np.float64],
+    title: str,
+) -> Figure:
+    """Draw the intensity on the sample over the band of each central wavelength, on each path.
+
+    Parameters
+    ----------
+    sample:
+        The rays before ``sample_pos`` by path, such as ``"bender out, guide 4a"``.
+    lambda0s:
+        The central wavelengths, in Å.
+    bins:
+        The edges of the wavelength bins, in Å.
+    title:
+        The title of the figure.
+
+    Returns
+    -------
+    :
+        One panel: the intensity on the area of the window, within ±0.5° solid and in every
+        direction dashed, a color per path, against ``lambda0``.
+    """
+    fig, ax = plt.subplots(figsize=(8, 4.5))
+    for color, (path, rays) in enumerate(sample.items()):
+        for half_divergence in LAMBDA0_HALF_DIVERGENCES:
+            window = Window(AREA_WIDTH / 2, AREA_HEIGHT / 2, half_divergence)
+            every_direction = half_divergence >= 90
+            ax.plot(
+                lambda0s,
+                lambda0_flux(rays, window, lambda0s, bins),
+                color=f"C{color}",
+                linestyle="--" if every_direction else "-",
+                linewidth=1.5,
+                label=f"{path}, {'every direction' if every_direction else f'±{half_divergence:g}°'}",
+            )
+    ax.set(
+        xlabel="lambda0 [Å]",
+        ylabel=f"Intensity on {AREA_WIDTH * 100:g} × {AREA_HEIGHT * 100:g} cm² [n/s]",
+        title=title,
+    )
+    ax.set_xlim(lambda0s[0], lambda0s[-1])
+    ax.set_ylim(bottom=0)
+    ax.grid(alpha=0.3)
+    ax.legend(fontsize="small")
+    fig.tight_layout()
+    return fig
+
+
+def _print_lambda0(sample: Mapping[str, Rays], bins: NDArray[np.float64]) -> None:
+    """Print the intensity on the sample over the band of each ``lambda0`` of ``LAMBDA0_TABLE``."""
+    lambda0s = np.array(LAMBDA0_TABLE)
+    columns = {
+        f"{path}, {'every direction' if half_divergence >= 90 else f'±{half_divergence:g}°'}": (
+            lambda0_flux(
+                rays, Window(AREA_WIDTH / 2, AREA_HEIGHT / 2, half_divergence), lambda0s, bins
+            )
+        )
+        for path, rays in sample.items()
+        for half_divergence in LAMBDA0_HALF_DIVERGENCES
+    }
+    print("lambda0 | band | " + " | ".join(columns) + " [n/s]")
+    for i, lambda0 in enumerate(lambda0s):
+        start, stop = wavelength_band(float(lambda0))
+        values = " | ".join(f"{flux[i]:.3g}" for flux in columns.values())
+        print(f"{lambda0:g} Å | {start:.2f}–{stop:.2f} Å | {values}")
+
+
 def _print_bands(
     faces: Mapping[str, tuple[NDArray[np.float64], NDArray[np.float64]]],
     points: Mapping[str, Rays],
@@ -427,10 +550,13 @@ def main(
 
     T-Rex runs twice, first with the bender out, through guide 4a, then with it in, through the
     bender and guide 4b. The figures are ``trex_brilliance_transfer.png`` and
-    ``trex_brilliance_transfer_bender_in.png``. The runs go to the run folders
+    ``trex_brilliance_transfer_bender_in.png``, and ``trex_brilliance_transfer_lambda0.png``:
+    the intensity on the area of the window, within ±0.5° and in every direction, over the
+    band of each ``lambda0`` of ``LAMBDA0_VALUES``, on both paths. The runs go to the run folders
     ``trex_moderator_brilliance``, ``trex_brilliance_transfer`` and
     ``trex_brilliance_transfer_bender_in``, replaced on every run. It also prints the
-    brilliance transfer of each path in the ``BANDS``.
+    brilliance transfer of each path in the ``BANDS``, and the intensity of each path for the
+    ``lambda0`` of ``LAMBDA0_TABLE``.
 
     Parameters
     ----------
@@ -447,7 +573,7 @@ def main(
     Returns
     -------
     :
-        The paths of the figures, bender out, then bender in.
+        The paths of the figures: bender out, bender in, then the sweep of ``lambda0``.
     """
     # --8<-- [start:reference]
     moderator = McStasScriptDiagnostics(define_moderator_view())
@@ -460,6 +586,7 @@ def main(
 
     folder = cli.output_folder(out, NAME)
     figures = []
+    sample: dict[str, Rays] = {}  # the rays before sample_pos, by path
     for bender_in in (False, True):
         run_name = f"{NAME}_bender_in" if bender_in else NAME
         instrument = define_instrument()
@@ -479,6 +606,14 @@ def main(
         title = f"{instrument.running_conditions()} · {path}"
         fig = plot_brilliance_transfer(faces, points, WAVELENGTH_BINS, title)
         figures.append(cli.save_figure(fig, folder / f"{run_name}.png", dpi=100))
+        sample[path] = points["before sample_pos"]
+
+    # --8<-- [start:lambda0]
+    _print_lambda0(sample, WAVELENGTH_BINS)
+    title = "Intensity on the sample over the band of lambda0 ± 0.905 Å"
+    fig = plot_lambda0_flux(sample, LAMBDA0_VALUES, WAVELENGTH_BINS, title)
+    figures.append(cli.save_figure(fig, folder / f"{NAME}_lambda0.png", dpi=100))
+    # --8<-- [end:lambda0]
     return figures
 
 

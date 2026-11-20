@@ -5,6 +5,7 @@ Setups that study one part of an instrument, and what reads their results. Each 
 documentation. See [Source](../instruments/trex/source.md),
 [Extraction guides](../instruments/trex/extraction.md),
 [Bender](../instruments/trex/bender-scan.md),
+[Brilliance transfer](../instruments/trex/brilliance-transfer.md),
 [Beam monitor](../instruments/trex/beam-monitor.md), [Guides](../instruments/trex/guides.md),
 [Choppers](../instruments/trex/choppers.md),
 [Time-distance diagram](../instruments/trex/time-distance.md),
@@ -15,8 +16,7 @@ documentation. See [Source](../instruments/trex/source.md),
 [Rotation scan](../instruments/trex/elastic-scan.md) for what they show for T-Rex, and
 [Source](../instruments/cspec/source.md) for CSPEC.
 [Run McStasScript's diagnostics](../how-to/run-mcstasscript-diagnostics.md) has the code of
-`guides_diagnostics`, and [Guides](../instruments/trex/guides.md) its figures and those of
-`brilliance_transfer`.
+`guides_diagnostics`, and [Guides](../instruments/trex/guides.md) its figures.
 
 ::: mcdgs.diagnostics.compare
 

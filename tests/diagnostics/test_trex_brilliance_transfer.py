@@ -113,6 +113,7 @@ def test_main_runs_the_moderator_then_trex_on_each_path_and_saves_the_figures(
     assert paths == [
         tmp_path / "trex_brilliance_transfer.png",
         tmp_path / "trex_brilliance_transfer_bender_in.png",
+        tmp_path / "trex_brilliance_transfer_lambda0.png",
     ]
     assert all(path.stat().st_size > 0 for path in paths)
     view, *trex = runs
@@ -135,3 +136,26 @@ def test_the_instrument_is_that_of_guides_diagnostics():
     from mcdgs.diagnostics.trex import guides_diagnostics
 
     assert bt.define_instrument() == guides_diagnostics.define_instrument()
+
+
+def test_the_sweep_sums_the_band_of_trex_around_each_lambda0():
+    from mcdgs.instruments.trex.sources import wavelength_band
+
+    rays = uniform_rays(100_000)
+    rays["dx"] = np.zeros(100_000)  # every ray within ±0.5°, on the area or not
+    rays["dy"] = np.zeros(100_000)
+    window = bt.Window(bt.AREA_WIDTH / 2, bt.AREA_HEIGHT / 2, 0.5)
+    on_area = window.contains(rays)
+    flux = bt.lambda0_flux(rays, window, np.array([2.0, 9.5]), bt.WAVELENGTH_BINS)
+    for lambda0, value in zip((2.0, 9.5), flux, strict=True):
+        start, stop = wavelength_band(lambda0)
+        in_band = on_area & (rays["l"] > start) & (rays["l"] < stop)
+        assert value == pytest.approx(rays["p"][in_band].sum(), rel=0.02)
+    # the band at 9.5 Å is cut at 10 Å: about half as wide as at 2 Å
+    assert flux[1] / flux[0] == pytest.approx((10.0 - 8.595) / 1.81, rel=0.05)
+
+
+def test_every_direction_is_a_half_divergence_of_90_degrees():
+    rays = uniform_rays(10_000, x=(-0.004, 0.004), divergence=10.0)
+    window = bt.Window(bt.AREA_WIDTH / 2, bt.AREA_HEIGHT / 2, bt.LAMBDA0_HALF_DIVERGENCES[-1])
+    assert window.contains(rays).all()
