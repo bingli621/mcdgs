@@ -81,17 +81,18 @@ POINT_NAMES = {
 WAVELENGTH_BINS = np.linspace(0.1, 10.0, 100)
 # a bin with fewer rays in a window has no brilliance transfer: too few to be read
 MIN_RAYS = 20
-# the bands of the table that main prints, in Å
+# the bands of the table of the brilliance transfer that main prints, in Å
+BANDS = (
+    (0.5, 1.0), (1.0, 1.5), (1.5, 2.0), (2.0, 3.0), (3.0, 4.0), (4.0, 6.0), (6.0, 8.0), (8.0, 10.0),
+)  # fmt: skip
+
 # the central wavelengths of the sweep, in Å: the band of each, lambda0 ± 0.905 Å, is that of
 # T-Rex, from wavelength_band
 LAMBDA0_VALUES = np.round(np.arange(1.0, 9.01, 0.1), 1)
 # the half divergences of the sweep, in deg: ±0.5°, and 90°, which keeps every direction
 LAMBDA0_HALF_DIVERGENCES = (0.5, 90.0)
-# the central wavelengths of the table that main prints, in Å
+# the central wavelengths of the table of the sweep that main prints, in Å
 LAMBDA0_TABLE = (1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0)
-BANDS = (
-    (0.5, 1.0), (1.0, 1.5), (1.5, 2.0), (2.0, 3.0), (3.0, 4.0), (4.0, 6.0), (6.0, 8.0), (8.0, 10.0),
-)  # fmt: skip
 
 
 def moderator_brilliance(
