@@ -41,10 +41,10 @@ print(trex)  # every parameter and component, with its position in the lab frame
 - [Core concepts](concepts.md): how instruments, components and parameters fit together.
 - [T-Rex](instruments/trex/details.md) and its results so far: the
   [source](instruments/trex/source.md), the [extraction guides](instruments/trex/extraction.md),
-  the [bender](instruments/trex/bender-scan.md), the [guides](instruments/trex/guides.md), the
+  the [bender](instruments/trex/bender-scan.md), the
+  [guide transmission](instruments/trex/guides.md), the
   [brilliance transfer](instruments/trex/brilliance-transfer.md), the
-  [beam monitor](instruments/trex/beam-monitor.md),
-  the [choppers](instruments/trex/choppers.md),
+  [beam monitor](instruments/trex/beam-monitor.md), the [choppers](instruments/trex/choppers.md),
   the [time-distance diagram](instruments/trex/time-distance.md), the
   [neutrons on the sample](instruments/trex/neutrons-on-sample.md), the
   [masked source](instruments/trex/masked-source.md), the

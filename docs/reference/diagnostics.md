@@ -4,7 +4,7 @@ Setups that study one part of an instrument, and what reads their results. Each 
 `main` runs as `python -m <module> [--out FOLDER]`, and makes the files of one page of the
 documentation. See [Source](../instruments/trex/source.md),
 [Extraction guides](../instruments/trex/extraction.md),
-[Bender](../instruments/trex/bender-scan.md), [Guides](../instruments/trex/guides.md),
+[Bender](../instruments/trex/bender-scan.md), [Guide transmission](../instruments/trex/guides.md),
 [Brilliance transfer](../instruments/trex/brilliance-transfer.md),
 [Beam monitor](../instruments/trex/beam-monitor.md),
 [Choppers](../instruments/trex/choppers.md),
@@ -16,7 +16,7 @@ documentation. See [Source](../instruments/trex/source.md),
 [Rotation scan](../instruments/trex/elastic-scan.md) for what they show for T-Rex, and
 [Source](../instruments/cspec/source.md) for CSPEC.
 [Run McStasScript's diagnostics](../how-to/run-mcstasscript-diagnostics.md) has the code of
-`guides_diagnostics`, and [Guides](../instruments/trex/guides.md) its figures.
+`guides_diagnostics`, and [Guide transmission](../instruments/trex/guides.md) its figures.
 
 ::: mcdgs.diagnostics.compare
 

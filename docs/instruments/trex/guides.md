@@ -1,4 +1,4 @@
-# Guides
+# Guide transmission
 
 [`mcdgs.diagnostics.trex.guides_diagnostics`](https://github.com/bingli621/mcdgs/blob/main/src/mcdgs/diagnostics/trex/guides_diagnostics.py)
 follows the beam of T-Rex through all its guides, from the source to the sample position. It

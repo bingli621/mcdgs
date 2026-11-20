@@ -11,9 +11,10 @@ Both run McStas themselves. A [`McStasScriptDiagnostics`](../reference/mcstas.md
 same [workspace](run-a-simulation.md#where-the-files-go) as a `Simulation`, with a run folder and a
 [record](run-a-simulation.md#find-and-clean-up-runs) for every run. The examples are those of
 [`mcdgs.diagnostics.trex.guides_diagnostics`](../reference/diagnostics.md), which runs `TRex` in
-the white beam, 0.1 to 10 Å, with every chopper parked; [Guides](../instruments/trex/guides.md)
-shows its figures and what they say about the guides of T-Rex, and the
-[extraction guides](../instruments/trex/extraction.md) show both tools on the first 6 m.
+the white beam, 0.1 to 10 Å, with every chopper parked;
+[Guide transmission](../instruments/trex/guides.md) shows its figures and what they say about the
+guides of T-Rex, and the [extraction guides](../instruments/trex/extraction.md) show both tools on
+the first 6 m.
 
 ```python
 from mcdgs.diagnostics import cli
@@ -72,7 +73,7 @@ Then draw it, one row per point and one column per view, under the instrument's
 
 `plot` draws the last run. A view of two variables is drawn in the `turbo` colormap, where
 McStasScript would use `jet`; give `colormap=` to the view for another. The figure of this run is
-on [Guides](../instruments/trex/guides.md#the-beam-along-the-guides).
+on [Guide transmission](../instruments/trex/guides.md#the-beam-along-the-guides).
 
 !!! warning "Every ray is kept, so keep `ncount` low"
 
@@ -103,7 +104,7 @@ spectra of two points for the transmission of the guides between them:
 ```
 <!-- fmt:on -->
 
-The figure is on [Guides](../instruments/trex/guides.md#by-wavelength).
+The figure is on [Guide transmission](../instruments/trex/guides.md#by-wavelength).
 
 `rays` gives the rays themselves: for each point, a dict of the ray variables asked for, an
 array each with a value per ray, empty at a point no ray reached. Besides the variables of the
@@ -148,8 +149,8 @@ each, on a log scale. Each step of the line is what one component loses:
 <!-- fmt:on -->
 
 It needs no points or views. The diagram of this run is on
-[Guides](../instruments/trex/guides.md#the-intensity-before-each-component), which reads the
-transmission of each section of guide from it.
+[Guide transmission](../instruments/trex/guides.md#the-intensity-before-each-component), which
+reads the transmission of each section of guide from it.
 
 The arrows on the left go from each component to the one it is placed relative to. A component
 with a dashed box takes part only under a condition, such as guide 4a, the bender and guide 4b
