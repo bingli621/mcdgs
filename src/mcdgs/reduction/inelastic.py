@@ -75,7 +75,6 @@ def time_at_sample(
     return time_at_monitor + flight.to(unit=time_at_monitor.unit)
 
 
-# --8<-- [start:qe_graph]
 def final_wavelength(
     time_at_sample: sc.Variable, time_at_detector: sc.Variable, L2: sc.Variable
 ) -> sc.Variable:
@@ -140,7 +139,6 @@ QE_GRAPH: GraphDict = {
     "Q": _momentum_transfer_magnitude,
     ("Qx", "Qy", "Qz"): _momentum_transfer_components,
 }
-# --8<-- [end:qe_graph]
 
 
 def arrival_window(

@@ -154,33 +154,27 @@ def main(
     tof_result = tof_model.run()
     # --8<-- [end:run_tof]
 
-    # --8<-- [start:read_maps]
     # the bins of the map of the monitor, time and wavelength, read from the monitor
     bins = monitor_bins(instrument.source_monitor.bin_limits)
     # the map of each model on those bins, a scipp data array with its errors as variances:
     # McStas in n/s, tof in neutrons, a bin of N neutrons with the Poisson error √N
     mcstas_map = read_mcstas_map("source_monitor", mcstas_data, bins)
     tof_map = read_tof_map("source_monitor", tof_result, bins)
-    # --8<-- [end:read_maps]
 
-    # --8<-- [start:scale_tof]
     # tof has no flux: each of its neutrons stands for the total of McStas over that of tof
     scale = compare.rescale_tof_to_mcstas(tof_map, mcstas_map)  # n/s per tof neutron
     # both maps side by side in n/s: tof times the scale, its Poisson errors scaled along
     comparison = compare.mcstas_vs_tof(
         "source_monitor", mcstas_map, tof_map, ncount, neutrons, scale
     )
-    # --8<-- [end:scale_tof]
 
     # the mean time and wavelength of each model, weighted by its intensity, and the scale
     compare.print_means(comparison)
     print(f"McStas total {mcstas_map.sum().value:.4g} n/s, {scale:.4g} n/s per tof neutron")
 
-    # --8<-- [start:plot]
     # top row: the time and wavelength map of each model, on one color scale; bottom row: the
     # wavelength spectrum and the time profile of both, with their error bars
     fig = compare.plot_comparison(comparison, "T-Rex flux at the entrance of guide 1")
-    # --8<-- [end:plot]
 
     return cli.save_figure(fig, cli.output_folder(out, "trex_source") / f"{run.name}.png")
 
