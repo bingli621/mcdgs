@@ -4,9 +4,9 @@ Setups that study one part of an instrument, and what reads their results. Each 
 `main` runs as `python -m <module> [--out FOLDER]`, and makes the files of one page of the
 documentation. See [Source](../instruments/trex/source.md),
 [Extraction guides](../instruments/trex/extraction.md),
-[Bender](../instruments/trex/bender-scan.md),
+[Bender](../instruments/trex/bender-scan.md), [Guides](../instruments/trex/guides.md),
 [Brilliance transfer](../instruments/trex/brilliance-transfer.md),
-[Beam monitor](../instruments/trex/beam-monitor.md), [Guides](../instruments/trex/guides.md),
+[Beam monitor](../instruments/trex/beam-monitor.md),
 [Choppers](../instruments/trex/choppers.md),
 [Time-distance diagram](../instruments/trex/time-distance.md),
 [Neutrons on sample](../instruments/trex/neutrons-on-sample.md),
