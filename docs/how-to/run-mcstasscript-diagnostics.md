@@ -110,7 +110,9 @@ The figure is on [Guide transmission](../instruments/trex/guides.md#by-wavelengt
 array each with a value per ray, empty at a point no ray reached. Besides the variables of the
 views, `"p"` is the weight in n/s, and `"dx"` and `"dy"` the horizontal and vertical divergence
 in deg. [`brilliance_transfer`](../reference/diagnostics.md) reads them before the beam monitor
-and before `sample_pos`, and keeps the rays in a window of position and divergence:
+and before `sample_pos`, and keeps the rays in a
+[`Window`](../reference/diagnostics.md#mcdgs.diagnostics.phase_space.Window) of position and
+divergence:
 
 <!-- fmt:off -->
 ```python
