@@ -9,20 +9,24 @@ write into. It offers:
 - ``run_from_sample``: one run from that beam file, ``sample_pos`` -> detector;
 - ``scan_from_sample``: one run per value from that beam file, in parallel.
 
-Everything runs through McStasScript's public API (``settings``, ``set_parameters``,
-``run_to``, ``run_from``, ``backengine``). A scan runs ``backengine`` once per value and merges
-the outputs into one file, after compiling the instrument once: see :mod:`.mcstas.scan`.
+McStasScript builds the instrument (``set_parameters``, ``run_to``, ``run_from``) and writes its
+``.instr``; mcrun compiles and runs it (:mod:`.mcstas.mcrun`). A scan still runs McStasScript's
+``backengine`` once per value and merges the outputs into one file, after compiling the
+instrument once: see :mod:`.mcstas.scan`.
 
 Each of them returns the :class:`.Run` it made, which is also left as ``run.json`` in the
 folder of the run.
 
-``_prepare`` is the step they all share: it gives the run its folder, its settings and its
+``_prepare`` is the step they all share: it gives the run its folder, its instrument and its
 record, which the caller finishes once McStas has run. :class:`.McStasScriptDiagnostics` starts
-with it too, for the runs that McStasScript starts itself.
+with it too, for the runs that McStasScript starts itself, and gives them their McStasScript
+settings with ``_set_mcstasscript_settings``.
 """
 
+import shlex
 from collections.abc import Mapping
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -31,6 +35,7 @@ from numpy.typing import ArrayLike
 
 from mcdgs.core import Instrument
 from mcdgs.mcstas.builder import build_mcstas
+from mcdgs.mcstas.mcrun import instrument_parameters, mcrun_command, run_mcrun
 from mcdgs.mcstas.runs import BEAM_FILE, Run, RunType, recorded_instr_params
 from mcdgs.mcstas.scan import random_seed, run_points_in_parallel
 from mcdgs.mcstas.workspace import Workspace
@@ -94,10 +99,8 @@ class Simulation:
         variable: str | None = None,
         values: list[float] | None = None,
         beam_run: str | None = None,
-        nexus: bool = True,
-        **settings: object,
     ) -> tuple[Run, McStas_instr]:
-        """Pick the run folder and build the instrument with the settings every run shares.
+        """Pick the run folder, build the instrument and make the record of the run.
 
         Every method of the simulation starts with it, and so does every run of
         :class:`.McStasScriptDiagnostics`, which McStasScript starts itself. The caller runs
@@ -115,26 +118,19 @@ class Simulation:
             ``variable``. They are recorded, and set unless the run is a scan, whose points
             each set their own. If ``None``, none: all keep the instrument's values.
         ncount:
-            Number of neutrons. If ``None``, as from the sample, it is not set.
+            Number of neutrons, recorded. If ``None``, as from the sample, it is not.
         seed:
-            Random seed. If ``None``, McStas picks one.
+            Random seed, recorded. If ``None``, McStas picks one.
         variable, values:
             The instrument parameter of a scan and its values.
         beam_run:
             The name of the run to the sample a run from the sample starts from.
-        nexus:
-            True writes McStas NeXus, the ``mccode.h5`` of the record. False writes McStas's own
-            format, which McStasScript's diagnostics and diagram read, and ``ms.load_data``:
-            the record then names a ``data_file`` that does not exist.
-        **settings:
-            The run's other McStasScript settings, e.g. ``mpi``.
 
         Returns
         -------
         :
-            The record of the run, not saved yet, and the McStasScript instrument writing into
-            its folder. A scan's points write into folders of their own instead
-            (:func:`.run_points_in_parallel`).
+            The record of the run, not saved yet, and the McStasScript instrument, built in the
+            build folder of the instrument. The run folder is only named: mcrun makes it.
         """
         instr_params = {} if instr_params is None else instr_params
         started = datetime.now().astimezone()
@@ -146,17 +142,6 @@ class Simulation:
         folder = self.workspace.new_run_folder(folder_name, label)
         input_path = self.workspace.build_folder(self.instrument.name)
         inst = build_mcstas(self.instrument, input_path=input_path)
-        if ncount is not None:
-            settings["ncount"] = ncount
-        inst.settings(
-            NeXus=nexus,
-            increment_folder_name=False,
-            suppress_output=True,
-            output_path=str(folder),
-            force_compile=True,
-            seed=seed,
-            **settings,  # pyright: ignore[reportArgumentType]
-        )
         if variable is None:
             inst.set_parameters(**instr_params)  # the rest keep the instrument's values
         run = Run(
@@ -218,9 +203,66 @@ class Simulation:
         return run, inst
 
     @staticmethod
-    def _run_once(run: Run, inst: McStas_instr) -> Run:
-        """Run McStas once, then save and return the record of the finished run."""
-        inst.backengine()  # compiles in its build folder
+    def _set_mcstasscript_settings(
+        inst: McStas_instr, run: Run, nexus: bool = True, **settings: object
+    ) -> None:
+        """Give a run that McStasScript starts itself its McStasScript settings.
+
+        These are the runs of :class:`.McStasScriptDiagnostics`, and the points of a scan.
+
+        Parameters
+        ----------
+        inst:
+            The McStasScript instrument, as :meth:`_prepare` builds it.
+        run:
+            Its record, as :meth:`_prepare` makes it: its folder, ``ncount`` and ``seed``.
+        nexus:
+            True writes McStas NeXus, the ``mccode.h5`` of the record. False writes McStas's own
+            format, which McStasScript's diagnostics and diagram read, and ``ms.load_data``:
+            the record then names a ``data_file`` that does not exist.
+        **settings:
+            The run's other McStasScript settings, e.g. ``mpi``.
+        """
+        if run.ncount is not None:
+            settings["ncount"] = run.ncount
+        inst.settings(
+            NeXus=nexus,
+            increment_folder_name=False,
+            suppress_output=True,
+            output_path=str(run.folder),
+            force_compile=True,
+            seed=run.seed,
+            **settings,  # pyright: ignore[reportArgumentType]
+        )
+
+    @staticmethod
+    def _run_once(
+        run: Run, inst: McStas_instr, mpi: int | str | None, custom_flags: str | None = None
+    ) -> Run:
+        """Write the instrument, run it once with mcrun, then save and return the finished record.
+
+        Parameters
+        ----------
+        run:
+            The record of the run, as :meth:`_prepare` makes it.
+        inst:
+            The McStasScript instrument, as :meth:`_prepare` builds it, cut for a split run.
+        mpi:
+            Number of MPI processes, or ``"auto"``. If ``None``, no MPI.
+        custom_flags:
+            Extra flags for mcrun, as one string.
+        """
+        inst.write_full_instrument()  # the .instr, in the build folder
+        command = mcrun_command(
+            f"{inst.name}.instr",
+            run.folder,
+            instrument_parameters(inst),
+            ncount=run.ncount,
+            seed=run.seed,
+            mpi=mpi,
+            custom_flags=shlex.split(custom_flags or ""),
+        )
+        run_mcrun(command, cwd=Path(inst.input_path), folder=run.folder)  # compiles there too
         return run.finish()
 
     @staticmethod
@@ -320,7 +362,7 @@ class Simulation:
         folder_name: str | None = None,
         ncount: float = 1e7,
         seed: int | None = None,
-        mpi: int | str = "auto",
+        mpi: int | str | None = "auto",
         custom_flags: str | None = None,
         **instr_params: float,
     ) -> Run:
@@ -335,7 +377,7 @@ class Simulation:
         seed:
             Random seed. If ``None``, McStas picks one.
         mpi:
-            Number of MPI processes, or ``"auto"``.
+            Number of MPI processes, or ``"auto"``. If ``None``, no MPI.
         custom_flags:
             Extra flags for mcrun.
         **instr_params:
@@ -346,16 +388,8 @@ class Simulation:
         :
             The run, with its file ``data_file``, ``<runs folder>/<folder>/mccode.h5``.
         """
-        run, inst = self._prepare(
-            folder_name,
-            RunType.RUN,
-            instr_params,
-            ncount=ncount,
-            seed=seed,
-            mpi=mpi,
-            custom_flags=custom_flags,
-        )
-        return self._run_once(run, inst)
+        run, inst = self._prepare(folder_name, RunType.RUN, instr_params, ncount=ncount, seed=seed)
+        return self._run_once(run, inst, mpi, custom_flags)
 
     def scan(
         self,
@@ -412,9 +446,9 @@ class Simulation:
             seed=random_seed() if seed is None else seed,  # picked here, to record it
             variable=variable,
             values=[point[variable] for point in points],
-            mpi=None,  # no MPI: the points run in parallel instead
-            custom_flags=custom_flags,
         )
+        # no MPI: the points run in parallel instead
+        self._set_mcstasscript_settings(inst, run, mpi=None, custom_flags=custom_flags)
         return self._run_points(run, inst, points, n_jobs)
 
     def run_to_sample(
@@ -422,7 +456,7 @@ class Simulation:
         folder_name: str | None = None,
         ncount: float = 1e8,
         seed: int | None = None,
-        mpi: int | str = "auto",
+        mpi: int | str | None = "auto",
         **instr_params: float,
     ) -> Run:
         """Simulate source -> ``sample_pos`` and dump the beam to an MCPL file.
@@ -459,7 +493,7 @@ class Simulation:
         """
         self._check_sample_pos()  # before anything
         run, inst = self._prepare(
-            folder_name, RunType.RUN_TO_SAMPLE, instr_params, ncount=ncount, seed=seed, mpi=mpi
+            folder_name, RunType.RUN_TO_SAMPLE, instr_params, ncount=ncount, seed=seed
         )
         inst.run_to(
             SAMPLE_POS,
@@ -470,7 +504,7 @@ class Simulation:
             # default to the raw weights of mode 2, which are deprecated
             weight_mode=1,
         )
-        run = self._run_once(run, inst)
+        run = self._run_once(run, inst, mpi)
         self.beam_run = run.name
         return run
 
@@ -479,7 +513,7 @@ class Simulation:
         folder_name: str | None = None,
         beam_run: str | None = None,
         seed: int | None = None,
-        mpi: int | str = "auto",
+        mpi: int | str | None = "auto",
         **instr_params: float,
     ) -> Run:
         """Simulate ``sample_pos`` -> sample -> detector once, from a beam file.
@@ -515,9 +549,9 @@ class Simulation:
             If there is no run to the sample to start from, before anything runs.
         """
         run, inst = self._prepare_from_sample(
-            folder_name, RunType.RUN_FROM_SAMPLE, instr_params, beam_run, seed=seed, mpi=mpi
+            folder_name, RunType.RUN_FROM_SAMPLE, instr_params, beam_run, seed=seed
         )
-        return self._run_once(run, inst)
+        return self._run_once(run, inst, mpi)
 
     def scan_from_sample(
         self,
@@ -577,6 +611,7 @@ class Simulation:
             seed=random_seed() if seed is None else seed,  # picked here, to record it
             variable=variable,
             values=[point[variable] for point in points],
-            mpi=None,  # no MPI: the points run in parallel instead
         )
+        # no MPI: the points run in parallel instead
+        self._set_mcstasscript_settings(inst, run, mpi=None)
         return self._run_points(run, inst, points, n_jobs)

@@ -147,9 +147,8 @@ class McStasScriptDiagnostics:
             instr_params,
             ncount=ncount,
             seed=seed,
-            nexus=False,
-            mpi=mpi,
         )
+        Simulation._set_mcstasscript_settings(inst, run, nexus=False, mpi=mpi)
         diagnostics = ms.Diagnostics(inst)  # runs a copy of inst, with its settings
         for point in self._points:
             diagnostics.add_point(**point)
@@ -296,9 +295,8 @@ class McStasScriptDiagnostics:
             instr_params,
             ncount=ncount,
             seed=seed,
-            nexus=False,
-            mpi=mpi,
         )
+        Simulation._set_mcstasscript_settings(inst, run, nexus=False, mpi=mpi)
         with patch.object(plt, "show"):  # McStasScript shows the figure and returns None
             inst.show_diagram(analysis=True)
         diagram = plt.gcf()

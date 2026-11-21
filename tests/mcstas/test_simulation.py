@@ -107,9 +107,10 @@ def test_the_record_of_a_run_from_the_sample_names_its_beam_run(tmp_path):
     assert run.beam_run == "to_sample" and run.ncount is None
 
 
-def test_a_run_mcstasscript_starts_itself_is_prepared_without_nexus(tmp_path):
+def test_a_run_mcstasscript_starts_itself_gets_its_settings_without_nexus(tmp_path):
     sim = Simulation(TRex(), Workspace(tmp_path))
-    run, inst = sim._prepare("diagnose", ncount=1e4, seed=3, nexus=False, mpi="auto")
+    run, inst = sim._prepare("diagnose", ncount=1e4, seed=3)
+    Simulation._set_mcstasscript_settings(inst, run, nexus=False, mpi="auto")
     assert run.run_type is RunType.RUN and run.folder == tmp_path / "runs" / "diagnose"
     assert run.instr_params == {p.name: float(p.value) for p in TRex().instr_params}
     assert inst._run_settings["NeXus"] is False  # McStasScript keeps them private
