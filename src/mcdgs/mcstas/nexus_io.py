@@ -1,5 +1,7 @@
 """Read and write McStas NeXus (HDF5) output.
 
+- :func:`read_monitor_map` reads the map of a monitor of one entry, on its bin edges, with h5py.
+- :func:`read_scan_maps` reads that map of every point of a scan, along the scan variable.
 - :func:`read_events` reads the neutrons of a detector, by pixel, with mcstastox.
 - :func:`read_pixels` reads the detector pixels of every scan point, with mcstastox.
 - :func:`numeric_parameters` keeps the instrument parameters of a file that are numbers.
@@ -8,7 +10,9 @@
 Nothing here knows an instrument: the components to read are named by the caller.
 
 A scan file holds one entry per scan point (entry1, entry2, ...). Reading it needs a mcstastox
-with ``entry_number`` support, which pyproject.toml pins.
+with ``entry_number`` support, which pyproject.toml pins. ``mcstasscript.load_data`` reads only
+a single run, so the maps of a scan are read from here; :func:`read_monitor_map` reads them as
+:func:`.read_mcstas_map` does, in n/s per bin on the bin edges of :func:`.monitor_bins`.
 """
 
 from collections.abc import Iterable, Mapping
@@ -20,6 +24,8 @@ import mcstastox
 import numpy as np
 import scipp as sc
 from numpy.typing import ArrayLike
+
+from mcdgs.mcstas.runs import Run
 
 
 def numeric_parameters(parameters: Mapping[str, Any]) -> dict[str, float]:
@@ -42,6 +48,96 @@ def numeric_parameters(parameters: Mapping[str, Any]) -> dict[str, float]:
         except (TypeError, ValueError):
             pass
     return numeric
+
+
+def read_monitor_map(
+    file: str | Path, name: str, bins: Mapping[str, sc.Variable], entry: int = 1
+) -> sc.DataArray:
+    """Read the map of a monitor of one entry of a McStas NeXus file, in n/s per bin.
+
+    Parameters
+    ----------
+    file:
+        The McStas NeXus file, such as :attr:`.Run.data_file`.
+    name:
+        The name of the monitor component. Its group is found by the name after its number in
+        beam order, so ``"sample_monitor"`` does not find ``0073_pre_sample_monitor``.
+    bins:
+        The bin edges of the map, by coordinate, in the order of the axes of the monitor, such as
+        ``"toa"`` then ``"wavelength"`` of ``"time ... lambda ..."``: as :func:`.monitor_bins`
+        gives them from its ``bin_limits``.
+    entry:
+        The entry to read, from 1: of a scan file, the scan point.
+
+    Returns
+    -------
+    :
+        The intensity per bin, in n/s, with the square of its error as variances. Its dimensions
+        are those of ``bins``, in their order, and its coordinates the bin edges.
+
+    Raises
+    ------
+    ValueError
+        If the entry has not one component of that name, the component has not one map, or the
+        map does not have the shape of ``bins``.
+    """
+    with h5py.File(file) as data:
+        components = data[f"entry{entry}/instrument/components"]
+        assert isinstance(components, h5py.Group)
+        found = [group for key, group in components.items() if key.partition("_")[2] == name]
+        if len(found) != 1:
+            raise ValueError(f"{file} entry{entry}: {len(found)} components {name!r}, not one")
+        output = found[0].get("output", {})
+        maps = [group for group in output.values() if "data" in group]
+        if len(maps) != 1:
+            raise ValueError(f"{file} entry{entry}: {name} has {len(maps)} maps, not one")
+        intensity = np.asarray(maps[0]["data"][()], dtype=float)  # axes in the order of bins
+        error = np.asarray(maps[0]["errors"][()], dtype=float)
+    shape = tuple(len(edges) - 1 for edges in bins.values())
+    if intensity.shape != shape:
+        raise ValueError(
+            f"{name}: McStas has a map of {intensity.shape} bins, the bins are {shape}"
+        )
+    return sc.DataArray(
+        sc.array(dims=list(bins), values=intensity, variances=error**2, unit="1/s"),
+        coords=dict(bins),
+    )
+
+
+def read_scan_maps(
+    run: Run, name: str, bins: Mapping[str, sc.Variable], unit: str | None = None
+) -> sc.DataArray:
+    """Read the map of a monitor of every point of a scan, as :func:`read_monitor_map`.
+
+    Parameters
+    ----------
+    run:
+        The scan, as :meth:`.Simulation.scan` returns it or :meth:`.Run.load` reads it.
+    name, bins:
+        The monitor and its bin edges, as in :func:`read_monitor_map`.
+    unit:
+        The unit of the scan variable, which the record of the run does not keep.
+
+    Returns
+    -------
+    :
+        The maps along the scan variable, then the dimensions of ``bins``, with the values of the
+        variable as its coordinate, in the order of the scan.
+
+    Raises
+    ------
+    ValueError
+        If the run is not a scan, or as :func:`read_monitor_map`.
+    """
+    if run.variable is None or run.values is None:
+        raise ValueError(f"{run.folder}: not a scan")
+    maps = [
+        read_monitor_map(run.data_file, name, bins, entry)
+        for entry in range(1, len(run.values) + 1)
+    ]
+    scan = sc.concat(maps, run.variable)
+    scan.coords[run.variable] = sc.array(dims=[run.variable], values=run.values, unit=unit)
+    return scan
 
 
 def _export_events(

@@ -42,6 +42,7 @@ classDiagram
         build_mcstas()
         Simulation
         read_mcstas_map()
+        read_monitor_map()
         read_pixels()
     }
     class tof {

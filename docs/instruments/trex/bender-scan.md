@@ -3,7 +3,8 @@
 [`mcdgs.diagnostics.trex.bender_scan`](https://github.com/bingli621/mcdgs/blob/main/src/mcdgs/diagnostics/trex/bender_scan.py)
 shows what the [bender](details.md#bender) does to the beam. Its instrument, `TRexBenderScan`, is
 T-Rex up to the beam monitor after guide 4, as the [`Extraction`](extraction.md), with the bender
-in, through the bender and the cold guide 4b. It scans the rotation of the bender, `b_rot`, and
+in, through the bender and the cold guide 4b. Only its beam monitor differs: it covers 0.25 to
+9.75 Å, the bands the scan reads, instead of 0.1 to 10 Å. It scans the rotation of the bender, `b_rot`, and
 reads the beam monitor, to show how it passes each band of wavelengths. The path through the
 bender at its nominal rotation, below, is run by [Extraction guides](extraction.md).
 
@@ -78,28 +79,24 @@ parameters, so McStas compiles it once:
 ```
 <!-- fmt:on -->
 
-`read_spectra` sums the map of the beam monitor over time, and then over bands of 0.5 Å centered
-on 0.5, 1.0, … 9.5 Å: 19 bands over the 0.1 to 10 Å of the monitor. Each wavelength bin, 0.02 Å
-wide, goes to the band whose center is nearest to its own, 25 bins to a band. A bin is centered on
-each edge of two bands, and goes to the band above, so each band is that of its center moved up by
-half a bin, 0.01 Å:
+`plot_bender_scan` reads the map of the beam monitor of every scan point into scipp, along
+`b_rot`, with `read_scan_maps`, and that of the run without the bender with `read_monitor_map`
+(see [Read the output](../../how-to/read-the-output.md#into-scipp)). It sums each map over time,
+and then over bands of 0.5 Å centered on 0.5, 1.0, … 9.5 Å: 19 bands, from 0.25 to 9.75 Å. The
+beam monitor covers just these, in bins of 0.02 Å, so the edge of every band is the edge of a
+bin, and each band sums 25 whole bins. The bins are independent, so their errors add in
+quadrature, as scipp adds their variances:
 
 <!-- fmt:off -->
 ```python
---8<-- "src/mcdgs/diagnostics/trex/bender_scan.py:bands"
+--8<-- "src/mcdgs/diagnostics/trex/bender_scan.py:read"
 ```
 <!-- fmt:on -->
 
-The bins are independent, so their errors add in quadrature:
-
-<!-- fmt:off -->
-```python
---8<-- "src/mcdgs/diagnostics/trex/bender_scan.py:sum_bands"
-```
-<!-- fmt:on -->
-
-`transmission` divides each band of the scan by the same band with the bender out, and the
-relative errors of the two add in quadrature:
+Each band of the scan is then divided by the same band with the bender out, and the
+relative errors of the two add in quadrature. scipp does not divide every point by the one
+reference with its errors, since that would correlate the points, so each point gets a copy of it
+of its own:
 
 <!-- fmt:off -->
 ```python
@@ -146,6 +143,8 @@ This is `main` at its defaults: 1e6 McStas neutrons per angle, and seed 1. The s
 `mcdgs_workspace/runs/bender_scan/`, the run without the bender to
 `mcdgs_workspace/runs/bender_out/`, each replacing the one of an earlier run, and the figure,
 `bender_scan.png`, to `mcdgs_workspace/results/trex_bender_scan/`.
-`read_angles`, `read_spectra` and `transmission` read the two files again, without running McStas.
+`plot_bender_scan` reads the two runs again, without running McStas: give it
+`define_instrument()` and the records of the runs, `Run.load("mcdgs_workspace/runs/bender_scan")`
+and the same of `bender_out`.
 The figures of the path with the bender in are made by
 [Extraction guides](extraction.md#making-the-figures).

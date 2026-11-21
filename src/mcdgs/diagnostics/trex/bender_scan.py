@@ -4,9 +4,10 @@
 :class:`.Extraction` has it. The scan reads its beam monitor: its time and wavelength map, summed
 over time, in bands of :data:`BAND_WIDTH` centered on its multiples.
 :func:`run_bender_scan` scans ``b_rot`` with the bender in, and runs once with it out;
-:func:`plot_bender_scan` draws the intensity per band of the scan over that of the same band
-with the bender out, from :func:`transmission`. :func:`read_angles` and :func:`read_spectra`
-read the files of the scan. :func:`main` does both; run the module for it::
+:func:`plot_bender_scan` reads the beam monitor of both, with :func:`.read_scan_maps` and
+:func:`.read_monitor_map`, sums each map over time and into the bands, and draws the
+intensity per band of the scan over that of the same band with the bender out. :func:`main`
+does both; run the module for it::
 
     pixi run python -m mcdgs.diagnostics.trex.bender_scan
 """
@@ -14,11 +15,10 @@ read the files of the scan. :func:`main` does both; run the module for it::
 from dataclasses import dataclass
 from pathlib import Path
 
-import h5py
 import matplotlib.pyplot as plt
 import numpy as np
+import scipp as sc
 from matplotlib.figure import Figure
-from mcstastox.LoadFile import Data
 from numpy.typing import NDArray
 
 from mcdgs.core import InstrParam, Instrument, param
@@ -41,9 +41,11 @@ from mcdgs.instruments.trex.guides.bispectral import (
 from mcdgs.instruments.trex.guides.extraction import guides_extraction
 from mcdgs.instruments.trex.monitors import beam_monitor, source_monitor
 from mcdgs.instruments.trex.sources import source
-from mcdgs.mcstas import Simulation, Workspace
+from mcdgs.mcstas import Run, Simulation, Workspace, read_monitor_map, read_scan_maps
+from mcdgs.reduction.binning import monitor_bins
 
 BAND_WIDTH = 0.5  # Å: the bands are centered on its multiples, 0.5, 1.0, 1.5 Å, ...
+BAND_LIMITS = (0.25, 9.75)  # Å: the edges of the first and the last band, 0.5 and 9.5 Å
 
 
 # --8<-- [start:instrument]
@@ -66,9 +68,10 @@ class TRexBenderScanParams:
 class TRexBenderScan(Instrument):
     """T-Rex up to the beam monitor after guide 4, with the bender in by default.
 
-    The source and the beam monitor keep the widest band, 0.1 to 10 Å. Guide 4a, the bender and
-    guide 4b are all in the instrument; ``bender_in`` chooses the path, as an instrument
-    parameter, so that a run of the scan can set it.
+    The source keeps the widest band, 0.1 to 10 Å. The beam monitor covers the bands,
+    :data:`BAND_LIMITS`, so that the edge of every band is also the edge of a bin. Guide 4a, the
+    bender and guide 4b are all in the instrument; ``bender_in`` chooses the path, as an
+    instrument parameter, so that a run of the scan can set it.
 
     Parameters
     ----------
@@ -95,14 +98,14 @@ class TRexBenderScan(Instrument):
     def __init__(self, params: TRexBenderScanParams | None = None) -> None:
         super().__init__(params)
         self.origin = Progress_bar(at=[0, 0, 0])
-        self.source = source()  # the widest band, as the beam monitor's default limits
+        self.source = source()  # the widest band
         self.source_monitor = source_monitor()
         self.add_components(guides_extraction())
         self.arm_guide_4 = arm_guide_4()
         self.guide_4a = guide_4a(when="bender_in==0")
         self.bender = bender(when="bender_in==1")
         self.guide_4b = guide_4b(when="bender_in==1")
-        self.beam_monitor = beam_monitor()
+        self.beam_monitor = beam_monitor(lambda_limits=BAND_LIMITS)  # on the edges of the bands
 
     @property
     def instr_params(self) -> list[InstrParam]:
@@ -126,129 +129,13 @@ def define_instrument() -> TRexBenderScan:
 # --8<-- [end:instrument]
 
 
-def transmission(
-    intensity: NDArray, error: NDArray, reference: NDArray, reference_error: NDArray
-) -> tuple[NDArray, NDArray]:
-    """Divide the intensity of each band by that of the same band in a reference run.
-
-    The errors are independent, so their relative errors add in quadrature.
-
-    Parameters
-    ----------
-    intensity:
-        The intensity per band of every scan point, with the shape (scan points, bands).
-    error:
-        Its error, with the same shape.
-    reference:
-        The intensity per band of the reference run, such as the bender out, with the shape
-        (bands,).
-    reference_error:
-        Its error, with the same shape.
-
-    Returns
-    -------
-    :
-        The ratio and its error, both with the shape of ``intensity``.
-    """
-    # --8<-- [start:transmission]
-    ratio = intensity / reference
-    ratio_error = ratio * np.sqrt((error / intensity) ** 2 + (reference_error / reference) ** 2)
-    # --8<-- [end:transmission]
-    return ratio, ratio_error
-
-
-def read_angles(h5_file: Path) -> NDArray:
-    """Read the rotation of the bender of every scan point.
-
-    Parameters
-    ----------
-    h5_file:
-        The file of the scan.
-
-    Returns
-    -------
-    :
-        The rotations in deg.
-    """
-    folder = str(h5_file.parent)
-    with Data(folder) as data:
-        n_entries = data.get_number_of_entries()
-    angles = []
-    for entry in range(1, n_entries + 1):
-        with Data(folder, entry_number=entry) as data:
-            angles.append(data.get_instrument_parameters()["b_rot"])
-    return np.array(angles, dtype=float)
-
-
-def read_spectra(h5_file: Path) -> tuple[NDArray, NDArray, NDArray]:
-    """Read the intensity per wavelength band at the beam monitor of every scan point.
-
-    The map of the beam monitor is summed over time, then over each band of
-    :data:`BAND_WIDTH`, centered on a multiple of it. A wavelength bin goes to the band whose
-    center is nearest to its own, and to the band above when it is centered on the edge of two,
-    so a band's edges are those of its bins, within half a bin of the band's. Only the bands
-    the axis of the monitor covers whole are kept. The bins are independent, so their errors add
-    in quadrature.
-
-    Parameters
-    ----------
-    h5_file:
-        The file of the scan.
-
-    Returns
-    -------
-    :
-        The wavelength at the center of each band in Å, then the intensity and its error, both
-        with the shape (scan points, bands).
-
-    Raises
-    ------
-    ValueError
-        If the axis of the beam monitor covers no band whole.
-    """
-    wavelengths, intensities, variances = np.empty(0), [], []
-    with h5py.File(h5_file) as file:
-        for n in range(1, len(file) + 1):  # by number: by name, entry10 comes before entry2
-            components = file[f"entry{n}/instrument/components"]
-            assert isinstance(components, h5py.Group)
-            monitor = next(c for name, c in components.items() if name.endswith("_beam_monitor"))
-            time_map = monitor["output/beam_monitor_t_L"]  # (time, wavelength)
-            intensities.append(time_map["data"][()].sum(axis=0))
-            variances.append((time_map["errors"][()] ** 2).sum(axis=0))
-            wavelengths = time_map["Wavelength__Angs_"][()]  # the bin centers
-
-    half_bin = (wavelengths[1] - wavelengths[0]) / 2
-    start, stop = wavelengths[0] - half_bin, wavelengths[-1] + half_bin  # the axis, in Å
-    # --8<-- [start:bands]
-    # the nearest center, in widths; a bin centered on the edge of two bands, as 0.25 Å, goes to
-    # the band above, whatever the rounding of its center
-    band_of_bin = np.floor(wavelengths / BAND_WIDTH + 0.5 + 1e-9).astype(int)
-    # --8<-- [end:bands]
-    tolerance = 1e-9  # Å: an edge of the axis on that of a band covers it
-    whole = [
-        int(band)
-        for band in np.unique(band_of_bin)
-        if (band - 0.5) * BAND_WIDTH >= start - tolerance
-        and (band + 0.5) * BAND_WIDTH <= stop + tolerance
-    ]
-    if not whole:
-        raise ValueError(
-            f"the wavelength axis, {start:.4g} to {stop:.4g} Å, covers no band of {BAND_WIDTH} Å"
-        )
-    # --8<-- [start:sum_bands]
-    intensity_bins, variance_bins = np.array(intensities), np.array(variances)
-    intensity = np.stack([intensity_bins[:, band_of_bin == b].sum(axis=1) for b in whole], 1)
-    variance = np.stack([variance_bins[:, band_of_bin == b].sum(axis=1) for b in whole], 1)
-    # --8<-- [end:sum_bands]
-    return np.array(whole) * BAND_WIDTH, intensity, np.sqrt(variance)
-
-
 def run_bender_scan(
+    instrument: TRexBenderScan,
     angles: NDArray | None = None,
     ncount: float = 1e6,
     seed: int = 1,
     workspace: Workspace | None = None,
-) -> tuple[Path, Path]:
+) -> tuple[Run, Run]:
     """Scan the rotation of the bender, and run once without it.
 
     The scan goes to the run folder ``bender_scan`` of the workspace, the run without the
@@ -256,6 +143,9 @@ def run_bender_scan(
 
     Parameters
     ----------
+    instrument:
+        The instrument to run, as :func:`define_instrument` gives it. The runs set
+        ``bender_in`` themselves.
     angles:
         The values of ``b_rot``, in deg. If ``None``, 19 from -0.8 to 0.1 deg.
     ncount:
@@ -268,22 +158,36 @@ def run_bender_scan(
     Returns
     -------
     :
-        The files of the scan and of the run without the bender.
+        The scan and the run without the bender.
     """
     if angles is None:
         angles = np.linspace(-0.8, 0.1, 19)
 
     # --8<-- [start:run_scan]
-    sim = Simulation(define_instrument(), workspace)
-    scan = sim.scan("b_rot", angles, "bender_scan", ncount=ncount, seed=seed, bender_in=1)
-    print(f"Saved {scan.data_file}")
-    bender_out = sim.run(folder_name="bender_out", ncount=ncount, seed=seed, bender_in=0)
+    sim = Simulation(instrument, workspace)
+    bender_in_scan = sim.scan(
+        variable="b_rot",
+        values=angles,
+        folder_name="bender_scan",
+        ncount=ncount,
+        seed=seed,
+        bender_in=1,
+    )
+    print(f"Saved {bender_in_scan.data_file}")
+    bender_out_run = sim.run(
+        folder_name="bender_out",
+        ncount=ncount,
+        seed=seed,
+        bender_in=0,
+    )
     # --8<-- [end:run_scan]
-    print(f"Saved {bender_out.data_file}")
-    return scan.data_file, bender_out.data_file
+    print(f"Saved {bender_out_run.data_file}")
+    return bender_in_scan, bender_out_run
 
 
-def plot_bender_scan(scan_file: Path, bender_out_file: Path) -> Figure:
+def plot_bender_scan(
+    instrument: TRexBenderScan, bender_in_scan: Run, bender_out_run: Run
+) -> Figure:
     """Draw the scan of :func:`run_bender_scan`.
 
     Each curve is one wavelength band, divided by the same band without the bender, so the
@@ -293,30 +197,44 @@ def plot_bender_scan(scan_file: Path, bender_out_file: Path) -> Figure:
 
     Parameters
     ----------
-    scan_file:
-        The file of the scan.
-    bender_out_file:
-        The file of the run without the bender.
+    instrument:
+        The instrument of the runs, whose beam monitor gives the bins of its maps.
+    bender_in_scan:
+        The scan with the bender in.
+    bender_out_run:
+        The run with the bender out.
 
     Returns
     -------
     :
         The figure.
     """
-    angles = read_angles(scan_file)
-    centers, intensity, error = read_spectra(scan_file)
-    _, bender_out, bender_out_error = read_spectra(bender_out_file)
-    reference, reference_error = bender_out[0], bender_out_error[0]
-
-    ratio, ratio_error = transmission(intensity, error, reference, reference_error)
+    bins = monitor_bins(instrument.beam_monitor.bin_limits)
+    # --8<-- [start:read]
+    bender_in = read_scan_maps(bender_in_scan, "beam_monitor", bins, unit="deg")
+    bender_out = read_monitor_map(bender_out_run.data_file, "beam_monitor", bins)
+    # over time, then over the bins of each band: the edges of the bands, 0.25, 0.75, ...
+    # 9.75 Å, are edges of bins, so each bin goes whole to one band, and the variances add
+    bands = sc.linspace("wavelength", *BAND_LIMITS, 20, unit="Å")
+    bender_in = bender_in.sum("toa").rebin(wavelength=bands)
+    bender_out = bender_out.sum("toa").rebin(wavelength=bands)
+    # --8<-- [end:read]
+    # --8<-- [start:transmission]
+    # scipp does not broadcast variances, which would correlate the points: each point gets a
+    # copy of the reference of its own, and scipp adds the relative errors in quadrature
+    ratio = bender_in / bender_out.broadcast(sizes=bender_in.sizes).copy()
+    # --8<-- [end:transmission]
+    angles = ratio.coords["b_rot"].values
+    centers = sc.midpoints(ratio.coords["wavelength"]).values
 
     fig, ax = plt.subplots(figsize=(8, 4.8), layout="constrained")
     n_colors = 10  # the default color cycle, C0 to C9: past it the colors come again
     for band, center in enumerate(centers):
+        curve = ratio["wavelength", band]
         ax.errorbar(
             angles,
-            ratio[:, band],
-            ratio_error[:, band],
+            curve.values,
+            sc.stddevs(curve).values,
             color=f"C{band % n_colors}",
             linestyle="-" if band < n_colors else "-.",
             label=f"{center:.2f}±{BAND_WIDTH / 2:.2f} Å",
@@ -350,8 +268,9 @@ def main(out: Path | None = None, ncount: float = 1e6, seed: int = 1) -> Path:
     :
         The path of the figure, ``bender_scan.png``.
     """
-    scan_file, bender_out_file = run_bender_scan(ncount=ncount, seed=seed)
-    fig = plot_bender_scan(scan_file, bender_out_file)
+    instrument = define_instrument()
+    bender_in_scan, bender_out_run = run_bender_scan(instrument, ncount=ncount, seed=seed)
+    fig = plot_bender_scan(instrument, bender_in_scan, bender_out_run)
     return cli.save_figure(fig, cli.output_folder(out, "trex_bender_scan") / "bender_scan.png")
 
 

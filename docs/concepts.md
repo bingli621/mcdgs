@@ -70,7 +70,9 @@ same object can go to both.
 3. Each run writes a folder in `mcdgs_workspace/runs/` with a McStas NeXus file, `mccode.h5`.
 4. [`read_pixels`](reference/mcstas.md) or `h5py` reads that file. See
    [Read the output](how-to/read-the-output.md). [`read_mcstas_map`](reference/mcstas.md) reads
-   the time and wavelength map of a monitor, in n/s per bin, from the data McStasScript loads.
+   the time and wavelength map of a monitor, in n/s per bin, from the data McStasScript loads,
+   and [`read_monitor_map`](reference/mcstas.md) the same from the file, also of each entry of a
+   scan, which McStasScript does not load.
 
 ### With tof
 
