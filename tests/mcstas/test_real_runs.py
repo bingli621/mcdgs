@@ -5,8 +5,10 @@ import shutil
 from dataclasses import dataclass
 
 import h5py
+import mcstasscript as ms
 import numpy as np
 import pytest
+import scipp as sc
 
 from mcdgs.core import InstrParam, Instrument, param
 from mcdgs.core.components import (
@@ -18,7 +20,15 @@ from mcdgs.core.components import (
     Progress_bar,
 )
 from mcdgs.instruments.trex.model import TRex
-from mcdgs.mcstas import Run, RunType, Simulation, Workspace, read_pixels
+from mcdgs.mcstas import (
+    Run,
+    RunType,
+    Simulation,
+    Workspace,
+    read_mcstas_map,
+    read_pixels,
+    read_scan_maps,
+)
 
 pytestmark = pytest.mark.skipif(shutil.which("mcrun") is None, reason="McStas is not on the PATH")
 
@@ -90,6 +100,19 @@ def test_a_scan_runs_each_point_with_its_own_values_and_seed(sim):
     assert Run.load(run.folder) == run
     assert (run.run_type, run.variable, run.values) == (RunType.SCAN, "width", [0.1, 0.05])
     assert run.instr_params == {} and run.seed == 1  # the variable is in the values
+
+
+def test_the_maps_of_a_scan_are_read_per_entry_as_mcstasscript_reads_the_first(sim):
+    run = sim.scan("width", [0.1, 0.05, 0.02], ncount=1e4, seed=1, n_jobs=3)
+    bins = {"toa": sc.linspace("toa", 0.0, 0.1, 11, unit="s")}  # of the histogram, "t ..."
+    maps = read_scan_maps(run, "monitor", bins, unit="m")
+    assert maps.dims == ("width", "toa")
+    assert sc.identical(maps.coords["width"], sc.array(dims=["width"], values=run.values, unit="m"))
+    # McStasScript reads the first entry alone: the same map
+    first = read_mcstas_map("monitor", ms.load_data(run.folder), bins)
+    assert sc.identical(maps["width", 0].drop_coords("width"), first)
+    with pytest.raises(ValueError, match=r"monitor: McStas has a map of \(10,\) bins"):
+        read_scan_maps(run, "monitor", {"toa": sc.linspace("toa", 0.0, 0.1, 6, unit="s")})
 
 
 def test_a_split_run_gives_the_intensity_and_geometry_of_a_direct_run(sim):

@@ -50,24 +50,26 @@ with h5py.File(scan.data_file) as file:
 
 ### Into scipp
 
-[`read_monitor_map`](../reference/mcstas.md) reads the map of a monitor into
-[scipp](https://scipp.github.io), in n/s per bin, with the square of its errors as variances. It
-finds the group by the name after the number, as above, and puts the map on the bin edges of the
-monitor, which [`monitor_bins`](../reference/reduction.md) gives from its `bin_limits`:
+[`read_mcstas_map`](../reference/mcstas.md) puts the map of a monitor of a single run, as
+McStasScript loads it, into [scipp](https://scipp.github.io), in n/s per bin, with the square of
+its errors as variances, on the bin edges of the monitor, which
+[`monitor_bins`](../reference/reduction.md) gives from its `bin_limits`:
 
 ```python
+import mcstasscript as ms
+
 from mcdgs.instruments.trex.model import TRex
-from mcdgs.mcstas import read_monitor_map, read_scan_maps
+from mcdgs.mcstas import read_mcstas_map, read_scan_maps
 from mcdgs.reduction.binning import monitor_bins
 
 bins = monitor_bins(TRex().sample_monitor.bin_limits)  # "toa" in s, "wavelength" in Å
-sample_map = read_monitor_map(run.data_file, "sample_monitor", bins)  # (toa, wavelength)
+sample_map = read_mcstas_map("sample_monitor", ms.load_data(run.folder), bins)  # (toa, wavelength)
 spectrum = sample_map.sum("toa")  # the variances add
 ```
 
-[`read_scan_maps`](../reference/mcstas.md) reads the map of every entry of a scan, along the scan
-variable, with the values of the scan as its coordinate. The record of the run keeps no unit, so
-it is given:
+[`read_scan_maps`](../reference/mcstas.md) reads the same map of every entry of a scan, with
+mcstastox, along the scan variable, with the values of the scan as its coordinate. The record of
+the run keeps no unit, so it is given:
 
 ```python
 scan_maps = read_scan_maps(scan, "sample_monitor", bins, unit="deg")  # (omega, toa, wavelength)
