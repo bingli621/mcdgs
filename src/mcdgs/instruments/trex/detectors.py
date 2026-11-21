@@ -26,7 +26,7 @@ def banana_detector() -> Monitor_nD:
     ``-BANANA_CENTER_Y``, so that, seen from the sample, it spans 25° below the beam to 15° above.
     Its pixels are ``BANANA_THETA_BINS`` in angle by ``BANANA_Y_BINS`` in height, numbered from 0
     as Mantid does. It lists every neutron that reaches it, with its pixel, time and wavelength, for
-    :func:`mcdgs.mcstas.nexus_io.read_pixels`.
+    :func:`mcdgs.mcstas.reader.read_pixels`.
 
     Returns
     -------

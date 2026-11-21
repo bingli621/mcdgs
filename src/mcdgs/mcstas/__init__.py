@@ -6,13 +6,13 @@ The names below are imported from here, ``from mcdgs.mcstas import Simulation``.
 from .builder import build_mcstas
 from .mcrun import random_seed
 from .mcstasscript_diagnostics import McStasScriptDiagnostics
-from .nexus_io import (
+from .reader import (
     numeric_parameters,
     read_events,
+    read_mcstas_map,
     read_pixels,
     read_scan_maps,
 )
-from .reader import read_mcstas_map
 from .runs import Run, RunType, monitor_file, recorded_instr_params
 from .simulation import Simulation
 from .workspace import Workspace
