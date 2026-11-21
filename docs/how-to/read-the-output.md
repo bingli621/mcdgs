@@ -31,6 +31,9 @@ finds the group by the name after the number: matching its end would also find
 `0073_pre_sample_monitor`. McStas adds a suffix for the variables to the file name, `_t_L` for
 time and wavelength. To see what a monitor wrote, use `list(monitor["output"])`.
 
+Next to the `mccode.h5` of a scan, `mcrun` writes `mccode.dat`: for each value, the total
+intensity and error of every histogram monitor.
+
 To read every entry of a scan, count through the entries, since sorted by name `entry10` comes
 before `entry2`:
 
@@ -39,6 +42,11 @@ with h5py.File(scan.data_file) as file:
     for n in range(1, len(file) + 1):
         entry = file[f"entry{n}"]
 ```
+
+!!! warning "McStasScript reads only the first entry of a scan"
+
+    `ms.load_data(scan.folder)` reads `entry1` alone, the first value, without saying so. It
+    suits a single run; read a scan by its entries, as above, or with `read_scan_maps` below.
 
 ### Into scipp
 

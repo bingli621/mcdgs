@@ -7,7 +7,8 @@ McStasScript has two tools to look inside a McStas run:
 - its **analysis diagram**, which draws the components in beam order with the intensity and the
   number of rays just before each.
 
-Both run McStas themselves. A [`McStasScriptDiagnostics`](../reference/mcstas.md) runs them in the
+Both run McStas themselves, through McStasScript: they are the only runs that do, since a
+`Simulation` runs `mcrun` itself. A [`McStasScriptDiagnostics`](../reference/mcstas.md) runs them in the
 same [workspace](run-a-simulation.md#where-the-files-go) as a `Simulation`, with a run folder and a
 [record](run-a-simulation.md#find-and-clean-up-runs) for every run. The examples are those of
 [`mcdgs.diagnostics.trex.guides_diagnostics`](../reference/diagnostics.md), which runs `TRex` in

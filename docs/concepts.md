@@ -64,10 +64,12 @@ same object can go to both.
 
 1. [`build_mcstas`](reference/mcstas.md) turns the instrument into a McStasScript instrument. It
    adds the instrument parameters, then the components in beam order.
-2. [`Simulation`](reference/mcstas.md) writes it to `mcdgs_workspace/builds/<instrument name>/`,
-   where McStas compiles it, and runs it. Every run builds the instrument anew, so a change applies to the next
-   run.
-3. Each run writes a folder in `mcdgs_workspace/runs/` with a McStas NeXus file, `mccode.h5`.
+2. [`Simulation`](reference/mcstas.md) has McStasScript write it as a `.instr` file to
+   `mcdgs_workspace/builds/<instrument name>/`, and runs it with McStas's own `mcrun`, which
+   compiles it there. McStasScript only builds the instrument; `mcrun` runs it, a scan as its own
+   list scan. Every run builds the instrument anew, so a change applies to the next run.
+3. Each run writes a folder in `mcdgs_workspace/runs/` with a McStas NeXus file, `mccode.h5`, and
+   the output of `mcrun`, `mcrun.log`.
 4. [`read_pixels`](reference/mcstas.md) or `h5py` reads that file. See
    [Read the output](how-to/read-the-output.md). [`read_mcstas_map`](reference/mcstas.md) reads
    the time and wavelength map of a monitor, in n/s per bin, from the data McStasScript loads,

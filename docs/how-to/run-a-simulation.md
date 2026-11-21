@@ -27,10 +27,13 @@ run.data_file  # mccode.h5, in the run folder run.folder
 `run` uses all cores through MPI by default (`mpi="auto"`). Like every run method, it returns the
 [record of the run](#find-and-clean-up-runs), which knows its folder and its McStas NeXus file.
 
+McStasScript writes the instrument, and McStas's own `mcrun` compiles and runs it. Its output is
+kept in `mcrun.log` in the run folder, and a run that fails raises a `RuntimeError` with the end
+of it.
+
 ## A scan
 
-`scan` runs once per value of an instrument parameter and merges the results into one file, with
-one entry per value. This is the [bender scan](../instruments/trex/bender-scan.md#the-scan), with fewer
+`scan` runs once per value of an instrument parameter, into one file with one entry per value. This is the [bender scan](../instruments/trex/bender-scan.md#the-scan), with fewer
 neutrons and at the sample position:
 
 ```python
@@ -43,10 +46,20 @@ scan = simulation.scan(
 )
 ```
 
-The instrument is compiled once, then the values run in parallel as single-process McStas jobs.
-`n_jobs` limits how many run at a time. With a `seed`, value `n` uses `seed + n + 1`, so the values
-do not repeat each other's random numbers. A name that is not an instrument parameter raises a
-`KeyError` before anything runs.
+It is McStas's own list scan, `mcrun -L`: the instrument is compiled once, then the values run in
+parallel (`--scan_split`), each without MPI, and `mcrun` merges them into one file.
+
+- `n_jobs` limits how many values run at a time; by default, the number of cores less one.
+- Value `n` uses the seed `seed + n * 1024`, as `mcrun` gives it, so the values do not repeat each
+  other's random numbers. Without a `seed`, one is picked and kept in the record of the run.
+- A name that is not an instrument parameter raises a `KeyError` before anything runs.
+
+!!! warning "A scanned instrument needs a histogram monitor"
+
+    `mcrun` keeps a value of a scan only if its run prints a `Detector:` line, which every
+    histogram monitor does, and an event list, such as the banana detector, does not. With event
+    lists alone, `mcrun` skips every value, and the scan raises a `RuntimeError` that points to
+    `mcrun.log`. T-Rex has histogram monitors all along the beam.
 
 ## Where the files go
 
@@ -55,7 +68,7 @@ Everything is written into one folder, the workspace:
 | Folder | Contents |
 | ------ | -------- |
 | `mcdgs_workspace/builds/<instrument name>/` | The generated `.instr` and `.c` files and the compiled instrument. |
-| `mcdgs_workspace/runs/<run name>/` | What McStas wrote in one run, and the record of the run. |
+| `mcdgs_workspace/runs/<run name>/` | What McStas wrote in one run, the output of `mcrun`, `mcrun.log`, and the record of the run. |
 | `mcdgs_workspace/results/<name>/` | What is made from the runs, such as the figures of a diagnostics module. |
 
 Without anything else, `mcdgs_workspace/` is in the folder you run Python in. To keep it in one
@@ -115,7 +128,8 @@ removes them all.
 Simulating the primary spectrometer is the expensive part. A split run does it once, dumps the beam
 at the component `sample_pos` to an MCPL file, and starts every later run from there. The
 instrument needs a component named `sample_pos`, and a detector after it for the second part, as
-T-Rex has.
+T-Rex has. For a scan from the sample, one of the monitors after `sample_pos` must be a
+histogram, as `sample_monitor` of T-Rex is: see [A scan](#a-scan).
 
 ```python
 from mcdgs.instruments.trex.model import TRex

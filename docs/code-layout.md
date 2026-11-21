@@ -11,7 +11,7 @@ Dependencies point inwards, so an instrument never depends on how it is simulate
 | ------- | ---- |
 | `core` | `Instrument`, the components, parameters and geometry. It imports nothing else from `mcdgs`. |
 | `instruments`, `samples` | The instruments and ready-made crystals, built on `core`. |
-| `mcstas` | An adapter that works with any instrument: builds it, runs it, reads the output. |
+| `mcstas` | An adapter that works with any instrument: builds it with McStasScript, runs it with `mcrun`, reads the output. |
 | `tof` | An adapter that works with any instrument: builds its chopper cascade as a tof model, gives its disks as scippneutron disk choppers, draws its chopper acceptance and time-distance diagrams, and counts the neutrons of a run on the bins of a McStas monitor. |
 | `io` | An adapter that saves any instrument to a YAML parameters file and loads it back. It imports `instruments` only to know every instrument class a file may name. |
 | `reduction` | Data reduction with the kernels of scippneutron: the incident energy of a straight flight, the patches of a time and wavelength map, the energy and momentum transfer of each neutron, the sub-pulse it belongs to, the solid angle of the pixels and bin edges. It imports nothing else from `mcdgs`. |
