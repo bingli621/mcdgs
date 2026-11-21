@@ -46,32 +46,40 @@ with h5py.File(scan.data_file) as file:
 !!! warning "McStasScript reads only the first entry of a scan"
 
     `ms.load_data(scan.folder)` reads `entry1` alone, the first value, without saying so. It
-    suits a single run; read a scan by its entries, as above, or with `read_mcstas_map` below.
+    suits a single run; read a scan by its entries, as above, or with `read_mcstas_maps` below.
 
 ### Into scipp
 
-[`read_mcstas_map`](../reference/mcstas.md) reads the map of a monitor of a run into
-[scipp](https://scipp.github.io), in n/s per bin, with the square of its errors as variances, on
-the bin edges of the monitor, which [`monitor_bins`](../reference/reduction.md) gives from its
-`bin_limits`. It takes the record of the run: a single run it reads as McStasScript loads it, a
-scan entry by entry with mcstastox.
+[`read_mcstas_maps`](../reference/mcstas.md) reads the maps of monitors of a run into
+[scipp](https://scipp.github.io), in n/s per bin, with the square of their errors as variances, on
+the bin edges of each monitor, which [`monitor_bins`](../reference/reduction.md) gives from its
+`bin_limits`. It takes the record of the run and the bins by monitor, and gives the maps by
+monitor: a single run it loads once, as McStasScript loads it, a scan entry by entry with
+mcstastox.
 
 ```python
 from mcdgs.instruments.trex.model import TRex
-from mcdgs.mcstas import read_mcstas_map
+from mcdgs.mcstas import read_mcstas_maps
 from mcdgs.reduction.binning import monitor_bins
 
-bins = monitor_bins(TRex().sample_monitor.bin_limits)  # "toa" in s, "wavelength" in Å
-sample_map = read_mcstas_map("sample_monitor", run, bins)  # (toa, wavelength)
-spectrum = sample_map.sum("toa")  # the variances add
+trex = TRex()
+bins = {  # "toa" in s, "wavelength" in Å
+    name: monitor_bins(getattr(trex, name).bin_limits)
+    for name in ("pre_sample_monitor", "sample_monitor")
+}
+maps = read_mcstas_maps(run, bins)  # by monitor, each (toa, wavelength)
+spectrum = maps["sample_monitor"].sum("toa")  # the variances add
 ```
 
 Of a scan, the maps come along the scan variable, with the values of the scan as its coordinate,
 in the unit the record of the run keeps for it:
 
 ```python
-scan_maps = read_mcstas_map("sample_monitor", scan, bins)  # (omega, toa, wavelength)
+scan_maps = read_mcstas_maps(scan, bins)  # by monitor, each (omega, toa, wavelength)
 ```
+
+[`read_tof_maps`](../reference/tof.md) reads a tof run, `model.run()`, on the same bins, in
+neutrons per bin with their Poisson variances, so that the two models can be compared bin by bin.
 
 `plot_bender_scan` in [`mcdgs.diagnostics.trex.bender_scan`](../reference/diagnostics.md) reads a
 scan this way, and the module is a complete example, from a scan to a figure: see

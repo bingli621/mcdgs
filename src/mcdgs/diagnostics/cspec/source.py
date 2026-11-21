@@ -36,9 +36,9 @@ from mcdgs.instruments.cspec.guides.bender import (
 )
 from mcdgs.instruments.cspec.guides.frame import MM_PER_M, arm_iscs
 from mcdgs.instruments.cspec.sources import source, wavelength_band
-from mcdgs.mcstas import Simulation, read_mcstas_map
+from mcdgs.mcstas import Simulation, read_mcstas_maps
 from mcdgs.reduction.binning import monitor_bins
-from mcdgs.tof import build_tof, read_tof_map
+from mcdgs.tof import build_tof, read_tof_maps
 
 SOURCE_MONITOR_LAMBDA_RESOLUTION = 0.05  # Å, the width of a wavelength bin, as for T-Rex
 SOURCE_MONITOR_TIME_RESOLUTION = 5e-5  # s, the width of a time bin, 0.05 ms, as for T-Rex
@@ -184,20 +184,20 @@ def main(
     # --8<-- [start:run_mcstas]
     # run McStas
     sim = Simulation(instrument)
-    run = sim.run(folder_name=folder_name, ncount=ncount, seed=seed)
+    mcstas_run = sim.run(folder_name=folder_name, ncount=ncount, seed=seed)
     # --8<-- [end:run_mcstas]
     # --8<-- [start:run_tof]
     # run tof, then read the monitor of both on the bins of the McStas map: time, wavelength
     tof_model = build_tof(instrument, neutrons=neutrons, seed=seed)
-    tof_result = tof_model.run()
+    tof_run = tof_model.run()
     # --8<-- [end:run_tof]
 
     # the bins of the map of the monitor, time and wavelength, read from the monitor
-    bins = monitor_bins(instrument.source_monitor.bin_limits)
+    bins = {"source_monitor": monitor_bins(instrument.source_monitor.bin_limits)}
     # the map of each model on those bins, a scipp data array with its errors as variances:
     # McStas in n/s, tof in neutrons, a bin of N neutrons with the Poisson error √N
-    mcstas_map = read_mcstas_map("source_monitor", run, bins)
-    tof_counts = read_tof_map("source_monitor", tof_result, bins)
+    mcstas_map = read_mcstas_maps(mcstas_run, bins)["source_monitor"]
+    tof_counts = read_tof_maps(tof_run, bins)["source_monitor"]
 
     # tof has no flux: each of its neutrons stands for the total of McStas over that of tof
     scale = compare.rescale_tof_to_mcstas(tof_counts, mcstas_map)  # n/s per tof neutron
@@ -214,7 +214,7 @@ def main(
     # wavelength spectrum and the time profile of both, with their error bars
     fig = compare.plot_comparison(comparison, "CSPEC flux at the entrance of the guide system")
 
-    return cli.save_figure(fig, cli.output_folder(out, "cspec_source") / f"{run.name}.png")
+    return cli.save_figure(fig, cli.output_folder(out, "cspec_source") / f"{mcstas_run.name}.png")
 
 
 if __name__ == "__main__":

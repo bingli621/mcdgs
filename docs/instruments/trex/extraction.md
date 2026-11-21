@@ -125,7 +125,7 @@ they are scaled again by a `transmission` of 0.2, the argument of `main`, for wh
 would let through. That is close to the 17 % of McStas above, so where McStas is above tof the
 guides pass more than 0.2 of the beam, and where it is below, less. [Beam monitor](beam-monitor.md)
 runs the same path with the transmission tuned to McStas, 0.1734, and explains both factors.
-`read_mcstas_map` and `read_tof_map` read each monitor of both models on its bins, from
+`read_mcstas_maps` and `read_tof_maps` read the monitors of both models on their bins, from
 `monitor_bins`; the scale of the
 source monitor, from `rescale_tof_to_mcstas`, is passed on to the beam monitor:
 

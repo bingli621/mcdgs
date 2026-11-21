@@ -71,8 +71,8 @@ same object can go to both.
 3. Each run writes a folder in `mcdgs_workspace/runs/` with a McStas NeXus file, `mccode.h5`, and
    the output of `mcrun`, `mcrun.log`.
 4. [`read_pixels`](reference/mcstas.md) or `h5py` reads that file. See
-   [Read the output](how-to/read-the-output.md). [`read_mcstas_map`](reference/mcstas.md) reads
-   the time and wavelength map of a monitor of a run, in n/s per bin: of a single run as
+   [Read the output](how-to/read-the-output.md). [`read_mcstas_maps`](reference/mcstas.md) reads
+   the time and wavelength maps of monitors of a run, in n/s per bin: of a single run as
    McStasScript loads it, of a scan entry by entry with mcstastox, since McStasScript loads only
    the first.
 
@@ -81,10 +81,10 @@ same object can go to both.
 1. [`build_tof`](reference/tof.md) turns the instrument into a tof model: the source, the choppers,
    and a detector at every monitor. It leaves out the optics, and measures each distance in a
    straight line from the source.
-2. `model.run()` follows the neutrons in memory and writes no files.
-3. `result["sample_monitor"]` holds the neutrons at the monitor at the sample position, with their
+2. `tof_run = model.run()` follows the neutrons in memory and writes no files.
+3. `tof_run["sample_monitor"]` holds the neutrons at the monitor at the sample position, with their
    wavelength and time of arrival. See [Simulate the choppers with tof](how-to/simulate-the-choppers-with-tof.md).
-   [`read_tof_map`](reference/tof.md) counts them on the bins of a McStas monitor, so that
+   [`read_tof_maps`](reference/tof.md) counts them on the bins of McStas monitors, so that
    [`mcdgs.diagnostics.compare`](reference/diagnostics.md) can put both maps side by side, as on
    [Source](instruments/trex/source.md).
 

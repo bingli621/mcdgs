@@ -9,7 +9,7 @@ from mcstasscript.data.data import McStasData, McStasMetaData
 from mcdgs.mcstas import (
     numeric_parameters,
     read_events,
-    read_mcstas_map,
+    read_mcstas_maps,
     read_pixels,
 )
 
@@ -46,7 +46,7 @@ def loaded(tmp_path, finished_run, monkeypatch):
 def test_the_map_of_the_named_monitor_is_read_as_time_by_wavelength(loaded):
     data = [_monitor("other", (2, 3)), _monitor("sample_monitor", (2, 3))]
     data[0].Intensity += 100
-    sample_map = read_mcstas_map("sample_monitor", loaded(data), BINS)
+    sample_map = read_mcstas_maps(loaded(data), {"sample_monitor": BINS})["sample_monitor"]
     assert sample_map.sizes == {"toa": 3, "wavelength": 2}  # time bins, wavelength bins
     np.testing.assert_array_equal(sample_map.values, [[0, 3], [1, 4], [2, 5]])
 
@@ -54,23 +54,32 @@ def test_the_map_of_the_named_monitor_is_read_as_time_by_wavelength(loaded):
 def test_the_map_is_in_n_per_s_with_its_errors_and_its_bin_edges(loaded):
     data = [_monitor("sample_monitor", (2, 3))]
     data[0].Error *= 2
-    sample_map = read_mcstas_map("sample_monitor", loaded(data), BINS)
+    sample_map = read_mcstas_maps(loaded(data), {"sample_monitor": BINS})["sample_monitor"]
     assert sample_map.unit == "1/s"
     np.testing.assert_array_equal(sc.stddevs(sample_map).values, np.full((3, 2), 2.0))
     assert all(sc.identical(sample_map.coords[dim], BINS[dim]) for dim in BINS)
     assert sc.stddevs(sample_map.sum("toa")).values == pytest.approx([12**0.5] * 2)  # quadrature
 
 
+def test_the_monitors_of_a_single_run_are_read_from_one_load(tmp_path, finished_run, monkeypatch):
+    run = finished_run(tmp_path / "run", 0)
+    loads = []
+    data = [_monitor("sample_monitor", (2, 3)), _monitor("beamstop_monitor", (2, 3))]
+    monkeypatch.setattr(ms, "load_data", lambda folder: loads.append(folder) or data)
+    maps = read_mcstas_maps(run, {"sample_monitor": BINS, "beamstop_monitor": BINS})
+    assert list(maps) == ["sample_monitor", "beamstop_monitor"] and len(loads) == 1
+
+
 def test_a_map_on_other_bins_is_refused(loaded):
     run = loaded([_monitor("sample_monitor", (3, 2))])
     with pytest.raises(ValueError, match=r"sample_monitor: McStas has a map of \(2, 3\) bins"):
-        read_mcstas_map("sample_monitor", run, BINS)
+        read_mcstas_maps(run, {"sample_monitor": BINS})["sample_monitor"]
 
 
 def test_a_name_of_several_data_sets_is_refused(loaded):
     run = loaded([_monitor("sample_monitor", (2, 3)), _monitor("sample_monitor", (2, 3))])
     with pytest.raises(ValueError, match="sample_monitor: 2 data sets of that name"):
-        read_mcstas_map("sample_monitor", run, BINS)
+        read_mcstas_maps(run, {"sample_monitor": BINS})["sample_monitor"]
 
 
 SPLIT = Path(__file__).parents[1] / "data" / "split_run" / "split"  # from mcstas_to_sqe

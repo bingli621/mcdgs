@@ -25,7 +25,7 @@ from mcdgs.mcstas import (
     RunType,
     Simulation,
     Workspace,
-    read_mcstas_map,
+    read_mcstas_maps,
     read_pixels,
 )
 
@@ -104,16 +104,18 @@ def test_a_scan_runs_each_point_with_its_own_values_and_seed(sim):
 def test_the_maps_of_a_scan_are_read_per_entry_as_mcstasscript_reads_the_first(sim):
     run = sim.scan("width", [0.1, 0.05, 0.02], ncount=1e4, seed=1, n_jobs=3)
     bins = {"toa": sc.linspace("toa", 0.0, 0.1, 11, unit="s")}  # of the histogram, "t ..."
-    maps = read_mcstas_map("monitor", run, bins)
+    maps = read_mcstas_maps(run, {"monitor": bins})["monitor"]
     assert maps.dims == ("width", "toa")
     assert sc.identical(maps.coords["width"], sc.array(dims=["width"], values=run.values, unit="m"))
     # McStasScript reads the first entry alone: the same map
     first = ms.name_search("monitor", ms.load_data(str(run.folder)))
     np.testing.assert_array_equal(maps["width", 0].values, first.Intensity)
     single = sim.run(ncount=1e4, seed=1, mpi=None)  # as McStasScript loads it, without "width"
-    assert read_mcstas_map("monitor", single, bins).dims == ("toa",)
+    assert read_mcstas_maps(single, {"monitor": bins})["monitor"].dims == ("toa",)
     with pytest.raises(ValueError, match=r"monitor: McStas has a map of \(10,\) bins"):
-        read_mcstas_map("monitor", run, {"toa": sc.linspace("toa", 0.0, 0.1, 6, unit="s")})
+        read_mcstas_maps(run, {"monitor": {"toa": sc.linspace("toa", 0.0, 0.1, 6, unit="s")}})[
+            "monitor"
+        ]
 
 
 def test_a_split_run_gives_the_intensity_and_geometry_of_a_direct_run(sim):

@@ -53,11 +53,11 @@ from mcdgs.diagnostics import cli, compare
 from mcdgs.instruments.trex.detectors import BANANA_RADIUS
 from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
 from mcdgs.instruments.trex.monitors import SAMPLE_MONITOR_HEIGHT, SAMPLE_MONITOR_WIDTH
-from mcdgs.mcstas import Run, Simulation, read_mcstas_map
+from mcdgs.mcstas import Run, Simulation, read_mcstas_maps
 from mcdgs.reduction.binning import monitor_bins
 from mcdgs.reduction.inelastic import DEFAULT_ENERGY_TRANSFER_RATIO, arrival_window, time_at_sample
 from mcdgs.reduction.patches import find_patches, subpulse_flight
-from mcdgs.tof import build_tof, read_tof_map
+from mcdgs.tof import build_tof, read_tof_maps
 
 LOG_DECADES = 3  # the log color scale of the maps spans this many decades below the highest bin
 MONITORS = ("pre_sample_monitor", "beamstop_monitor")  # give the incident energy, in beam order
@@ -163,7 +163,8 @@ def read_xy_map(monitor: Monitor_nD, run: Run) -> sc.DataArray:
         axis: sc.linspace(axis, start, stop, n_bins + 1, unit="m")
         for axis, (start, stop, n_bins) in ((axis, limits[axis]) for axis in ("x", "y"))
     }
-    return read_mcstas_map(str(monitor.filename), run, edges).transpose(["y", "x"]).copy()
+    name = str(monitor.filename)
+    return read_mcstas_maps(run, {name: edges})[name].transpose(["y", "x"]).copy()
 
 
 def plot_xy_map(xy_map: sc.DataArray, title: str) -> Figure:
@@ -387,7 +388,7 @@ def plot_patches(
 
 def subpulse_windows(
     instrument: TRex,
-    tof_result: tof.Result,
+    tof_run: tof.Result,
     energy_transfer_ratio: tuple[float, float] = DEFAULT_ENERGY_TRANSFER_RATIO,
 ) -> sc.DataArray:
     """Give each sub-pulse of a tof run its arrival window at the banana detector.
@@ -402,7 +403,7 @@ def subpulse_windows(
     ----------
     instrument:
         The instrument of the run, with the monitors of ``MONITORS``.
-    tof_result:
+    tof_run:
         The tof run.
     energy_transfer_ratio:
         The smallest and the largest ``E / Ei`` of the windows, as :func:`.arrival_window`.
@@ -416,11 +417,9 @@ def subpulse_windows(
         neutrons at the pre-sample monitor, not n/s.
     """
     positions = {name: sc.vector(xyz, unit="m") for name, xyz in instrument.positions().items()}
-    start, end = (
-        find_patches(read_tof_map(name, tof_result, bins).values, bins)
-        for name in MONITORS
-        for bins in [monitor_bins(getattr(instrument, name).bin_limits)]
-    )
+    bins = {name: monitor_bins(getattr(instrument, name).bin_limits) for name in MONITORS}
+    tof_maps = read_tof_maps(tof_run, bins)
+    start, end = (find_patches(tof_maps[name].values, bins[name]) for name in MONITORS)
     pulses = subpulse_flight(start, positions[MONITORS[0]], end, positions[MONITORS[1]])
     pulses.unit = None  # tof neutrons, not n/s
     pulses.coords["time_at_sample"] = time_at_sample(
@@ -540,23 +539,25 @@ def main(
 
     # run McStas
     sim = Simulation(instrument)
-    run = sim.run(folder_name=name, ncount=ncount, seed=seed)
+    mcstas_run = sim.run(folder_name=name, ncount=ncount, seed=seed)
 
     # run tof, then read the monitors of both on the bins of the McStas maps: time, wavelength
     tof_model = build_tof(instrument, neutrons=neutrons, seed=seed)
-    tof_result = tof_model.run()
+    tof_run = tof_model.run()
     # tof's counts are scaled to the total of McStas at the source monitor, in n/s; at the
     # sample monitor, the same scale, and the transmission on top of it
-    source_bins = monitor_bins(instrument.source_monitor.bin_limits)
-    sample_bins = monitor_bins(instrument.sample_monitor.bin_limits)
-    mcstas_source = read_mcstas_map("source_monitor", run, source_bins)
-    tof_source = read_tof_map("source_monitor", tof_result, source_bins)
+    bins = {
+        name: monitor_bins(getattr(instrument, name).bin_limits)
+        for name in ("source_monitor", "sample_monitor")
+    }
+    mcstas_maps = read_mcstas_maps(mcstas_run, bins)
+    tof_maps = read_tof_maps(tof_run, bins)
+    mcstas_source, tof_source = mcstas_maps["source_monitor"], tof_maps["source_monitor"]
     scale = compare.rescale_tof_to_mcstas(tof_source, mcstas_source)
     at_source = compare.mcstas_vs_tof(
         "source_monitor", mcstas_source, tof_source, ncount, neutrons, scale
     )
-    mcstas_sample = read_mcstas_map("sample_monitor", run, sample_bins)
-    tof_sample = read_tof_map("sample_monitor", tof_result, sample_bins)
+    mcstas_sample, tof_sample = mcstas_maps["sample_monitor"], tof_maps["sample_monitor"]
     if transmission is None:  # tuned: the transmission that gives tof the total of McStas
         transmission = compare.rescale_tof_to_mcstas(tof_sample, mcstas_sample) / scale
     comparison = compare.mcstas_vs_tof(
@@ -589,7 +590,7 @@ def main(
         for suffix, log_decades, log_y in (("", None, False), ("_log", LOG_DECADES, True))
     ]
 
-    windows = subpulse_windows(instrument, tof_result)
+    windows = subpulse_windows(instrument, tof_run)
     fig = plot_patches(comparison, f"Center of mass of each patch\n{conditions}", windows=windows)
     files.append(cli.save_figure(fig, folder / f"{name}_patches.png"))
 
@@ -597,7 +598,7 @@ def main(
     print(table, end="")
     files.append(cli.save_text(table, folder / f"{name}_windows.txt"))
 
-    xy_map = read_xy_map(instrument.sample_xy_monitor, run)
+    xy_map = read_xy_map(instrument.sample_xy_monitor, mcstas_run)
     fig = plot_xy_map(xy_map, f"T-Rex beam at the sample position, McStas\n{conditions}")
     files.append(cli.save_figure(fig, folder / f"{name}_xy.png"))
     return files

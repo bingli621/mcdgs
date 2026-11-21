@@ -18,7 +18,7 @@ from mcdgs.diagnostics.compare import (
 )
 from mcdgs.diagnostics.trex.source import TRexSource
 from mcdgs.mcstas.reader import map_on_bins
-from mcdgs.tof import build_tof, read_tof_map
+from mcdgs.tof import build_tof, read_tof_maps
 
 BINS = {
     "toa": sc.linspace("toa", 0.0, 15.0, 31, unit="ms"),
@@ -28,35 +28,35 @@ NEUTRONS = 10_000
 
 
 @pytest.fixture(scope="module")
-def tof_result() -> tof.Result:
+def tof_run() -> tof.Result:
     return build_tof(TRexSource(), neutrons=NEUTRONS, seed=1).run()
 
 
 def _mcstas_map(scale: float = 1.0) -> sc.DataArray:
-    """A McStas map on BINS, as read_mcstas_map reads it: (time, wavelength), in n/s."""
+    """A McStas map on BINS, as read_mcstas_maps reads it: (time, wavelength), in n/s."""
     shape = tuple(len(edges) - 1 for edges in BINS.values())
     intensity = scale * np.arange(np.prod(shape), dtype=float).reshape(shape)
     return map_on_bins("source_monitor", intensity, np.ones(shape), BINS)
 
 
-def _source_comparison(tof_result: tof.Result) -> MonitorComparison:
+def _source_comparison(tof_run: tof.Result) -> MonitorComparison:
     """source_monitor in both models, tof scaled to the total of McStas there."""
     mcstas_map = _mcstas_map()
-    tof_counts = read_tof_map("source_monitor", tof_result, BINS)
+    tof_counts = read_tof_maps(tof_run, {"source_monitor": BINS})["source_monitor"]
     scale = rescale_tof_to_mcstas(tof_counts, mcstas_map)
     return mcstas_vs_tof("source_monitor", mcstas_map, tof_counts, 1e6, NEUTRONS, scale)
 
 
-def test_tof_is_scaled_to_the_total_of_mcstas(tof_result):
-    comparison = _source_comparison(tof_result)
+def test_tof_is_scaled_to_the_total_of_mcstas(tof_run):
+    comparison = _source_comparison(tof_run)
     assert comparison.titles == ("McStas", "tof")
     assert comparison.labels is not None and "transmission" not in comparison.labels[1]
     assert comparison.second.values.sum() == pytest.approx(comparison.first.values.sum())
 
 
-def test_the_scale_and_the_transmission_scale_tof_and_its_poisson_errors(tof_result):
+def test_the_scale_and_the_transmission_scale_tof_and_its_poisson_errors(tof_run):
     mcstas_map = _mcstas_map()
-    tof_counts = read_tof_map("source_monitor", tof_result, BINS)
+    tof_counts = read_tof_maps(tof_run, {"source_monitor": BINS})["source_monitor"]
     comparison = mcstas_vs_tof(
         "source_monitor", mcstas_map, tof_counts, 1e6, NEUTRONS, scale=2.0, transmission=0.25
     )
@@ -70,13 +70,13 @@ def test_the_scale_and_the_transmission_scale_tof_and_its_poisson_errors(tof_res
     )
 
 
-def test_the_transmission_from_the_rescaling_gives_tof_the_total_of_mcstas_further_down(tof_result):
+def test_the_transmission_from_the_rescaling_gives_tof_the_total_of_mcstas_further_down(tof_run):
     # the same tof neutrons at both monitors, a quarter of the McStas beam at the later one
-    tof_two_monitors = {"later_monitor": tof_result["source_monitor"]}
+    tof_two_monitors = {"later_monitor": tof_run["source_monitor"]}
     source_map = _mcstas_map()
-    tof_source = read_tof_map("source_monitor", tof_result, BINS)
+    tof_source = read_tof_maps(tof_run, {"source_monitor": BINS})["source_monitor"]
     later_map = _mcstas_map(scale=1 / 4)  # a quarter of the beam gets there
-    tof_later = read_tof_map("later_monitor", tof_two_monitors, BINS)
+    tof_later = read_tof_maps(tof_two_monitors, {"later_monitor": BINS})["later_monitor"]
     scale = rescale_tof_to_mcstas(tof_source, source_map)
     transmission = rescale_tof_to_mcstas(tof_later, later_map) / scale
     later = mcstas_vs_tof("later_monitor", later_map, tof_later, 1e6, NEUTRONS, scale, transmission)
@@ -84,16 +84,16 @@ def test_the_transmission_from_the_rescaling_gives_tof_the_total_of_mcstas_furth
     assert later.second.values.sum() == pytest.approx(later.first.values.sum())
 
 
-def test_the_figure_has_the_two_maps_the_spectrum_and_the_profile(tof_result):
-    comparison = _source_comparison(tof_result)
+def test_the_figure_has_the_two_maps_the_spectrum_and_the_profile(tof_run):
+    comparison = _source_comparison(tof_run)
     fig = plot_comparison(comparison, "A title")
     assert fig.get_suptitle() == "A title"
     assert len(fig.axes) == 5  # four plots and the color bar
     plt.close(fig)
 
 
-def test_the_maps_can_be_drawn_on_a_log_scale(tof_result):
-    comparison = _source_comparison(tof_result)
+def test_the_maps_can_be_drawn_on_a_log_scale(tof_run):
+    comparison = _source_comparison(tof_run)
     fig = plot_comparison(comparison, "A title", log_decades=3, connect=True)
     mesh = fig.axes[0].collections[0]
     vmax = max(comparison.first.values.max(), comparison.second.values.max())
@@ -118,8 +118,8 @@ def test_two_mcstas_maps_are_compared_with_their_own_titles(capsys):
     plt.close(fig)
 
 
-def test_the_spectrum_and_the_profile_can_be_on_a_log_axis(tof_result):
-    comparison = _source_comparison(tof_result)
+def test_the_spectrum_and_the_profile_can_be_on_a_log_axis(tof_run):
+    comparison = _source_comparison(tof_run)
     fig = plot_comparison(comparison, "A title", log_y=True)
     assert [ax.get_yscale() for ax in fig.axes[2:4]] == ["log", "log"]
     plt.close(fig)

@@ -17,13 +17,13 @@ from mcdgs.tof import build_tof
 
 trex = TRex()
 model = build_tof(trex, neutrons=1_000_000, seed=1)
-result = model.run()
-print(result)
+tof_run = model.run()
+print(tof_run)
 ```
 
 The result says how many neutrons each chopper lets through and how many it stops.
 
-`result.plot()` draws the time-distance diagram of the run: the path of each neutron, time across
+`tof_run.plot()` draws the time-distance diagram of the run: the path of each neutron, time across
 and distance up, with the choppers where they stop it.
 `time_distance_diagram(trex)`, from `mcdgs.tof.time_distance`, builds, runs and draws it in one
 call; see
@@ -59,7 +59,7 @@ carried over:
 Each detector holds every neutron of the source, with a mask for those stopped on the way:
 
 ```python
-neutrons = result["sample_monitor"].data["pulse", 0]
+neutrons = tof_run["sample_monitor"].data["pulse", 0]
 reached = neutrons[~neutrons.masks["blocked_by_others"]]
 print(reached.coords["wavelength"].min(), reached.coords["wavelength"].max())
 print(reached.coords["toa"].to(unit="ms"))  # time of arrival

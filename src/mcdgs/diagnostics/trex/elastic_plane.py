@@ -62,7 +62,7 @@ from mcdgs.instruments.trex.detectors import (
     BANANA_Y_BINS,
 )
 from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
-from mcdgs.mcstas import Run, Simulation, Workspace, read_events, read_mcstas_map
+from mcdgs.mcstas import Run, Simulation, Workspace, read_events, read_mcstas_maps
 from mcdgs.reduction.binning import bin_edges, monitor_bins
 from mcdgs.reduction.inelastic import events_to_q_and_energy, time_at_sample
 from mcdgs.reduction.patches import MIN_FRACTION, find_patches, subpulse_flight
@@ -152,9 +152,8 @@ def subpulse_timing(
         If the monitors do not have as many sub-pulses, or one arrives at the beamstop monitor
         first.
     """
-    pre_sample, beamstop = (
-        find_patches(read_mcstas_map(name, run, bins[name]).values, bins[name]) for name in MONITORS
-    )
+    maps = read_mcstas_maps(run, {name: bins[name] for name in MONITORS})
+    pre_sample, beamstop = (find_patches(maps[name].values, bins[name]) for name in MONITORS)
     pre_sample_position = sc.vector(positions["pre_sample_monitor"], unit="m")
     pulses = subpulse_flight(
         pre_sample,

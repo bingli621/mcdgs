@@ -4,7 +4,7 @@
 :class:`.Extraction` has it. The scan reads its beam monitor: its time and wavelength map, summed
 over time, in bands of :data:`BAND_WIDTH` centered on its multiples.
 :func:`run_bender_scan` scans ``b_rot`` with the bender in, and runs once with it out;
-:func:`plot_bender_scan` reads the beam monitor of both with :func:`.read_mcstas_map`, sums each map over time and into the bands, and draws the
+:func:`plot_bender_scan` reads the beam monitor of both with :func:`.read_mcstas_maps`, sums each map over time and into the bands, and draws the
 intensity per band of the scan over that of the same band with the bender out. :func:`main`
 does both; run the module for it::
 
@@ -40,7 +40,7 @@ from mcdgs.instruments.trex.guides.bispectral import (
 from mcdgs.instruments.trex.guides.extraction import guides_extraction
 from mcdgs.instruments.trex.monitors import beam_monitor, source_monitor
 from mcdgs.instruments.trex.sources import source
-from mcdgs.mcstas import Run, Simulation, Workspace, read_mcstas_map
+from mcdgs.mcstas import Run, Simulation, Workspace, read_mcstas_maps
 from mcdgs.reduction.binning import monitor_bins
 
 BAND_WIDTH = 0.5  # Å: the bands are centered on its multiples, 0.5, 1.0, 1.5 Å, ...
@@ -208,10 +208,10 @@ def plot_bender_scan(
     :
         The figure.
     """
-    bins = monitor_bins(instrument.beam_monitor.bin_limits)
+    bins = {"beam_monitor": monitor_bins(instrument.beam_monitor.bin_limits)}
     # --8<-- [start:read]
-    bender_in = read_mcstas_map("beam_monitor", bender_in_scan, bins)  # along b_rot
-    bender_out = read_mcstas_map("beam_monitor", bender_out_run, bins)
+    bender_in = read_mcstas_maps(bender_in_scan, bins)["beam_monitor"]  # along b_rot
+    bender_out = read_mcstas_maps(bender_out_run, bins)["beam_monitor"]
     # over time, then over the bins of each band: the edges of the bands, 0.25, 0.75, ...
     # 9.75 Å, are edges of bins, so each bin goes whole to one band, and the variances add
     bands = sc.linspace("wavelength", *BAND_LIMITS, 20, unit="Å")

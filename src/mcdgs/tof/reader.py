@@ -1,9 +1,9 @@
 """Read the neutrons of a tof run.
 
-:func:`read_tof_map` counts the neutrons at a component of a tof run, a monitor or a chopper,
-on bins of any of their coordinates, such as the time of arrival and the wavelength.
+:func:`read_tof_maps` counts the neutrons at components of a tof run, monitors or choppers, on
+bins of any of their coordinates, such as the time of arrival and the wavelength.
 :func:`.monitor_bins` gives those bins from the axes of a ``Monitor_nD``, so that tof is read on
-the bins of McStas, as :func:`.read_mcstas_map` reads McStas.
+the bins of McStas, as :func:`.read_mcstas_maps` reads McStas.
 """
 
 from collections.abc import Mapping
@@ -12,38 +12,43 @@ import scipp as sc
 import tof
 
 
-def read_tof_map(
-    name: str,
-    tof_result: tof.Result,
-    bins: Mapping[str, sc.Variable],
+def read_tof_maps(
+    tof_run: tof.Result,
+    bins: Mapping[str, Mapping[str, sc.Variable]],
     *,
     transmitted: bool = True,
-) -> sc.DataArray:
-    """Count the neutrons of the first pulse at a component of a tof run, on any bins.
+) -> dict[str, sc.DataArray]:
+    """Count the neutrons of the first pulse at components of a tof run, on any bins.
 
     Parameters
     ----------
-    name:
-        The name of the component: a monitor, a ``tof.Detector``, or a chopper, a
-        ``tof.Chopper``, the only components a tof run has a reading of.
-    tof_result:
-        The tof run.
+    tof_run:
+        The tof run, what ``model.run()`` returns.
     bins:
-        The bin edges of each axis, by the name of a coordinate of the neutrons, such as
-        ``"toa"`` or ``"wavelength"``, in any unit that converts to the coordinate's.
+        The bin edges of each component, by its name, and of each axis, by the name of a
+        coordinate of the neutrons, such as ``"toa"`` or ``"wavelength"``, in any unit that
+        converts to the coordinate's. A component is a monitor, a ``tof.Detector``, or a chopper,
+        a ``tof.Chopper``, the only components a tof run has a reading of.
     transmitted:
-        True counts the neutrons the component lets through: of a chopper, those that pass its
+        True counts the neutrons a component lets through: of a chopper, those that pass its
         slits, as a McStas monitor just after it would see them. False counts all that reach
         it, also those a chopper blocks. A monitor blocks none: both count the same.
 
     Returns
     -------
     :
-        The neutrons per bin, in counts, with their Poisson variances: N for a bin of N
-        neutrons, an error of √N. It has one dimension per entry of ``bins``, in their order,
-        and ``bins`` as its coordinates, in the units given.
+        The neutrons per bin of each component, by name, in counts, with their Poisson
+        variances: N for a bin of N neutrons, an error of √N. Each has one dimension per entry of
+        its bins, in their order, and its bins as its coordinates, in the units given.
     """
-    neutrons = tof_result[name].data["pulse", 0]
+    return {name: _read_tof_map(name, tof_run, edges, transmitted) for name, edges in bins.items()}
+
+
+def _read_tof_map(
+    name: str, tof_run: tof.Result, bins: Mapping[str, sc.Variable], transmitted: bool
+) -> sc.DataArray:
+    """Count the neutrons of the first pulse at one component of a tof run."""
+    neutrons = tof_run[name].data["pulse", 0]
     blocked = neutrons.masks["blocked_by_others"]
     if transmitted and "blocked_by_me" in neutrons.masks:  # a chopper
         blocked = blocked | neutrons.masks["blocked_by_me"]

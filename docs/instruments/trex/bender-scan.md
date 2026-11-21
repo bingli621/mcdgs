@@ -80,7 +80,7 @@ parameters, so McStas compiles it once:
 <!-- fmt:on -->
 
 `plot_bender_scan` reads the map of the beam monitor of every scan point into scipp, along
-`b_rot`, and that of the run without the bender, both with `read_mcstas_map` (see [Read the output](../../how-to/read-the-output.md#into-scipp)). It sums each map over time,
+`b_rot`, and that of the run without the bender, both with `read_mcstas_maps` (see [Read the output](../../how-to/read-the-output.md#into-scipp)). It sums each map over time,
 and then over bands of 0.5 Å centered on 0.5, 1.0, … 9.5 Å: 19 bands, from 0.25 to 9.75 Å. The
 beam monitor covers just these, in bins of 0.02 Å, so the edge of every band is the edge of a
 bin, and each band sums 25 whole bins. The bins are independent, so their errors add in

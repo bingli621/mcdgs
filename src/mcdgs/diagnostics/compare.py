@@ -1,7 +1,7 @@
 """Two time and wavelength maps of one monitor, side by side: McStas and tof, or any two.
 
 Each model gives one time and wavelength map of the monitor, a scipp data array with its bin
-edges and its errors: :func:`.read_mcstas_map` that of McStas, in n/s, and :func:`.read_tof_map`
+edges and its errors: :func:`.read_mcstas_maps` that of McStas, in n/s, and :func:`.read_tof_maps`
 that of tof, in neutrons, both on the bins of the monitor (:func:`.monitor_bins`).
 
 One map:
@@ -184,7 +184,7 @@ class MonitorComparison:
     name:
         The name of the monitor.
     first, second:
-        The maps, as :func:`.read_mcstas_map`: (time bins, wavelength bins), with their bin
+        The maps, as :func:`.read_mcstas_maps`: (time bins, wavelength bins), with their bin
         edges, ``"toa"`` and ``"wavelength"``, evenly spaced, and their errors as variances.
     titles:
         Short names of the two maps, such as ``("McStas", "tof")``: the titles of the maps in
@@ -337,7 +337,7 @@ def mcstas_vs_tof(
     name:
         The name of the monitor, in both models.
     mcstas_map:
-        The map of McStas, in n/s, as :func:`.read_mcstas_map` reads it.
+        The map of McStas, in n/s, as :func:`.read_mcstas_maps` reads it.
     tof_counts:
         The map of tof on the same bins, in neutrons.
     ncount:

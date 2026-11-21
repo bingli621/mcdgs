@@ -55,8 +55,8 @@ and McStas runs it and saves the monitor in its run folder:
 
 tof builds its model from the same components: the `ESS_butterfly` of beam port W3 becomes tof's
 pulse `ess-cspec`, and the `Monitor_nD` a detector named `source_monitor`, 1.90431 m from the
-moderator in a straight line. `read_mcstas_map` reads the map of McStas in n/s per bin and
-`read_tof_map` counts the tof neutrons on the same bins:
+moderator in a straight line. `read_mcstas_maps` reads the map of McStas in n/s per bin and
+`read_tof_maps` counts the tof neutrons on the same bins:
 
 <!-- fmt:off -->
 ```python

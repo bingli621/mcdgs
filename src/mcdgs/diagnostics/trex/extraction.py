@@ -45,10 +45,10 @@ from mcdgs.instruments.trex.sources import source
 from mcdgs.mcstas import (
     McStasScriptDiagnostics,
     build_mcstas,
-    read_mcstas_map,
+    read_mcstas_maps,
 )
 from mcdgs.reduction.binning import monitor_bins
-from mcdgs.tof import build_tof, read_tof_map
+from mcdgs.tof import build_tof, read_tof_maps
 
 # McStas neutrons of the run with McStasScript's diagnostics, which lists every ray at each of its
 # three positions: about 180 MB at 1e6
@@ -235,7 +235,7 @@ def main(
         # McStasScript's diagram of the components, with the intensity and the rays before
         # each: a McStas run of its own, in a folder of its own, which also holds the monitors
         # --8<-- [start:diagram]
-        run, fig = diag.run_analysis(
+        mcstas_run, fig = diag.run_analysis(
             f"{run_name}_intensity",
             ncount=ncount,
             seed=seed,
@@ -249,17 +249,19 @@ def main(
         # stands for, the total of McStas over that of tof
 
         tof_model = build_tof(instrument, neutrons=neutrons, seed=seed)
-        tof_result = tof_model.run()
+        tof_run = tof_model.run()
 
-        source_bins = monitor_bins(instrument.source_monitor.bin_limits)
-        tof_source = read_tof_map("source_monitor", tof_result, source_bins)
-        mcstas_source = read_mcstas_map("source_monitor", run, source_bins)
+        bins = {
+            name: monitor_bins(getattr(instrument, name).bin_limits)
+            for name in ("source_monitor", "beam_monitor")
+        }
+        tof_maps = read_tof_maps(tof_run, bins)
+        mcstas_maps = read_mcstas_maps(mcstas_run, bins)
+        tof_source, mcstas_source = tof_maps["source_monitor"], mcstas_maps["source_monitor"]
         scale = compare.rescale_tof_to_mcstas(tof_source, mcstas_source)
 
         # at the beam monitor: tof with that scale, and the transmission of the guides on top
-        beam_bins = monitor_bins(instrument.beam_monitor.bin_limits)
-        tof_beam = read_tof_map("beam_monitor", tof_result, beam_bins)
-        mcstas_beam = read_mcstas_map("beam_monitor", run, beam_bins)
+        tof_beam, mcstas_beam = tof_maps["beam_monitor"], mcstas_maps["beam_monitor"]
 
         comparison = compare.mcstas_vs_tof(
             "beam_monitor", mcstas_beam, tof_beam, ncount, neutrons, scale, transmission

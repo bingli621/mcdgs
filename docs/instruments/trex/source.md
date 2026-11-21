@@ -51,7 +51,7 @@ and McStas runs it and saves the monitor in its run folder:
 
 tof builds its model from the same components: the `ESS_butterfly` becomes tof's pulse of beam
 port W7 and the `Monitor_nD` a detector named `source_monitor`. It gives each neutron's time and
-wavelength there. `read_mcstas_map` reads the map of McStas in n/s per bin and `read_tof_map`
+wavelength there. `read_mcstas_maps` reads the map of McStas in n/s per bin and `read_tof_maps`
 counts the tof neutrons on the same bins:
 
 <!-- fmt:off -->

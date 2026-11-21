@@ -9,7 +9,7 @@ from .mcstasscript_diagnostics import McStasScriptDiagnostics
 from .reader import (
     numeric_parameters,
     read_events,
-    read_mcstas_map,
+    read_mcstas_maps,
     read_pixels,
 )
 from .runs import Run, RunType, monitor_file, recorded_instr_params
@@ -27,7 +27,7 @@ __all__ = [
     "numeric_parameters",
     "random_seed",
     "read_events",
-    "read_mcstas_map",
+    "read_mcstas_maps",
     "read_pixels",
     "recorded_instr_params",
 ]

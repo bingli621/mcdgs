@@ -98,7 +98,7 @@ both have the same total at the beam monitor:
 T = McStas total at the beam monitor / (tof neutrons at the beam monitor × scale)
 ```
 
-Each step is a function of its own: `read_mcstas_map` and `read_tof_map` read each monitor of
+Each step is a function of its own: `read_mcstas_maps` and `read_tof_maps` read the monitors of
 both models, `rescale_tof_to_mcstas` sets the scale at the source monitor and,
 divided by the scale, tunes T at the beam monitor unless it is given, and `mcstas_vs_tof` scales
 tof by both:

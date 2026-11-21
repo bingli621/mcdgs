@@ -39,7 +39,7 @@ from mcdgs.diagnostics import cli, compare
 from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
 from mcdgs.instruments.trex.monitors import sample_monitor
 from mcdgs.instruments.trex.sources import wavelength_band
-from mcdgs.mcstas import Simulation, read_mcstas_map
+from mcdgs.mcstas import Simulation, read_mcstas_maps
 from mcdgs.reduction.binning import monitor_bins
 
 MONITOR = "sample_monitor"  # where both sources are compared
@@ -141,7 +141,7 @@ class SourceRun:
     seconds:
         The wall time of the run, compiling included, in s.
     sample_map:
-        The map of the sample monitor, as :func:`.read_mcstas_map`: in n/s per bin, (time bins,
+        The map of the sample monitor, as :func:`.read_mcstas_maps`: in n/s per bin, (time bins,
         wavelength bins), with its bin edges, ``"toa"`` and ``"wavelength"``, evenly spaced, and
         its errors as variances.
     acceptance:
@@ -205,7 +205,8 @@ def run_source(
     sim = Simulation(instrument)
     run = sim.run(folder_name=folder_name, ncount=ncount, seed=seed)
     seconds = time.perf_counter() - start
-    sample_map = read_mcstas_map(MONITOR, run, monitor_bins(instrument.sample_monitor.bin_limits))
+    bins = {MONITOR: monitor_bins(instrument.sample_monitor.bin_limits)}
+    sample_map = read_mcstas_maps(run, bins)[MONITOR]
     region = run.folder / f"{instrument.source.name}.json"  # the masked source writes its region
     acceptance = json.loads(region.read_text())["acceptance"] if region.is_file() else None
     return SourceRun(instrument.source.component_name, run.folder, seconds, sample_map, acceptance)

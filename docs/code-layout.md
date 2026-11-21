@@ -41,13 +41,13 @@ classDiagram
         <<package>>
         build_mcstas()
         Simulation
-        read_mcstas_map()
+        read_mcstas_maps()
         read_pixels()
     }
     class tof {
         <<package>>
         build_tof()
-        read_tof_map()
+        read_tof_maps()
         acceptance_diagram()
         time_distance_diagram()
     }

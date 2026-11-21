@@ -40,9 +40,9 @@ from mcdgs.instruments.trex.guides.bispectral import arm_guide_4, guide_4a
 from mcdgs.instruments.trex.guides.extraction import guides_extraction
 from mcdgs.instruments.trex.monitors import beam_monitor, source_monitor
 from mcdgs.instruments.trex.sources import source
-from mcdgs.mcstas import Simulation, read_mcstas_map
+from mcdgs.mcstas import Simulation, read_mcstas_maps
 from mcdgs.reduction.binning import monitor_bins
-from mcdgs.tof import build_tof, read_tof_map
+from mcdgs.tof import build_tof, read_tof_maps
 
 # 1/Å: C of the example efficiency ε = C λ, 1e-4 at 2 Å, within the 1e-5 to 1e-3 of beam
 # monitors
@@ -217,28 +217,30 @@ def main(
     # --8<-- [start:run_mcstas]
     # run McStas
     sim = Simulation(instrument)
-    run = sim.run(folder_name=name, ncount=ncount, seed=seed)
+    mcstas_run = sim.run(folder_name=name, ncount=ncount, seed=seed)
     # --8<-- [end:run_mcstas]
 
     # --8<-- [start:run_tof]
     # run tof, then read the monitors of both on the bins of the McStas maps: time, wavelength
     tof_model = build_tof(instrument, neutrons=neutrons, seed=seed)
-    tof_result = tof_model.run()
-    source_bins = monitor_bins(instrument.source_monitor.bin_limits)  # read from the monitors
-    bins = monitor_bins(instrument.beam_monitor.bin_limits)
+    tof_run = tof_model.run()
+    bins = {  # read from the monitors
+        name: monitor_bins(getattr(instrument, name).bin_limits)
+        for name in ("source_monitor", "beam_monitor")
+    }
+    mcstas_maps = read_mcstas_maps(mcstas_run, bins)
+    tof_maps = read_tof_maps(tof_run, bins)
     # --8<-- [end:run_tof]
 
     # --8<-- [start:transmission]
     # tof's counts are scaled to the total of McStas at the source monitor, in n/s; at the beam
     # monitor, the same scale, and the transmission on top of it, tuned if it is None
-    mcstas_source = read_mcstas_map("source_monitor", run, source_bins)
-    tof_source = read_tof_map("source_monitor", tof_result, source_bins)
+    mcstas_source, tof_source = mcstas_maps["source_monitor"], tof_maps["source_monitor"]
     scale = compare.rescale_tof_to_mcstas(tof_source, mcstas_source)
     at_source = compare.mcstas_vs_tof(
         "source_monitor", mcstas_source, tof_source, ncount, neutrons, scale
     )
-    mcstas_beam = read_mcstas_map("beam_monitor", run, bins)
-    tof_beam = read_tof_map("beam_monitor", tof_result, bins)
+    mcstas_beam, tof_beam = mcstas_maps["beam_monitor"], tof_maps["beam_monitor"]
     if transmission is None:  # tuned: the transmission that gives tof the total of McStas
         transmission = compare.rescale_tof_to_mcstas(tof_beam, mcstas_beam) / scale
     comparison = compare.mcstas_vs_tof(
@@ -255,7 +257,9 @@ def main(
         f"{scale:.4g} n/s per tof neutron, transmission {transmission:.4g}"
     )
     monitor = instrument.beam_monitor
-    _print_rates(comparison.first.values, bins, area=monitor.xwidth * monitor.yheight * 1e4)
+    _print_rates(
+        comparison.first.values, bins["beam_monitor"], area=monitor.xwidth * monitor.yheight * 1e4
+    )
 
     fig = compare.plot_comparison(comparison, "T-Rex flux at the beam monitor after guide 4a")
     return cli.save_figure(fig, cli.output_folder(out, name) / f"{name}.png")
