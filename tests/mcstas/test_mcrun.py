@@ -6,7 +6,16 @@ import pytest
 
 from mcdgs.instruments.trex.model import TRex
 from mcdgs.mcstas import build_mcstas
-from mcdgs.mcstas.mcrun import LOG_FILE, instrument_parameters, mcrun_command, run_mcrun
+from mcdgs.mcstas.mcrun import (
+    LOG_FILE,
+    check_scan,
+    instrument_parameters,
+    mcrun_command,
+    random_seed,
+    run_mcrun,
+)
+
+SPLIT = Path(__file__).parents[1] / "data" / "split_run" / "split"  # a scan of two values
 
 
 def test_the_command_has_the_settings_then_the_instrument_then_its_parameters():
@@ -39,6 +48,40 @@ def test_the_command_has_the_settings_then_the_instrument_then_its_parameters():
 def test_without_ncount_seed_and_mpi_mcrun_keeps_its_defaults():
     command = mcrun_command("trex.instr", Path("a"), {}, nexus=False)
     assert command == ["mcrun", "-c", "-d", "a", "trex.instr"]
+
+
+def test_a_scan_is_mcrun_s_list_scan_with_its_values_separated_by_commas():
+    command = mcrun_command(
+        "trex.instr", Path("a"), {"b_rot": [-0.6, 0.0], "bender_in": 1}, seed=1, scan_split="auto"
+    )
+    assert command == [
+        "mcrun",
+        "-c",
+        "--format=NeXus",
+        "--seed=1",
+        "-L",
+        "--scan_split=auto",
+        "-d",
+        "a",
+        "trex.instr",
+        "b_rot=-0.6,0.0",
+        "bender_in=1",
+    ]
+
+
+def test_a_random_seed_is_one_mcrun_accepts_for_a_million_values():
+    seeds = [random_seed() for _ in range(20)]
+    assert all(isinstance(seed, int) and 0 < seed < 10**9 for seed in seeds)
+    assert len(set(seeds)) > 1
+
+
+def test_a_scan_with_an_entry_per_value_passes():
+    check_scan(SPLIT, "width", [0.1, 0.05])
+
+
+def test_a_scan_that_misses_a_value_raises():
+    with pytest.raises(RuntimeError, match="ran 2 of the 3 values of width"):
+        check_scan(SPLIT, "width", [0.1, 0.05, 0.02])
 
 
 def test_the_parameters_are_those_mcstasscript_would_give_mcrun(tmp_path):

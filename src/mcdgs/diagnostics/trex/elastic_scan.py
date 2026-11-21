@@ -116,7 +116,7 @@ def simulate(omegas: np.ndarray = OMEGAS, beam_run: str = plane.TO_SAMPLE, seed:
         The name of the run to the sample whose beam to start from: by default that of
         :mod:`.diagnostics.trex.elastic_plane`.
     seed:
-        Seed of the random numbers; angle ``n`` takes ``seed + n + 1``.
+        Seed of the random numbers; angle ``n`` takes ``seed + n * 1024``.
 
     Returns
     -------

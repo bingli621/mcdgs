@@ -7,7 +7,7 @@ what it writes.
 
 ::: mcdgs.mcstas.mcstasscript_diagnostics
 
-::: mcdgs.mcstas.scan
+::: mcdgs.mcstas.mcrun
 
 ::: mcdgs.mcstas.builder
 

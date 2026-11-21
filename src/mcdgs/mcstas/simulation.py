@@ -10,9 +10,8 @@ write into. It offers:
 - ``scan_from_sample``: one run per value from that beam file, in parallel.
 
 McStasScript builds the instrument (``set_parameters``, ``run_to``, ``run_from``) and writes its
-``.instr``; mcrun compiles and runs it (:mod:`.mcstas.mcrun`). A scan still runs McStasScript's
-``backengine`` once per value and merges the outputs into one file, after compiling the
-instrument once: see :mod:`.mcstas.scan`.
+``.instr``; mcrun compiles and runs it (:mod:`.mcstas.mcrun`). A scan is mcrun's own list scan,
+its values run in parallel (``-L --scan_split``), into one file with an entry per value.
 
 Each of them returns the :class:`.Run` it made, which is also left as ``run.json`` in the
 folder of the run.
@@ -35,9 +34,14 @@ from numpy.typing import ArrayLike
 
 from mcdgs.core import Instrument
 from mcdgs.mcstas.builder import build_mcstas
-from mcdgs.mcstas.mcrun import instrument_parameters, mcrun_command, run_mcrun
+from mcdgs.mcstas.mcrun import (
+    check_scan,
+    instrument_parameters,
+    mcrun_command,
+    random_seed,
+    run_mcrun,
+)
 from mcdgs.mcstas.runs import BEAM_FILE, Run, RunType, recorded_instr_params
-from mcdgs.mcstas.scan import random_seed, run_points_in_parallel
 from mcdgs.mcstas.workspace import Workspace
 
 SAMPLE_POS = "sample_pos"  # the component a split run cuts the beam at
@@ -115,8 +119,8 @@ class Simulation:
             What the run does.
         instr_params:
             The instrument parameters given to the run, of a scan those other than
-            ``variable``. They are recorded, and set unless the run is a scan, whose points
-            each set their own. If ``None``, none: all keep the instrument's values.
+            ``variable``. They are recorded and set. If ``None``, none: all keep the
+            instrument's values.
         ncount:
             Number of neutrons, recorded. If ``None``, as from the sample, it is not.
         seed:
@@ -142,8 +146,7 @@ class Simulation:
         folder = self.workspace.new_run_folder(folder_name, label)
         input_path = self.workspace.build_folder(self.instrument.name)
         inst = build_mcstas(self.instrument, input_path=input_path)
-        if variable is None:
-            inst.set_parameters(**instr_params)  # the rest keep the instrument's values
+        inst.set_parameters(**instr_params)  # the rest keep the instrument's values
         run = Run(
             folder=folder,
             instrument=self.instrument.name,
@@ -208,7 +211,7 @@ class Simulation:
     ) -> None:
         """Give a run that McStasScript starts itself its McStasScript settings.
 
-        These are the runs of :class:`.McStasScriptDiagnostics`, and the points of a scan.
+        These are the runs of :class:`.McStasScriptDiagnostics`.
 
         Parameters
         ----------
@@ -236,10 +239,18 @@ class Simulation:
         )
 
     @staticmethod
-    def _run_once(
-        run: Run, inst: McStas_instr, mpi: int | str | None, custom_flags: str | None = None
+    def _run_mcrun(
+        run: Run,
+        inst: McStas_instr,
+        mpi: int | str | None = None,
+        custom_flags: str | None = None,
+        n_jobs: int | None = None,
     ) -> Run:
-        """Write the instrument, run it once with mcrun, then save and return the finished record.
+        """Write the instrument, run it with mcrun, then save and return the finished record.
+
+        A scan, a run with a ``variable``, is mcrun's own list scan of its ``values``, which
+        run in parallel; a scan of one value is a single run, whose seed is that of the first
+        value of a scan.
 
         Parameters
         ----------
@@ -248,29 +259,38 @@ class Simulation:
         inst:
             The McStasScript instrument, as :meth:`_prepare` builds it, cut for a split run.
         mpi:
-            Number of MPI processes, or ``"auto"``. If ``None``, no MPI.
+            Number of MPI processes, or ``"auto"``. If ``None``, no MPI, as for a scan.
         custom_flags:
             Extra flags for mcrun, as one string.
+        n_jobs:
+            Of a scan, the number of values run at a time. If ``None``, the number of cores less
+            one.
+
+        Raises
+        ------
+        RuntimeError
+            If mcrun fails, or a scan misses a value.
         """
         inst.write_full_instrument()  # the .instr, in the build folder
+        parameters = instrument_parameters(inst)
+        scan_split: int | str | None = None
+        if run.variable is not None and run.values is not None:
+            many = len(run.values) > 1
+            parameters[run.variable] = list(run.values) if many else run.values[0]
+            scan_split = (n_jobs or "auto") if many else None
         command = mcrun_command(
             f"{inst.name}.instr",
             run.folder,
-            instrument_parameters(inst),
+            parameters,
             ncount=run.ncount,
             seed=run.seed,
             mpi=mpi,
+            scan_split=scan_split,
             custom_flags=shlex.split(custom_flags or ""),
         )
         run_mcrun(command, cwd=Path(inst.input_path), folder=run.folder)  # compiles there too
-        return run.finish()
-
-    @staticmethod
-    def _run_points(
-        run: Run, inst: McStas_instr, points: list[dict[str, float]], n_jobs: int | None
-    ) -> Run:
-        """Run McStas once per point of a scan, then save and return the finished run's record."""
-        run_points_in_parallel(inst, run.folder, points, seed=run.seed, n_jobs=n_jobs)
+        if run.variable is not None and run.values is not None:
+            check_scan(run.folder, run.variable, run.values)
         return run.finish()
 
     def _check_sample_pos(self) -> None:
@@ -389,7 +409,7 @@ class Simulation:
             The run, with its file ``data_file``, ``<runs folder>/<folder>/mccode.h5``.
         """
         run, inst = self._prepare(folder_name, RunType.RUN, instr_params, ncount=ncount, seed=seed)
-        return self._run_once(run, inst, mpi, custom_flags)
+        return self._run_mcrun(run, inst, mpi, custom_flags)
 
     def scan(
         self,
@@ -404,7 +424,9 @@ class Simulation:
     ) -> Run:
         """Simulate source -> detector for every value of an instrument parameter.
 
-        The values run in parallel as single-process mcrun jobs.
+        It is mcrun's own list scan: the values run in parallel, without MPI, into one file.
+        mcrun counts a value only if the instrument has a histogram monitor, which prints its
+        ``Detector:`` line: with event lists alone, it skips every value.
 
         Parameters
         ----------
@@ -417,10 +439,10 @@ class Simulation:
         ncount:
             Number of neutrons per value.
         n_jobs:
-            Number of jobs at a time. If ``None``, the number of cores.
+            Number of values run at a time. If ``None``, the number of cores less one.
         seed:
-            Random seed; value ``n`` gets ``seed + n + 1``, so the jobs do not repeat each
-            other's random numbers. If ``None``, a random seed.
+            Random seed; value ``n`` gets ``seed + n * 1024``, as mcrun gives it, so the values
+            do not repeat each other's random numbers. If ``None``, a random seed.
         custom_flags:
             Extra flags for mcrun.
         **instr_params:
@@ -436,6 +458,8 @@ class Simulation:
         ------
         KeyError
             If a name is not an instrument parameter, before anything runs.
+        RuntimeError
+            If mcrun fails, or skips a value.
         """
         points = self.get_scan_points(variable, values, instr_params)  # checked before anything
         run, inst = self._prepare(
@@ -447,9 +471,8 @@ class Simulation:
             variable=variable,
             values=[point[variable] for point in points],
         )
-        # no MPI: the points run in parallel instead
-        self._set_mcstasscript_settings(inst, run, mpi=None, custom_flags=custom_flags)
-        return self._run_points(run, inst, points, n_jobs)
+        # no MPI: the values run in parallel instead
+        return self._run_mcrun(run, inst, custom_flags=custom_flags, n_jobs=n_jobs)
 
     def run_to_sample(
         self,
@@ -504,7 +527,7 @@ class Simulation:
             # default to the raw weights of mode 2, which are deprecated
             weight_mode=1,
         )
-        run = self._run_once(run, inst, mpi)
+        run = self._run_mcrun(run, inst, mpi)
         self.beam_run = run.name
         return run
 
@@ -551,7 +574,7 @@ class Simulation:
         run, inst = self._prepare_from_sample(
             folder_name, RunType.RUN_FROM_SAMPLE, instr_params, beam_run, seed=seed
         )
-        return self._run_once(run, inst, mpi)
+        return self._run_mcrun(run, inst, mpi)
 
     def scan_from_sample(
         self,
@@ -565,8 +588,10 @@ class Simulation:
     ) -> Run:
         """Simulate ``sample_pos`` -> detector from a beam file, for every value of a parameter.
 
-        This is part 2 of a split run, for a scan. The values run in parallel as single-process
-        mcrun jobs, all starting from the same beam file.
+        This is part 2 of a split run, for a scan. It is mcrun's own list scan: the values run in
+        parallel, without MPI, all starting from the same beam file. mcrun counts a value only if
+        the instrument has a histogram monitor after ``sample_pos``, which prints its
+        ``Detector:`` line: with event lists alone, it skips every value.
 
         Parameters
         ----------
@@ -580,10 +605,10 @@ class Simulation:
             Name of the run to the sample whose beam to start from, in the runs folder of the
             workspace. If ``None``, :attr:`beam_run`, the last one of this simulation.
         n_jobs:
-            Number of jobs at a time. If ``None``, the number of cores.
+            Number of values run at a time. If ``None``, the number of cores less one.
         seed:
-            Random seed; value ``n`` gets ``seed + n + 1``, so the jobs do not repeat each
-            other's random numbers. If ``None``, a random seed.
+            Random seed; value ``n`` gets ``seed + n * 1024``, as mcrun gives it, so the values
+            do not repeat each other's random numbers. If ``None``, a random seed.
         **instr_params:
             The other instrument parameters by McStas name.
 
@@ -601,6 +626,8 @@ class Simulation:
             If the instrument has no ``sample_pos``, before anything runs.
         FileNotFoundError
             If there is no run to the sample to start from, before anything runs.
+        RuntimeError
+            If mcrun fails, or skips a value.
         """
         points = self.get_scan_points(variable, values, instr_params)  # checked before anything
         run, inst = self._prepare_from_sample(
@@ -612,6 +639,5 @@ class Simulation:
             variable=variable,
             values=[point[variable] for point in points],
         )
-        # no MPI: the points run in parallel instead
-        self._set_mcstasscript_settings(inst, run, mpi=None)
-        return self._run_points(run, inst, points, n_jobs)
+        # no MPI: the values run in parallel instead
+        return self._run_mcrun(run, inst, n_jobs=n_jobs)

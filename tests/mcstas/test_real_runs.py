@@ -39,6 +39,16 @@ class _Small(Instrument):
         self.origin = Progress_bar()
         self.source = ESS_butterfly(Lmin=2, Lmax=4, dist=2, focus_xw=0.05, focus_yh=0.05)
         self.sample_pos = Arm(at=[0, 0, 2], rotated=[0, 0.5, 0])  # the detector stays in the beam
+        # a histogram, after sample_pos: mcrun counts a value of a scan only if one prints its
+        # "Detector:" line, which the event list of the detector does not
+        self.monitor = Monitor_nD(
+            xwidth=0.2,
+            yheight=0.2,
+            options="t limits=[0 0.1] bins=10",
+            restore_neutron=1,
+            at=[0, 0, DETECTOR_AT / 2],
+            relative="sample_pos",
+        )
         self.detector = Monitor_nD(
             xwidth="width",
             yheight=0.1,
@@ -72,10 +82,11 @@ def test_a_scan_runs_each_point_with_its_own_values_and_seed(sim):
     points = read_pixels(run.folder, "detector", "source", "sample_pos")
     assert [params["width"] for params, _ in points] == [0.1, 0.05]
     with h5py.File(run.data_file) as f:
-        assert [f[f"entry{n}/simulation"].attrs["Seed"] for n in (1, 2)] == [b"2", b"3"]
+        # mcrun's seeds: seed + n * 1024
+        assert [f[f"entry{n}/simulation"].attrs["Seed"] for n in (1, 2)] == [b"1", b"1025"]
     narrow, wide = points[1][1].sum().value, points[0][1].sum().value
     assert narrow < wide  # the instrument parameter reached McStas
-    assert not (run.folder / "point_0000").exists()  # merged, then removed
+    assert not (run.folder / "0").exists()  # mcrun merged the values, then removed them
     assert Run.load(run.folder) == run
     assert (run.run_type, run.variable, run.values) == (RunType.SCAN, "width", [0.1, 0.05])
     assert run.instr_params == {} and run.seed == 1  # the variable is in the values

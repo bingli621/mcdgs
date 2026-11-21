@@ -5,7 +5,6 @@
 - :func:`read_events` reads the neutrons of a detector, by pixel, with mcstastox.
 - :func:`read_pixels` reads the detector pixels of every scan point, with mcstastox.
 - :func:`numeric_parameters` keeps the instrument parameters of a file that are numbers.
-- :func:`merge_entries` merges single-run files into one scan file.
 
 Nothing here knows an instrument: the components to read are named by the caller.
 
@@ -15,7 +14,7 @@ a single run, so the maps of a scan are read from here; :func:`read_monitor_map`
 :func:`.read_mcstas_map` does, in n/s per bin on the bin edges of :func:`.monitor_bins`.
 """
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
@@ -269,25 +268,3 @@ def read_pixels(
             grouped = _export_events(data, folder, detector, source, sample, beam_direction)
         points.append((params, grouped.bins.sum()))  # events are grouped by pixel id
     return points
-
-
-def merge_entries(files: Iterable[str | Path], merged: Path) -> Path:
-    """Merge single-entry McStas files into one scan file.
-
-    Parameters
-    ----------
-    files:
-        McStas NeXus files, each with one entry ``entry1``.
-    merged:
-        File to write, overwritten if it exists.
-
-    Returns
-    -------
-    :
-        ``merged``, with the entries ``entry1``, ``entry2``, ... in the order of ``files``.
-    """
-    with h5py.File(merged, "w") as out:
-        for n, file in enumerate(files, start=1):
-            with h5py.File(file) as part:
-                part.copy(part["entry1"], out, name=f"entry{n}")
-    return merged

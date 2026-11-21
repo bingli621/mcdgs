@@ -7,7 +7,6 @@ import scipp as sc
 
 from mcdgs.mcstas import (
     RunType,
-    merge_entries,
     numeric_parameters,
     read_events,
     read_monitor_map,
@@ -20,18 +19,6 @@ SPLIT = Path(__file__).parents[1] / "data" / "split_run" / "split"  # from mcsta
 
 def test_only_the_numeric_parameters_are_kept():
     assert numeric_parameters({"omega": "5", "file": "beam.mcpl", "x": None}) == {"omega": 5.0}
-
-
-def test_single_run_files_become_one_entry_each_in_their_order(tmp_path):
-    files = []
-    for omega in (-5, 5):
-        files.append(tmp_path / f"run_{omega}.h5")
-        with h5py.File(files[-1], "w") as f:
-            f.create_group("entry1").attrs["omega"] = omega
-
-    with h5py.File(merge_entries(files, tmp_path / "scan.h5")) as scan:
-        assert list(scan) == ["entry1", "entry2"]
-        assert [scan[e].attrs["omega"] for e in scan] == [-5, 5]
 
 
 def test_read_pixels_needs_the_beam_direction_for_a_file_without_a_source():
