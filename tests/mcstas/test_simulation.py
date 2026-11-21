@@ -97,6 +97,7 @@ def test_the_record_of_a_scan_has_its_variable_apart_from_the_other_parameters(t
     )
     assert run.folder.name.endswith("_scan_omega_from_sample")
     assert (run.variable, run.values) == ("omega", [0.0, 1.0])
+    assert run.variable_unit == "deg"  # as the instrument parameter has it
     assert "omega" not in run.instr_params and run.instr_params["bender_in"] == 1.0
     assert run.started.tzinfo is not None
 

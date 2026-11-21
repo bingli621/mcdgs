@@ -80,6 +80,9 @@ class Run:
         The instrument parameter of a scan, else ``None``.
     values:
         The values of ``variable``, in the order of the entries of the file, else ``None``.
+    variable_unit:
+        The unit of ``variable``, as its instrument parameter has it, ``""`` without one.
+        ``None`` if the run is no scan, and in a record saved before the unit was recorded.
     beam_run:
         The name of the run to the sample whose beam a run from the sample started from, in
         the same runs folder, else ``None``.
@@ -95,6 +98,7 @@ class Run:
     seed: int | None = None
     variable: str | None = None
     values: list[float] | None = None
+    variable_unit: str | None = None
     beam_run: str | None = None
 
     @property

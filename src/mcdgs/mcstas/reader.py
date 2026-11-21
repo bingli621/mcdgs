@@ -104,9 +104,7 @@ def read_mcstas_map(
     return map_on_bins(name, intensity, error, bins)
 
 
-def read_scan_maps(
-    run: Run, name: str, bins: Mapping[str, sc.Variable], unit: str | None = None
-) -> sc.DataArray:
+def read_scan_maps(name: str, run: Run, bins: Mapping[str, sc.Variable]) -> sc.DataArray:
     """Read the map of a monitor of every point of a scan, as :func:`.read_mcstas_map` reads one.
 
     Each entry is read with mcstastox. Its ``get_component_data`` finds no map of a
@@ -115,23 +113,21 @@ def read_scan_maps(
 
     Parameters
     ----------
-    run:
-        The scan, as :meth:`.Simulation.scan` returns it or :meth:`.Run.load` reads it.
     name:
         The name of the monitor component.
+    run:
+        The scan, as :meth:`.Simulation.scan` returns it or :meth:`.Run.load` reads it.
     bins:
         The bin edges of the map, by coordinate, in the order of the axes of the monitor, such as
         ``"toa"`` then ``"wavelength"`` of ``"time ... lambda ..."``: as :func:`.monitor_bins`
         gives them from its ``bin_limits``.
-    unit:
-        The unit of the scan variable, which the record of the run does not keep.
 
     Returns
     -------
     :
         The intensity per bin, in n/s, with the square of its error as variances, along the scan
-        variable, with its values as the coordinate, in the order of the scan, then the
-        dimensions of ``bins``, with the bin edges.
+        variable, with its values as the coordinate, in the unit of the record of the run and
+        the order of the scan, then the dimensions of ``bins``, with the bin edges.
 
     Raises
     ------
@@ -148,7 +144,9 @@ def read_scan_maps(
             error = np.asarray(group["errors"], dtype=float)
         maps.append(map_on_bins(name, intensity, error, bins))
     scan = sc.concat(maps, run.variable)
-    scan.coords[run.variable] = sc.array(dims=[run.variable], values=run.values, unit=unit)
+    scan.coords[run.variable] = sc.array(
+        dims=[run.variable], values=run.values, unit=run.variable_unit
+    )
     return scan
 
 

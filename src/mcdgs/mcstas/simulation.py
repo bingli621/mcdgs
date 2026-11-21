@@ -126,7 +126,7 @@ class Simulation:
         seed:
             Random seed, recorded. If ``None``, McStas picks one.
         variable, values:
-            The instrument parameter of a scan and its values.
+            The instrument parameter of a scan and its values. Its unit is recorded with them.
         beam_run:
             The name of the run to the sample a run from the sample starts from.
 
@@ -147,6 +147,7 @@ class Simulation:
         input_path = self.workspace.build_folder(self.instrument.name)
         inst = build_mcstas(self.instrument, input_path=input_path)
         inst.set_parameters(**instr_params)  # the rest keep the instrument's values
+        units = {param.name: param.unit for param in self.instrument.instr_params}
         run = Run(
             folder=folder,
             instrument=self.instrument.name,
@@ -159,6 +160,7 @@ class Simulation:
             seed=seed,
             variable=variable,
             values=values,
+            variable_unit=None if variable is None else units[variable],
             beam_run=beam_run,
         )
         return run, inst

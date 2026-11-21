@@ -212,7 +212,7 @@ def plot_bender_scan(
     """
     bins = monitor_bins(instrument.beam_monitor.bin_limits)
     # --8<-- [start:read]
-    bender_in = read_scan_maps(bender_in_scan, "beam_monitor", bins, unit="deg")
+    bender_in = read_scan_maps("beam_monitor", bender_in_scan, bins)
     bender_out = read_mcstas_map("beam_monitor", ms.load_data(bender_out_run.folder), bins)
     # over time, then over the bins of each band: the edges of the bands, 0.25, 0.75, ...
     # 9.75 Å, are edges of bins, so each bin goes whole to one band, and the variances add

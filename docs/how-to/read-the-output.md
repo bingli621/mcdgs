@@ -68,11 +68,11 @@ spectrum = sample_map.sum("toa")  # the variances add
 ```
 
 [`read_scan_maps`](../reference/mcstas.md) reads the same map of every entry of a scan, with
-mcstastox, along the scan variable, with the values of the scan as its coordinate. The record of
-the run keeps no unit, so it is given:
+mcstastox, along the scan variable, with the values of the scan as its coordinate, in the unit the
+record of the run keeps for it:
 
 ```python
-scan_maps = read_scan_maps(scan, "sample_monitor", bins, unit="deg")  # (omega, toa, wavelength)
+scan_maps = read_scan_maps("sample_monitor", scan, bins)  # (omega, toa, wavelength)
 ```
 
 `plot_bender_scan` in [`mcdgs.diagnostics.trex.bender_scan`](../reference/diagnostics.md) reads a

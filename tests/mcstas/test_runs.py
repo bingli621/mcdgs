@@ -45,6 +45,14 @@ def test_a_saved_run_is_read_back_as_it_was(tmp_path):
     assert Run.load(str(tmp_path)) == scan
 
 
+def test_a_scan_recorded_before_its_unit_was_has_none(tmp_path):
+    _scan(tmp_path).save()
+    record = json.loads((tmp_path / "run.json").read_text())
+    del record["variable_unit"]
+    (tmp_path / "run.json").write_text(json.dumps(record))
+    assert Run.load(tmp_path).variable_unit is None
+
+
 def test_a_run_without_the_optional_values_is_read_back_as_it_was(tmp_path):
     run = Run(tmp_path, "TRex", RunType.RUN, STARTED, {"omega": 5.0}, ncount=1e7)
     run.save()

@@ -114,4 +114,4 @@ TOA_BINS = {"toa": sc.linspace("toa", 0.0, 0.015, 4, unit="s")}
 
 def test_a_run_that_is_no_scan_has_no_scan_maps(tmp_path, finished_run):
     with pytest.raises(ValueError, match="not a scan"):
-        read_scan_maps(finished_run(tmp_path / "run", 0), "sample_monitor", TOA_BINS)
+        read_scan_maps("sample_monitor", finished_run(tmp_path / "run", 0), TOA_BINS)
