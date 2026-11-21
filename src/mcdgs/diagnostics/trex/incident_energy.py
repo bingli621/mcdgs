@@ -34,7 +34,6 @@ graph. Run the module to do it::
 from pathlib import Path
 
 import matplotlib.pyplot as plt
-import mcstasscript as ms
 import scipp as sc
 from matplotlib.figure import Figure
 from scippneutron.conversion import tof as tof_kernels
@@ -364,10 +363,9 @@ def main(
     instrument = define_instrument()
     name = "trex_determine_ei"
 
-    # run McStas and load its monitors, in n/s per bin
+    # run McStas
     sim = Simulation(instrument)
     run = sim.run(folder_name=name, ncount=ncount, seed=seed)
-    mcstas_data = ms.load_data(run.folder)
 
     # run tof; its counts are scaled to the total of McStas at the source monitor, in n/s, and,
     # at the pre-sample and beamstop monitors, by the transmission on top of it
@@ -377,7 +375,7 @@ def main(
         name: monitor_bins(getattr(instrument, name).bin_limits)
         for name in ("source_monitor", *MONITORS)
     }
-    mcstas_maps = {name: read_mcstas_map(name, mcstas_data, edges) for name, edges in bins.items()}
+    mcstas_maps = {name: read_mcstas_map(name, run, edges) for name, edges in bins.items()}
     tof_maps = {name: read_tof_map(name, tof_result, edges) for name, edges in bins.items()}
     scale = compare.rescale_tof_to_mcstas(tof_maps["source_monitor"], mcstas_maps["source_monitor"])
     if transmission is None:  # tuned at the pre-sample monitor, and kept at the beamstop monitor

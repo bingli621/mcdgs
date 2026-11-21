@@ -72,9 +72,9 @@ same object can go to both.
    the output of `mcrun`, `mcrun.log`.
 4. [`read_pixels`](reference/mcstas.md) or `h5py` reads that file. See
    [Read the output](how-to/read-the-output.md). [`read_mcstas_map`](reference/mcstas.md) reads
-   the time and wavelength map of a monitor, in n/s per bin, from the data McStasScript loads,
-   and [`read_scan_maps`](reference/mcstas.md) the same of each entry of a scan, with mcstastox,
-   since McStasScript loads only the first.
+   the time and wavelength map of a monitor of a run, in n/s per bin: of a single run as
+   McStasScript loads it, of a scan entry by entry with mcstastox, since McStasScript loads only
+   the first.
 
 ### With tof
 

@@ -21,8 +21,6 @@ the module for it::
 from dataclasses import dataclass
 from pathlib import Path
 
-import mcstasscript as ms
-
 from mcdgs.core import InstrParam, Instrument, param
 from mcdgs.core.components import (
     Arm,
@@ -252,17 +250,16 @@ def main(
 
         tof_model = build_tof(instrument, neutrons=neutrons, seed=seed)
         tof_result = tof_model.run()
-        mcstas_data = ms.load_data(run.folder)
 
         source_bins = monitor_bins(instrument.source_monitor.bin_limits)
         tof_source = read_tof_map("source_monitor", tof_result, source_bins)
-        mcstas_source = read_mcstas_map("source_monitor", mcstas_data, source_bins)
+        mcstas_source = read_mcstas_map("source_monitor", run, source_bins)
         scale = compare.rescale_tof_to_mcstas(tof_source, mcstas_source)
 
         # at the beam monitor: tof with that scale, and the transmission of the guides on top
         beam_bins = monitor_bins(instrument.beam_monitor.bin_limits)
         tof_beam = read_tof_map("beam_monitor", tof_result, beam_bins)
-        mcstas_beam = read_mcstas_map("beam_monitor", mcstas_data, beam_bins)
+        mcstas_beam = read_mcstas_map("beam_monitor", run, beam_bins)
 
         comparison = compare.mcstas_vs_tof(
             "beam_monitor", mcstas_beam, tof_beam, ncount, neutrons, scale, transmission

@@ -46,33 +46,31 @@ with h5py.File(scan.data_file) as file:
 !!! warning "McStasScript reads only the first entry of a scan"
 
     `ms.load_data(scan.folder)` reads `entry1` alone, the first value, without saying so. It
-    suits a single run; read a scan by its entries, as above, or with `read_scan_maps` below.
+    suits a single run; read a scan by its entries, as above, or with `read_mcstas_map` below.
 
 ### Into scipp
 
-[`read_mcstas_map`](../reference/mcstas.md) puts the map of a monitor of a single run, as
-McStasScript loads it, into [scipp](https://scipp.github.io), in n/s per bin, with the square of
-its errors as variances, on the bin edges of the monitor, which
-[`monitor_bins`](../reference/reduction.md) gives from its `bin_limits`:
+[`read_mcstas_map`](../reference/mcstas.md) reads the map of a monitor of a run into
+[scipp](https://scipp.github.io), in n/s per bin, with the square of its errors as variances, on
+the bin edges of the monitor, which [`monitor_bins`](../reference/reduction.md) gives from its
+`bin_limits`. It takes the record of the run: a single run it reads as McStasScript loads it, a
+scan entry by entry with mcstastox.
 
 ```python
-import mcstasscript as ms
-
 from mcdgs.instruments.trex.model import TRex
-from mcdgs.mcstas import read_mcstas_map, read_scan_maps
+from mcdgs.mcstas import read_mcstas_map
 from mcdgs.reduction.binning import monitor_bins
 
 bins = monitor_bins(TRex().sample_monitor.bin_limits)  # "toa" in s, "wavelength" in Å
-sample_map = read_mcstas_map("sample_monitor", ms.load_data(run.folder), bins)  # (toa, wavelength)
+sample_map = read_mcstas_map("sample_monitor", run, bins)  # (toa, wavelength)
 spectrum = sample_map.sum("toa")  # the variances add
 ```
 
-[`read_scan_maps`](../reference/mcstas.md) reads the same map of every entry of a scan, with
-mcstastox, along the scan variable, with the values of the scan as its coordinate, in the unit the
-record of the run keeps for it:
+Of a scan, the maps come along the scan variable, with the values of the scan as its coordinate,
+in the unit the record of the run keeps for it:
 
 ```python
-scan_maps = read_scan_maps("sample_monitor", scan, bins)  # (omega, toa, wavelength)
+scan_maps = read_mcstas_map("sample_monitor", scan, bins)  # (omega, toa, wavelength)
 ```
 
 `plot_bender_scan` in [`mcdgs.diagnostics.trex.bender_scan`](../reference/diagnostics.md) reads a

@@ -40,8 +40,8 @@ creates its components in beam order, with their positions.
 
 ## Running both models
 
-The same `TRexSource` object runs in McStas and in tof. McStas writes the instrument file, runs it
-and saves the monitor in its run folder, which McStasScript loads back:
+The same `TRexSource` object runs in McStas and in tof. McStasScript writes the instrument file,
+and McStas runs it and saves the monitor in its run folder:
 
 <!-- fmt:off -->
 ```python

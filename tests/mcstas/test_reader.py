@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import mcstasscript as ms
 import numpy as np
 import pytest
 import scipp as sc
@@ -10,7 +11,6 @@ from mcdgs.mcstas import (
     read_events,
     read_mcstas_map,
     read_pixels,
-    read_scan_maps,
 )
 
 BINS = {
@@ -29,33 +29,48 @@ def _monitor(name: str, shape: tuple[int, int]) -> McStasData:
     return data
 
 
-def test_the_map_of_the_named_monitor_is_read_as_time_by_wavelength():
+@pytest.fixture
+def loaded(tmp_path, finished_run, monkeypatch):
+    """loaded(data) -> a single run whose folder ``ms.load_data`` reads as ``data``."""
+
+    def make(data):
+        run = finished_run(tmp_path / "run", 0)
+        monkeypatch.setattr(
+            ms, "load_data", lambda folder: data if folder == str(run.folder) else []
+        )
+        return run
+
+    return make
+
+
+def test_the_map_of_the_named_monitor_is_read_as_time_by_wavelength(loaded):
     data = [_monitor("other", (2, 3)), _monitor("sample_monitor", (2, 3))]
     data[0].Intensity += 100
-    sample_map = read_mcstas_map("sample_monitor", data, BINS)
+    sample_map = read_mcstas_map("sample_monitor", loaded(data), BINS)
     assert sample_map.sizes == {"toa": 3, "wavelength": 2}  # time bins, wavelength bins
     np.testing.assert_array_equal(sample_map.values, [[0, 3], [1, 4], [2, 5]])
 
 
-def test_the_map_is_in_n_per_s_with_its_errors_and_its_bin_edges():
+def test_the_map_is_in_n_per_s_with_its_errors_and_its_bin_edges(loaded):
     data = [_monitor("sample_monitor", (2, 3))]
     data[0].Error *= 2
-    sample_map = read_mcstas_map("sample_monitor", data, BINS)
+    sample_map = read_mcstas_map("sample_monitor", loaded(data), BINS)
     assert sample_map.unit == "1/s"
     np.testing.assert_array_equal(sc.stddevs(sample_map).values, np.full((3, 2), 2.0))
     assert all(sc.identical(sample_map.coords[dim], BINS[dim]) for dim in BINS)
     assert sc.stddevs(sample_map.sum("toa")).values == pytest.approx([12**0.5] * 2)  # quadrature
 
 
-def test_a_map_on_other_bins_is_refused():
+def test_a_map_on_other_bins_is_refused(loaded):
+    run = loaded([_monitor("sample_monitor", (3, 2))])
     with pytest.raises(ValueError, match=r"sample_monitor: McStas has a map of \(2, 3\) bins"):
-        read_mcstas_map("sample_monitor", [_monitor("sample_monitor", (3, 2))], BINS)
+        read_mcstas_map("sample_monitor", run, BINS)
 
 
-def test_a_name_of_several_data_sets_is_refused():
-    data = [_monitor("sample_monitor", (2, 3)), _monitor("sample_monitor", (2, 3))]
+def test_a_name_of_several_data_sets_is_refused(loaded):
+    run = loaded([_monitor("sample_monitor", (2, 3)), _monitor("sample_monitor", (2, 3))])
     with pytest.raises(ValueError, match="sample_monitor: 2 data sets of that name"):
-        read_mcstas_map("sample_monitor", data, BINS)
+        read_mcstas_map("sample_monitor", run, BINS)
 
 
 SPLIT = Path(__file__).parents[1] / "data" / "split_run" / "split"  # from mcstas_to_sqe
@@ -107,11 +122,3 @@ def test_read_events_reads_each_scan_point_as_read_pixels_does():
             SPLIT, "detector", "source", "sample_pos", beam_direction=[0, 0, 1], entry=entry
         )
         assert np.allclose(binned.bins.sum().values, pixels.values)
-
-
-TOA_BINS = {"toa": sc.linspace("toa", 0.0, 0.015, 4, unit="s")}
-
-
-def test_a_run_that_is_no_scan_has_no_scan_maps(tmp_path, finished_run):
-    with pytest.raises(ValueError, match="not a scan"):
-        read_scan_maps("sample_monitor", finished_run(tmp_path / "run", 0), TOA_BINS)

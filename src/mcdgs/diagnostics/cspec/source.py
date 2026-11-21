@@ -24,8 +24,6 @@ in both models, and with the band of ``lambda0`` = 3 Å::
 from dataclasses import dataclass
 from pathlib import Path
 
-import mcstasscript as ms
-
 from mcdgs.core import Instrument, param
 from mcdgs.core.components import Arm, ESS_butterfly, Monitor_nD
 from mcdgs.core.components.monitors import time_lambda_options
@@ -184,10 +182,9 @@ def main(
     """
     instrument = define_instrument(lambda0)
     # --8<-- [start:run_mcstas]
-    # run McStas and load its monitors, in n/s per bin
+    # run McStas
     sim = Simulation(instrument)
     run = sim.run(folder_name=folder_name, ncount=ncount, seed=seed)
-    mcstas_data = ms.load_data(run.folder)
     # --8<-- [end:run_mcstas]
     # --8<-- [start:run_tof]
     # run tof, then read the monitor of both on the bins of the McStas map: time, wavelength
@@ -199,7 +196,7 @@ def main(
     bins = monitor_bins(instrument.source_monitor.bin_limits)
     # the map of each model on those bins, a scipp data array with its errors as variances:
     # McStas in n/s, tof in neutrons, a bin of N neutrons with the Poisson error √N
-    mcstas_map = read_mcstas_map("source_monitor", mcstas_data, bins)
+    mcstas_map = read_mcstas_map("source_monitor", run, bins)
     tof_counts = read_tof_map("source_monitor", tof_result, bins)
 
     # tof has no flux: each of its neutrons stands for the total of McStas over that of tof

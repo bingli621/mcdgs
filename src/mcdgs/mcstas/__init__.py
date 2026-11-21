@@ -11,7 +11,6 @@ from .reader import (
     read_events,
     read_mcstas_map,
     read_pixels,
-    read_scan_maps,
 )
 from .runs import Run, RunType, monitor_file, recorded_instr_params
 from .simulation import Simulation
@@ -30,6 +29,5 @@ __all__ = [
     "read_events",
     "read_mcstas_map",
     "read_pixels",
-    "read_scan_maps",
     "recorded_instr_params",
 ]

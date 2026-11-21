@@ -1,9 +1,9 @@
 """Read the output of a McStas run into scipp, with McStasScript and mcstastox.
 
-- :func:`read_mcstas_map` reads the map of a monitor of a single run, in n/s per bin, on its bin
-  edges (:func:`.monitor_bins`), from the data McStasScript loads (``mcstasscript.load_data``).
-- :func:`read_scan_maps` reads that map of every point of a scan, along the scan variable, with
-  mcstastox, since McStasScript loads only the first entry.
+- :func:`read_mcstas_map` reads the map of a monitor of a run, in n/s per bin, on its bin edges
+  (:func:`.monitor_bins`): of a single run with McStasScript (``mcstasscript.load_data``), of a
+  scan entry by entry with mcstastox, along the scan variable, since McStasScript loads only the
+  first entry.
 - :func:`map_on_bins` puts a map on its bins, for both.
 - :func:`read_events` reads the neutrons of a detector, by pixel, with mcstastox.
 - :func:`read_pixels` reads the detector pixels of every scan point, with mcstastox.
@@ -24,7 +24,6 @@ import mcstasscript as ms
 import mcstastox
 import numpy as np
 import scipp as sc
-from mcstasscript.data.data import McStasData
 from numpy.typing import ArrayLike, NDArray
 
 from mcdgs.mcstas.runs import Run
@@ -66,57 +65,19 @@ def map_on_bins(
     )
 
 
-def read_mcstas_map(
-    name: str, mcstas_data: list[McStasData], bins: Mapping[str, sc.Variable]
-) -> sc.DataArray:
-    """Read the time and wavelength map of a component of one McStas run, in n/s per bin.
+def read_mcstas_map(name: str, run: Run, bins: Mapping[str, sc.Variable]) -> sc.DataArray:
+    """Read the map of a monitor of a McStas run, in n/s per bin, on its bin edges.
 
-    Parameters
-    ----------
-    name:
-        The name of the component, such as a monitor.
-    mcstas_data:
-        The data of the components of the McStas run, as ``mcstasscript.load_data`` reads them.
-        That of this one must be a 2D map of time against wavelength,
-        ``"time ... lambda ..."``, on ``bins``.
-    bins:
-        The bin edges of the map, ``"toa"`` and ``"wavelength"``, in that order.
-
-    Returns
-    -------
-    :
-        The intensity per bin, in n/s, with the square of its error as variances. Its
-        dimensions are those of ``bins``, in their order, (time bins, wavelength bins), and its
-        coordinates the bin edges.
-
-    Raises
-    ------
-    ValueError
-        If several data sets have the name, or the map does not have the shape of ``bins``.
-    """
-    component = ms.name_search(name, mcstas_data)
-    if isinstance(component, list):  # McStasScript returns all of them, as a list
-        # the name is ambiguous, not of a wrong type: a ValueError
-        raise ValueError(f"{name}: {len(component)} data sets of that name, not one")  # noqa: TRY004
-    # McStasScript has the map as (wavelength, time), the y axis first
-    intensity = np.asarray(component.Intensity, dtype=float).T
-    error = np.asarray(component.Error, dtype=float).T
-    return map_on_bins(name, intensity, error, bins)
-
-
-def read_scan_maps(name: str, run: Run, bins: Mapping[str, sc.Variable]) -> sc.DataArray:
-    """Read the map of a monitor of every point of a scan, as :func:`.read_mcstas_map` reads one.
-
-    Each entry is read with mcstastox. Its ``get_component_data`` finds no map of a
-    ``Monitor_nD``, whose data lies one group below ``output``, in the group that its
-    ``get_info_entry`` gives.
+    A single run is read as McStasScript loads it, ``mcstasscript.load_data``, which also reads
+    McStas's own format of the runs of :class:`.McStasScriptDiagnostics`. A scan, a run with a
+    ``variable``, is read entry by entry with mcstastox, since McStasScript loads only the first.
 
     Parameters
     ----------
     name:
         The name of the monitor component.
     run:
-        The scan, as :meth:`.Simulation.scan` returns it or :meth:`.Run.load` reads it.
+        The run, as :class:`.Simulation` returns it or :meth:`.Run.load` reads it.
     bins:
         The bin edges of the map, by coordinate, in the order of the axes of the monitor, such as
         ``"toa"`` then ``"wavelength"`` of ``"time ... lambda ..."``: as :func:`.monitor_bins`
@@ -125,28 +86,56 @@ def read_scan_maps(name: str, run: Run, bins: Mapping[str, sc.Variable]) -> sc.D
     Returns
     -------
     :
-        The intensity per bin, in n/s, with the square of its error as variances, along the scan
-        variable, with its values as the coordinate, in the unit of the record of the run and
-        the order of the scan, then the dimensions of ``bins``, with the bin edges.
+        The intensity per bin, in n/s, with the square of its error as variances, along the
+        dimensions of ``bins``, with the bin edges. Of a scan, along the scan variable first,
+        with its values as the coordinate, in the unit of the record of the run and the order of
+        the scan.
 
     Raises
     ------
     ValueError
-        If the run is not a scan, or a map does not have the shape of ``bins``.
+        If several data sets of a single run have the name, or a map does not have the shape of
+        ``bins``.
     """
-    if run.variable is None or run.values is None:
-        raise ValueError(f"{run.folder}: not a scan")
+    if run.variable is not None and run.values is not None:
+        return _read_scan_maps(name, run.folder, run.variable, run.values, run.variable_unit, bins)
+    return _read_run_map(name, run.folder, bins)
+
+
+def _read_run_map(name: str, folder: Path, bins: Mapping[str, sc.Variable]) -> sc.DataArray:
+    """Read the map of a monitor of a single run, as McStasScript loads it."""
+    component = ms.name_search(name, ms.load_data(str(folder)))
+    if isinstance(component, list):  # McStasScript returns all of them, as a list
+        # the name is ambiguous, not of a wrong type: a ValueError
+        raise ValueError(f"{name}: {len(component)} data sets of that name, not one")  # noqa: TRY004
+    # McStasScript has a 2D map as (y, x), the y axis first: the axes in reverse order of bins
+    intensity = np.asarray(component.Intensity, dtype=float).T
+    error = np.asarray(component.Error, dtype=float).T
+    return map_on_bins(name, intensity, error, bins)
+
+
+def _read_scan_maps(
+    name: str,
+    folder: Path,
+    variable: str,
+    values: list[float],
+    unit: str | None,
+    bins: Mapping[str, sc.Variable],
+) -> sc.DataArray:
+    """Read the map of a monitor of every entry of a scan, with mcstastox.
+
+    mcstastox's ``get_component_data`` finds no map of a ``Monitor_nD``, whose data lies one
+    group below ``output``, in the group that its ``get_info_entry`` gives.
+    """
     maps = []
-    for entry in range(1, len(run.values) + 1):
-        with mcstastox.Read(str(run.folder), entry_number=entry) as data:
+    for entry in range(1, len(values) + 1):
+        with mcstastox.Read(str(folder), entry_number=entry) as data:
             group = data.file_object.get_info_entry(name)
             intensity = np.asarray(group["data"], dtype=float)  # the axes in the order of bins
             error = np.asarray(group["errors"], dtype=float)
         maps.append(map_on_bins(name, intensity, error, bins))
-    scan = sc.concat(maps, run.variable)
-    scan.coords[run.variable] = sc.array(
-        dims=[run.variable], values=run.values, unit=run.variable_unit
-    )
+    scan = sc.concat(maps, variable)
+    scan.coords[variable] = sc.array(dims=[variable], values=values, unit=unit)
     return scan
 
 

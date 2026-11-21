@@ -48,12 +48,10 @@ Running the module only reduces the runs again, without McStas, with :func:`anal
 from pathlib import Path
 
 import matplotlib.pyplot as plt
-import mcstasscript as ms
 import numpy as np
 import scipp as sc
 from matplotlib.colors import LogNorm
 from matplotlib.figure import Figure
-from mcstasscript.data.data import McStasData
 
 from mcdgs.diagnostics import cli
 from mcdgs.instruments.trex.detectors import (
@@ -64,7 +62,7 @@ from mcdgs.instruments.trex.detectors import (
     BANANA_Y_BINS,
 )
 from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
-from mcdgs.mcstas import Simulation, Workspace, read_events, read_mcstas_map
+from mcdgs.mcstas import Run, Simulation, Workspace, read_events, read_mcstas_map
 from mcdgs.reduction.binning import bin_edges, monitor_bins
 from mcdgs.reduction.inelastic import events_to_q_and_energy, time_at_sample
 from mcdgs.reduction.patches import MIN_FRACTION, find_patches, subpulse_flight
@@ -117,7 +115,7 @@ def define_instrument() -> TRexWithLa2Ni7:
 
 
 def subpulse_timing(
-    mcstas_data: list[McStasData],
+    run: Run,
     bins: dict[str, dict[str, sc.Variable]],
     positions: dict[str, list[float]],
     min_fraction: float = MIN_FRACTION,
@@ -130,8 +128,8 @@ def subpulse_timing(
 
     Parameters
     ----------
-    mcstas_data:
-        The monitors of the McStas run, as ``mcstasscript.load_data`` reads them.
+    run:
+        The McStas run to the sample, with the monitors of ``MONITORS``.
     bins:
         The bin edges of the time and wavelength map of each monitor of ``MONITORS``, by name,
         as :func:`.monitor_bins`.
@@ -155,8 +153,7 @@ def subpulse_timing(
         first.
     """
     pre_sample, beamstop = (
-        find_patches(read_mcstas_map(name, mcstas_data, bins[name]).values, bins[name])
-        for name in MONITORS
+        find_patches(read_mcstas_map(name, run, bins[name]).values, bins[name]) for name in MONITORS
     )
     pre_sample_position = sc.vector(positions["pre_sample_monitor"], unit="m")
     pulses = subpulse_flight(
@@ -447,7 +444,7 @@ def subpulse_timing_of_run(to_sample: str | Path | None = None) -> sc.DataArray:
     to_sample = Path(to_sample or Workspace.find().run_folder(TO_SAMPLE))
     instrument = define_instrument()  # as simulate runs it
     bins = {monitor: monitor_bins(getattr(instrument, monitor).bin_limits) for monitor in MONITORS}
-    return subpulse_timing(ms.load_data(to_sample), bins, instrument.positions())
+    return subpulse_timing(Run.load(to_sample), bins, instrument.positions())
 
 
 def reduce_runs(

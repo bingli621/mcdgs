@@ -4,7 +4,6 @@ import pytest
 import scipp as sc
 import tof
 from matplotlib.colors import LogNorm
-from mcstasscript.data.data import McStasData, McStasMetaData
 
 from mcdgs.diagnostics.compare import (
     MonitorComparison,
@@ -18,7 +17,7 @@ from mcdgs.diagnostics.compare import (
     rescale_tof_to_mcstas,
 )
 from mcdgs.diagnostics.trex.source import TRexSource
-from mcdgs.mcstas import read_mcstas_map
+from mcdgs.mcstas.reader import map_on_bins
 from mcdgs.tof import build_tof, read_tof_map
 
 BINS = {
@@ -33,19 +32,16 @@ def tof_result() -> tof.Result:
     return build_tof(TRexSource(), neutrons=NEUTRONS, seed=1).run()
 
 
-def _mcstas_map(shape: tuple[int, int], name: str = "source_monitor") -> list[McStasData]:
-    """A McStas monitor, source_monitor by default, as McStasScript has it: (wavelength, time)."""
-    metadata = McStasMetaData()
-    metadata.component_name = name
-    data = McStasData(metadata)
-    data.Intensity = np.arange(np.prod(shape), dtype=float).reshape(shape)
-    data.Error = np.ones(shape)
-    return [data]
+def _mcstas_map(scale: float = 1.0) -> sc.DataArray:
+    """A McStas map on BINS, as read_mcstas_map reads it: (time, wavelength), in n/s."""
+    shape = tuple(len(edges) - 1 for edges in BINS.values())
+    intensity = scale * np.arange(np.prod(shape), dtype=float).reshape(shape)
+    return map_on_bins("source_monitor", intensity, np.ones(shape), BINS)
 
 
 def _source_comparison(tof_result: tof.Result) -> MonitorComparison:
     """source_monitor in both models, tof scaled to the total of McStas there."""
-    mcstas_map = read_mcstas_map("source_monitor", _mcstas_map((20, 30)), BINS)
+    mcstas_map = _mcstas_map()
     tof_counts = read_tof_map("source_monitor", tof_result, BINS)
     scale = rescale_tof_to_mcstas(tof_counts, mcstas_map)
     return mcstas_vs_tof("source_monitor", mcstas_map, tof_counts, 1e6, NEUTRONS, scale)
@@ -59,7 +55,7 @@ def test_tof_is_scaled_to_the_total_of_mcstas(tof_result):
 
 
 def test_the_scale_and_the_transmission_scale_tof_and_its_poisson_errors(tof_result):
-    mcstas_map = read_mcstas_map("source_monitor", _mcstas_map((20, 30)), BINS)
+    mcstas_map = _mcstas_map()
     tof_counts = read_tof_map("source_monitor", tof_result, BINS)
     comparison = mcstas_vs_tof(
         "source_monitor", mcstas_map, tof_counts, 1e6, NEUTRONS, scale=2.0, transmission=0.25
@@ -77,23 +73,15 @@ def test_the_scale_and_the_transmission_scale_tof_and_its_poisson_errors(tof_res
 def test_the_transmission_from_the_rescaling_gives_tof_the_total_of_mcstas_further_down(tof_result):
     # the same tof neutrons at both monitors, a quarter of the McStas beam at the later one
     tof_two_monitors = {"later_monitor": tof_result["source_monitor"]}
-    source_map = read_mcstas_map("source_monitor", _two_monitors(), BINS)
+    source_map = _mcstas_map()
     tof_source = read_tof_map("source_monitor", tof_result, BINS)
-    later_map = read_mcstas_map("later_monitor", _two_monitors(), BINS)
+    later_map = _mcstas_map(scale=1 / 4)  # a quarter of the beam gets there
     tof_later = read_tof_map("later_monitor", tof_two_monitors, BINS)
     scale = rescale_tof_to_mcstas(tof_source, source_map)
     transmission = rescale_tof_to_mcstas(tof_later, later_map) / scale
     later = mcstas_vs_tof("later_monitor", later_map, tof_later, 1e6, NEUTRONS, scale, transmission)
     assert transmission == pytest.approx(0.25)
     assert later.second.values.sum() == pytest.approx(later.first.values.sum())
-
-
-def _two_monitors() -> list[McStasData]:
-    """The same McStas map twice: as source_monitor and as a monitor further down the beam."""
-    (first,) = _mcstas_map((20, 30))
-    (second,) = _mcstas_map((20, 30), name="later_monitor")
-    second.Intensity = first.Intensity / 4  # a quarter of the beam gets there
-    return [first, second]
 
 
 def test_the_figure_has_the_two_maps_the_spectrum_and_the_profile(tof_result):
@@ -117,9 +105,7 @@ def test_the_maps_can_be_drawn_on_a_log_scale(tof_result):
 
 
 def test_two_mcstas_maps_are_compared_with_their_own_titles(capsys):
-    first, second = (
-        read_mcstas_map(name, _two_monitors(), BINS) for name in ("source_monitor", "later_monitor")
-    )
+    first, second = _mcstas_map(), _mcstas_map(scale=1 / 4)
     comparison = MonitorComparison("monitor", first, second, titles=("Setting A", "Setting B"))
     print_means(comparison)
     assert capsys.readouterr().out.split()[0:2] == ["Setting", "A:"]

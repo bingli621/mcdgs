@@ -29,7 +29,6 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import matplotlib.pyplot as plt
-import mcstasscript as ms
 import numpy as np
 import scipp as sc
 from matplotlib.axes import Axes
@@ -206,9 +205,7 @@ def run_source(
     sim = Simulation(instrument)
     run = sim.run(folder_name=folder_name, ncount=ncount, seed=seed)
     seconds = time.perf_counter() - start
-    sample_map = read_mcstas_map(
-        MONITOR, ms.load_data(run.folder), monitor_bins(instrument.sample_monitor.bin_limits)
-    )
+    sample_map = read_mcstas_map(MONITOR, run, monitor_bins(instrument.sample_monitor.bin_limits))
     region = run.folder / f"{instrument.source.name}.json"  # the masked source writes its region
     acceptance = json.loads(region.read_text())["acceptance"] if region.is_file() else None
     return SourceRun(instrument.source.component_name, run.folder, seconds, sample_map, acceptance)

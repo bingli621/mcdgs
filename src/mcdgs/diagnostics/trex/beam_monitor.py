@@ -28,7 +28,6 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
-import mcstasscript as ms
 import numpy as np
 import scipp as sc
 from numpy.typing import NDArray
@@ -216,10 +215,9 @@ def main(
     name = "trex_beam_monitor"
 
     # --8<-- [start:run_mcstas]
-    # run McStas and load its monitors, in n/s per bin
+    # run McStas
     sim = Simulation(instrument)
     run = sim.run(folder_name=name, ncount=ncount, seed=seed)
-    mcstas_data = ms.load_data(run.folder)
     # --8<-- [end:run_mcstas]
 
     # --8<-- [start:run_tof]
@@ -233,13 +231,13 @@ def main(
     # --8<-- [start:transmission]
     # tof's counts are scaled to the total of McStas at the source monitor, in n/s; at the beam
     # monitor, the same scale, and the transmission on top of it, tuned if it is None
-    mcstas_source = read_mcstas_map("source_monitor", mcstas_data, source_bins)
+    mcstas_source = read_mcstas_map("source_monitor", run, source_bins)
     tof_source = read_tof_map("source_monitor", tof_result, source_bins)
     scale = compare.rescale_tof_to_mcstas(tof_source, mcstas_source)
     at_source = compare.mcstas_vs_tof(
         "source_monitor", mcstas_source, tof_source, ncount, neutrons, scale
     )
-    mcstas_beam = read_mcstas_map("beam_monitor", mcstas_data, bins)
+    mcstas_beam = read_mcstas_map("beam_monitor", run, bins)
     tof_beam = read_tof_map("beam_monitor", tof_result, bins)
     if transmission is None:  # tuned: the transmission that gives tof the total of McStas
         transmission = compare.rescale_tof_to_mcstas(tof_beam, mcstas_beam) / scale

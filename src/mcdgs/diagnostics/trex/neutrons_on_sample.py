@@ -37,7 +37,6 @@ Run the module to do it::
 from pathlib import Path
 
 import matplotlib.pyplot as plt
-import mcstasscript as ms
 import numpy as np
 import scipp as sc
 import tof
@@ -46,7 +45,6 @@ from matplotlib.colors import LogNorm
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
-from mcstasscript.data.data import McStasData
 from scippneutron.conversion import tof as tof_kernels
 
 from mcdgs.core import bins_from_limits
@@ -55,7 +53,7 @@ from mcdgs.diagnostics import cli, compare
 from mcdgs.instruments.trex.detectors import BANANA_RADIUS
 from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
 from mcdgs.instruments.trex.monitors import SAMPLE_MONITOR_HEIGHT, SAMPLE_MONITOR_WIDTH
-from mcdgs.mcstas import Simulation, read_mcstas_map
+from mcdgs.mcstas import Run, Simulation, read_mcstas_map
 from mcdgs.reduction.binning import monitor_bins
 from mcdgs.reduction.inelastic import DEFAULT_ENERGY_TRANSFER_RATIO, arrival_window, time_at_sample
 from mcdgs.reduction.patches import find_patches, subpulse_flight
@@ -138,7 +136,7 @@ def define_instrument() -> TRexToSample:
 # --8<-- [end:instrument]
 
 
-def read_xy_map(monitor: Monitor_nD, mcstas_data: list[McStasData]) -> sc.DataArray:
+def read_xy_map(monitor: Monitor_nD, run: Run) -> sc.DataArray:
     """Read the x and y map of a monitor of one McStas run.
 
     Parameters
@@ -146,8 +144,8 @@ def read_xy_map(monitor: Monitor_nD, mcstas_data: list[McStasData]) -> sc.DataAr
     monitor:
         The monitor, such as :func:`sample_xy_monitor`: its ``filename`` is its name in the run,
         and its ``options`` give one 2D map of x against y, in m.
-    mcstas_data:
-        The monitors of the McStas run, as ``mcstasscript.load_data`` reads them.
+    run:
+        The McStas run.
 
     Returns
     -------
@@ -160,29 +158,12 @@ def read_xy_map(monitor: Monitor_nD, mcstas_data: list[McStasData]) -> sc.DataAr
     ValueError
         If the map of McStas does not have the bins of ``options``.
     """
-    name = str(monitor.filename)
-    data = ms.name_search(name, mcstas_data)
     limits = monitor.bin_limits
-    edges = {
+    edges = {  # in the order of the axes of options, x then y
         axis: sc.linspace(axis, start, stop, n_bins + 1, unit="m")
-        for axis, (start, stop, n_bins) in ((axis, limits[axis]) for axis in ("y", "x"))
+        for axis, (start, stop, n_bins) in ((axis, limits[axis]) for axis in ("x", "y"))
     }
-    # McStasScript has the map as (y, x), the y axis first
-    intensity = np.asarray(data.Intensity, dtype=float)
-    shape = tuple(len(edge) - 1 for edge in edges.values())
-    if intensity.shape != shape:
-        raise ValueError(
-            f"{name}: McStas has a map of {intensity.shape} bins, the bins are {shape}"
-        )
-    return sc.DataArray(
-        sc.array(
-            dims=["y", "x"],
-            values=intensity,
-            variances=np.asarray(data.Error, dtype=float) ** 2,
-            unit="1/s",
-        ),
-        coords=edges,
-    )
+    return read_mcstas_map(str(monitor.filename), run, edges).transpose(["y", "x"]).copy()
 
 
 def plot_xy_map(xy_map: sc.DataArray, title: str) -> Figure:
@@ -557,10 +538,9 @@ def main(
     instrument = define_instrument()
     name = "trex_neutrons_on_sample"
 
-    # run McStas and load its monitors, in n/s per bin
+    # run McStas
     sim = Simulation(instrument)
     run = sim.run(folder_name=name, ncount=ncount, seed=seed)
-    mcstas_data = ms.load_data(run.folder)
 
     # run tof, then read the monitors of both on the bins of the McStas maps: time, wavelength
     tof_model = build_tof(instrument, neutrons=neutrons, seed=seed)
@@ -569,13 +549,13 @@ def main(
     # sample monitor, the same scale, and the transmission on top of it
     source_bins = monitor_bins(instrument.source_monitor.bin_limits)
     sample_bins = monitor_bins(instrument.sample_monitor.bin_limits)
-    mcstas_source = read_mcstas_map("source_monitor", mcstas_data, source_bins)
+    mcstas_source = read_mcstas_map("source_monitor", run, source_bins)
     tof_source = read_tof_map("source_monitor", tof_result, source_bins)
     scale = compare.rescale_tof_to_mcstas(tof_source, mcstas_source)
     at_source = compare.mcstas_vs_tof(
         "source_monitor", mcstas_source, tof_source, ncount, neutrons, scale
     )
-    mcstas_sample = read_mcstas_map("sample_monitor", mcstas_data, sample_bins)
+    mcstas_sample = read_mcstas_map("sample_monitor", run, sample_bins)
     tof_sample = read_tof_map("sample_monitor", tof_result, sample_bins)
     if transmission is None:  # tuned: the transmission that gives tof the total of McStas
         transmission = compare.rescale_tof_to_mcstas(tof_sample, mcstas_sample) / scale
@@ -617,7 +597,7 @@ def main(
     print(table, end="")
     files.append(cli.save_text(table, folder / f"{name}_windows.txt"))
 
-    xy_map = read_xy_map(instrument.sample_xy_monitor, mcstas_data)
+    xy_map = read_xy_map(instrument.sample_xy_monitor, run)
     fig = plot_xy_map(xy_map, f"T-Rex beam at the sample position, McStas\n{conditions}")
     files.append(cli.save_figure(fig, folder / f"{name}_xy.png"))
     return files
