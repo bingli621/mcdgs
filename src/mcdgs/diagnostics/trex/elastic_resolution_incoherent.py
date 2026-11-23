@@ -522,6 +522,52 @@ def q_e_maps(
     return maps
 
 
+def coverage(
+    incident_energy: float,
+    energy_transfer: np.ndarray,
+    q: np.ndarray,
+    two_theta_limits: tuple[float, float],
+    window: tuple[float, float] = DEFAULT_ENERGY_TRANSFER_RATIO,
+) -> np.ndarray:
+    """Return which points of (E, |Q|) a sub-pulse can reach on the detector.
+
+    A point is reached if its E lies in the arrival window, ``window`` times Ei, and its |Q|
+    between those of the smallest and the largest 2θ at that E, from :func:`momentum_transfer`.
+
+    Parameters
+    ----------
+    incident_energy:
+        Ei, in meV.
+    energy_transfer, q:
+        The E of each row and the |Q| of each column, in meV and 1/Å.
+    two_theta_limits:
+        The smallest and the largest 2θ of the pixels, in deg.
+    window:
+        The smallest and the largest ``E / Ei`` of the arrival windows, as
+        :func:`.arrival_window`.
+
+    Returns
+    -------
+    :
+        True where the point is reached, along E and |Q|.
+
+    Examples
+    --------
+    Elastic, 20 meV reach |Q| from 0.27 to 5.9 1/Å between 5° and 144°; 30 meV of energy loss
+    is beyond the window:
+
+    >>> covered = coverage(20.0, np.array([0.0, 30.0]), np.array([0.1, 3.0, 6.0]), (5.0, 144.0))
+    >>> covered.tolist()
+    [[False, True, False], [False, False, False]]
+    """
+    inside = (energy_transfer >= window[0] * incident_energy) & (
+        energy_transfer <= window[1] * incident_energy
+    )
+    reachable = np.where(inside, energy_transfer, 0.0)  # kf is real only inside the window
+    low, high = (momentum_transfer(incident_energy, reachable, t) for t in two_theta_limits)
+    return inside[:, None] & (q[None, :] >= low[:, None]) & (q[None, :] <= high[:, None])
+
+
 def plot_q_e_maps(
     maps: sc.DataArray,
     two_theta_limits: tuple[float, float],
@@ -532,10 +578,10 @@ def plot_q_e_maps(
     """Draw the S(Q,E) map of every sub-pulse, |Q| across and E up, from the highest Ei.
 
     Every map spans the same range of |Q| and E, that of the bins of :func:`q_e_maps`, and they
-    share one linear color scale, turbo, from 0 to the highest bin of all, with the empty bins
-    in white. The dashed lines are the |Q| of the smallest and the largest 2θ of the detector at
-    each E of the arrival window of the sub-pulse, ``window`` times its Ei: the detector reaches
-    the bins between them only.
+    share one linear color scale, turbo, from 0 to the highest bin of all. A bin the sub-pulse
+    reaches, as :func:`coverage` finds, has the color of its value, the bottom of the scale if
+    it is empty; a bin it cannot reach is white. So the colored area of each map is its coverage:
+    its arrival window, ``window`` times its Ei, between the smallest and the largest 2θ.
 
     Parameters
     ----------
@@ -559,6 +605,8 @@ def plot_q_e_maps(
     maps = maps.transpose(["subpulse", "energy_transfer", "Q"])
     q = maps.coords["Q"].to(unit="1/Å").values
     energy = maps.coords["energy_transfer"].to(unit="meV").values
+    q_centers = (q[:-1] + q[1:]) / 2
+    energy_centers = (energy[:-1] + energy[1:]) / 2
     energies = maps.coords["incident_energy"].to(unit="meV").values
     order = np.argsort(-energies)  # the highest Ei first
     rows = -(-order.size // columns)
@@ -581,14 +629,16 @@ def plot_q_e_maps(
             mesh = ax.pcolormesh(
                 q,
                 energy,
-                np.ma.masked_less_equal(maps.values[i], 0),  # empty bins in white
+                # white only where the sub-pulse cannot reach; there, any neutron is still shown
+                np.ma.masked_where(
+                    ~coverage(ei, energy_centers, q_centers, two_theta_limits, window)
+                    & (maps.values[i] <= 0),
+                    maps.values[i],
+                ),
                 cmap=cmap,
                 vmin=0.0,
                 vmax=top,
             )
-            own = np.linspace(window[0] * ei, window[1] * ei, 400)
-            for two_theta in two_theta_limits:
-                ax.plot(momentum_transfer(ei, own, two_theta), own, "k--", lw=0.8)
             ax.set(
                 xlim=(q[0], q[-1]), ylim=(energy[0], energy[-1]), title=f"{i}: Ei = {ei:.1f} meV"
             )
