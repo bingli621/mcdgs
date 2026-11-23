@@ -4,7 +4,13 @@ The width of the elastic line of vanadium comes from three places: how long the 
 choppers are open, how long the monochromatic choppers are open, and where in the sample a neutron
 scatters. This module computes each from the geometry of :class:`.TRex`, convolves them, and fits
 a Gaussian to the result as :func:`.elastic_resolution_incoherent.fit_elastic_lines` fits the
-simulated lines. It needs no McStas and no random numbers. It goes in six steps.
+simulated lines. It needs no McStas and no random numbers.
+
+:func:`literature_resolution` gives, for comparison, the same width from eq. (3) of Lechner
+(2000), the main reference here, as written on the elastic line: the opening time of each pair
+from its slit alone, ``a / (2 u)`` as in eq. (1) of Gaspar (2007), and the three terms added in
+quadrature. The model keeps eq. (3), and differs from it in two places, step 2 and step 5 below.
+It goes in six steps.
 
 **1. The flight of an elastic neutron.** A neutron passes the pulse-shaping pair at ``t_P`` and
 the monochromatic pair at ``t_M``, ``L_PM`` apart, which fixes its speed,
@@ -24,7 +30,9 @@ line, the energy transfer it computes is off by
 
     δE = (2 Ei v0 / L2) (A δt_M - B δt_P),
 
-with ``v0`` the speed of the sub-pulse. This is eq. (19) of Gaspar (2007) at ``Ei = Ef``: there
+with ``v0`` the speed of the sub-pulse. This is eq. (3) of Lechner (2000) at ``λ = λ0``, with his
+``L12`` for ``L_PM`` and his ``L2S + LSD`` for ``L_MD``, and eq. (19) of Gaspar (2007) at
+``Ei = Ef``: there
 ``L0 = L_PM``, and the path from the monochromatic choppers to the detector is ``L2 + L1`` in its
 notation. The pulse-shaping choppers weigh in only by ``B``, 0.09 for T-Rex, but they are open
 about ten times as long as the monochromatic ones, so their term is as large. Both terms are in
@@ -45,8 +53,9 @@ than the wide one, 26.9 mm. :func:`pair_transmission` computes the opening exact
 of the beam inside both slits at each time, for a beam that fills its window evenly. It also takes
 in that the second disk is ``spacing`` further down the beam: its delay is set for the speed of
 ``lambda0``, so for a sub-pulse of another speed the two slits are not centered at the same
-time, by ``spacing (1 / v - 1 / v_lambda0)``. This part is not in Gaspar (2007), which takes
-eq. (1), the triangle, for every pair.
+time, by ``spacing (1 / v - 1 / v_lambda0)``. Lechner (2000) gives the opening times without a
+formula, but notes that the window of the chopper and the aperture of the guide set them together
+(his Sec. 5.2, and Fig. 2); Gaspar (2007) takes eq. (1), the triangle, for every pair.
 
 **3. Where the neutron scatters.** A neutron that scatters at ``(x, y)`` in the sample, ``x``
 along the beam and ``y`` across it in the horizontal plane, from its center, into the scattering
@@ -55,23 +64,24 @@ angle 2θ flies further by
     δpath = x (1 - cos 2θ) - y sin 2θ,
 
 which the reduction, which puts every neutron at the center, reads as a time ``δpath / v0`` and an
-error ``δE = 2 Ei δpath / L2``. This is eq. (20) of Gaspar (2007), for a rectangle, at
-``Ei = Ef``. For the cylinder of radius ``r`` of T-Rex, :func:`sample_path_density` uses that
+error ``δE = 2 Ei δpath / L2``. This is the ``ΔL`` term of eq. (3) of Lechner (2000), as eq. (20)
+of Gaspar (2007) gives it for a rectangle, at ``Ei = Ef``. For the cylinder of radius ``r`` of T-Rex, :func:`sample_path_density` uses that
 ``δpath`` is the projection of a uniform disk onto a vector of length ``2 sin θ``: a semicircle of
 radius ``2 r |sin θ|``. It averages it over the 2θ of the detector, evenly per degree: vanadium
 scatters the same into every direction, and the pixels of the banana are of equal angle. Out of the
 horizontal plane, the detector spans 25° below to 15° above the beam; that is left out.
 
 **4. The detector.** The banana of the simulation has no depth and lists the exact time of each
-neutron, so it adds nothing. A real detector would add a term like that of the sample, from its
-depth: eq. (9) of Gaspar (2007).
+neutron, so it adds nothing. A real detector adds its thickness to ``ΔL`` in eq. (3) of Lechner
+(2000), as his Table 1 does for 15 mm ³He tubes, or as eq. (9) of Gaspar (2007).
 
 **5. Together.** The three offsets are independent: the moderator pulse, 2.86 ms long, is flat
 across the openings, so ``δt_P`` and ``δt_M`` are not correlated, nor is either with where the
 neutron scatters. :func:`elastic_resolution` therefore convolves the three distributions of
-``δE``. It does not add their widths in quadrature, as Gaspar (2007) does for Gaussians
-(footnote 1): the openings are triangles and trapezoids, for which quadrature gives a line about
-25 % too wide.
+``δE``. It does not add their widths in quadrature, as eq. (3) of Lechner (2000) does, and
+Gaspar (2007) for Gaussians (his footnote 1): the openings are triangles and trapezoids, for which
+quadrature gives a line about 25 % too wide. Lechner notes that for pulses that are not Gaussian,
+standard deviations may serve better than the FWHM (his Sec. 3).
 
 **6. The width.** As the reduction, it fits a Gaussian to the bins of at least ``fit_fraction``
 of the highest, and gives ``FWHM_PER_SIGMA`` times its σ.
@@ -82,6 +92,13 @@ sub-pulse of a frame, which makes them narrower than the model.
 
 References
 ----------
+R. E. Lechner, "Quasielastic high-resolution time-of-flight spectrometers employing multi-disk
+chopper cascades for spallation sources", Proceedings of ICANS-XV (Tsukuba, 2000), JAERI-Conf
+2001-002, pp. 357-376, in the proceedings https://doi.org/10.11484/jaeri-conf-2001-002, and open at
+https://www.osti.gov/etdeweb/servlets/purl/20226979: the main reference, for eq. (1), the intensity,
+eq. (3), the energy resolution, and eq. (4), the optimal ratio of the opening times of the two
+choppers.
+
 A. M. Gaspar, "Methods for analytically estimating the resolution and intensity of neutron
 time-of-flight spectrometers. The case of the TOFTOF spectrometer", arXiv:0710.5319 (2007), a
 technical report of 2005, https://arxiv.org/abs/0710.5319: eqs. (1), (14), (19) and (20), cited by
@@ -400,6 +417,181 @@ def fwhm_of(energies: np.ndarray, density: np.ndarray, fit_fraction: float = FIT
         warnings.simplefilter("ignore", OptimizeWarning)
         best, _ = curve_fit(_gaussian, x, y, p0=start, sigma=np.sqrt(y))
     return float(FWHM_PER_SIGMA * abs(best[2]))
+
+
+def opening_of(pair: ChopperPair, offset: float = 0.0) -> tuple[float, float]:
+    """Compute the FWHM and the area of the opening of a pair, from :func:`pair_transmission`.
+
+    Parameters
+    ----------
+    pair:
+        The pair.
+    offset:
+        As :func:`pair_transmission`, in s.
+
+    Returns
+    -------
+    :
+        The full width at half maximum of the opening, in s, and its area, the fraction of the beam
+        that passes integrated over time, in s.
+
+    Examples
+    --------
+    Over a beam at least as wide as the slit, the triangle of eq. (1) of Gaspar (2007):
+
+    >>> pair = ChopperPair(distance=0, spacing=0, slit_arc=0.02, rim_speed=400, beam_width=0.03)
+    >>> fwhm, area = opening_of(pair)
+    >>> round(fwhm * 1e6, 2), round(area * 1e6, 2)
+    (25.0, 16.67)
+    """
+    reach = (pair.slit_arc + pair.beam_width) / (2 * pair.rim_speed) + abs(offset)
+    times = np.linspace(-reach, reach, 200001)
+    opening = pair_transmission(pair, offset, times)
+    above = times[opening >= opening.max() / 2]
+    return float(above[-1] - above[0]), float(opening.sum() * (times[1] - times[0]))
+
+
+def slit_opening(pair: ChopperPair) -> float:
+    """Return the FWHM of the opening of a pair from its slit alone, ``a / (2 u)``.
+
+    Eq. (1) of Gaspar (2007), ``Δt = b / (2π f D)``: the triangle of a beam at least as wide as
+    the slit, whatever the beam.
+
+    Parameters
+    ----------
+    pair:
+        The pair.
+
+    Returns
+    -------
+    :
+        The FWHM, in s.
+    """
+    return pair.slit_arc / (2 * pair.rim_speed)
+
+
+def sample_path_spread(radius: float, two_theta_ranges: tuple[tuple[float, float], ...]) -> float:
+    """Return the spread of the flight path from the sample of eq. (20) of Gaspar (2007).
+
+    On the elastic line, eq. (20) is ``v Δt_s = sqrt(c² sin² 2θ + a² (1 - cos 2θ)²)``, for a
+    rectangle of half-width ``c`` across the beam and half-thickness ``a`` along it. For the
+    cylinder, both are its ``radius``. It is averaged over ``two_theta_ranges`` as a root mean
+    square, evenly per degree.
+
+    Parameters
+    ----------
+    radius:
+        The radius of the cylinder, in m.
+    two_theta_ranges:
+        The scattering angles, as (start, stop) in deg.
+
+    Returns
+    -------
+    :
+        ``ΔL``, the spread of the flight path, in m.
+
+    Examples
+    --------
+    At 90°, a square of half-width 1 cm spreads the path by the root of 2 cm²:
+
+    >>> round(sample_path_spread(0.01, ((89.999, 90.001),)) * 100, 4)
+    1.4142
+    """
+    angles = np.deg2rad(
+        np.concatenate([np.linspace(start, stop, 721) for start, stop in two_theta_ranges])
+    )
+    weights = np.concatenate(
+        [np.full(721, (stop - start) / 721) for start, stop in two_theta_ranges]
+    )
+    spread = radius**2 * (np.sin(angles) ** 2 + (1 - np.cos(angles)) ** 2)
+    return float(np.sqrt(np.average(spread, weights=weights)))
+
+
+def literature_resolution(
+    geometry: ResolutionGeometry, incident_energies: sc.Variable, openings: str = "slit"
+) -> sc.Dataset:
+    """Compute the FWHM of the elastic line from eq. (3) of Lechner (2000), on the elastic line.
+
+    ``Δ(hν) = (2 Ei v0 / (L_PM L2)) sqrt((τ1 L_MD)² + (τ2 (L_PM + L_MD))² + (L_PM ΔL / v0)²)``:
+    eq. (3) at ``λ = λ0``, with ``2 Ei v0`` for his 647.2 / λ³ in µeV, Å, m and µs, ``τ1`` and
+    ``τ2`` the FWHM of the openings of the pulse-shaping and monochromatic pairs, and ``ΔL`` the
+    spread of the flight path, here from the sample only, :func:`sample_path_spread`. The terms add
+    in quadrature, as for Gaussians.
+
+    Parameters
+    ----------
+    geometry:
+        The geometry, as :func:`geometry_of` reads it.
+    incident_energies:
+        The incident energies, along one dimension.
+    openings:
+        ``"slit"`` for the opening times of the slits, :func:`slit_opening`; ``"beam"`` for
+        the exact FWHM of the openings for the width of the beam, :func:`opening_of`.
+
+    Returns
+    -------
+    :
+        Along the dimension of ``incident_energies``, in meV: ``fwhm``, and ``pulse_shaping``,
+        ``monochromatic`` and ``sample``, the three terms; with ``incident_energy`` as coordinate.
+
+    Raises
+    ------
+    ValueError
+        If ``openings`` is neither ``"slit"`` nor ``"beam"``.
+    """
+    if openings not in ("slit", "beam"):
+        raise ValueError(f"openings {openings!r} is not 'slit' or 'beam'")
+    dim = incident_energies.dim
+    energies = incident_energies.to(unit="meV").values
+    l_pm = geometry.monochromatic.distance - geometry.pulse_shaping.distance
+    l_md = geometry.sample_distance + geometry.detector_distance
+    spread = sample_path_spread(geometry.sample_radius, geometry.two_theta_ranges)
+    v_lambda0 = speed_from_wavelength(geometry.lambda0)
+    widths: dict[str, list[float]] = {
+        name: [] for name in ("fwhm", "pulse_shaping", "monochromatic", "sample")
+    }
+    for ei in energies:
+        v0 = _speed(float(ei))
+        taus = {}
+        for name in PAIRS:
+            pair: ChopperPair = getattr(geometry, name)
+            if openings == "slit":
+                taus[name] = slit_opening(pair)
+            else:
+                taus[name], _ = opening_of(pair, pair.spacing * (1 / v0 - 1 / v_lambda0))
+        scale = 2 * ei * v0 / (l_pm * geometry.detector_distance)
+        terms = {
+            "pulse_shaping": scale * taus["pulse_shaping"] * l_md,
+            "monochromatic": scale * taus["monochromatic"] * (l_pm + l_md),
+            "sample": scale * l_pm * spread / v0,
+        }
+        for name, value in terms.items():
+            widths[name].append(float(value))
+        widths["fwhm"].append(float(np.sqrt(sum(value**2 for value in terms.values()))))
+    return sc.Dataset(
+        {name: sc.array(dims=[dim], values=values, unit="meV") for name, values in widths.items()},
+        coords={"incident_energy": incident_energies.to(unit="meV")},
+    )
+
+
+def optimal_ratio(geometry: ResolutionGeometry) -> float:
+    """Return the optimal ratio of the opening times of the two pairs, eq. (4) of Lechner (2000).
+
+    On the elastic line, ``ρ_opt = τ1 / τ2 = (L_PM + L_MD) / L_MD``, ``A / B`` of step 1: the
+    ratio at which the two chopper terms are equal, which gives the most intensity for a resolution.
+
+    Parameters
+    ----------
+    geometry:
+        The geometry.
+
+    Returns
+    -------
+    :
+        ``ρ_opt``.
+    """
+    a_coefficient, b_coefficient = geometry.coefficients
+    return a_coefficient / b_coefficient
 
 
 def energy_of(wavelength: float) -> float:

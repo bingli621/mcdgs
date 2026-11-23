@@ -12,11 +12,16 @@ from mcdgs.diagnostics.trex.elastic_resolution_incoherent import (
 from mcdgs.diagnostics.trex.elastic_resolution_model import (
     ChopperPair,
     elastic_resolution,
+    energy_of,
     fwhm_of,
     geometry_of,
+    literature_resolution,
+    opening_of,
+    optimal_ratio,
     pair_transmission,
     read_pair,
     sample_path_density,
+    slit_opening,
 )
 from mcdgs.instruments.trex.detectors import BANANA_RADIUS, BANANA_THETA_LIMITS
 from mcdgs.instruments.trex.model import Params, TRex
@@ -119,3 +124,52 @@ def test_the_narrow_pulse_shaping_slits_do_more_than_the_narrow_monochromatic_on
     widths = {mode: elastic_resolution(geometry(mode), energies) for mode in ("FF", "FR", "RF")}
     assert widths["RF"]["fwhm"].values[0] < widths["FR"]["fwhm"].values[0]
     assert widths["FF"]["pulse_shaping"].values[0] > widths["FF"]["monochromatic"].values[0]
+
+
+def test_the_formula_of_lechner_adds_its_three_terms_in_quadrature():
+    energies = sc.array(dims=["subpulse"], values=[20.45], unit="meV")
+    widths = literature_resolution(geometry("FF"), energies)
+    terms = [widths[name].values[0] for name in ("pulse_shaping", "monochromatic", "sample")]
+    assert widths["fwhm"].values[0] == pytest.approx(np.sqrt(np.sum(np.square(terms))))
+
+
+def test_the_formula_of_lechner_has_the_prefactor_of_his_eq_3():
+    # 647.2 / λ³ µeV·m/µs is 2 Ei v0: at 2 Å, τ2 = 10 µs on 1 m to the detector and L_PM = 1 m
+    g = geometry("FF")
+    pair = replace(g.monochromatic, slit_arc=2 * g.monochromatic.rim_speed * 10e-6)  # τ2 = 10 µs
+    tiny = replace(g.pulse_shaping, slit_arc=1e-12)
+    simple = replace(
+        g,
+        pulse_shaping=replace(tiny, distance=0.0),
+        monochromatic=replace(pair, distance=1.0),
+        sample_distance=0.0,
+        detector_distance=1.0,
+        sample_radius=1e-12,
+    )
+    energies = sc.array(dims=["subpulse"], values=[energy_of(2.0)], unit="meV")
+    width = literature_resolution(simple, energies)["fwhm"].values[0]
+    # eq. (3): 647.2 · τ2 (L12 + LSD) / (L12 LSD λ³) µeV
+    assert width * 1000 == pytest.approx(647.2 * 10 * 2 / 2**3, rel=1e-3)
+
+
+def test_the_slit_opening_is_the_triangle_of_the_literature():
+    g = geometry("RR")
+    assert slit_opening(g.monochromatic) == pytest.approx(opening_of(g.monochromatic)[0], rel=1e-3)
+    assert slit_opening(g.pulse_shaping) < opening_of(g.pulse_shaping)[0]  # a narrower beam
+
+
+def test_the_optimal_ratio_of_lechner_makes_the_two_chopper_terms_equal():
+    g = geometry("FF")
+    a, b = g.coefficients
+    assert optimal_ratio(g) == pytest.approx(a / b)
+    assert optimal_ratio(g) == pytest.approx(12.33, abs=0.01)
+
+
+@pytest.mark.parametrize(("mode", "flux"), [("FR", 0.33), ("RF", 0.50), ("RR", 0.16)])
+def test_the_areas_of_the_openings_give_the_flux_of_mcstas_over_ff(mode, flux):
+    # the McStas flux at the pre-sample monitor over that of FF, at 20.45 meV
+    def areas(m):
+        g = geometry(m)
+        return opening_of(g.pulse_shaping)[1] * opening_of(g.monochromatic)[1]
+
+    assert areas(mode) / areas("FF") == pytest.approx(flux, abs=0.015)

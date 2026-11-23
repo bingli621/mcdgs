@@ -87,6 +87,13 @@ TERM_LABELS = {
     "total": "All three",
 }
 TERM_COLORS = {"pulse_shaping": "C4", "monochromatic": "C5", "sample": "C7", "total": "k"}
+# the calculations of the width, with their label and line style: eq. (3) of Lechner (2000) with
+# the opening times of the slits, the same with those of the beam, and the model
+CALCULATIONS = {
+    "literature": ("Lechner eq. (3): slit openings, quadrature", "--"),
+    "beam": ("Beam openings, quadrature", ":"),
+    "model": ("Model: beam openings, convolution", "-"),
+}
 RATIO_LEGEND_ROOM = 1.4  # the y axis of the ratios of plot_resolutions, past the highest
 MODE_LABELS: dict[Mode, str] = {
     "FF": "FF, high flux",
@@ -836,23 +843,39 @@ def model_table(lines: dict[Mode, sc.Dataset], models: dict[Mode, sc.Dataset]) -
     return cli.markdown_table(header, rows)
 
 
-def model_terms(modes: tuple[Mode, ...] = MODES) -> tuple[float, dict[Mode, sc.Dataset]]:
-    """Compute the analytic FWHM of each term at the Ei of ``lambda0``, in every mode.
+def model_terms(
+    modes: tuple[Mode, ...] = MODES, calculation: str = "model"
+) -> tuple[float, dict[Mode, sc.Dataset]]:
+    """Compute the FWHM of each term at the Ei of ``lambda0``, in every mode.
 
     Parameters
     ----------
     modes:
         The modes.
+    calculation:
+        ``"model"``, :func:`.elastic_resolution_model.elastic_resolution`, or ``"literature"``,
+        :func:`.elastic_resolution_model.literature_resolution` with the openings of the slits.
 
     Returns
     -------
     :
-        The Ei of ``lambda0``, in meV, and the widths of
-        :func:`.elastic_resolution_model.elastic_resolution` there, by mode.
+        The Ei of ``lambda0``, in meV, and the widths there, by mode.
+
+    Raises
+    ------
+    ValueError
+        If ``calculation`` is neither ``"model"`` nor ``"literature"``.
     """
+    if calculation not in ("model", "literature"):
+        raise ValueError(f"calculation {calculation!r} is not 'model' or 'literature'")
     geometries = {mode: model_geometry(mode) for mode in modes}
     ei = model.energy_of(geometries[modes[0]].lambda0)
     energies = sc.array(dims=["incident_energy"], values=[ei], unit="meV")
+    if calculation == "literature":
+        return ei, {
+            mode: model.literature_resolution(geometry, energies)
+            for mode, geometry in geometries.items()
+        }
     return ei, {
         mode: model.elastic_resolution(geometry, energies, FIT_FRACTION)
         for mode, geometry in geometries.items()
@@ -941,6 +964,239 @@ def plot_model_terms(ei: float, modes: tuple[Mode, ...], title: str) -> Figure:
             ax.set(xlabel="δE, the error of the energy transfer [meV]")
             ax.set_xlim(-2.5, 2.5)
     return fig
+
+
+def literature_resolutions(
+    lines: dict[Mode, sc.Dataset], points: int | None = MODEL_POINTS, openings: str = "slit"
+) -> dict[Mode, sc.Dataset]:
+    """Compute the FWHM of the formula of the literature across the Ei of each mode.
+
+    Parameters
+    ----------
+    lines:
+        The fits of :func:`fit_elastic_lines`, by mode: the curves span their Ei.
+    points:
+        As :func:`model_resolutions`.
+    openings:
+        As :func:`.elastic_resolution_model.literature_resolution`.
+
+    Returns
+    -------
+    :
+        The widths of :func:`.elastic_resolution_model.literature_resolution` in the geometry of
+        :func:`model_geometry`, by mode.
+    """
+    curves = {}
+    for mode, fits in lines.items():
+        ei = fits.coords["incident_energy"].to(unit="meV")
+        if points is not None:
+            ei = sc.linspace("incident_energy", ei.min(), ei.max(), points)
+        curves[mode] = model.literature_resolution(model_geometry(mode), ei, openings)
+    return curves
+
+
+def calculations(
+    lines: dict[Mode, sc.Dataset], points: int | None
+) -> dict[str, dict[Mode, sc.Dataset]]:
+    """Compute the FWHM of the three calculations of ``CALCULATIONS`` across the Ei of each mode.
+
+    Parameters
+    ----------
+    lines:
+        The fits of :func:`fit_elastic_lines`, by mode.
+    points:
+        As :func:`model_resolutions`.
+
+    Returns
+    -------
+    :
+        By calculation, as ``CALCULATIONS`` names them, the widths by mode.
+    """
+    return {
+        "literature": literature_resolutions(lines, points, "slit"),
+        "beam": literature_resolutions(lines, points, "beam"),
+        "model": model_resolutions(lines, points),
+    }
+
+
+def plot_calculations(
+    lines: dict[Mode, sc.Dataset],
+    curves: dict[str, dict[Mode, sc.Dataset]],
+    at_subpulses: dict[str, dict[Mode, sc.Dataset]],
+    title: str,
+) -> Figure:
+    """Draw the FWHM of McStas and of the three calculations of ``CALCULATIONS``, in every mode.
+
+    One column per mode. The top row draws the FWHM of the simulated lines, points with the error
+    of their fit, and of each calculation, a line; the bottom row each calculation over McStas at
+    the Ei of the sub-pulses, with the error of the fit.
+
+    Parameters
+    ----------
+    lines:
+        The fits of :func:`fit_elastic_lines`, by mode.
+    curves:
+        The widths of :func:`calculations` across the Ei, by calculation and mode.
+    at_subpulses:
+        The widths of :func:`calculations` at the Ei of the sub-pulses, by calculation and mode.
+    title:
+        The title of the figure.
+
+    Returns
+    -------
+    :
+        The figure.
+    """
+    modes = list(lines)
+    with plt.rc_context({"font.size": FONT_SIZE}):
+        fig, axes = plt.subplots(
+            2,
+            len(modes),
+            figsize=(5 * len(modes), 10),
+            sharex=True,
+            sharey="row",
+            squeeze=False,
+            layout="constrained",
+        )
+        fig.suptitle(title)
+        for column, mode in enumerate(modes):
+            top, bottom = axes[0, column], axes[1, column]
+            color = MODE_COLORS.get(mode, "k")
+            ei = lines[mode].coords["incident_energy"].to(unit="meV").values
+            fwhm = lines[mode]["fwhm"]
+            error = np.sqrt(fwhm.variances)
+            top.errorbar(
+                ei, fwhm.values, yerr=error, fmt="o", ms=6, capsize=3, color=color, label="McStas"
+            )
+            for name, (label, style) in CALCULATIONS.items():
+                curve = curves[name][mode]
+                top.plot(
+                    curve.coords["incident_energy"].values,
+                    curve["fwhm"].values,
+                    color="k",
+                    linestyle=style,
+                    lw=1.5,
+                    label=label,
+                )
+                ratio = at_subpulses[name][mode]["fwhm"].values / fwhm.values
+                bottom.errorbar(
+                    ei,
+                    ratio,
+                    yerr=ratio * error / fwhm.values,
+                    fmt="o",
+                    ms=5,
+                    capsize=2,
+                    color="k",
+                    markerfacecolor="none" if name != "model" else "k",
+                    linestyle=style,
+                    lw=1,
+                    label=label,
+                )
+            bottom.axhline(1, color=color, lw=1.5)
+            top.set(title=MODE_LABELS.get(mode, mode))
+            bottom.set(xlabel="Ei [meV]")
+            for ax in (top, bottom):
+                ax.grid(True, alpha=0.3)
+            top.set_ylim(bottom=0)
+        axes[0, 0].set(ylabel="FWHM [meV]")
+        axes[1, 0].set(ylabel="Calculation / McStas")
+        axes[0, 0].legend(fontsize="small", loc="upper left")
+    return fig
+
+
+def calculations_table(
+    lines: dict[Mode, sc.Dataset], at_subpulses: dict[str, dict[Mode, sc.Dataset]]
+) -> str:
+    """Return each calculation of ``CALCULATIONS`` over McStas at each sub-pulse, as Markdown.
+
+    Parameters
+    ----------
+    lines:
+        The fits of :func:`fit_elastic_lines`, by mode, with the same sub-pulses.
+    at_subpulses:
+        The widths of :func:`calculations` at the Ei of the sub-pulses, by calculation and mode.
+
+    Returns
+    -------
+    :
+        One row per sub-pulse: its Ei in the first mode, then in each mode each calculation over
+        the FWHM of McStas.
+    """
+    modes = list(lines)
+    first = modes[0]
+    short = {"literature": "Lechner", "beam": "Beam, quadrature", "model": "Model"}
+    header = ["Sub-pulse", f"Ei {first}"]
+    for mode in modes:
+        header += [f"{short[name]} / McStas {mode}" for name in CALCULATIONS]
+    rows = []
+    for i, ei in enumerate(lines[first].coords["incident_energy"].to(unit="meV").values):
+        row = [f"{i}", f"{ei:.2f} meV"]
+        for mode in modes:
+            mcstas = lines[mode]["fwhm"].values[i]
+            row += [
+                f"{at_subpulses[name][mode]['fwhm'].values[i] / mcstas:.3f}"
+                for name in CALCULATIONS
+            ]
+        rows.append(row)
+    return cli.markdown_table(header, rows)
+
+
+def lechner_table(pulses: dict[Mode, sc.DataArray]) -> str:
+    """Return the opening times, their ratio and the intensity rule of Lechner (2000), as Markdown.
+
+    At the sub-pulse nearest the Ei of ``lambda0``: the FWHM ``τ1`` and ``τ2`` of the openings of
+    the pulse-shaping and monochromatic pairs, :func:`.elastic_resolution_model.opening_of`, their
+    ratio ``ρ`` against the optimum ``ρ_opt`` of eq. (4), and the intensity over that of the first
+    mode three ways: ``τ1 τ2`` as eq. (1) has it, the product of the areas of the two openings, and
+    the flux of McStas at the pre-sample monitor.
+
+    Parameters
+    ----------
+    pulses:
+        The sub-pulses of :func:`.sample_runs.subpulse_timing`, by mode, with their flux.
+
+    Returns
+    -------
+    :
+        One row per mode.
+    """
+    modes = list(pulses)
+    openings = {}
+    for mode in modes:
+        geometry = model_geometry(mode)
+        openings[mode] = [model.opening_of(getattr(geometry, name)) for name in model.PAIRS]
+    geometry = model_geometry(modes[0])
+    ei = model.energy_of(geometry.lambda0)
+    first = pulses[modes[0]]
+    index = int(np.argmin(np.abs(first.coords["incident_energy"].to(unit="meV").values - ei)))
+    (tau1_first, area1_first), (tau2_first, area2_first) = openings[modes[0]]
+    header = [
+        "Mode",
+        "τ1",
+        "τ2",
+        "ρ = τ1 / τ2",
+        "ρ_opt",
+        f"τ1 τ2 / {modes[0]}",
+        f"Areas / {modes[0]}",
+        f"McStas flux / {modes[0]}",
+    ]
+    rows = []
+    for mode in modes:
+        (tau1, area1), (tau2, area2) = openings[mode]
+        flux = pulses[mode].values[index] / first.values[index]
+        rows.append(
+            [
+                mode,
+                f"{tau1 * 1e6:.0f} µs",
+                f"{tau2 * 1e6:.1f} µs",
+                f"{tau1 / tau2:.1f}",
+                f"{model.optimal_ratio(model_geometry(mode)):.1f}",
+                f"{tau1 * tau2 / (tau1_first * tau2_first):.2f}",
+                f"{area1 * area2 / (area1_first * area2_first):.2f}",
+                f"{flux:.2f}",
+            ]
+        )
+    return cli.markdown_table(header, rows)
 
 
 def plot_resolutions(
@@ -1075,7 +1331,13 @@ def analyze(out: Path | None = None, modes: tuple[Mode, ...] = MODES) -> list[Pa
     The analytic model adds ``trex_elastic_resolution_incoherent_model.txt``, the table of
     :func:`model_table`, ``trex_elastic_resolution_incoherent_terms.txt``, that of
     :func:`terms_table`, and ``trex_elastic_resolution_incoherent_terms.png``, from
-    :func:`plot_model_terms`.
+    :func:`plot_model_terms`; and, against the literature,
+    ``trex_elastic_resolution_incoherent_literature_terms.txt``, the table of :func:`terms_table`
+    for the formula of the literature,
+    ``trex_elastic_resolution_incoherent_calculations.png``, from :func:`plot_calculations`,
+    ``trex_elastic_resolution_incoherent_calculations.txt``, the table of
+    :func:`calculations_table`, and ``trex_elastic_resolution_incoherent_lechner.txt``, that of
+    :func:`lechner_table`.
 
     Parameters
     ----------
@@ -1127,10 +1389,29 @@ def analyze(out: Path | None = None, modes: tuple[Mode, ...] = MODES) -> list[Pa
         table = model_table(lines, model_resolutions(lines, points=None))
         print(table, end="")
         files.append(cli.save_text(table, folder / f"{NAME}_model.txt"))
+        at_subpulses = calculations(lines, points=None)
+        fig = plot_calculations(
+            lines,
+            calculations(lines, MODEL_POINTS),
+            at_subpulses,
+            f"T-Rex, vanadium: the elastic resolution of Lechner (2000), of the model and of "
+            f"McStas\n{conditions}",
+        )
+        files.append(cli.save_figure(fig, folder / f"{NAME}_calculations.png"))
+        table = calculations_table(lines, at_subpulses)
+        print(table, end="")
+        files.append(cli.save_text(table, folder / f"{NAME}_calculations.txt"))
+        table = lechner_table(fluxes)
+        print(table, end="")
+        files.append(cli.save_text(table, folder / f"{NAME}_lechner.txt"))
     ei, terms = model_terms(modes)
     table = terms_table(ei, terms)
     print(table, end="")
     files.append(cli.save_text(table, folder / f"{NAME}_terms.txt"))
+    _, terms = model_terms(modes, "literature")
+    table = terms_table(ei, terms)
+    print(table, end="")
+    files.append(cli.save_text(table, folder / f"{NAME}_literature_terms.txt"))
     conditions = define_instrument().running_conditions().replace(f" · {modes[0]}", "")
     fig = plot_model_terms(
         ei,
