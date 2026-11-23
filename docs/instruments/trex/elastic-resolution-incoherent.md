@@ -188,13 +188,14 @@ The mixed modes take one pair of choppers at a time from FF to RR: RF narrows th
 pulse-shaping choppers only, FR those of the monochromatic choppers only. Their spectra, fits and
 maps are made as for FF and RR.
 
-![The FWHM of the elastic line of each sub-pulse against its Ei in FF, FR, RF and RR, as a fraction of Ei, the flux of each sub-pulse, and the FWHM and flux of FR, RF and RR over FF](figures/elastic-resolution-incoherent/trex_elastic_resolution_incoherent_modes.png)
+![The FWHM of the elastic line of each sub-pulse against its Ei in FF, FR, RF and RR, with the analytic model as lines, as a fraction of Ei, the flux of each sub-pulse, and the FWHM and flux of FR, RF and RR over FF](figures/elastic-resolution-incoherent/trex_elastic_resolution_incoherent_modes.png)
 
 `plot_resolutions` draws, against Ei, the FWHM of every mode, the FWHM as a fraction of Ei, the flux
 of each sub-pulse at the pre-sample monitor, and the FWHM, open circles, and the flux, open squares,
 of each mode over those of FF. The FWHM has the error of its fit; the flux has no error bars, since
-the sub-pulses are found from the intensity of the monitor alone. `resolution_table` gives the
-numbers side by side:
+the sub-pulses are found from the intensity of the monitor alone. The lines in the first panel
+are the width the [analytic resolution](elastic-resolution-model.md) gives each mode, from the
+geometry alone. `resolution_table` gives the numbers side by side:
 
 --8<-- "docs/instruments/trex/figures/elastic-resolution-incoherent/trex_elastic_resolution_incoherent_modes.txt"
 

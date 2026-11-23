@@ -8,7 +8,10 @@ import mcdgs.diagnostics.cspec as cspec_diagnostics
 import mcdgs.diagnostics.trex as trex_diagnostics
 from mcdgs.core import Instrument
 
-SHARED = {"mcdgs.diagnostics.trex.sample_runs"}  # shared by the diagnostics, not one itself
+SHARED = {  # used by the diagnostics, not one itself
+    "mcdgs.diagnostics.trex.sample_runs",
+    "mcdgs.diagnostics.trex.elastic_resolution_model",
+}
 MODULES = sorted(
     name
     for package in (trex_diagnostics, cspec_diagnostics)

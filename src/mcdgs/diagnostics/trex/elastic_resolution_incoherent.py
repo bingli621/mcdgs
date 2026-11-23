@@ -57,13 +57,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipp as sc
 from matplotlib.figure import Figure
+from matplotlib.lines import Line2D
 from scipy.optimize import curve_fit
 
 from mcdgs.core.components import Incoherent
 from mcdgs.diagnostics import cli
+from mcdgs.diagnostics.trex import elastic_resolution_model as model
 from mcdgs.diagnostics.trex import sample_runs as runs
 from mcdgs.diagnostics.trex.solid_angles import detector_window
 from mcdgs.instruments.trex.choppers import Mode
+from mcdgs.instruments.trex.detectors import BANANA_RADIUS, BANANA_THETA_LIMITS
 from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
 from mcdgs.mcstas import Simulation, Workspace
 from mcdgs.reduction.binning import bin_edges, bins_title
@@ -75,6 +78,15 @@ NAME = "trex_elastic_resolution_incoherent"
 MODES: tuple[Mode, ...] = ("FF", "FR", "RF", "RR")  # coarse to fine; FF, first, is the reference
 # C0 to C3 from the finest resolution to the coarsest
 MODE_COLORS: dict[Mode, str] = {"RR": "C0", "RF": "C1", "FR": "C2", "FF": "C3"}
+MODEL_POINTS = 60  # the incident energies of the analytic model, across those of the sub-pulses
+TERMS = ("pulse_shaping", "monochromatic", "sample", "total")  # of the analytic model
+TERM_LABELS = {
+    "pulse_shaping": "Pulse-shaping choppers",
+    "monochromatic": "Monochromatic choppers",
+    "sample": "Sample",
+    "total": "All three",
+}
+TERM_COLORS = {"pulse_shaping": "C4", "monochromatic": "C5", "sample": "C7", "total": "k"}
 RATIO_LEGEND_ROOM = 1.4  # the y axis of the ratios of plot_resolutions, past the highest
 MODE_LABELS: dict[Mode, str] = {
     "FF": "FF, high flux",
@@ -738,10 +750,204 @@ def resolution_table(lines: dict[Mode, sc.Dataset], pulses: dict[Mode, sc.DataAr
     return cli.markdown_table(header, rows)
 
 
+def model_geometry(mode: Mode) -> model.ResolutionGeometry:
+    """Return the geometry of the analytic model of :mod:`.elastic_resolution_model` in a mode.
+
+    It is that of :func:`define_instrument` in the mode, with the banana detector at
+    ``BANANA_RADIUS``, the cylinder of :func:`sample`, and the scattering angles of the banana that
+    :func:`scattered_pixels` keeps: past ``MIN_TWO_THETA`` on either side of the beam.
+
+    Parameters
+    ----------
+    mode:
+        The slits of the pulse-shaping and monochromatic choppers.
+
+    Returns
+    -------
+    :
+        The geometry.
+    """
+    start, stop = BANANA_THETA_LIMITS
+    two_theta_ranges = ((start, -MIN_TWO_THETA), (MIN_TWO_THETA, stop))
+    instrument = define_instrument(mode)
+    return model.geometry_of(instrument, BANANA_RADIUS, float(sample().radius), two_theta_ranges)
+
+
+def model_resolutions(
+    lines: dict[Mode, sc.Dataset], points: int | None = MODEL_POINTS
+) -> dict[Mode, sc.Dataset]:
+    """Compute the analytic FWHM of :mod:`.elastic_resolution_model` across the Ei of each mode.
+
+    Parameters
+    ----------
+    lines:
+        The fits of :func:`fit_elastic_lines`, by mode: the model spans their Ei.
+    points:
+        The incident energies of the model, evenly spaced. If ``None``, the Ei of the sub-pulses.
+
+    Returns
+    -------
+    :
+        The widths of :func:`.elastic_resolution_model.elastic_resolution` in the geometry of
+        :func:`model_geometry`, by mode.
+    """
+    models = {}
+    for mode, fits in lines.items():
+        ei = fits.coords["incident_energy"].to(unit="meV")
+        if points is not None:
+            ei = sc.linspace("incident_energy", ei.min(), ei.max(), points)
+        models[mode] = model.elastic_resolution(model_geometry(mode), ei, FIT_FRACTION)
+    return models
+
+
+def model_table(lines: dict[Mode, sc.Dataset], models: dict[Mode, sc.Dataset]) -> str:
+    """Return the FWHM of the simulated lines and of the analytic model, as a Markdown table.
+
+    Parameters
+    ----------
+    lines:
+        The fits of :func:`fit_elastic_lines`, by mode, with the same sub-pulses.
+    models:
+        The widths of :func:`model_resolutions` at the Ei of the sub-pulses, by mode.
+
+    Returns
+    -------
+    :
+        One row per sub-pulse: its Ei in the first mode, then in each mode the FWHM of McStas, of
+        the model, and the model over McStas.
+    """
+    modes = list(lines)
+    first = modes[0]
+    header = ["Sub-pulse", f"Ei {first}"]
+    for mode in modes:
+        header += [f"McStas {mode}", f"Model {mode}", f"Model / McStas {mode}"]
+    rows = []
+    for i, ei in enumerate(lines[first].coords["incident_energy"].to(unit="meV").values):
+        row = [f"{i}", f"{ei:.2f} meV"]
+        for mode in modes:
+            fwhm = lines[mode]["fwhm"]
+            width = models[mode]["fwhm"].values[i]
+            row += [
+                f"{fwhm.values[i]:.3f} ± {np.sqrt(fwhm.variances[i]):.3f} meV",
+                f"{width:.3f} meV",
+                f"{width / fwhm.values[i]:.3f}",
+            ]
+        rows.append(row)
+    return cli.markdown_table(header, rows)
+
+
+def model_terms(modes: tuple[Mode, ...] = MODES) -> tuple[float, dict[Mode, sc.Dataset]]:
+    """Compute the analytic FWHM of each term at the Ei of ``lambda0``, in every mode.
+
+    Parameters
+    ----------
+    modes:
+        The modes.
+
+    Returns
+    -------
+    :
+        The Ei of ``lambda0``, in meV, and the widths of
+        :func:`.elastic_resolution_model.elastic_resolution` there, by mode.
+    """
+    geometries = {mode: model_geometry(mode) for mode in modes}
+    ei = model.energy_of(geometries[modes[0]].lambda0)
+    energies = sc.array(dims=["incident_energy"], values=[ei], unit="meV")
+    return ei, {
+        mode: model.elastic_resolution(geometry, energies, FIT_FRACTION)
+        for mode, geometry in geometries.items()
+    }
+
+
+def terms_table(ei: float, terms: dict[Mode, sc.Dataset]) -> str:
+    """Return the FWHM of each term of the analytic model at one Ei, as a Markdown table.
+
+    Parameters
+    ----------
+    ei:
+        The incident energy, in meV.
+    terms:
+        The widths of :func:`model_terms`, by mode.
+
+    Returns
+    -------
+    :
+        One row per mode: the FWHM of the pulse-shaping choppers, of the monochromatic choppers
+        and of the sample, each alone, and of the three together, in meV and as a fraction of Ei.
+    """
+    header = ["Mode", "Pulse-shaping", "Monochromatic", "Sample", "All three", "All three / Ei"]
+    rows = []
+    for mode, widths in terms.items():
+        # the dataset names the width of the three together fwhm
+        values = [widths["fwhm" if name == "total" else name].values[0] for name in TERMS]
+        rows.append(
+            [mode, *(f"{value:.3f} meV" for value in values), f"{100 * values[-1] / ei:.2f} %"]
+        )
+    return cli.markdown_table(header, rows)
+
+
+def plot_model_terms(ei: float, modes: tuple[Mode, ...], title: str) -> Figure:
+    """Draw the distribution of δE of each term of the analytic model, and of the three together.
+
+    One panel per mode, at one Ei, each distribution over its own highest value, so that their
+    widths compare. The legend gives the FWHM of each, as :func:`.elastic_resolution_model.fwhm_of`
+    fits it.
+
+    Parameters
+    ----------
+    ei:
+        The incident energy, in meV.
+    modes:
+        The modes, one panel each.
+    title:
+        The title of the figure.
+
+    Returns
+    -------
+    :
+        The figure.
+    """
+    columns = 2
+    rows = -(-len(modes) // columns)
+    with plt.rc_context({"font.size": FONT_SIZE}):
+        fig, axes = plt.subplots(
+            rows,
+            columns,
+            figsize=(16, 5.5 * rows),
+            sharex=True,
+            squeeze=False,
+            layout="constrained",
+        )
+        fig.suptitle(title)
+        for ax, mode in zip(axes.flat, modes):
+            shapes = model.line_shapes(model_geometry(mode), ei)
+            for name in TERMS:
+                energies, density = shapes[name]
+                fwhm = model.fwhm_of(energies, density, FIT_FRACTION)
+                ax.plot(
+                    energies,
+                    density / density.max(),
+                    color=TERM_COLORS[name],
+                    lw=2.5 if name == "total" else 1.5,
+                    label=f"{TERM_LABELS[name]}: FWHM {fwhm:.3f} meV",
+                )
+            ax.set(title=MODE_LABELS.get(mode, mode), ylabel="Over its highest value")
+            ax.set_ylim(0, 1.45)  # the legend above the lines
+            ax.grid(True, alpha=0.3)
+            ax.legend(fontsize="small", loc="upper left")
+        for ax in axes.flat[len(modes) :]:
+            ax.set_visible(False)
+        for ax in axes[-1]:
+            ax.set(xlabel="δE, the error of the energy transfer [meV]")
+            ax.set_xlim(-2.5, 2.5)
+    return fig
+
+
 def plot_resolutions(
     lines: dict[Mode, sc.Dataset],
     pulses: dict[Mode, sc.DataArray],
     title: str,
+    models: dict[Mode, sc.Dataset] | None = None,
 ) -> Figure:
     """Draw the FWHM of the elastic line and the flux of each sub-pulse against Ei, in every mode.
 
@@ -752,7 +958,8 @@ def plot_resolutions(
     square the flux. The FWHM has the error of the fit of :func:`fit_elastic_lines`; the flux has
     none: :func:`.find_patches` sums the intensity of the monitor without its errors, which are
     small from 1e9 rays. The n-th sub-pulse of one mode is the n-th of another, as in
-    :func:`resolution_table`.
+    :func:`resolution_table`. The first panel also draws the FWHM of ``models``, the analytic
+    model of :mod:`.elastic_resolution_model`, as a line in the color of its mode.
 
     Parameters
     ----------
@@ -762,6 +969,8 @@ def plot_resolutions(
         The sub-pulses of :func:`.sample_runs.subpulse_timing`, by mode, with their flux.
     title:
         The title of the figure.
+    models:
+        The widths of :func:`model_resolutions`, by mode. If ``None``, no lines.
 
     Returns
     -------
@@ -782,6 +991,14 @@ def plot_resolutions(
             style = {"color": color, "fmt": "o", "ms": 7, "capsize": 3}
             label = MODE_LABELS.get(mode, mode)
             absolute.errorbar(ei, fwhm.values, yerr=error, label=label, **style)
+            if models is not None and mode in models:
+                curve = models[mode]
+                absolute.plot(
+                    curve.coords["incident_energy"].values,
+                    curve["fwhm"].values,
+                    color=color,
+                    lw=1.5,
+                )
             relative.errorbar(ei, 100 * fwhm.values / ei, yerr=100 * error / ei, **style)
             flux_ei = pulses[mode].coords["incident_energy"].to(unit="meV").values
             flux = pulses[mode].to(unit="1/s").values / 1e6
@@ -828,7 +1045,11 @@ def plot_resolutions(
             ax.grid(True, alpha=0.3)
             ax.set_ylim(bottom=0)
         ratios.set_ylim(top=RATIO_LEGEND_ROOM * ratios.get_ylim()[1])  # the legend above the data
-        absolute.legend(loc="upper left")
+        handles, labels = absolute.get_legend_handles_labels()
+        if models:
+            handles.append(Line2D([], [], color="gray", lw=1.5))
+            labels.append("Lines: the analytic model")
+        absolute.legend(handles, labels, loc="upper left")
         handles, labels = ratios.get_legend_handles_labels()  # the FWHM in one column, the flux
         order = sorted(range(len(labels)), key=lambda i: not labels[i].startswith("FWHM"))
         ratios.legend(
@@ -851,6 +1072,10 @@ def analyze(out: Path | None = None, modes: tuple[Mode, ...] = MODES) -> list[Pa
     ``trex_elastic_resolution_incoherent_m_sqe.png``, from :func:`plot_q_e_maps`; with more than
     one mode, ``trex_elastic_resolution_incoherent_modes.png``, from :func:`plot_resolutions`,
     and ``trex_elastic_resolution_incoherent_modes.txt``, the table of :func:`resolution_table`.
+    The analytic model adds ``trex_elastic_resolution_incoherent_model.txt``, the table of
+    :func:`model_table`, ``trex_elastic_resolution_incoherent_terms.txt``, that of
+    :func:`terms_table`, and ``trex_elastic_resolution_incoherent_terms.png``, from
+    :func:`plot_model_terms`.
 
     Parameters
     ----------
@@ -896,8 +1121,23 @@ def analyze(out: Path | None = None, modes: tuple[Mode, ...] = MODES) -> list[Pa
             lines,
             fluxes,
             f"T-Rex, vanadium: the elastic resolution in {', '.join(lines)}\n{conditions}",
+            model_resolutions(lines),
         )
         files.append(cli.save_figure(fig, folder / f"{NAME}_modes.png"))
+        table = model_table(lines, model_resolutions(lines, points=None))
+        print(table, end="")
+        files.append(cli.save_text(table, folder / f"{NAME}_model.txt"))
+    ei, terms = model_terms(modes)
+    table = terms_table(ei, terms)
+    print(table, end="")
+    files.append(cli.save_text(table, folder / f"{NAME}_terms.txt"))
+    conditions = define_instrument().running_conditions().replace(f" · {modes[0]}", "")
+    fig = plot_model_terms(
+        ei,
+        modes,
+        f"T-Rex, the analytic elastic resolution at Ei = {ei:.2f} meV, that of λ0\n{conditions}",
+    )
+    files.append(cli.save_figure(fig, folder / f"{NAME}_terms.png"))
     return files
 
 

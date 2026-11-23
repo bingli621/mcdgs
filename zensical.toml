@@ -32,6 +32,7 @@ nav = [
       { "Masked source" = "instruments/trex/masked-source.md" },
       { "Incident energy" = "instruments/trex/incident-energy.md" },
       { "Elastic resolution" = "instruments/trex/elastic-resolution-incoherent.md" },
+      { "Analytic resolution" = "instruments/trex/elastic-resolution-model.md" },
       { "Diffraction" = "instruments/trex/diffraction.md" },
       { "Rotation scan" = "instruments/trex/diffraction-scan.md" },
     ] },

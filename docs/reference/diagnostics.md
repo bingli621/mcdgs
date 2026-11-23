@@ -51,6 +51,8 @@ documentation. See [Source](../instruments/trex/source.md),
 
 ::: mcdgs.diagnostics.trex.elastic_resolution_incoherent
 
+::: mcdgs.diagnostics.trex.elastic_resolution_model
+
 ::: mcdgs.diagnostics.trex.diffraction
 
 ::: mcdgs.diagnostics.trex.diffraction_scan
