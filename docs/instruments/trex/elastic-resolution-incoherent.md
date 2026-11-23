@@ -71,22 +71,27 @@ two parts, with `run_to_sample` and `run_from_sample` of
 5. **The spectra.** `energy_spectra` sums the neutrons of each sub-pulse into 0.05 meV bins of
    E. It weights each one by the solid angle of its pixel and divides by the 2.11 sr of all the
    pixels. The result is the intensity averaged over the detector, per neutron at the
-   pre-sample monitor, per steradian and per meV.
+   pre-sample monitor, per steradian and per meV. Each neutron of weight w counts with the
+   variance w², so a bin has the error √Σw².
 
 ## The spectra
 
-![The intensity of each of the 15 sub-pulses against the energy transfer, over its whole window on a log scale and near the elastic line on a linear scale](figures/elastic-resolution-incoherent/trex_elastic_resolution_incoherent.png)
+![The intensity of each of the 15 sub-pulses against the energy transfer, stacked from the highest Ei at the top to the lowest at the bottom, each with its Gaussian fit](figures/elastic-resolution-incoherent/trex_elastic_resolution_incoherent.png)
 
-The top panel draws each sub-pulse over its whole arrival window, against E / Ei, on a log scale
-four decades deep. The bottom panel draws the elastic lines against E in meV, on a linear scale.
+The figure is linear and spans the whole energy coverage: each sub-pulse is drawn over its
+arrival window, −0.8 Ei to 0.8 Ei, empty bins included. Each bin is a point with its error, and
+each line is the Gaussian fitted to a sub-pulse, labeled with its Ei, its FWHM and the FWHM
+as a fraction of Ei. The sub-pulses are
+stacked from the highest Ei at the top to the lowest at the bottom, each lifted above the one
+below by 0.4 of the highest bin, so that each stands on its own baseline and the width of its
+window shows.
 
 - **One line per sub-pulse, and nothing else.** No sub-pulse has neutrons beyond about
   ±0.1 Ei, although its window spans ±0.8 Ei. Of the 1,403,295 neutrons on the pixels kept, only
   491 fall outside every window. So no sub-pulse leaks into the window of the next: there is no
   neutron [between the sub-pulses](neutrons-on-sample.md#between-the-sub-pulses).
-- **The width grows with Ei.** The line is 0.41 meV wide at 11.4 meV and 3.03 meV at 47.2 meV.
-  As a fraction of Ei it goes from 3.6 % at the longest wavelength to about 7 % at the
-  shortest.
+- **The width grows with Ei**, from 0.40 meV at 11.4 meV to 3.4 meV at 47.2 meV. As a fraction
+  of Ei it goes from 3.5 % at the longest wavelength to about 7 % at the shortest.
 - **The shape.** The lines of the long wavelengths are narrow and peaked. Those of the short
   wavelengths have a flat top and long tails.
 - **The intensity falls with the wavelength**, from 6.8 × 10⁻³ to 3.2 × 10⁻³ per steradian. The
@@ -94,15 +99,24 @@ four decades deep. The bottom panel draws the elastic lines against E in meV, on
   neutrons. The intensity is per neutron at the pre-sample monitor, so it also counts the
   neutrons that miss the 20 mm cylinder.
 
-## The elastic lines
+## The Gaussian fits
 
-`elastic_lines` gives the line of each sub-pulse: its center, the highest bin, and its full width
-at half maximum, interpolated linearly on each side. The intensity is that of the whole spectrum,
-summed over E. `analyze` prints the table:
+`fit_elastic_lines` fits a Gaussian to the line of each sub-pulse against Ef, weighting each bin
+by its error:
+
+I(Ef) = h exp(−(Ef − Ec)² / 2σ²), with FWHM = 2 √(2 ln 2) σ ≈ 2.355 σ.
+
+σ is the standard deviation of the Gaussian, not its width: the full width at half maximum is
+2.355 times larger. The fit keeps only the core of each line, the bins of at least 20 % of the
+highest. The tails are not Gaussian, and a bin there holds few neutrons, some of tiny weight,
+whose variance is no error for the bin. Fitted over every bin, the tails pull the Gaussian
+narrow, with χ² per degree of freedom of up to 540. Over the core it is 0.7 to 1.8.
+
+The intensity is that of the whole spectrum, summed over E. `analyze` prints the table:
 
 --8<-- "docs/instruments/trex/figures/elastic-resolution-incoherent/trex_elastic_resolution_incoherent_lines.txt"
 
-Every line is centered within 0.075 meV of zero, about one bin of 0.05 meV. So the Ei of each
+Every center lies within 0.1 meV of its Ei, 0.02 to 0.09 meV above it. So the Ei of each
 sub-pulse and its time at the sample agree with what the detector sees.
 
 ## Making the figures
