@@ -119,16 +119,43 @@ The intensity is that of the whole spectrum, summed over E. `analyze` prints the
 Every center lies within 0.1 meV of its Ei, 0.02 to 0.09 meV above it. So the Ei of each
 sub-pulse and its time at the sample agree with what the detector sees.
 
+## S(Q, E)
+
+![The S(Q, E) map of each of the 15 sub-pulses, |Q| across and E up, from the highest Ei to the lowest, with the limits of the detector](figures/elastic-resolution-incoherent/trex_elastic_resolution_incoherent_sqe.png)
+
+`q_e_maps` histograms the neutrons of each sub-pulse in |Q| and E, in bins of 0.05 meV and
+0.05 Å⁻¹. Every sub-pulse has the same bins, so every map spans the same range: E from −38 to
+38 meV, the arrival window of the highest Ei, and |Q| from 0 to 11 Å⁻¹, the largest the
+detector reaches. `plot_q_e_maps` draws the 15 maps from the highest Ei to the lowest, on shared
+axes and one linear scale in turbo, with the empty bins in white. The intensity is that of the
+spectra per bin of |Q| as well, so a map summed over |Q| gives back the spectrum of its
+sub-pulse. It is averaged over the solid angle of the whole detector, not normalized by the
+coverage of each bin: that is the normalization still to come on the way to S(Q, E).
+
+The dashed lines are the |Q| of the smallest and the largest 2θ of the pixels, 5° and 143.7°, at
+each E of the arrival window of the sub-pulse. The detector reaches only the bins between them,
+and the lower the Ei, the smaller the part of the common range it covers.
+
+- **Only the elastic line.** Each map holds one band at E = 0, as wide as the resolution of its
+  sub-pulse, from the smallest |Q| to the largest the detector reaches. The rest of the
+  coverage is empty: vanadium scatters nothing inelastically here.
+- **The band is brighter at low |Q|.** At 2θ below 36°, the detector covers both sides of the
+  beam, −36° to −5° as well as 5° to 36°, so twice as many pixels fall in each bin of |Q|. The
+  step lies at 2 ki sin 18°, from 2.9 Å⁻¹ at 47.2 meV to 1.4 Å⁻¹ at 11.4 meV. Normalizing each bin
+  by its coverage would remove it.
+- **The scale is shared**, so the maps of the highest Ei are the faintest: their lines are the
+  widest, and their intensity is spread over more meV.
+
 ## Making the figures
 
-The figure needs McStas, so it is not made with the site. To run McStas and make it, run:
+The figures need McStas, so they are not made with the site. To run McStas and make them, run:
 
 ```bash
 pixi run python -c "from mcdgs.diagnostics.trex.elastic_resolution_incoherent import main; main()"
 ```
 
 At its defaults, `main` runs both parts, 1e9 rays from the masked source with seed 1, as for
-the figure here. It prints the table and saves the figure and the table to
+the figures here. It prints the table and saves both figures and the table to
 `mcdgs_workspace/results/trex_elastic_resolution_incoherent/`, or to the folder given as `out`.
 Running the module, as `pixi run docs-diagnostics` does, only reduces the runs again, without
 McStas:

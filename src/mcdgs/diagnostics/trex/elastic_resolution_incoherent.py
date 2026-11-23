@@ -30,6 +30,8 @@ The reduction is that of :mod:`.diagnostics.trex.elastic_plane`:
 :func:`fit_elastic_lines` fits a Gaussian to the elastic line of each sub-pulse, against the
 final energy Ef, and gives its FWHM, ``FWHM_PER_SIGMA`` times its standard deviation σ.
 :func:`plot_spectra` draws the spectra with their errors and their Gaussians, against E.
+:func:`q_e_maps` histograms the neutrons of each sub-pulse in |Q| and E as well, and
+:func:`plot_q_e_maps` draws the maps of all of them in one figure.
 
 :func:`main` is :func:`simulate`, which runs McStas, then :func:`analyze`, which reduces and
 draws. Run it to do both::
@@ -42,6 +44,7 @@ Running the module only reduces the runs again, without McStas, with :func:`anal
 """
 
 from pathlib import Path
+from typing import NamedTuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -70,6 +73,14 @@ FWHM_PER_SIGMA = 2 * np.sqrt(2 * np.log(2))  # the full width at half maximum of
 FIT_FRACTION = 0.2
 SHIFT = 0.4  # each sub-pulse is lifted above the one below by this much of the highest bin
 FONT_SIZE = 14  # pt, of every text of the figure
+MAP_Q_STEP = 0.05  # 1/Å, the bin width in |Q| of the S(Q,E) maps; in E, ENERGY_STEP
+# the unit of the maps, as scipp cannot print meV and 1/Å together but in SI units
+MAP_UNIT = "1/(sr·meV·Å⁻¹)"
+MAP_COLUMNS = 3  # the maps of the sub-pulses, in rows of this many
+# meV Å², ħ²/2m of the neutron: E = HBAR2_OVER_2M k²
+HBAR2_OVER_2M = float(
+    (sc.constants.hbar**2 / (2 * sc.constants.neutron_mass)).to(unit="meV*Å**2").value
+)
 
 
 # --8<-- [start:instrument]
@@ -381,7 +392,6 @@ def plot_spectra(
     with plt.rc_context({"font.size": FONT_SIZE}):  # every text of the figure
         fig, ax = plt.subplots(figsize=(13, 12), layout="constrained")
         fig.suptitle(title)
-        points = {"fmt": "o", "ms": 1.5, "elinewidth": 0.5, "capsize": 0}  # not joined
         for i, (values, variances, ei, color, level) in enumerate(
             zip(spectra.values, spectra.variances, energies, colors, levels)
         ):
@@ -392,7 +402,9 @@ def plot_spectra(
             )
             dense = np.linspace(window[0] * ei, window[1] * ei, 4000)
             lift = level * step
-            ax.errorbar(x, y + lift, yerr=error, color=color, **points)
+            ax.errorbar(  # points, not joined
+                x, y + lift, yerr=error, color=color, fmt="o", ms=1.5, elinewidth=0.5, capsize=0
+            )
             # E = Ei - Ef: the Gaussian of Ef, centered at Ei - center in E
             ax.plot(dense, gaussian(dense, height, ei - center, sigma) + lift, color=color, lw=1.0)
             fwhm = lines["fwhm"].values[i]
@@ -413,6 +425,196 @@ def plot_spectra(
         )
         ax.grid(True, alpha=0.3)
     return fig
+
+
+def momentum_transfer(
+    incident_energy: float, energy_transfer: np.ndarray, two_theta: float
+) -> np.ndarray:
+    """Return |Q| of a neutron of an incident energy and energy transfer, scattered by 2θ.
+
+    ``Q² = ki² + kf² - 2 ki kf cos 2θ``, with ``E = HBAR2_OVER_2M k²``.
+
+    Parameters
+    ----------
+    incident_energy:
+        Ei, in meV.
+    energy_transfer:
+        E = Ei - Ef, in meV, below Ei.
+    two_theta:
+        The scattering angle, in deg.
+
+    Returns
+    -------
+    :
+        |Q| for each energy transfer, in 1/Å.
+
+    Examples
+    --------
+    Elastic and scattered straight back, Q is 2 ki:
+
+    >>> ki = np.sqrt(20.0 / HBAR2_OVER_2M)
+    >>> bool(np.isclose(momentum_transfer(20.0, np.array([0.0]), 180.0)[0], 2 * ki))
+    True
+    """
+    ki = np.sqrt(incident_energy / HBAR2_OVER_2M)
+    kf = np.sqrt((incident_energy - energy_transfer) / HBAR2_OVER_2M)
+    return np.sqrt(ki**2 + kf**2 - 2 * ki * kf * np.cos(np.radians(two_theta)))
+
+
+def q_e_maps(
+    events: sc.DataArray,
+    pulses: sc.DataArray,
+    solid_angle: sc.Variable,
+    two_theta_limits: tuple[float, float],
+    window: tuple[float, float] = DEFAULT_ENERGY_TRANSFER_RATIO,
+    energy_step: float = ENERGY_STEP,
+    q_step: float = MAP_Q_STEP,
+) -> sc.DataArray:
+    """Histogram the neutrons of each sub-pulse in |Q| and E, as :func:`energy_spectra` does in E.
+
+    Every sub-pulse has the same bins, so that all the maps span the same range: in E those of
+    :func:`energy_spectra`, wide enough for the arrival window of the highest Ei, and in |Q|
+    from 0 to the largest |Q| the detector reaches, at the largest 2θ and the highest Ei. The
+    intensity is that of :func:`energy_spectra` per bin of |Q| too, so a map summed over |Q|
+    gives the spectrum of its sub-pulse. It is averaged over the solid angle of the whole
+    detector, not normalized by the coverage of each bin.
+
+    Parameters
+    ----------
+    events:
+        The neutrons of :func:`.elastic_plane.normalized_events`, in 1/sr, with their
+        ``subpulse``, ``energy_transfer``, ``Q`` and the ``solid_angle`` of their pixel.
+    pulses:
+        The sub-pulses of :func:`.elastic_plane.subpulse_timing`.
+    solid_angle:
+        The solid angle of all the pixels the neutrons come from, in sr.
+    two_theta_limits:
+        The smallest and the largest 2θ of those pixels, in deg.
+    window:
+        The smallest and the largest ``E / Ei`` of the arrival windows, as
+        :func:`.arrival_window`.
+    energy_step, q_step:
+        The bin widths, in meV and in 1/Å.
+
+    Returns
+    -------
+    :
+        The intensity per incident neutron, per steradian, per meV and per 1/Å
+        (``MAP_UNIT``), along ``subpulse``, ``energy_transfer`` and ``Q``, with the bin edges
+        ``energy_transfer`` and ``Q``, in meV and 1/Å, and the ``incident_energy`` of each
+        sub-pulse.
+    """
+    energies = pulses.coords["incident_energy"].to(unit="meV").values
+    highest = float(energies.max())
+    limit = np.ceil(max(map(abs, window)) * highest)
+    energy = bin_edges("energy_transfer", -limit, limit, energy_step, unit="meV")
+    # the largest |Q| of all: at the largest 2θ, and the largest kf, of the highest Ei
+    reach = momentum_transfer(highest, np.array([window[0] * highest]), two_theta_limits[1])[0]
+    q = bin_edges("Q", 0.0, float(np.ceil(reach)), q_step, unit="1/Å")
+    fractions = events.copy(deep=False)
+    fractions.data = events.data * events.coords["solid_angle"]  # of the incident neutrons
+    fractions.coords["energy_transfer"] = events.coords["energy_transfer"].to(unit="meV")
+    fractions.coords["Q"] = events.coords["Q"].to(unit="1/Å")
+    grouped = fractions.group(sc.arange("subpulse", pulses.sizes["subpulse"]))
+    maps = grouped.hist(energy_transfer=energy, Q=q) / solid_angle.to(unit="sr")
+    maps = maps / sc.scalar(energy_step, unit="meV") / sc.scalar(q_step, unit="1/Å")
+    maps.coords["incident_energy"] = pulses.coords["incident_energy"].copy()
+    return maps
+
+
+def plot_q_e_maps(
+    maps: sc.DataArray,
+    two_theta_limits: tuple[float, float],
+    title: str,
+    window: tuple[float, float] = DEFAULT_ENERGY_TRANSFER_RATIO,
+    columns: int = MAP_COLUMNS,
+) -> Figure:
+    """Draw the S(Q,E) map of every sub-pulse, |Q| across and E up, from the highest Ei.
+
+    Every map spans the same range of |Q| and E, that of the bins of :func:`q_e_maps`, and they
+    share one linear color scale, turbo, from 0 to the highest bin of all, with the empty bins
+    in white. The dashed lines are the |Q| of the smallest and the largest 2θ of the detector at
+    each E of the arrival window of the sub-pulse, ``window`` times its Ei: the detector reaches
+    the bins between them only.
+
+    Parameters
+    ----------
+    maps:
+        The maps of :func:`q_e_maps`.
+    two_theta_limits:
+        The smallest and the largest 2θ of the pixels, in deg.
+    title:
+        The title of the figure.
+    window:
+        The smallest and the largest ``E / Ei`` of the arrival windows, as
+        :func:`.arrival_window`.
+    columns:
+        The number of maps in a row.
+
+    Returns
+    -------
+    :
+        The figure.
+    """
+    maps = maps.transpose(["subpulse", "energy_transfer", "Q"])
+    q = maps.coords["Q"].to(unit="1/Å").values
+    energy = maps.coords["energy_transfer"].to(unit="meV").values
+    energies = maps.coords["incident_energy"].to(unit="meV").values
+    order = np.argsort(-energies)  # the highest Ei first
+    rows = -(-order.size // columns)
+    top = float(maps.values.max())
+    cmap = plt.get_cmap("turbo").with_extremes(bad="white")
+    with plt.rc_context({"font.size": FONT_SIZE}):
+        fig, axes = plt.subplots(
+            rows,
+            columns,
+            figsize=(5.5 * columns, 4.5 * rows),
+            sharex=True,
+            sharey=True,
+            layout="constrained",
+            squeeze=False,
+        )
+        fig.suptitle(title)
+        mesh = None
+        for ax, i in zip(axes.flat, order):
+            ei = float(energies[i])
+            mesh = ax.pcolormesh(
+                q,
+                energy,
+                np.ma.masked_less_equal(maps.values[i], 0),  # empty bins in white
+                cmap=cmap,
+                vmin=0.0,
+                vmax=top,
+            )
+            own = np.linspace(window[0] * ei, window[1] * ei, 400)
+            for two_theta in two_theta_limits:
+                ax.plot(momentum_transfer(ei, own, two_theta), own, "k--", lw=0.8)
+            ax.set(
+                xlim=(q[0], q[-1]), ylim=(energy[0], energy[-1]), title=f"{i}: Ei = {ei:.1f} meV"
+            )
+        for ax in axes.flat[order.size :]:
+            ax.set_visible(False)
+        for ax in axes[-1]:
+            ax.set_xlabel("|Q| [1/Å]")
+        for ax in axes[:, 0]:
+            ax.set_ylabel("E = Ei − Ef [meV]")
+        if mesh is not None:
+            fig.colorbar(
+                mesh,
+                ax=axes,
+                shrink=0.6,
+                label=f"S(Q, E) [{MAP_UNIT}], not normalized by the coverage of each bin",
+            )
+    return fig
+
+
+class Reduction(NamedTuple):
+    """The reduction of a run of :func:`simulate`, from :func:`reduce_runs`."""
+
+    pulses: sc.DataArray  # the sub-pulses of :func:`.elastic_plane.subpulse_timing`
+    spectra: sc.DataArray  # of :func:`energy_spectra`
+    maps: sc.DataArray  # of :func:`q_e_maps`
+    two_theta_limits: tuple[float, float]  # deg, the smallest and the largest 2θ of the pixels
 
 
 def simulate(ncount: float = 1e9, seed: int = 1) -> tuple[Path, Path]:
@@ -445,7 +647,7 @@ def simulate(ncount: float = 1e9, seed: int = 1) -> tuple[Path, Path]:
 
 def reduce_runs(
     to_sample: str | Path | None = None, from_sample: str | Path | None = None
-) -> tuple[sc.DataArray, sc.DataArray]:
+) -> Reduction:
     """Reduce the two parts of a McStas run of :func:`simulate`, without running McStas.
 
     Parameters
@@ -458,8 +660,9 @@ def reduce_runs(
     Returns
     -------
     :
-        The sub-pulses of :func:`.elastic_plane.subpulse_timing`, and the spectra of
-        :func:`energy_spectra`, from the pixels of :func:`scattered_pixels`.
+        The sub-pulses of :func:`.elastic_plane.subpulse_timing`, the spectra of
+        :func:`energy_spectra` and the maps of :func:`q_e_maps`, from the pixels of
+        :func:`scattered_pixels`, and the smallest and the largest 2θ of those pixels.
     """
     workspace = Workspace.find()
     to_sample = Path(to_sample or workspace.run_folder(TO_SAMPLE))
@@ -471,7 +674,14 @@ def reduce_runs(
     binned = scattered_pixels(binned)
     events = plane.normalized_events(binned, pulses)
     solid_angle = plane.pixel_solid_angle(binned).sum()
-    return pulses, energy_spectra(events, pulses, solid_angle)
+    angles = two_theta(binned)
+    limits = (float(angles.min().value), float(angles.max().value))
+    return Reduction(
+        pulses,
+        energy_spectra(events, pulses, solid_angle),
+        q_e_maps(events, pulses, solid_angle, limits),
+        limits,
+    )
 
 
 def analyze(
@@ -482,8 +692,9 @@ def analyze(
     """Reduce the two parts of a McStas run, and save the spectra and the fits of their lines.
 
     It runs no McStas, so it can run again on the same runs; :func:`main` runs them first. The
-    files are ``trex_elastic_resolution_incoherent.png``, from :func:`plot_spectra`, and
-    ``trex_elastic_resolution_incoherent_lines.txt``, the table of :func:`lines_table`.
+    files are ``trex_elastic_resolution_incoherent.png``, from :func:`plot_spectra`,
+    ``trex_elastic_resolution_incoherent_lines.txt``, the table of :func:`lines_table`, and
+    ``trex_elastic_resolution_incoherent_sqe.png``, from :func:`plot_q_e_maps`.
 
     Parameters
     ----------
@@ -498,8 +709,9 @@ def analyze(
     :
         The paths of the files.
     """
-    pulses, spectra = reduce_runs(to_sample, from_sample)
+    pulses, spectra, maps, limits = reduce_runs(to_sample, from_sample)
     folder = cli.output_folder(out, NAME)
+    conditions = define_instrument().running_conditions()
     lines = fit_elastic_lines(spectra)
     table = lines_table(lines)
     print(table, end="")
@@ -508,9 +720,11 @@ def analyze(
         spectra,
         lines,
         f"T-Rex, vanadium: the energy transfer of {pulses.sizes['subpulse']} sub-pulses\n"
-        f"{define_instrument().running_conditions()}",
+        f"{conditions}",
     )
     files.append(cli.save_figure(fig, folder / f"{NAME}.png"))
+    fig = plot_q_e_maps(maps, limits, f"T-Rex, vanadium: S(Q, E) of each sub-pulse\n{conditions}")
+    files.append(cli.save_figure(fig, folder / f"{NAME}_sqe.png"))
     return files
 
 
