@@ -10,9 +10,12 @@ instrument, and whatever lies away from it comes from the reduction or the instr
 sample. The cylinder scatters only once, into the window of
 :func:`.solid_angles.detector_window`, which covers the banana detector.
 
-:func:`main` runs it in two parts, with :class:`.Simulation`, as
-:mod:`.diagnostics.trex.diffraction` does: from the source to ``sample_pos``, which dumps the
-beam there into a beam file, then from that beam through the vanadium to the detector.
+It runs in each mode of ``MODES``: ``"FF"``, the wide slits of the pulse-shaping and
+monochromatic choppers, for high flux, and ``"RR"``, the narrow ones, for high resolution, with
+the same ``lambda0`` and ``rrm``, so the same sub-pulses. :func:`main` runs each mode in two
+parts, with :class:`.Simulation`, as :mod:`.diagnostics.trex.diffraction` does: from the source
+to ``sample_pos``, which dumps the beam there into a beam file, then from that beam through the
+vanadium to the detector, into the folders of :func:`run_names`.
 
 The reduction is that of :mod:`.diagnostics.trex.sample_runs`, as for diffraction:
 
@@ -32,7 +35,8 @@ The reduction is that of :mod:`.diagnostics.trex.sample_runs`, as for diffractio
 final energy Ef, and gives its FWHM, ``FWHM_PER_SIGMA`` times its standard deviation σ.
 :func:`plot_spectra` draws the spectra with their errors and their Gaussians, against E.
 :func:`q_e_maps` histograms the neutrons of each sub-pulse in |Q| and E as well, and
-:func:`plot_q_e_maps` draws the maps of all of them in one figure.
+:func:`plot_q_e_maps` draws the maps of all of them in one figure. :func:`plot_resolutions` and
+:func:`resolution_table` compare the FWHM of the modes.
 
 :func:`main` is :func:`simulate`, which runs McStas, then :func:`analyze`, which reduces and
 draws. Run it to do both::
@@ -57,6 +61,7 @@ from mcdgs.core.components import Incoherent
 from mcdgs.diagnostics import cli
 from mcdgs.diagnostics.trex import sample_runs as runs
 from mcdgs.diagnostics.trex.solid_angles import detector_window
+from mcdgs.instruments.trex.choppers import Mode
 from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
 from mcdgs.mcstas import Simulation, Workspace
 from mcdgs.reduction.binning import bin_edges, bins_title
@@ -65,8 +70,7 @@ from mcdgs.reduction.mdnorm import momentum_transfer, q_e_coverage
 from mcdgs.samples import vanadium
 
 NAME = "trex_elastic_resolution_incoherent"
-TO_SAMPLE = f"{NAME}_run_to_sample"  # the run folder of the first part, source -> sample_pos
-FROM_SAMPLE = f"{NAME}_run_from_sample"  # that of the second part, sample_pos -> detector
+MODES: tuple[Mode, ...] = ("FF", "RR")  # high flux, high resolution: each runs on its own
 MIN_TWO_THETA = 5.0  # deg: the pixels closer to the beam see the direct beam past the beamstop
 ENERGY_STEP = 0.05  # meV, the bin width of the spectra
 FWHM_PER_SIGMA = 2 * np.sqrt(2 * np.log(2))  # the full width at half maximum of a Gaussian
@@ -111,9 +115,16 @@ class TRexElasticResolution(TRex):
         super().__init__(sample=sample(), params=params, source_masked=source_masked)
 
 
-def define_instrument() -> TRexElasticResolution:
-    """Return the instrument of this diagnostic: :class:`TRexElasticResolution` at its defaults."""
-    params = Params()  # the default control parameters
+def define_instrument(mode: Mode = "FF") -> TRexElasticResolution:
+    """Return the instrument of this diagnostic: :class:`TRexElasticResolution` at its defaults.
+
+    Parameters
+    ----------
+    mode:
+        The slits of the pulse-shaping and monochromatic choppers: ``"FF"``, the default, for
+        high flux, or ``"RR"`` for high resolution.
+    """
+    params = Params(mode=mode)  # the default control parameters, in the mode
     return TRexElasticResolution(params=params)
 
 
@@ -587,13 +598,26 @@ class Reduction(NamedTuple):
     maps: sc.DataArray  # of :func:`q_e_maps`
 
 
-def simulate(ncount: float = 1e9, seed: int = 1) -> tuple[Path, Path]:
-    """Run :class:`TRexElasticResolution` in McStas, in two parts split at ``sample_pos``.
+def run_names(mode: Mode) -> tuple[str, str]:
+    """Return the run folders of a mode: the part to ``sample_pos``, and the part from it.
 
-    The first part runs from the source to ``sample_pos`` into ``TO_SAMPLE``, with the monitors
-    of the incident energy and the beam file; the second from that beam through the vanadium to
-    the detector, into ``FROM_SAMPLE``, both in the runs folder of :meth:`.Workspace.find`. Each
-    replaces the folder of an earlier run.
+    Examples
+    --------
+    >>> run_names("RR")[0]
+    'trex_elastic_resolution_incoherent_rr_run_to_sample'
+    """
+    return f"{NAME}_{mode.lower()}_run_to_sample", f"{NAME}_{mode.lower()}_run_from_sample"
+
+
+def simulate(
+    ncount: float = 1e9, seed: int = 1, modes: tuple[Mode, ...] = MODES
+) -> dict[Mode, tuple[Path, Path]]:
+    """Run :class:`TRexElasticResolution` in McStas in each mode, in two parts split at ``sample_pos``.
+
+    In each mode, the first part runs from the source to ``sample_pos``, with the monitors of the
+    incident energy and the beam file; the second from that beam through the vanadium to the
+    detector, both into the folders of :func:`run_names`, in the runs folder of
+    :meth:`.Workspace.find`. Each replaces the folder of an earlier run.
 
     Parameters
     ----------
@@ -601,43 +625,53 @@ def simulate(ncount: float = 1e9, seed: int = 1) -> tuple[Path, Path]:
         Number of McStas rays of the first part, from the masked source. The second part runs
         every neutron of the beam file.
     seed:
-        Seed of the random numbers of the first part; the second part takes ``seed + 1``.
+        Seed of the random numbers of the first part, in every mode; the second part takes
+        ``seed + 1``.
+    modes:
+        The modes to run.
 
     Returns
     -------
     :
-        The folders of the first and the second part.
+        The folders of the first and the second part, by mode.
     """
-    sim = Simulation(define_instrument())
-    to_sample = sim.run_to_sample(folder_name=TO_SAMPLE, ncount=ncount, seed=seed)
-    # sample_pos -> detector, from the beam file, in the frame of sample_pos: the beam frame
-    from_sample = sim.run_from_sample(folder_name=FROM_SAMPLE, seed=seed + 1)
-    return to_sample.folder, from_sample.folder
+    folders = {}
+    for mode in modes:
+        to_name, from_name = run_names(mode)
+        sim = Simulation(define_instrument(mode))
+        to_sample = sim.run_to_sample(folder_name=to_name, ncount=ncount, seed=seed)
+        # sample_pos -> detector, from the beam file, in the frame of sample_pos: the beam frame
+        from_sample = sim.run_from_sample(folder_name=from_name, seed=seed + 1)
+        folders[mode] = (to_sample.folder, from_sample.folder)
+    return folders
 
 
 def reduce_runs(
-    to_sample: str | Path | None = None, from_sample: str | Path | None = None
+    mode: Mode = "FF", to_sample: str | Path | None = None, from_sample: str | Path | None = None
 ) -> Reduction:
     """Reduce the two parts of a McStas run of :func:`simulate`, without running McStas.
 
     Parameters
     ----------
+    mode:
+        The mode of the run.
     to_sample, from_sample:
-        The folders of the first and the second part. If ``None``, ``TO_SAMPLE`` and
-        ``FROM_SAMPLE`` in the runs folder of :meth:`.Workspace.find`, where :func:`simulate`
-        writes.
+        The folders of the first and the second part. If ``None``, those of :func:`run_names`
+        in the runs folder of :meth:`.Workspace.find`, where :func:`simulate` writes.
 
     Returns
     -------
     :
         The sub-pulses of :func:`.sample_runs.subpulse_timing`, the spectra of
         :func:`energy_spectra` and the maps of :func:`q_e_maps`, from the pixels of
-        :func:`scattered_pixels`, and the smallest and the largest 2θ of those pixels.
+        :func:`scattered_pixels`.
     """
     workspace = Workspace.find()
-    to_sample = Path(to_sample or workspace.run_folder(TO_SAMPLE))
-    from_sample = Path(from_sample or workspace.run_folder(FROM_SAMPLE))
-    pulses = runs.subpulse_timing_of_run(to_sample, define_instrument())  # as simulate runs it
+    to_name, from_name = run_names(mode)
+    to_sample = Path(to_sample or workspace.run_folder(to_name))
+    from_sample = Path(from_sample or workspace.run_folder(from_name))
+    # as simulate runs it
+    pulses = runs.subpulse_timing_of_run(to_sample, define_instrument(mode))
     binned = scattered_pixels(runs.read_detector(from_sample))
     pixels = runs.pixel_solid_angle(binned)
     events = normalized_events(binned, pulses, pixels)
@@ -648,52 +682,153 @@ def reduce_runs(
     )
 
 
-def analyze(
-    out: Path | None = None,
-    to_sample: str | Path | None = None,
-    from_sample: str | Path | None = None,
-) -> list[Path]:
-    """Reduce the two parts of a McStas run, and save the spectra and the fits of their lines.
+def resolution_table(lines: dict[Mode, sc.Dataset], pulses: dict[Mode, sc.DataArray]) -> str:
+    """Return the FWHM and the flux of each sub-pulse in every mode, as a Markdown table.
 
-    It runs no McStas, so it can run again on the same runs; :func:`main` runs them first. The
-    files are ``trex_elastic_resolution_incoherent.png``, from :func:`plot_spectra`,
-    ``trex_elastic_resolution_incoherent_lines.txt``, the table of :func:`lines_table`, and
-    ``trex_elastic_resolution_incoherent_sqe.png``, from :func:`plot_q_e_maps`.
+    The n-th sub-pulse of one mode is the n-th of another: the modes share ``lambda0`` and
+    ``rrm``, so the sub-pulses have the same Ei.
+
+    Parameters
+    ----------
+    lines:
+        The fits of :func:`fit_elastic_lines`, by mode, with the same sub-pulses.
+    pulses:
+        The sub-pulses of :func:`.sample_runs.subpulse_timing`, by mode, with their flux at the
+        pre-sample monitor.
+
+    Returns
+    -------
+    :
+        One row per sub-pulse: its Ei in the first mode, the FWHM, FWHM / Ei and flux of each
+        mode, and the FWHM and the flux of each mode after the first over those of the first.
+    """
+    modes = list(lines)
+    first = modes[0]
+    header = ["Sub-pulse", f"Ei {first}"]
+    for mode in modes:
+        header += [f"FWHM {mode}", f"FWHM / Ei {mode}", f"Flux {mode}"]
+    for mode in modes[1:]:
+        header += [f"FWHM {mode} / {first}", f"Flux {mode} / {first}"]
+    rows = []
+    for i, ei in enumerate(lines[first].coords["incident_energy"].to(unit="meV").values):
+        row = [f"{i}", f"{ei:.2f} meV"]
+        for mode in modes:
+            fwhm = lines[mode]["fwhm"]
+            row += [
+                f"{fwhm.values[i]:.3f} ± {np.sqrt(fwhm.variances[i]):.3f} meV",
+                f"{100 * fwhm.values[i] / ei:.2f} %",
+                f"{pulses[mode].values[i]:.2e} n/s",
+            ]
+        for mode in modes[1:]:
+            width = lines[mode]["fwhm"].values[i] / lines[first]["fwhm"].values[i]
+            flux = pulses[mode].values[i] / pulses[first].values[i]
+            row += [f"{width:.2f}", f"{flux:.2f}"]
+        rows.append(row)
+    return cli.markdown_table(header, rows)
+
+
+def plot_resolutions(lines: dict[Mode, sc.Dataset], spectra: sc.DataArray, title: str) -> Figure:
+    """Draw the FWHM of the elastic line of each sub-pulse against its Ei, in every mode.
+
+    The first panel draws the FWHM, the second the FWHM as a fraction of Ei, each a point with
+    the error of the fit of :func:`fit_elastic_lines`, not joined.
+
+    Parameters
+    ----------
+    lines:
+        The fits of :func:`fit_elastic_lines`, by mode.
+    spectra:
+        The spectra the lines are fitted to, for the bins under the title, :func:`.bins_title`.
+    title:
+        The title of the figure.
+
+    Returns
+    -------
+    :
+        The figure.
+    """
+    with plt.rc_context({"font.size": FONT_SIZE}):
+        fig, (absolute, relative) = plt.subplots(1, 2, figsize=(14, 6), layout="constrained")
+        fig.suptitle(f"{title}\n{bins_title({'E': spectra.coords['energy_transfer']})}")
+        for mode, color, marker in zip(lines, ("tab:blue", "tab:red"), ("o", "s")):
+            ei = lines[mode].coords["incident_energy"].to(unit="meV").values
+            fwhm = lines[mode]["fwhm"]
+            error = np.sqrt(fwhm.variances)
+            label = {"FF": "FF, high flux", "RR": "RR, high resolution"}.get(mode, mode)
+            style = {"color": color, "fmt": marker, "ms": 6, "capsize": 3, "label": label}
+            absolute.errorbar(ei, fwhm.values, yerr=error, **style)
+            relative.errorbar(ei, 100 * fwhm.values / ei, yerr=100 * error / ei, **style)
+        absolute.set(xlabel="Ei [meV]", ylabel="FWHM [meV]", title="The width of the elastic line")
+        relative.set(xlabel="Ei [meV]", ylabel="FWHM / Ei [%]", title="As a fraction of Ei")
+        for ax in (absolute, relative):
+            ax.grid(True, alpha=0.3)
+            ax.set_ylim(bottom=0)
+            ax.legend()
+    return fig
+
+
+def analyze(out: Path | None = None, modes: tuple[Mode, ...] = MODES) -> list[Path]:
+    """Reduce the runs of every mode, save their spectra and fits, and compare the modes.
+
+    It runs no McStas, so it can run again on the same runs; :func:`main` runs them first. For
+    each mode, ``m`` its name in lower case, the files are
+    ``trex_elastic_resolution_incoherent_m.png``, from :func:`plot_spectra`,
+    ``trex_elastic_resolution_incoherent_m_lines.txt``, the table of :func:`lines_table`, and
+    ``trex_elastic_resolution_incoherent_m_sqe.png``, from :func:`plot_q_e_maps`; with more than
+    one mode, ``trex_elastic_resolution_incoherent_modes.png``, from :func:`plot_resolutions`,
+    and ``trex_elastic_resolution_incoherent_modes.txt``, the table of :func:`resolution_table`.
 
     Parameters
     ----------
     out:
         Folder of the files. If ``None``, ``trex_elastic_resolution_incoherent`` in the results
         folder of :meth:`.Workspace.find`.
-    to_sample, from_sample:
-        The folders of the two parts, as :func:`reduce_runs`.
+    modes:
+        The modes to reduce, whose runs :func:`simulate` made.
 
     Returns
     -------
     :
         The paths of the files.
     """
-    pulses, spectra, maps = reduce_runs(to_sample, from_sample)
     folder = cli.output_folder(out, NAME)
-    conditions = define_instrument().running_conditions()
-    lines = fit_elastic_lines(spectra)
-    table = lines_table(lines)
-    print(table, end="")
-    files = [cli.save_text(table, folder / f"{NAME}_lines.txt")]
-    fig = plot_spectra(
-        spectra,
-        lines,
-        f"T-Rex, vanadium: the energy transfer of {pulses.sizes['subpulse']} sub-pulses\n"
-        f"{conditions}",
-    )
-    files.append(cli.save_figure(fig, folder / f"{NAME}.png"))
-    fig = plot_q_e_maps(maps, f"T-Rex, vanadium: S(Q, E) of each sub-pulse\n{conditions}")
-    files.append(cli.save_figure(fig, folder / f"{NAME}_sqe.png"))
+    files = []
+    lines: dict[Mode, sc.Dataset] = {}
+    fluxes: dict[Mode, sc.DataArray] = {}
+    for mode in modes:
+        pulses, spectra, maps = reduce_runs(mode)
+        fluxes[mode] = pulses
+        conditions = define_instrument(mode).running_conditions()
+        stem = f"{NAME}_{mode.lower()}"
+        lines[mode] = fit_elastic_lines(spectra)
+        table = lines_table(lines[mode])
+        print(f"{mode}:\n{table}", end="")
+        files.append(cli.save_text(table, folder / f"{stem}_lines.txt"))
+        fig = plot_spectra(
+            spectra,
+            lines[mode],
+            f"T-Rex, vanadium: the energy transfer of {pulses.sizes['subpulse']} sub-pulses\n"
+            f"{conditions}",
+        )
+        files.append(cli.save_figure(fig, folder / f"{stem}.png"))
+        fig = plot_q_e_maps(maps, f"T-Rex, vanadium: S(Q, E) of each sub-pulse\n{conditions}")
+        files.append(cli.save_figure(fig, folder / f"{stem}_sqe.png"))
+    if len(lines) > 1:
+        table = resolution_table(lines, fluxes)
+        print(table, end="")
+        files.append(cli.save_text(table, folder / f"{NAME}_modes.txt"))
+        conditions = define_instrument().running_conditions().replace(f" · {modes[0]}", "")
+        fig = plot_resolutions(
+            lines,
+            spectra,
+            f"T-Rex, vanadium: the elastic resolution in {' and '.join(lines)}\n{conditions}",
+        )
+        files.append(cli.save_figure(fig, folder / f"{NAME}_modes.png"))
     return files
 
 
 def main(out: Path | None = None, ncount: float = 1e9, seed: int = 1) -> list[Path]:
-    """Run McStas with :func:`simulate`, then reduce and draw it with :func:`analyze`.
+    """Run McStas in every mode with :func:`simulate`, then reduce and draw with :func:`analyze`.
 
     Parameters
     ----------
@@ -707,9 +842,9 @@ def main(out: Path | None = None, ncount: float = 1e9, seed: int = 1) -> list[Pa
     :
         The paths of the files.
     """
-    to_sample, from_sample = simulate(ncount=ncount, seed=seed)
-    return analyze(out, to_sample, from_sample)
+    simulate(ncount=ncount, seed=seed)
+    return analyze(out)
 
 
 if __name__ == "__main__":
-    analyze(out=cli.parse_out(__doc__))  # McStas runs only with main, a few minutes
+    analyze(out=cli.parse_out(__doc__))  # McStas runs only with main, a few minutes per mode

@@ -15,8 +15,10 @@ incident energies of [Incident energy](incident-energy.md) and the
 ## The setup
 
 `TRexElasticResolution` is `TRex` with the vanadium of `vanadium` on `sample_pos`, the beamstop
-and the banana detector. Its control parameters are the defaults: mode `"FF"`, `lambda0` = 2 Å
-and `rrm` = 18. The choppers turn, so the beam on the sample is a train of sub-pulses. This is
+and the banana detector. Its control parameters are the defaults, `lambda0` = 2 Å and
+`rrm` = 18, in each of the two modes of the choppers: `"FF"`, the wide slits of the
+pulse-shaping and monochromatic choppers, for high flux, and `"RR"`, the narrow ones, for high
+resolution. Both modes have the same 15 sub-pulses. The choppers turn, so the beam on the sample is a train of sub-pulses. This is
 not the white beam of the `solid_angles` diagnostic, where every chopper is parked open. It has
 the [masked source](masked-source.md).
 
@@ -42,15 +44,17 @@ as the bottom of the detector lies below it.
 ## Two runs, split at the sample
 
 As on [Diffraction](diffraction.md#two-runs-split-at-the-sample), `simulate` runs McStas in
-two parts, with `run_to_sample` and `run_from_sample` of
+each mode in two parts, with `run_to_sample` and `run_from_sample` of
 [`Simulation`](../../how-to/run-a-simulation.md):
 
 1. **From the source to `sample_pos`**, with 1e9 rays: about a minute and a half on 18 cores.
    Its folder holds the pre-sample and beamstop monitors and the beam at `sample_pos`.
 2. **From that beam through the vanadium to the detector**: under ten seconds. 4.09 million
-   neutrons reach the detector.
+   neutrons reach the detector in FF, 1.04 million in RR.
 
-`reduce_runs` and `analyze` read the two runs again without McStas.
+RR lets a sixth of the neutrons of FF through, 4.3 × 10⁶ n/s at the pre-sample monitor against
+2.5 × 10⁷ n/s. `reduce_runs` and `analyze` read the runs of a mode again without McStas. The
+figures below are of FF, except in [FF and RR](#ff-and-rr).
 
 ## The reduction
 
@@ -77,7 +81,7 @@ two parts, with `run_to_sample` and `run_from_sample` of
 
 ## S(Q, E)
 
-![S(Q, E) of each of the 15 sub-pulses, |Q| across and E up, from the highest Ei to the lowest, normalized by the coverage of each bin, colored where the detector reaches and white elsewhere](figures/elastic-resolution-incoherent/trex_elastic_resolution_incoherent_sqe.png)
+![S(Q, E) of each of the 15 sub-pulses, |Q| across and E up, from the highest Ei to the lowest, normalized by the coverage of each bin, colored where the detector reaches and white elsewhere](figures/elastic-resolution-incoherent/trex_elastic_resolution_incoherent_ff_sqe.png)
 
 `q_e_maps` histograms the neutrons of each sub-pulse in |Q| and E, in bins of 0.05 meV and
 0.05 Å⁻¹. Every sub-pulse has the same bins, so every map spans the same range: E from −38 to
@@ -122,7 +126,7 @@ common range it covers: ±9 meV and |Q| below 5.2 Å⁻¹ at 11.4 meV.
 
 ## The spectra
 
-![The intensity of each of the 15 sub-pulses against the energy transfer, stacked from the highest Ei at the top to the lowest at the bottom, each with its Gaussian fit](figures/elastic-resolution-incoherent/trex_elastic_resolution_incoherent.png)
+![The intensity of each of the 15 sub-pulses against the energy transfer, stacked from the highest Ei at the top to the lowest at the bottom, each with its Gaussian fit](figures/elastic-resolution-incoherent/trex_elastic_resolution_incoherent_ff.png)
 
 The figure is linear and spans the whole energy coverage: each sub-pulse is drawn over its
 arrival window, −0.8 Ei to 0.8 Ei, empty bins included. Each bin is a point with its error, and
@@ -160,10 +164,38 @@ narrow, with χ² per degree of freedom of up to 540. Over the core it is 0.7 to
 
 The intensity is that of the whole spectrum, summed over E. `analyze` prints the table:
 
---8<-- "docs/instruments/trex/figures/elastic-resolution-incoherent/trex_elastic_resolution_incoherent_lines.txt"
+--8<-- "docs/instruments/trex/figures/elastic-resolution-incoherent/trex_elastic_resolution_incoherent_ff_lines.txt"
 
 Every center lies within 0.1 meV of its Ei, 0.02 to 0.09 meV above it. So the Ei of each
 sub-pulse and its time at the sample agree with what the detector sees.
+
+## FF and RR
+
+![The elastic line of each of the 15 sub-pulses in RR, stacked from the highest Ei at the top to the lowest at the bottom, each with its Gaussian fit](figures/elastic-resolution-incoherent/trex_elastic_resolution_incoherent_rr.png)
+
+The same spectra and fits in RR. Every line is narrower than in FF, and the fits are as good,
+with χ² per degree of freedom from 0.5 to 1.6. Each sub-pulse has nearly the Ei it has in FF: they
+differ by 0.6 % at most, 46.91 meV against 47.17 meV for the highest:
+
+--8<-- "docs/instruments/trex/figures/elastic-resolution-incoherent/trex_elastic_resolution_incoherent_rr_lines.txt"
+
+![The FWHM of the elastic line of each sub-pulse against its Ei, in FF and RR, and as a fraction of Ei](figures/elastic-resolution-incoherent/trex_elastic_resolution_incoherent_modes.png)
+
+`plot_resolutions` draws the FWHM of both modes against Ei, and as a fraction of Ei, each with
+the error of its fit; `resolution_table` gives them side by side, with the flux of each
+sub-pulse at the pre-sample monitor:
+
+--8<-- "docs/instruments/trex/figures/elastic-resolution-incoherent/trex_elastic_resolution_incoherent_modes.txt"
+
+- **RR is almost twice as fine.** Its lines are 0.54 to 0.63 times as wide as those of FF: from
+  0.25 meV at 11.4 meV to 2.0 meV at 46.9 meV, 2.2 % to 4.3 % of Ei, against 3.5 % to 7.4 % in
+  FF.
+- **For a sixth of the flux.** Every sub-pulse keeps 0.15 to 0.18 of its flux in RR, about
+  the same share at every Ei: 2.8 × 10⁵ against 1.7 × 10⁶ n/s at 20.45 meV. The narrow slits of the pulse-shaping and monochromatic choppers
+  shorten each sub-pulse, which sets its time at the sample, and its spread of Ei. So the lines
+  narrow, and fewer neutrons pass.
+- **The same trend against Ei.** In both modes FWHM / Ei grows with Ei. In FF it levels off
+  above 40 meV, 7.4 % at 40.7 meV and 7.2 % at 47.2 meV; in RR it still grows, to 4.3 %.
 
 ## Making the figures
 
@@ -173,8 +205,9 @@ The figures need McStas, so they are not made with the site. To run McStas and m
 pixi run python -c "from mcdgs.diagnostics.trex.elastic_resolution_incoherent import main; main()"
 ```
 
-At its defaults, `main` runs both parts, 1e9 rays from the masked source with seed 1, as for
-the figures here. It prints the table and saves both figures and the table to
+At its defaults, `main` runs both parts in both modes, 1e9 rays from the masked source with
+seed 1 each, as for the figures here: about three minutes in all. It prints the tables and
+saves the figures and the tables of each mode, and those that compare them, to
 `mcdgs_workspace/results/trex_elastic_resolution_incoherent/`, or to the folder given as `out`.
 Running the module, as `pixi run docs-diagnostics` does, only reduces the runs again, without
 McStas:
