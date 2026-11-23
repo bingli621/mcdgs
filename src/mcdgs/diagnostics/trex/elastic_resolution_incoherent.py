@@ -81,7 +81,6 @@ SHIFT = 0.4  # each sub-pulse is lifted above the one below by this much of the 
 FONT_SIZE = 14  # pt, of every text of the figure
 MAP_Q_STEP = 0.05  # 1/Å, the bin width in |Q| of the S(Q,E) maps; in E, ENERGY_STEP
 MAP_COLUMNS = 3  # the maps of the sub-pulses, in rows of this many
-LEGEND_ROOM = 1.45  # the y axes of plot_resolutions reach this far past their data: the legend
 # the top of the color scale of the maps, as a percentile of the bins with neutrons: a bin on the
 # edge of the coverage, with little of it, can stand far above the rest
 MAP_PERCENTILE = 99.9
@@ -731,26 +730,24 @@ def resolution_table(lines: dict[Mode, sc.Dataset], pulses: dict[Mode, sc.DataAr
 def plot_resolutions(
     lines: dict[Mode, sc.Dataset],
     pulses: dict[Mode, sc.DataArray],
-    spectra: sc.DataArray,
     title: str,
 ) -> Figure:
     """Draw the FWHM of the elastic line and the flux of each sub-pulse against Ei, in every mode.
 
-    The first panel draws the FWHM, the second the FWHM as a fraction of Ei, each a point with
-    the error of the fit of :func:`fit_elastic_lines`, not joined. Both panels also draw the
-    flux of each sub-pulse at the pre-sample monitor, hollow, on a second axis: the price of the
-    resolution, on a linear scale in the first panel and a log scale in the second. The flux has
-    no error bars: :func:`.find_patches` sums the intensity of the monitor without its errors,
-    which are small from 1e9 rays.
+    Four panels on one Ei axis, each with one linear y axis: the FWHM, the FWHM as a fraction of
+    Ei, the flux at the pre-sample monitor, and the FWHM and the flux of each mode after the
+    first over those of the first, the price of the resolution. Each sub-pulse is a point, not
+    joined. The FWHM has the error of the fit of :func:`fit_elastic_lines`; the flux has none:
+    :func:`.find_patches` sums the intensity of the monitor without its errors, which are small
+    from 1e9 rays. The n-th sub-pulse of one mode is the n-th of another, as in
+    :func:`resolution_table`.
 
     Parameters
     ----------
     lines:
-        The fits of :func:`fit_elastic_lines`, by mode.
+        The fits of :func:`fit_elastic_lines`, by mode, with the same sub-pulses.
     pulses:
         The sub-pulses of :func:`.sample_runs.subpulse_timing`, by mode, with their flux.
-    spectra:
-        The spectra the lines are fitted to, for the bins under the title, :func:`.bins_title`.
     title:
         The title of the figure.
 
@@ -759,65 +756,67 @@ def plot_resolutions(
     :
         The figure.
     """
+    modes = list(lines)
+    first = modes[0]
     with plt.rc_context({"font.size": FONT_SIZE}):
-        fig, (absolute, relative) = plt.subplots(1, 2, figsize=(16, 6), layout="constrained")
-        fig.suptitle(f"{title}\n{bins_title({'E': spectra.coords['energy_transfer']})}")
-        panels = {absolute: absolute.twinx(), relative: relative.twinx()}  # each with the flux
-        for mode, color, marker in zip(lines, ("tab:blue", "tab:red"), ("o", "s")):
+        fig, axes = plt.subplots(2, 2, figsize=(16, 11), sharex=True, layout="constrained")
+        fig.suptitle(title)
+        (absolute, relative), (flux_panel, ratios) = axes
+        for mode, color, marker in zip(modes, ("C0", "C1"), ("o", "s")):
             ei = lines[mode].coords["incident_energy"].to(unit="meV").values
             fwhm = lines[mode]["fwhm"]
             error = np.sqrt(fwhm.variances)
             label = {"FF": "FF, high flux", "RR": "RR, high resolution"}.get(mode, mode)
-            style = {"color": color, "fmt": marker, "ms": 6, "capsize": 3}
-            absolute.errorbar(ei, fwhm.values, yerr=error, label=f"{label}: FWHM", **style)
-            relative.errorbar(
-                ei,
-                100 * fwhm.values / ei,
-                yerr=100 * error / ei,
-                label=f"{label}: FWHM / Ei",
-                **style,
-            )
-            flux = pulses[mode].to(unit="1/s").values
+            style = {"color": color, "fmt": marker, "ms": 7, "capsize": 3}
+            absolute.errorbar(ei, fwhm.values, yerr=error, label=label, **style)
+            relative.errorbar(ei, 100 * fwhm.values / ei, yerr=100 * error / ei, **style)
             flux_ei = pulses[mode].coords["incident_energy"].to(unit="meV").values
-            for flux_axis, scale in zip(panels.values(), (1e6, 1)):  # linear in 1e6 n/s
-                flux_axis.plot(
-                    flux_ei,
-                    flux / scale,
-                    linestyle="none",
-                    marker=marker,
-                    ms=8,
-                    markerfacecolor="none",
-                    color=color,
-                    label=f"{label}: flux",
-                )
-        absolute.set(
-            xlabel="Ei [meV]",
-            ylabel="FWHM [meV]",
-            title="The width of the elastic line, and the flux",
-        )
-        relative.set(
-            xlabel="Ei [meV]", ylabel="FWHM / Ei [%]", title="As a fraction of Ei, and the flux"
-        )
-        flux_label = "Flux at the pre-sample monitor [{}], hollow"
-        panels[absolute].set(ylabel=flux_label.format("$10^6$ n/s"), ylim=(0, None))  # linear
-        panels[relative].set(ylabel=flux_label.format("n/s"), yscale="log")
-        for ax, flux_axis in panels.items():
-            ax.grid(True, alpha=0.3)
-            ax.set_ylim(0, LEGEND_ROOM * ax.get_ylim()[1])
-            low, high = flux_axis.get_ylim()
-            if flux_axis.get_yscale() == "log":  # the same room, in decades
-                flux_axis.set_ylim(low, low * (high / low) ** LEGEND_ROOM)
-            else:
-                flux_axis.set_ylim(0, LEGEND_ROOM * high)
-            handles, labels = ax.get_legend_handles_labels()
-            flux_handles, flux_labels = flux_axis.get_legend_handles_labels()
-            flux_axis.legend(  # on the second axis, so that its points do not hide the legend
-                handles + flux_handles,
-                labels + flux_labels,
-                fontsize="small",
-                ncols=2,
-                loc="upper center",
+            flux = pulses[mode].to(unit="1/s").values / 1e6
+            flux_panel.plot(flux_ei, flux, linestyle="none", marker=marker, ms=7, color=color)
+        ei = lines[first].coords["incident_energy"].to(unit="meV").values
+        for mode, marker in zip(modes[1:], ("o", "s", "^", "v")):
+            width = lines[mode]["fwhm"].data / lines[first]["fwhm"].data  # with the fit errors
+            flux = pulses[mode].values / pulses[first].values
+            ratios.errorbar(
+                ei,
+                width.values,
+                yerr=np.sqrt(width.variances),
+                color="C3",
+                fmt=marker,
+                ms=7,
+                capsize=3,
+                label=f"FWHM {mode} / {first}",
             )
+            ratios.plot(
+                ei,
+                flux,
+                linestyle="none",
+                marker=marker,
+                ms=7,
+                color="C4",
+                label=f"Flux {mode} / {first}",
+            )
+        absolute.set(ylabel="FWHM [meV]", title="The width of the elastic line")
+        relative.set(ylabel="FWHM / Ei [%]", title="As a fraction of Ei")
+        flux_panel.set(
+            xlabel="Ei [meV]",
+            ylabel="Flux [$10^6$ n/s]",
+            title="The flux at the pre-sample monitor",
+        )
+        ratios.set(
+            xlabel="Ei [meV]",
+            ylabel=f"Ratio to {first}",
+            title=f"The price of the resolution, over {first}",
+        )
+        for ax in axes.flat:
+            ax.grid(True, alpha=0.3)
+            ax.set_ylim(bottom=0)
+        absolute.legend(loc="upper left")
+        handles, labels = ratios.get_legend_handles_labels()  # the FWHM first, as above
+        order = sorted(range(len(labels)), key=lambda i: not labels[i].startswith("FWHM"))
+        ratios.legend(
+            [handles[i] for i in order], [labels[i] for i in order], ncols=2, loc="lower center"
+        )
     return fig
 
 
@@ -875,7 +874,6 @@ def analyze(out: Path | None = None, modes: tuple[Mode, ...] = MODES) -> list[Pa
         fig = plot_resolutions(
             lines,
             fluxes,
-            spectra,
             f"T-Rex, vanadium: the elastic resolution in {' and '.join(lines)}\n{conditions}",
         )
         files.append(cli.save_figure(fig, folder / f"{NAME}_modes.png"))

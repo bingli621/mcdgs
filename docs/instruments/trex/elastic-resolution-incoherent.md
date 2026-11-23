@@ -179,13 +179,14 @@ differ by 0.6 % at most, 46.91 meV against 47.17 meV for the highest:
 
 --8<-- "docs/instruments/trex/figures/elastic-resolution-incoherent/trex_elastic_resolution_incoherent_rr_lines.txt"
 
-![The FWHM of the elastic line of each sub-pulse against its Ei, in FF and RR, and as a fraction of Ei, each with the flux of each sub-pulse on a second axis](figures/elastic-resolution-incoherent/trex_elastic_resolution_incoherent_modes.png)
+![The FWHM of the elastic line of each sub-pulse against its Ei in FF and RR, as a fraction of Ei, the flux of each sub-pulse, and the FWHM and flux of RR over FF](figures/elastic-resolution-incoherent/trex_elastic_resolution_incoherent_modes.png)
 
-`plot_resolutions` draws the FWHM of both modes against Ei, and as a fraction of Ei, each with
-the error of its fit. Both panels also draw the flux of each sub-pulse at the pre-sample
-monitor, hollow, on a second axis, linear in the first panel and log in the second, without
-error bars: the sub-pulses are found from the intensity of the monitor alone. `resolution_table`
-gives them side by side, with the flux of each sub-pulse at the pre-sample monitor:
+`plot_resolutions` draws, against Ei, the FWHM of both modes, the FWHM as a fraction of Ei, the
+flux of each sub-pulse at the pre-sample monitor, and the FWHM and the flux of RR over those of
+FF. The FWHM has the error of its fit; the flux has no error bars, since the sub-pulses are found
+from the intensity of the monitor alone. RR narrows the elastic line to about
+0.55 of FF, for about 0.17 of its flux, at every Ei. `resolution_table` gives the numbers side by
+side:
 
 --8<-- "docs/instruments/trex/figures/elastic-resolution-incoherent/trex_elastic_resolution_incoherent_modes.txt"
 
