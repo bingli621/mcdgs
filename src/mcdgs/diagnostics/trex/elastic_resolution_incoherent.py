@@ -800,7 +800,7 @@ def plot_resolutions(
         relative.set(ylabel="FWHM / Ei [%]", title="As a fraction of Ei")
         flux_panel.set(
             xlabel="Ei [meV]",
-            ylabel="Flux [$10^6$ n/s]",
+            ylabel="Neutrons through the whole monitor [$10^6$ n/s]",
             title="The flux at the pre-sample monitor",
         )
         ratios.set(
