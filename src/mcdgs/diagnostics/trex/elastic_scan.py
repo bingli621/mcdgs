@@ -40,9 +40,11 @@ from mcdgs.core import rotation
 from mcdgs.core.components import Single_crystal
 from mcdgs.diagnostics import cli
 from mcdgs.diagnostics.trex import elastic_plane as plane
+from mcdgs.diagnostics.trex import sample_runs as runs
 from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
-from mcdgs.mcstas import Simulation, Workspace, numeric_parameters, read_events
+from mcdgs.mcstas import Simulation, Workspace, numeric_parameters
 from mcdgs.reduction.binning import bin_edges
+from mcdgs.reduction.inelastic import normalized_events
 from mcdgs.samples import la2ni7
 
 NAME = "trex_elastic_scan"
@@ -209,8 +211,11 @@ def reduce_angles(
     ValueError
         If the scan has no angles.
     """
-    scan = Path(scan or Workspace.find().run_folder(SCAN))
-    pulses = plane.subpulse_timing_of_run(to_sample)
+    workspace = Workspace.find()
+    scan = Path(scan or workspace.run_folder(SCAN))
+    to_sample = Path(to_sample or workspace.run_folder(plane.TO_SAMPLE))
+    # the beam of the scan is that of the elastic plane, which its instrument ran
+    pulses = runs.subpulse_timing_of_run(to_sample, plane.define_instrument())
     edges = {name: bin_edges(name, -Q_LIMIT, Q_LIMIT, step, unit="1/Å") for name in ("Qz", "Qx")}
     with mcstastox.Read(str(scan)) as data:
         n_entries = data.get_number_of_entries()
@@ -220,15 +225,9 @@ def reduce_angles(
     for entry in range(1, n_entries + 1):
         with mcstastox.Read(str(scan), entry_number=entry) as data:
             omega = numeric_parameters(data.get_instrument_parameters())["omega"]
-        binned = read_events(
-            scan,
-            plane.DETECTOR,
-            "source",
-            plane.SAMPLE,
-            beam_direction=plane.BEAM_DIRECTION,
-            entry=entry,
-        )
-        events = crystal_frame(plane.normalized_events(binned, pulses), omega)
+        binned = runs.read_detector(scan, entry=entry)
+        events = normalized_events(binned, pulses, runs.pixel_solid_angle(binned))
+        events = crystal_frame(events, omega)
         qy = events.coords["Qy"].to(unit="1/Å").values
         (dim,) = events.dims
         near = events[dim, np.flatnonzero(np.abs(qy) < qy_half_width)]

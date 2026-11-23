@@ -12,7 +12,12 @@ In the order of the beam, which is also the order ``pixi run docs-diagnostics`` 
 8. :mod:`.neutrons_on_sample`: the neutrons at the sample monitor.
 9. :mod:`.masked_source`: the source masked by the choppers, against the plain one.
 10. :mod:`.incident_energy`: the incident energy of each sub-pulse.
-11. :mod:`.elastic_plane`: the horizontal scattering plane of a La2Ni7 crystal. It writes the
+11. :mod:`.elastic_resolution_incoherent`: the elastic resolution of each sub-pulse, from
+    vanadium.
+12. :mod:`.elastic_plane`: the horizontal scattering plane of a La2Ni7 crystal. It writes the
     beam file that the next one reads.
-12. :mod:`.elastic_scan`: a rotation scan of that crystal.
+13. :mod:`.elastic_scan`: a rotation scan of that crystal.
+
+The diagnostics with a sample share :mod:`.sample_runs`, which reduces the two parts of a run
+split at the sample. It is not a diagnostic itself.
 """

@@ -9,25 +9,23 @@ McStas repeats each one that does ``SAMPLE_SPLIT`` times, with its weight divide
 which dumps the beam there into a beam file, then from that beam through the crystal to the
 detector. The second part can run again from the same beam, without the long first part.
 
-The reduction follows :mod:`mcdgs.reduction`:
+The reduction is that of :mod:`.diagnostics.trex.sample_runs`, with :mod:`mcdgs.reduction`:
 
-1. :func:`subpulse_timing` finds the sub-pulses at the pre-sample and beamstop monitors of the
-   first part with :func:`.find_patches`, as :mod:`.diagnostics.trex.incident_energy` does: both come before
-   ``sample_pos`` in beam order. It gives each sub-pulse its incident energy, from its flight
-   between the monitors with :func:`.subpulse_flight`, and the time it reaches the sample, with
-   :func:`.time_at_sample`.
-2. :func:`.read_events` reads the neutrons of the banana detector of the second part, by pixel.
-   That part runs in the frame of ``sample_pos``, which is the beam frame: the origin is the
+1. :func:`.sample_runs.subpulse_timing` finds the sub-pulses at the pre-sample and beamstop
+   monitors of the first part, as :mod:`.diagnostics.trex.incident_energy` does, with their
+   incident energy and the time they reach the sample.
+2. :func:`.sample_runs.read_detector` reads the neutrons of the banana detector of the second
+   part, by pixel, in the frame of ``sample_pos``, which is the beam frame: the origin is the
    sample, z the axis of ``arm_mc``, straight along the beam from the pre-sample monitor to the
    sample, y up and x to the left of the beam.
-3. :func:`.events_to_q_and_energy`, within :func:`normalized_events`, gives each pixel and
+3. :func:`.events_to_q_and_energy`, within :func:`.normalized_events`, gives each pixel and
    sub-pulse the arrival window of :func:`.arrival_window`, keeps the neutrons that
    :func:`.assign_subpulse` finds inside the window of a sub-pulse, whatever their energy
    transfer within it, and converts them with ``QE_GRAPH`` to the momentum transfer (Qx, Qy,
    Qz).
-4. :func:`normalized_events` divides each neutron by the solid angle of its pixel, from
-   :func:`pixel_solid_angle`, and by the incoming flux of its sub-pulse, its intensity at the
-   pre-sample monitor: per incident neutron and per steradian.
+4. :func:`.normalized_events` divides each neutron by the solid angle of its pixel, from
+   :func:`.sample_runs.pixel_solid_angle`, and by the incoming flux of its sub-pulse, its
+   intensity at the pre-sample monitor: per incident neutron and per steradian.
 
 :func:`plot_plane` draws the intensity in (Qx, Qz) of every sub-pulse, summed over a slice of
 Qy near the horizontal plane, ``|Qy| < QY_HALF_WIDTH``, on a log color scale. Each sub-pulse has
@@ -54,28 +52,16 @@ from matplotlib.colors import LogNorm
 from matplotlib.figure import Figure
 
 from mcdgs.diagnostics import cli
-from mcdgs.instruments.trex.detectors import (
-    BANANA_HEIGHT,
-    BANANA_RADIUS,
-    BANANA_THETA_BINS,
-    BANANA_THETA_LIMITS,
-    BANANA_Y_BINS,
-)
+from mcdgs.diagnostics.trex import sample_runs as runs
 from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
-from mcdgs.mcstas import Run, Simulation, Workspace, read_events, read_mcstas_maps
-from mcdgs.reduction.binning import bin_edges, monitor_bins
-from mcdgs.reduction.inelastic import events_to_q_and_energy, time_at_sample
-from mcdgs.reduction.patches import MIN_FRACTION, find_patches, subpulse_flight
-from mcdgs.reduction.solid_angle import rectangle_solid_angle
+from mcdgs.mcstas import Simulation, Workspace
+from mcdgs.reduction.binning import bin_edges
+from mcdgs.reduction.inelastic import normalized_events
 from mcdgs.samples import la2ni7
 
-MONITORS = ("pre_sample_monitor", "beamstop_monitor")  # in beam order
-DETECTOR = "banana_detector"
-SAMPLE = "sample_pos"
 NAME = "trex_elastic_plane"
 TO_SAMPLE = f"{NAME}_run_to_sample"  # the run folder of the first part, source -> sample_pos
 FROM_SAMPLE = f"{NAME}_run_from_sample"  # that of the second part, sample_pos -> detector
-BEAM_DIRECTION = (0.0, 0.0, 1.0)  # the incident beam in the frame of sample_pos: along arm_mc
 Q_STEP = 0.02  # 1/Å, the bin width in Qx and Qz
 LOG_DECADES = 4  # the color scale spans this many decades below the highest bin
 QY_HALF_WIDTH = 0.5  # 1/Å: the plane keeps the neutrons with |Qy| below this, near horizontal
@@ -114,135 +100,15 @@ def define_instrument() -> TRexWithLa2Ni7:
 # --8<-- [end:instrument]
 
 
-def subpulse_timing(
-    run: Run,
-    bins: dict[str, dict[str, sc.Variable]],
-    positions: dict[str, list[float]],
-    min_fraction: float = MIN_FRACTION,
-) -> sc.DataArray:
-    """Find the sub-pulses at both monitors, and their incident energy and time at the sample.
-
-    The sub-pulses are the patches of :func:`.find_patches` with at least ``min_fraction`` of
-    the intensity of the strongest, paired by :func:`.subpulse_flight`: the n-th at one monitor
-    is the n-th at the other.
-
-    Parameters
-    ----------
-    run:
-        The McStas run to the sample, with the monitors of ``MONITORS``.
-    bins:
-        The bin edges of the time and wavelength map of each monitor of ``MONITORS``, by name,
-        as :func:`.monitor_bins`.
-    positions:
-        The position of every component, in m, by name, as :meth:`.Instrument.positions`.
-    min_fraction:
-        The weakest patch that counts as a sub-pulse, as a fraction of the strongest.
-
-    Returns
-    -------
-    :
-        The intensity of each sub-pulse at the pre-sample monitor, along ``subpulse``, with the
-        coordinates of :func:`.incident_flight` between the monitors (``Ltotal``, ``tof``,
-        ``incident_wavelength``, ``incident_energy``), ``time_at_pre_sample_monitor`` and
-        ``time_at_sample``.
-
-    Raises
-    ------
-    ValueError
-        If the monitors do not have as many sub-pulses, or one arrives at the beamstop monitor
-        first.
-    """
-    maps = read_mcstas_maps(run, {name: bins[name] for name in MONITORS})
-    pre_sample, beamstop = (find_patches(maps[name].values, bins[name]) for name in MONITORS)
-    pre_sample_position = sc.vector(positions["pre_sample_monitor"], unit="m")
-    pulses = subpulse_flight(
-        pre_sample,
-        pre_sample_position,
-        beamstop,
-        sc.vector(positions["beamstop_monitor"], unit="m"),
-        min_fraction=min_fraction,
-    )
-    for name in ("time_at_end", "wavelength_at_start"):
-        del pulses.coords[name]
-    pulses.coords["time_at_pre_sample_monitor"] = pulses.coords.pop("time_at_start")
-    pulses.coords["time_at_sample"] = time_at_sample(
-        pulses.coords["time_at_pre_sample_monitor"],
-        pre_sample_position,
-        sc.vector(positions[SAMPLE], unit="m"),
-        pulses.coords["incident_energy"],
-    )
-    return pulses
-
-
-def pixel_solid_angle(binned: sc.DataArray) -> sc.Variable:
-    """Return the solid angle of each pixel of the banana detector, seen from the sample.
-
-    A pixel is ``BANANA_THETA_BINS`` of the arc of ``BANANA_THETA_LIMITS`` wide, at
-    ``BANANA_RADIUS``, and ``BANANA_Y_BINS`` of ``BANANA_HEIGHT`` high, on a cylinder around the
-    vertical through the sample, as :func:`.rectangle_solid_angle`.
-
-    Parameters
-    ----------
-    binned:
-        The neutrons by pixel, as :func:`.read_events`, with the pixel ``position`` and the
-        ``sample_position``.
-
-    Returns
-    -------
-    :
-        The solid angle of each pixel, in sr, along the pixel dimension.
-    """
-    theta_start, theta_stop = BANANA_THETA_LIMITS
-    width = BANANA_RADIUS * np.radians(theta_stop - theta_start) / BANANA_THETA_BINS
-    return rectangle_solid_angle(
-        binned.coords["position"],
-        binned.coords["sample_position"],
-        sc.scalar(width, unit="m"),
-        sc.scalar(BANANA_HEIGHT / BANANA_Y_BINS, unit="m"),
-        shape="cylinder",
-    )
-
-
-def normalized_events(binned: sc.DataArray, pulses: sc.DataArray) -> sc.DataArray:
-    """Reduce the neutrons of the detector, per incident neutron and per steradian.
-
-    Each neutron is divided by the solid angle of its pixel, from :func:`pixel_solid_angle`,
-    then reduced with :func:`.events_to_q_and_energy`, and divided by the intensity of its
-    sub-pulse at the pre-sample monitor, its incoming flux.
-
-    Parameters
-    ----------
-    binned:
-        The neutrons by pixel, as :func:`.read_events`, in n/s.
-    pulses:
-        The sub-pulses of :func:`subpulse_timing`, with their intensity at the pre-sample
-        monitor, in n/s.
-
-    Returns
-    -------
-    :
-        The neutrons of :func:`.events_to_q_and_energy`, in 1/sr: per neutron of their
-        sub-pulse at the pre-sample monitor. Each keeps the ``solid_angle`` of its pixel, so
-        that times it gives the fraction of the incident neutrons it stands for.
-    """
-    solid_angle = pixel_solid_angle(binned)
-    binned = binned.copy()
-    binned.bins.coords["solid_angle"] = sc.bins_like(binned, solid_angle)
-    events = events_to_q_and_energy(binned / solid_angle, pulses)
-    flux = pulses.data[events.coords["subpulse"].values]  # the flux of each neutron's sub-pulse
-    events.data = events.data / sc.array(dims=events.dims, values=flux.values, unit=flux.unit)
-    return events
-
-
 def print_subpulse_table(pulses: sc.DataArray, events: sc.DataArray) -> None:
     """Print the incident energy, ki and time at the sample of each sub-pulse.
 
     Parameters
     ----------
     pulses:
-        The sub-pulses of :func:`subpulse_timing`.
+        The sub-pulses of :func:`.sample_runs.subpulse_timing`.
     events:
-        The neutrons of :func:`normalized_events`.
+        The neutrons of :func:`.normalized_events`.
     """
     print(
         "  sub-pulse  t_sample [ms]  λi [Å]  Ei [meV]  ki [1/Å]  flux [n/s]  neutrons"
@@ -426,26 +292,6 @@ def simulate(ncount: float = 1e9, seed: int = 1) -> tuple[Path, Path]:
     return to_sample.folder, from_sample.folder
 
 
-def subpulse_timing_of_run(to_sample: str | Path | None = None) -> sc.DataArray:
-    """Find the sub-pulses of the run to the sample of :func:`simulate`, without running McStas.
-
-    Parameters
-    ----------
-    to_sample:
-        The folder of the first part. If ``None``, ``TO_SAMPLE`` in the runs folder of
-        :meth:`.Workspace.find`.
-
-    Returns
-    -------
-    :
-        The sub-pulses of :func:`subpulse_timing`.
-    """
-    to_sample = Path(to_sample or Workspace.find().run_folder(TO_SAMPLE))
-    instrument = define_instrument()  # as simulate runs it
-    bins = {monitor: monitor_bins(getattr(instrument, monitor).bin_limits) for monitor in MONITORS}
-    return subpulse_timing(Run.load(to_sample), bins, instrument.positions())
-
-
 def reduce_runs(
     to_sample: str | Path | None = None, from_sample: str | Path | None = None
 ) -> tuple[sc.DataArray, sc.DataArray]:
@@ -461,15 +307,16 @@ def reduce_runs(
     Returns
     -------
     :
-        The sub-pulses of :func:`subpulse_timing`, and the neutrons of
-        :func:`.events_to_q_and_energy`.
+        The sub-pulses of :func:`.sample_runs.subpulse_timing`, and the neutrons of
+        :func:`.normalized_events`.
     """
-    from_sample = Path(from_sample or Workspace.find().run_folder(FROM_SAMPLE))
+    workspace = Workspace.find()
+    to_sample = Path(to_sample or workspace.run_folder(TO_SAMPLE))
+    from_sample = Path(from_sample or workspace.run_folder(FROM_SAMPLE))
     # the first part: the incident energy and the time at the sample of each sub-pulse
-    pulses = subpulse_timing_of_run(to_sample)
-    # the second part has no source: the incident beam is given by its direction instead
-    binned = read_events(from_sample, DETECTOR, "source", SAMPLE, beam_direction=BEAM_DIRECTION)
-    return pulses, normalized_events(binned, pulses)
+    pulses = runs.subpulse_timing_of_run(to_sample, define_instrument())  # as simulate runs it
+    binned = runs.read_detector(from_sample)
+    return pulses, normalized_events(binned, pulses, runs.pixel_solid_angle(binned))
 
 
 def analyze(

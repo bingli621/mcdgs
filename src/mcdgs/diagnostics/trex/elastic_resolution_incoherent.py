@@ -14,14 +14,15 @@ sample. The cylinder scatters only once, into the window of
 :mod:`.diagnostics.trex.elastic_plane` does: from the source to ``sample_pos``, which dumps the
 beam there into a beam file, then from that beam through the vanadium to the detector.
 
-The reduction is that of :mod:`.diagnostics.trex.elastic_plane`:
+The reduction is that of :mod:`.diagnostics.trex.sample_runs`, as for the elastic plane:
 
-1. :func:`.elastic_plane.subpulse_timing` finds the sub-pulses at the pre-sample and beamstop
+1. :func:`.sample_runs.subpulse_timing` finds the sub-pulses at the pre-sample and beamstop
    monitors of the first part, with their incident energy and the time they reach the sample.
-2. :func:`.read_events` reads the neutrons of the banana detector of the second part, by pixel,
+2. :func:`.sample_runs.read_detector` reads the neutrons of the banana detector of the second
+   part, by pixel,
    and :func:`scattered_pixels` leaves out the pixels within ``MIN_TWO_THETA`` of the beam: the
    direct beam that passes the beamstop.
-3. :func:`.elastic_plane.normalized_events` keeps the neutrons inside the arrival window of a
+3. :func:`.normalized_events` keeps the neutrons inside the arrival window of a
    sub-pulse, gives them their energy transfer, and divides each by the solid angle of its pixel
    and by the flux of its sub-pulse.
 4. :func:`energy_spectra` sums them into a histogram of the energy transfer of each sub-pulse,
@@ -54,12 +55,12 @@ from scipy.optimize import curve_fit
 
 from mcdgs.core.components import Incoherent
 from mcdgs.diagnostics import cli
-from mcdgs.diagnostics.trex import elastic_plane as plane
+from mcdgs.diagnostics.trex import sample_runs as runs
 from mcdgs.diagnostics.trex.solid_angles import detector_window
 from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
-from mcdgs.mcstas import Simulation, Workspace, read_events
+from mcdgs.mcstas import Simulation, Workspace
 from mcdgs.reduction.binning import bin_edges
-from mcdgs.reduction.inelastic import DEFAULT_ENERGY_TRANSFER_RATIO
+from mcdgs.reduction.inelastic import DEFAULT_ENERGY_TRANSFER_RATIO, normalized_events
 from mcdgs.samples import vanadium
 
 NAME = "trex_elastic_resolution_incoherent"
@@ -122,12 +123,12 @@ def define_instrument() -> TRexElasticResolution:
 
 
 def two_theta(binned: sc.DataArray) -> sc.Variable:
-    """Return the scattering angle of each pixel, from the beam along ``BEAM_DIRECTION``.
+    """Return the scattering angle of each pixel, from the beam along ``runs.BEAM_DIRECTION``.
 
     Parameters
     ----------
     binned:
-        The neutrons by pixel, as :func:`.read_events`, with the pixel ``position`` and the
+        The neutrons by pixel, as :func:`.sample_runs.read_detector`, with the pixel ``position`` and the
         ``sample_position``, in the beam frame of ``sample_pos``.
 
     Returns
@@ -137,7 +138,7 @@ def two_theta(binned: sc.DataArray) -> sc.Variable:
         along the pixel dimension.
     """
     scattered = binned.coords["position"] - binned.coords["sample_position"]
-    beam = sc.vector(plane.BEAM_DIRECTION)
+    beam = sc.vector(runs.BEAM_DIRECTION)
     cosine = sc.dot(scattered, beam) / sc.norm(scattered)
     return sc.acos(sc.values(cosine)).to(unit="deg")
 
@@ -148,7 +149,7 @@ def scattered_pixels(binned: sc.DataArray, min_two_theta: float = MIN_TWO_THETA)
     Parameters
     ----------
     binned:
-        The neutrons by pixel, as :func:`.read_events`.
+        The neutrons by pixel, as :func:`.sample_runs.read_detector`.
     min_two_theta:
         The smallest scattering angle kept, in deg.
 
@@ -170,7 +171,7 @@ def energy_spectra(
 ) -> sc.DataArray:
     """Sum the neutrons of each sub-pulse into a histogram of their energy transfer.
 
-    Each neutron of :func:`.elastic_plane.normalized_events` times the solid angle of its pixel
+    Each neutron of :func:`.normalized_events` times the solid angle of its pixel
     is the fraction of the incident neutrons of its sub-pulse it stands for. Summed over the
     pixels and divided by their solid angle, it is the intensity averaged over the detector.
     Each neutron of weight w counts with the variance w², so a bin has the error √Σw².
@@ -178,10 +179,10 @@ def energy_spectra(
     Parameters
     ----------
     events:
-        The neutrons of :func:`.elastic_plane.normalized_events`, in 1/sr, with their
+        The neutrons of :func:`.normalized_events`, in 1/sr, with their
         ``subpulse``, ``energy_transfer`` and the ``solid_angle`` of their pixel.
     pulses:
-        The sub-pulses of :func:`.elastic_plane.subpulse_timing`.
+        The sub-pulses of :func:`.sample_runs.subpulse_timing`.
     solid_angle:
         The solid angle of all the pixels the neutrons come from, in sr.
     step:
@@ -482,10 +483,10 @@ def q_e_maps(
     Parameters
     ----------
     events:
-        The neutrons of :func:`.elastic_plane.normalized_events`, in 1/sr, with their
+        The neutrons of :func:`.normalized_events`, in 1/sr, with their
         ``subpulse``, ``energy_transfer``, ``Q`` and the ``solid_angle`` of their pixel.
     pulses:
-        The sub-pulses of :func:`.elastic_plane.subpulse_timing`.
+        The sub-pulses of :func:`.sample_runs.subpulse_timing`.
     solid_angle:
         The solid angle of all the pixels the neutrons come from, in sr.
     two_theta_limits:
@@ -661,7 +662,7 @@ def plot_q_e_maps(
 class Reduction(NamedTuple):
     """The reduction of a run of :func:`simulate`, from :func:`reduce_runs`."""
 
-    pulses: sc.DataArray  # the sub-pulses of :func:`.elastic_plane.subpulse_timing`
+    pulses: sc.DataArray  # the sub-pulses of :func:`.sample_runs.subpulse_timing`
     spectra: sc.DataArray  # of :func:`energy_spectra`
     maps: sc.DataArray  # of :func:`q_e_maps`
     two_theta_limits: tuple[float, float]  # deg, the smallest and the largest 2θ of the pixels
@@ -710,20 +711,18 @@ def reduce_runs(
     Returns
     -------
     :
-        The sub-pulses of :func:`.elastic_plane.subpulse_timing`, the spectra of
+        The sub-pulses of :func:`.sample_runs.subpulse_timing`, the spectra of
         :func:`energy_spectra` and the maps of :func:`q_e_maps`, from the pixels of
         :func:`scattered_pixels`, and the smallest and the largest 2θ of those pixels.
     """
     workspace = Workspace.find()
     to_sample = Path(to_sample or workspace.run_folder(TO_SAMPLE))
     from_sample = Path(from_sample or workspace.run_folder(FROM_SAMPLE))
-    pulses = plane.subpulse_timing_of_run(to_sample)
-    binned = read_events(
-        from_sample, plane.DETECTOR, "source", plane.SAMPLE, beam_direction=plane.BEAM_DIRECTION
-    )
-    binned = scattered_pixels(binned)
-    events = plane.normalized_events(binned, pulses)
-    solid_angle = plane.pixel_solid_angle(binned).sum()
+    pulses = runs.subpulse_timing_of_run(to_sample, define_instrument())  # as simulate runs it
+    binned = scattered_pixels(runs.read_detector(from_sample))
+    pixels = runs.pixel_solid_angle(binned)
+    events = normalized_events(binned, pulses, pixels)
+    solid_angle = pixels.sum()
     angles = two_theta(binned)
     limits = (float(angles.min().value), float(angles.max().value))
     return Reduction(

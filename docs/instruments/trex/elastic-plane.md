@@ -46,19 +46,21 @@ without running it.
 
 ## The reduction
 
+The reduction is shared with the other diagnostics with a sample, in `sample_runs`:
+
 1. **The sub-pulses.** `subpulse_timing` finds the 15 sub-pulses at the pre-sample and beamstop
    monitors of the first part with `find_patches` and `subpulse_flight`, as on
    [Incident energy](incident-energy.md#finding-the-sub-pulses). Each gets its Ei from the
    flight between the monitors, and the time it reaches the sample with `time_at_sample`.
-2. **The neutrons.** `read_events` reads the neutrons of the banana detector of the second part,
-   by pixel. The second part has no source, so the incident beam is given by its direction, z.
+2. **The neutrons.** `read_detector` reads the neutrons of the banana detector of the second
+   part, by pixel. The second part has no source, so the incident beam is given by its direction, z.
 3. **The windows.** `events_to_q_and_energy` gives each pixel and sub-pulse the arrival window
    of `arrival_window`, for an energy transfer from −0.8 Ei to 0.8 Ei, as on
    [Neutrons on sample](neutrons-on-sample.md#arrival-windows-at-the-detector). A neutron inside
    the window of a sub-pulse takes its Ei and its time at the sample, whatever its energy
    transfer within the window, and `QE_GRAPH` gives its Q = ki − kf, as (Qx, Qy, Qz).
-4. **The normalization.** `normalized_events` divides each neutron by the solid angle of its
-   pixel, from `pixel_solid_angle`, and by the intensity of its sub-pulse at the pre-sample
+4. **The normalization.** `normalized_events`, of the reduction package, divides each neutron
+   by the solid angle of its pixel, from `pixel_solid_angle`, and by the intensity of its sub-pulse at the pre-sample
    monitor, its incoming flux. The intensity is then per incident neutron and per steradian,
    in 1/sr.
 

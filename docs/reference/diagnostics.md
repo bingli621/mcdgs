@@ -47,6 +47,8 @@ documentation. See [Source](../instruments/trex/source.md),
 
 ::: mcdgs.diagnostics.trex.incident_energy
 
+::: mcdgs.diagnostics.trex.sample_runs
+
 ::: mcdgs.diagnostics.trex.elastic_resolution_incoherent
 
 ::: mcdgs.diagnostics.trex.elastic_plane

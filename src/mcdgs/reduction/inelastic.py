@@ -11,6 +11,7 @@ own incident energy. :func:`arrival_window` gives, per pixel and sub-pulse, when
 an energy-transfer range reach the detector, and :func:`assign_subpulse` gives each neutron the
 sub-pulse of the window it arrives in. :func:`events_to_q_and_energy` does both for neutrons
 binned by pixel, keeps those inside a window and converts them with ``QE_GRAPH``.
+:func:`normalized_events` does the same per incident neutron and per steradian.
 """
 
 from typing import cast
@@ -28,6 +29,7 @@ __all__ = [
     "assign_subpulse",
     "events_to_q_and_energy",
     "final_wavelength",
+    "normalized_events",
     "time_at_sample",
 ]
 
@@ -335,3 +337,45 @@ def events_to_q_and_energy(
     return events.transform_coords(
         ["energy_transfer", "Q", "Qx", "Qy", "Qz"], graph=QE_GRAPH, keep_intermediate=False
     )
+
+
+def normalized_events(
+    binned: sc.DataArray,
+    pulses: sc.DataArray,
+    solid_angle: sc.Variable,
+    energy_transfer_ratio: tuple[float, float] = DEFAULT_ENERGY_TRANSFER_RATIO,
+) -> sc.DataArray:
+    """Reduce neutrons binned by pixel, per incident neutron and per steradian.
+
+    Each neutron is divided by the solid angle of its pixel, then reduced with
+    :func:`events_to_q_and_energy`, and divided by the intensity of its sub-pulse, its incoming
+    flux.
+
+    Parameters
+    ----------
+    binned:
+        The neutrons, binned by pixel, as :func:`events_to_q_and_energy` takes them.
+    pulses:
+        The sub-pulses, as :func:`events_to_q_and_energy` takes them, with their intensity, the
+        incoming flux, as data, in the unit of the neutrons.
+    solid_angle:
+        The solid angle of each pixel, along the pixel dimension of ``binned``.
+    energy_transfer_ratio:
+        The smallest and the largest ``E / Ei`` of the arrival windows, as
+        :func:`arrival_window`.
+
+    Returns
+    -------
+    :
+        The neutrons of :func:`events_to_q_and_energy`, per neutron of their sub-pulse and per
+        unit of ``solid_angle``. Each keeps the ``solid_angle`` of its pixel, so that times it
+        gives the fraction of the incident neutrons it stands for.
+    """
+    binned = binned.copy()
+    binned.bins.coords["solid_angle"] = sc.bins_like(binned, solid_angle)
+    events = events_to_q_and_energy(
+        binned / solid_angle, pulses, energy_transfer_ratio=energy_transfer_ratio
+    )
+    flux = pulses.data[events.coords["subpulse"].values]  # the flux of each neutron's sub-pulse
+    events.data = events.data / sc.array(dims=events.dims, values=flux.values, unit=flux.unit)
+    return events

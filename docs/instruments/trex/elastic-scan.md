@@ -36,7 +36,7 @@ sample does not depend on the crystal. The 31 angles take under a minute on 18 c
 
 `reduce_angles` takes the sub-pulses from the run to the sample of
 [Elastic plane](elastic-plane.md#the-reduction), the same for every angle, and reads the angles
-one at a time, with `read_events`. Each is reduced and normalized as there, per incident neutron
+one at a time, with `read_detector`. Each is reduced and normalized as there, per incident neutron
 and per steradian. Then `crystal_frame` turns its Q by the angle of the crystal, with the McStas
 rotation matrix of `ROTATED (0, omega, 0)`: Q is then in the frame of the crystal as it stands at
 omega = 0, and a reflection has the same Q at every angle. The neutrons with |Qy| < 0.5 Å⁻¹ in

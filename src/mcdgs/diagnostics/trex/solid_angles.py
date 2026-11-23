@@ -31,7 +31,7 @@ import scipp as sc
 from matplotlib.figure import Figure
 
 from mcdgs.diagnostics import cli
-from mcdgs.diagnostics.trex.elastic_plane import pixel_solid_angle
+from mcdgs.diagnostics.trex.sample_runs import pixel_solid_angle
 from mcdgs.instruments.trex.detectors import (
     BANANA_CENTER_Y,
     BANANA_HEIGHT,

@@ -8,11 +8,12 @@ import mcdgs.diagnostics.cspec as cspec_diagnostics
 import mcdgs.diagnostics.trex as trex_diagnostics
 from mcdgs.core import Instrument
 
+SHARED = {"mcdgs.diagnostics.trex.sample_runs"}  # shared by the diagnostics, not one itself
 MODULES = sorted(
-    f"{package.__name__}.{info.name}"
+    name
     for package in (trex_diagnostics, cspec_diagnostics)
     for info in pkgutil.iter_modules(package.__path__)
-    if not info.ispkg
+    if not info.ispkg and (name := f"{package.__name__}.{info.name}") not in SHARED
 )
 
 

@@ -54,10 +54,11 @@ two parts, with `run_to_sample` and `run_from_sample` of
 
 ## The reduction
 
-1. **The sub-pulses.** `subpulse_timing` of the elastic plane finds the 15 sub-pulses at the
+1. **The sub-pulses.** `subpulse_timing`, of `sample_runs`, finds the 15 sub-pulses at the
    pre-sample and beamstop monitors, with the Ei of each and the time it reaches the sample, as on
    [Incident energy](incident-energy.md#finding-the-sub-pulses).
-2. **The pixels.** `read_events` reads the neutrons of the banana detector, by pixel.
+2. **The pixels.** `read_detector`, of `sample_runs`, reads the neutrons of the banana detector,
+   by pixel.
    `scattered_pixels` leaves out the pixels within 5° of the beam (2θ < 5°). Those see the
    direct beam that passes the beamstop: 2.69 million of the 4.09 million neutrons, on 405
    pixels. The 38,760 pixels kept cover 2.11 sr.

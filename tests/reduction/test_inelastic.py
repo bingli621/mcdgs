@@ -8,6 +8,7 @@ from mcdgs.reduction.inelastic import (
     arrival_window,
     assign_subpulse,
     events_to_q_and_energy,
+    normalized_events,
     time_at_sample,
 )
 
@@ -192,3 +193,15 @@ def test_a_narrower_window_drops_more():
     binned, pulses = _detector_events()
     events = events_to_q_and_energy(binned, pulses, energy_transfer_ratio=(0.1, 0.5))
     assert events.sizes == {"event": 0}  # elastic neutrons are outside
+
+
+def test_each_neutron_is_per_steradian_of_its_pixel_and_per_neutron_of_its_sub_pulse():
+    binned, pulses = _detector_events()
+    pulses.data = sc.array(dims=["subpulse"], values=[2.0, 4.0], unit="1/s")  # the flux
+    solid_angle = sc.array(dims=["pixel_id"], values=[0.5, 0.25], unit="sr")
+    events = normalized_events(binned, pulses, solid_angle)
+    # 1 n/s each: over 0.5 sr and 2 n/s, then over 0.25 sr and 4 n/s
+    assert events.unit == "1/sr"
+    assert events.values == pytest.approx([1.0, 1.0])
+    assert events.coords["solid_angle"].values == pytest.approx([0.5, 0.25])
+    assert (events.values * events.coords["solid_angle"].values).tolist() == [0.5, 0.25]
