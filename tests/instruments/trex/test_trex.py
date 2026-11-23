@@ -1,6 +1,7 @@
 import math
 from dataclasses import replace
 from itertools import pairwise
+from typing import get_args
 
 import numpy as np
 import pytest
@@ -14,6 +15,7 @@ from mcdgs.core.components import (
 from mcdgs.core.components.masked_source import aperture, chopper_train
 from mcdgs.instruments.trex.choppers import (
     DISKS,
+    Mode,
     chopper,
     chopper_timings,
 )
@@ -285,13 +287,17 @@ def test_in_rr_each_zero_mark_passes_the_beam_when_the_central_wavelength_arrive
         # slit is centered on 175 deg here, not on 185 deg, so it turns 185 deg to the beam
         ("FF", {"bw1": 0, "bw2": 0, "ps1": 55, "ps2": 55, "mc1": 175, "mc2": 185}),
         ("RR", {"bw1": 0, "bw2": 0, "ps1": 0, "ps2": 0, "mc1": 0, "mc2": 0}),
+        # the mixed modes: the pulse-shaping choppers of the first letter, the monochromatic
+        # ones of the second
+        ("RF", {"bw1": 0, "bw2": 0, "ps1": 0, "ps2": 0, "mc1": 175, "mc2": 185}),
+        ("FR", {"bw1": 0, "bw2": 0, "ps1": 55, "ps2": 55, "mc1": 0, "mc2": 0}),
     ],
 )
 def test_the_phase_shifts_of_the_mode_are_the_shifts_of_trex_primary(mode, angles):
     assert {name: DISKS[name].phase_from_mode(mode) for name in angles} == pytest.approx(angles)
 
 
-@pytest.mark.parametrize("mode", ["FF", "RR"])
+@pytest.mark.parametrize("mode", get_args(Mode))
 def test_the_slit_of_the_mode_is_centered_on_the_beam_when_the_central_wavelength_arrives(mode):
     timings = chopper_timings(lambda0=2.4, rrm=4, source_frequency=14, mode=mode, t0_offset=0.0017)
     for name, timing in timings.items():
@@ -311,6 +317,15 @@ def test_the_mode_selects_the_wide_slit_for_flux_and_the_narrow_one_for_resoluti
         assert wide > narrow, name
 
 
+@pytest.mark.parametrize("mode", get_args(Mode))
+def test_the_letters_of_the_mode_choose_the_slits_of_each_pair(mode):
+    # F the wide slit of FF, R the narrow one of RR: the pulse-shaping pair first, then the
+    # monochromatic pair, the disks of a pair on the same slit
+    for letter, pair in zip(mode, (("ps1", "ps2"), ("mc1", "mc2"))):
+        for name in pair:
+            assert DISKS[name].mode_slit[mode] == DISKS[name].mode_slit[letter * 2], name
+
+
 @pytest.mark.parametrize(
     ("name", "edges"),
     [
@@ -327,7 +342,7 @@ def test_the_slit_edges_are_the_centers_plus_and_minus_half_the_widths(name, edg
     assert TRex().components[name].slit_edges == list(edges)
 
 
-@pytest.mark.parametrize("mode", ["FF", "RR"])
+@pytest.mark.parametrize("mode", get_args(Mode))
 def test_rrm_0_parks_every_chopper_on_the_slit_of_the_mode(mode):
     timings = chopper_timings(lambda0=None, rrm=0, source_frequency=14, mode=mode, t0_offset=0.0017)
     for name, timing in timings.items():
@@ -354,7 +369,7 @@ def test_turning_choppers_without_a_central_wavelength_raise():
 
 
 def test_an_unknown_mode_raises():
-    with pytest.raises(ValueError, match="mode 'HF' is not 'FF' or 'RR'"):
+    with pytest.raises(ValueError, match="mode 'HF' is not one of FF, RF, FR, RR"):
         chopper_timings(lambda0=2.4, rrm=4, source_frequency=14, mode="HF", t0_offset=0.0017)
 
 
@@ -387,7 +402,7 @@ def test_the_timing_follows_the_control_parameters():
     assert instr_param_dict["delay_bw1"] == chopper_timings(4.0, 6, 14, "FF", 0.0017)["bw1"].delay
 
 
-@pytest.mark.parametrize("mode", ["FF", "RR"])
+@pytest.mark.parametrize("mode", get_args(Mode))
 def test_rrm_0_parks_each_chopper_of_the_instrument_on_the_slit_of_the_mode(mode):
     params = Params(rrm=0, mode=mode)
     trex = TRex(params=params)

@@ -55,7 +55,9 @@ with L the flight path to the disk, ν its signed frequency and θ the angle the
 its zero mark to put the slit of the mode on the beam. In `"RR"` θ is 0: a narrow slit is
 centered at `beam_angle` from the zero mark, so it is on the beam at the delay. In `"FF"` it is
 55° on the pulse-shaping choppers, 175° on `mc1` and 185° on `mc2`, the angle to their wide
-slits; the bandwidth choppers have one slit, at θ = 0 in both modes.
+slits; the bandwidth choppers have one slit, at θ = 0 in every mode. In `"RF"` and `"FR"`, each
+pair takes the θ of its letter: in `"RF"` 0 on the pulse-shaping choppers and the angles of `"FF"`
+on the monochromatic ones, in `"FR"` the other way around.
 
 | Chopper | Flight path L | λ0 arrives at | θ in `"FF"` | Delay |
 | ------- | ------------- | ------------- | ----------- | ----- |

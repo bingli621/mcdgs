@@ -57,7 +57,9 @@ class Params:
         too, with the slit of ``mode`` on the beam.
     mode:
         ``"FF"`` puts the wide slits of the pulse-shaping and monochromatic choppers on the beam,
-        for high flux; ``"RR"`` the narrow ones, for high resolution.
+        for high flux; ``"RR"`` the narrow ones, for high resolution; ``"RF"`` the narrow slits
+        of the pulse-shaping choppers and the wide ones of the monochromatic choppers, and
+        ``"FR"`` the other way around.
     omega:
         Goniometer rotation about +y, in deg.
     bender_in:
@@ -72,7 +74,9 @@ class Params:
 
     lambda0: float | None = param(2.0, "Å", "central wavelength")
     rrm: int = param(18, "", "repetition rate multiplication factor")
-    mode: Mode = param("FF", "", "FF = high flux, RR = high resolution")
+    mode: Mode = param(
+        "FF", "", "slits of PS then MC: F = wide, high flux, R = narrow, high resolution"
+    )
 
     omega: float = param(0.0, "deg", "goniometer rotation about +Y")
     bender_in: bool = param(False, "", "True = bender in, False = bender out")

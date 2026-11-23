@@ -16,9 +16,11 @@ incident energies of [Incident energy](incident-energy.md) and the
 
 `TRexElasticResolution` is `TRex` with the vanadium of `vanadium` on `sample_pos`, the beamstop
 and the banana detector. Its control parameters are the defaults, `lambda0` = 2 Å and
-`rrm` = 18, in each of the two modes of the choppers: `"FF"`, the wide slits of the
-pulse-shaping and monochromatic choppers, for high flux, and `"RR"`, the narrow ones, for high
-resolution. Both modes have the same 15 sub-pulses. The choppers turn, so the beam on the sample is a train of sub-pulses. This is
+`rrm` = 18, in each of the four modes of the choppers: `"FF"`, the wide slits of the
+pulse-shaping and monochromatic choppers, for high flux, `"RR"`, the narrow ones, for high
+resolution, and between them `"RF"`, the narrow slits of the pulse-shaping choppers with the
+wide ones of the monochromatic choppers, and `"FR"`, the other way around. All four modes have
+the same 15 sub-pulses. The choppers turn, so the beam on the sample is a train of sub-pulses. This is
 not the white beam of the `solid_angles` diagnostic, where every chopper is parked open. It has
 the [masked source](masked-source.md).
 
@@ -54,7 +56,8 @@ each mode in two parts, with `run_to_sample` and `run_from_sample` of
 
 RR lets a sixth of the neutrons of FF through, 4.3 × 10⁶ n/s at the pre-sample monitor against
 2.5 × 10⁷ n/s. `reduce_runs` and `analyze` read the runs of a mode again without McStas. The
-figures below are of FF, except in [FF and RR](#ff-and-rr).
+figures below are of FF, except in [FF and RR](#ff-and-rr) and
+[All four modes](#all-four-modes).
 
 ## The reduction
 
@@ -179,14 +182,19 @@ differ by 0.6 % at most, 46.91 meV against 47.17 meV for the highest:
 
 --8<-- "docs/instruments/trex/figures/elastic-resolution-incoherent/trex_elastic_resolution_incoherent_rr_lines.txt"
 
-![The FWHM of the elastic line of each sub-pulse against its Ei in FF and RR, as a fraction of Ei, the flux of each sub-pulse, and the FWHM and flux of RR over FF](figures/elastic-resolution-incoherent/trex_elastic_resolution_incoherent_modes.png)
+## All four modes
 
-`plot_resolutions` draws, against Ei, the FWHM of both modes, the FWHM as a fraction of Ei, the
-flux of each sub-pulse at the pre-sample monitor, and the FWHM and the flux of RR over those of
-FF. The FWHM has the error of its fit; the flux has no error bars, since the sub-pulses are found
-from the intensity of the monitor alone. RR narrows the elastic line to about
-0.55 of FF, for about 0.17 of its flux, at every Ei. `resolution_table` gives the numbers side by
-side:
+The mixed modes take one pair of choppers at a time from FF to RR: RF narrows the slits of the
+pulse-shaping choppers only, FR those of the monochromatic choppers only. Their spectra, fits and
+maps are made as for FF and RR.
+
+![The FWHM of the elastic line of each sub-pulse against its Ei in FF, FR, RF and RR, as a fraction of Ei, the flux of each sub-pulse, and the FWHM and flux of FR, RF and RR over FF](figures/elastic-resolution-incoherent/trex_elastic_resolution_incoherent_modes.png)
+
+`plot_resolutions` draws, against Ei, the FWHM of every mode, the FWHM as a fraction of Ei, the flux
+of each sub-pulse at the pre-sample monitor, and the FWHM, open circles, and the flux, open squares,
+of each mode over those of FF. The FWHM has the error of its fit; the flux has no error bars, since
+the sub-pulses are found from the intensity of the monitor alone. `resolution_table` gives the
+numbers side by side:
 
 --8<-- "docs/instruments/trex/figures/elastic-resolution-incoherent/trex_elastic_resolution_incoherent_modes.txt"
 
@@ -194,10 +202,19 @@ side:
   0.25 meV at 11.4 meV to 2.0 meV at 46.9 meV, 2.2 % to 4.3 % of Ei, against 3.5 % to 7.4 % in
   FF.
 - **For a sixth of the flux.** Every sub-pulse keeps 0.15 to 0.18 of its flux in RR, about
-  the same share at every Ei: 2.8 × 10⁵ against 1.7 × 10⁶ n/s at 20.45 meV. The narrow slits of the pulse-shaping and monochromatic choppers
-  shorten each sub-pulse, which sets its time at the sample, and its spread of Ei. So the lines
-  narrow, and fewer neutrons pass.
-- **The same trend against Ei.** In both modes FWHM / Ei grows with Ei. In FF it levels off
+  the same share at every Ei: 2.8 × 10⁵ against 1.7 × 10⁶ n/s at 20.45 meV. The narrow slits of
+  the pulse-shaping and monochromatic choppers shorten each sub-pulse, which sets its time at the
+  sample, and its spread of Ei. So the lines narrow, and fewer neutrons pass.
+- **RF does more than FR, for less.** The narrow slits of the pulse-shaping choppers alone make
+  the lines 0.78 to 0.82 times as wide as in FF and keep 0.48 to 0.52 of the flux; those of the
+  monochromatic choppers alone make them 0.82 to 0.92 times as wide and keep only 0.32 to 0.35.
+  At 20.45 meV, RF has 0.85 meV with 8.6 × 10⁵ n/s, FR 0.95 meV with 5.7 × 10⁵ n/s. Only at the
+  lowest Ei, 11.36 meV, is FR the narrower, 0.85 against 0.90 of FF; at the highest, 47.17 meV,
+  the two are as wide.
+- **The narrow monochromatic slits cost more than their width.** They are 0.57 of the wide
+  ones, 2.5° against 4.4°, as the narrow pulse-shaping slits are, 20° against 35°. RF keeps
+  about that share of the flux, a half; FR keeps a third.
+- **The same trend against Ei.** In every mode FWHM / Ei grows with Ei. In FF it levels off
   above 40 meV, 7.4 % at 40.7 meV and 7.2 % at 47.2 meV; in RR it still grows, to 4.3 %.
 
 ## Making the figures
@@ -208,8 +225,8 @@ The figures need McStas, so they are not made with the site. To run McStas and m
 pixi run python -c "from mcdgs.diagnostics.trex.elastic_resolution_incoherent import main; main()"
 ```
 
-At its defaults, `main` runs both parts in both modes, 1e9 rays from the masked source with
-seed 1 each, as for the figures here: about three minutes in all. It prints the tables and
+At its defaults, `main` runs both parts in all four modes, 1e9 rays from the masked source with
+seed 1 each, as for the figures here: about a minute and a half per mode. It prints the tables and
 saves the figures and the tables of each mode, and those that compare them, to
 `mcdgs_workspace/results/trex_elastic_resolution_incoherent/`, or to the folder given as `out`.
 Running the module, as `pixi run docs-diagnostics` does, only reduces the runs again, without

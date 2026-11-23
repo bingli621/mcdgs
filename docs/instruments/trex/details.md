@@ -21,7 +21,7 @@ collimators yet.
 | `b_rot` | −0.398 deg | Rotation of the bender about +y. |
 | `lambda0` | 2.0 Å | Central wavelength. `None` is the white beam, 0.1 to 10 Å, with `rrm` 0 only: turning choppers need a wavelength to be phased to. |
 | `rrm` | 18 | Repetition rate multiplication factor. 0 parks every chopper on the slit of the mode, the bandwidth choppers too (see [Chopper timing](#chopper-timing)). |
-| `mode` | `"FF"` | `"FF"` puts the wide slits of the pulse-shaping and monochromatic choppers on the beam, for high flux; `"RR"` the narrow ones, for high resolution. |
+| `mode` | `"FF"` | The slits of the pulse-shaping, then the monochromatic choppers, `F` wide and `R` narrow: `"FF"` puts the wide slits of both on the beam, for high flux; `"RR"` the narrow ones, for high resolution; `"RF"` the narrow slits of the pulse-shaping choppers and the wide ones of the monochromatic choppers, and `"FR"` the other way around. |
 | `t0_offset` | 1.7 ms | Time from the start of the pulse at which the neutrons the choppers are phased to leave the moderator. |
 | `omega` | 0.0 deg | Goniometer rotation about +y. |
 
@@ -262,12 +262,14 @@ The disks of the pulse-shaping and monochromatic choppers have two kinds of slit
 neutron of wavelength `lambda0` arrives. In `"RR"` the narrow slit is centered on the beam then,
 so the delay is the arrival time. In `"FF"` the disk is phased to the wide slit instead: it has
 turned past its zero mark by the angle from the center of the wide slit to the beam, 55° for the
-pulse-shaping choppers, 175° for `mc1` and 185° for `mc2`. The model keeps the disks as they are
-and changes the delay, which is the same as shifting the slit edges.
+pulse-shaping choppers, 175° for `mc1` and 185° for `mc2`. In `"RF"` and `"FR"` each pair is
+phased by its letter: in `"RF"` the pulse-shaping choppers as in `"RR"` and the monochromatic ones
+as in `"FF"`, in `"FR"` the other way around. The model keeps the disks as they are and changes
+the delay, which is the same as shifting the slit edges.
 
 `rrm` 0 parks every chopper, the bandwidth choppers too: `nu_<name>` and `delay_<name>` are 0,
 and `park_<name>` stands the disk still with the slit of the mode centered on the beam, turned by
-the same angle, 55°, 175° or 185° in `"FF"` and 0 in `"RR"`. While a disk turns, `park_<name>`
+the same angle, 55°, 175° or 185° on a wide slit and 0 on a narrow one. While a disk turns, `park_<name>`
 is 0, and McStas does not read it.
 [Choppers](choppers.md#delays) gives the delay of each disk at the default parameters.
 

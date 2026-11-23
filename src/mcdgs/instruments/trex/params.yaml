@@ -4,7 +4,7 @@ params:
   t0_offset: {value: 0.0017, unit: s, comment: time added to choppers shifting to middle of the long pulse}
   lambda0: {value: 2.0, unit: Å, comment: central wavelength}
   rrm: {value: 18, unit: '', comment: repetition rate multiplication factor}
-  mode: {value: FF, unit: '', comment: 'FF = high flux, RR = high resolution'}
+  mode: {value: FF, unit: '', comment: 'slits of PS then MC: F = wide, high flux, R = narrow, high resolution'}
   omega: {value: 0.0, unit: deg, comment: goniometer rotation about +Y}
   bender_in: {value: false, unit: '', comment: 'True = bender in, False = bender out'}
   b_rot: {value: -0.3978809618345933, unit: deg, comment: rotation of the cold neutron bender}

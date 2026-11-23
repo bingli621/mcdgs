@@ -11,8 +11,10 @@ sample. The cylinder scatters only once, into the window of
 :func:`.solid_angles.detector_window`, which covers the banana detector.
 
 It runs in each mode of ``MODES``: ``"FF"``, the wide slits of the pulse-shaping and
-monochromatic choppers, for high flux, and ``"RR"``, the narrow ones, for high resolution, with
-the same ``lambda0`` and ``rrm``, so the same sub-pulses. :func:`main` runs each mode in two
+monochromatic choppers, for high flux, ``"RR"``, the narrow ones, for high resolution, and
+between them ``"RF"``, the narrow slits of the pulse-shaping choppers with the wide ones of the
+monochromatic choppers, and ``"FR"``, the other way around, all with the same ``lambda0`` and
+``rrm``, so the same sub-pulses. :func:`main` runs each mode in two
 parts, with :class:`.Simulation`, as :mod:`.diagnostics.trex.diffraction` does: from the source
 to ``sample_pos``, which dumps the beam there into a beam file, then from that beam through the
 vanadium to the detector, into the folders of :func:`run_names`.
@@ -70,7 +72,16 @@ from mcdgs.reduction.mdnorm import momentum_transfer, q_e_coverage
 from mcdgs.samples import vanadium
 
 NAME = "trex_elastic_resolution_incoherent"
-MODES: tuple[Mode, ...] = ("FF", "RR")  # high flux, high resolution: each runs on its own
+MODES: tuple[Mode, ...] = ("FF", "FR", "RF", "RR")  # coarse to fine; FF, first, is the reference
+# C0 to C3 from the finest resolution to the coarsest
+MODE_COLORS: dict[Mode, str] = {"RR": "C0", "RF": "C1", "FR": "C2", "FF": "C3"}
+RATIO_LEGEND_ROOM = 1.4  # the y axis of the ratios of plot_resolutions, past the highest
+MODE_LABELS: dict[Mode, str] = {
+    "FF": "FF, high flux",
+    "FR": "FR, narrow monochromatic slits",
+    "RF": "RF, narrow pulse-shaping slits",
+    "RR": "RR, high resolution",
+}
 MIN_TWO_THETA = 5.0  # deg: the pixels closer to the beam see the direct beam past the beamstop
 ENERGY_STEP = 0.05  # meV, the bin width of the spectra
 FWHM_PER_SIGMA = 2 * np.sqrt(2 * np.log(2))  # the full width at half maximum of a Gaussian
@@ -122,7 +133,7 @@ def define_instrument(mode: Mode = "FF") -> TRexElasticResolution:
     ----------
     mode:
         The slits of the pulse-shaping and monochromatic choppers: ``"FF"``, the default, for
-        high flux, or ``"RR"`` for high resolution.
+        high flux, ``"RR"`` for high resolution, or ``"RF"`` or ``"FR"`` between.
     """
     params = Params(mode=mode)  # the default control parameters, in the mode
     return TRexElasticResolution(params=params)
@@ -734,12 +745,13 @@ def plot_resolutions(
 ) -> Figure:
     """Draw the FWHM of the elastic line and the flux of each sub-pulse against Ei, in every mode.
 
-    Four panels on one Ei axis, each with one linear y axis: the FWHM, the FWHM as a fraction of
-    Ei, the flux at the pre-sample monitor, and the FWHM and the flux of each mode after the
-    first over those of the first, the price of the resolution. Each sub-pulse is a point, not
-    joined. The FWHM has the error of the fit of :func:`fit_elastic_lines`; the flux has none:
-    :func:`.find_patches` sums the intensity of the monitor without its errors, which are small
-    from 1e9 rays. The n-th sub-pulse of one mode is the n-th of another, as in
+    Four panels on one Ei axis, each with one linear y axis: the FWHM, the FWHM as a fraction of Ei,
+    the flux at the pre-sample monitor, and the FWHM and the flux of each mode after the first over
+    those of the first, the price of the resolution. Each sub-pulse is a point, not joined, in the
+    color of its mode, ``MODE_COLORS``; in the last panel an open circle is the FWHM and an open
+    square the flux. The FWHM has the error of the fit of :func:`fit_elastic_lines`; the flux has
+    none: :func:`.find_patches` sums the intensity of the monitor without its errors, which are
+    small from 1e9 rays. The n-th sub-pulse of one mode is the n-th of another, as in
     :func:`resolution_table`.
 
     Parameters
@@ -762,28 +774,31 @@ def plot_resolutions(
         fig, axes = plt.subplots(2, 2, figsize=(16, 11), sharex=True, layout="constrained")
         fig.suptitle(title)
         (absolute, relative), (flux_panel, ratios) = axes
-        for mode, color, marker in zip(modes, ("C0", "C1"), ("o", "s")):
+        for mode in modes:
+            color = MODE_COLORS.get(mode, "k")
             ei = lines[mode].coords["incident_energy"].to(unit="meV").values
             fwhm = lines[mode]["fwhm"]
             error = np.sqrt(fwhm.variances)
-            label = {"FF": "FF, high flux", "RR": "RR, high resolution"}.get(mode, mode)
-            style = {"color": color, "fmt": marker, "ms": 7, "capsize": 3}
+            style = {"color": color, "fmt": "o", "ms": 7, "capsize": 3}
+            label = MODE_LABELS.get(mode, mode)
             absolute.errorbar(ei, fwhm.values, yerr=error, label=label, **style)
             relative.errorbar(ei, 100 * fwhm.values / ei, yerr=100 * error / ei, **style)
             flux_ei = pulses[mode].coords["incident_energy"].to(unit="meV").values
             flux = pulses[mode].to(unit="1/s").values / 1e6
-            flux_panel.plot(flux_ei, flux, linestyle="none", marker=marker, ms=7, color=color)
+            flux_panel.plot(flux_ei, flux, linestyle="none", marker="o", ms=7, color=color)
         ei = lines[first].coords["incident_energy"].to(unit="meV").values
-        for mode, marker in zip(modes[1:], ("o", "s", "^", "v")):
+        for mode in modes[1:]:
+            color = MODE_COLORS.get(mode, "k")
             width = lines[mode]["fwhm"].data / lines[first]["fwhm"].data  # with the fit errors
             flux = pulses[mode].values / pulses[first].values
             ratios.errorbar(
                 ei,
                 width.values,
                 yerr=np.sqrt(width.variances),
-                color="C3",
-                fmt=marker,
+                color=color,
+                fmt="o",
                 ms=7,
+                markerfacecolor="none",
                 capsize=3,
                 label=f"FWHM {mode} / {first}",
             )
@@ -791,9 +806,10 @@ def plot_resolutions(
                 ei,
                 flux,
                 linestyle="none",
-                marker=marker,
+                marker="s",
                 ms=7,
-                color="C4",
+                markerfacecolor="none",
+                color=color,
                 label=f"Flux {mode} / {first}",
             )
         absolute.set(ylabel="FWHM [meV]", title="The width of the elastic line")
@@ -811,11 +827,16 @@ def plot_resolutions(
         for ax in axes.flat:
             ax.grid(True, alpha=0.3)
             ax.set_ylim(bottom=0)
+        ratios.set_ylim(top=RATIO_LEGEND_ROOM * ratios.get_ylim()[1])  # the legend above the data
         absolute.legend(loc="upper left")
-        handles, labels = ratios.get_legend_handles_labels()  # the FWHM first, as above
+        handles, labels = ratios.get_legend_handles_labels()  # the FWHM in one column, the flux
         order = sorted(range(len(labels)), key=lambda i: not labels[i].startswith("FWHM"))
         ratios.legend(
-            [handles[i] for i in order], [labels[i] for i in order], ncols=2, loc="lower center"
+            [handles[i] for i in order],
+            [labels[i] for i in order],
+            ncols=2,
+            fontsize="small",
+            loc="upper center",
         )
     return fig
 
@@ -874,7 +895,7 @@ def analyze(out: Path | None = None, modes: tuple[Mode, ...] = MODES) -> list[Pa
         fig = plot_resolutions(
             lines,
             fluxes,
-            f"T-Rex, vanadium: the elastic resolution in {' and '.join(lines)}\n{conditions}",
+            f"T-Rex, vanadium: the elastic resolution in {', '.join(lines)}\n{conditions}",
         )
         files.append(cli.save_figure(fig, folder / f"{NAME}_modes.png"))
     return files

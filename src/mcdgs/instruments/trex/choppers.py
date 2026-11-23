@@ -7,10 +7,13 @@ repetition rate multiplication and the mode. A repetition rate multiplication of
 disk on the slit of the mode.
 
 The mode chooses the slit of the pulse-shaping and monochromatic chopper disks that is on the
-beam: the wide one in ``"FF"`` (high flux), the narrow one in ``"RR"`` (high resolution). Rather
-than shift the slit edges, the disks stay as they are and turn later, by the angle from the slit
-to the beam, which is the same. The narrow slits are centered on ``beam_angle``, so ``"RR"``
-turns them by 0.
+beam, in two letters: the first for the pulse-shaping choppers, the second for the
+monochromatic ones, ``F`` the wide slit (flux) and ``R`` the narrow one (resolution). ``"FF"``
+is high flux, ``"RR"`` high resolution, and ``"RF"`` and ``"FR"`` are between: the narrow slits
+of the pulse-shaping choppers with the wide ones of the monochromatic choppers, and the other
+way around. Both disks of a pair always take the same slit. Rather than shift the slit edges,
+the disks stay as they are and turn later, by the angle from the slit to the beam, which is the
+same. The narrow slits are centered on ``beam_angle``, so ``"RR"`` turns them by 0.
 
 Each disk has a beam window as wide as the exit of the guide in front of it, on the source
 side, which the instrument gives :func:`chopper`: the beam that reaches the disk. NXdisk_chopper hangs the window from the height of the
@@ -45,7 +48,8 @@ from .guides.straight import (
     PSC_GAP_LENGTH,
 )
 
-Mode = Literal["FF", "RR"]  # high flux, high resolution
+# the slits of the pulse-shaping, then the monochromatic choppers: F wide (flux), R narrow
+Mode = Literal["FF", "RF", "FR", "RR"]
 
 
 PSC_DISK_SPACING = 0.1  # FIXME, not in Table of Optics v3.2, in m
@@ -75,7 +79,7 @@ class TRexDisk(Disk):
         Parameters
         ----------
         mode:
-            ``"FF"`` or ``"RR"``.
+            A mode of :data:`Mode`.
 
         Returns
         -------
@@ -89,6 +93,8 @@ class TRexDisk(Disk):
         (55.0, 175.0)
         >>> DISKS["mc1"].phase_from_mode("RR"), DISKS["mc2"].phase_from_mode("FF")
         (0.0, 185.0)
+        >>> DISKS["ps1"].phase_from_mode("RF"), DISKS["mc1"].phase_from_mode("RF")
+        (0.0, 175.0)
         """
         center, _ = self.slits[self.mode_slit[mode]]
         return float((self.beam_angle - center) % 360)
@@ -102,7 +108,7 @@ DISKS: dict[str, TRexDisk] = {
         beam_angle=0,
         zero_angle=0,
         slit_height=0.085,  # FIXME slit height unknown
-        mode_slit={"FF": 0, "RR": 0},
+        mode_slit={"FF": 0, "RF": 0, "FR": 0, "RR": 0},
         gap_arm="arm_bwc1",
         gap_z=ARM_BWC1_Z,
         z=BWC1_GAP_LENGTH / 2,  # 0.015, distance 31.96404
@@ -113,7 +119,7 @@ DISKS: dict[str, TRexDisk] = {
         beam_angle=0,
         zero_angle=0,
         slit_height=0.085,  # FIXME slit height unknown
-        mode_slit={"FF": 0, "RR": 0},
+        mode_slit={"FF": 0, "RF": 0, "FR": 0, "RR": 0},
         gap_arm="arm_bwc2",
         gap_z=ARM_BWC2_Z,
         z=BWC2_GAP_LENGTH / 2,  # 0.015, distance 39.95504
@@ -124,7 +130,7 @@ DISKS: dict[str, TRexDisk] = {
         beam_angle=180,
         zero_angle=0,
         slit_height=0.095,
-        mode_slit={"FF": 1, "RR": 2},
+        mode_slit={"FF": 1, "RF": 2, "FR": 1, "RR": 2},
         gap_arm="arm_psc",
         gap_z=ARM_PSC_Z,
         z=(PSC_GAP_LENGTH - PSC_DISK_SPACING) / 2,  # 0.05, distance 107.95
@@ -135,7 +141,7 @@ DISKS: dict[str, TRexDisk] = {
         beam_angle=180,
         zero_angle=0,
         slit_height=0.095,
-        mode_slit={"FF": 1, "RR": 2},
+        mode_slit={"FF": 1, "RF": 2, "FR": 1, "RR": 2},
         gap_arm="arm_psc",
         gap_z=ARM_PSC_Z,
         z=(PSC_GAP_LENGTH + PSC_DISK_SPACING) / 2,  # 0.15, distance 108.05
@@ -146,7 +152,7 @@ DISKS: dict[str, TRexDisk] = {
         beam_angle=180,
         zero_angle=0,
         slit_height=0.045,
-        mode_slit={"FF": 1, "RR": 0},
+        mode_slit={"FF": 1, "RF": 1, "FR": 0, "RR": 0},
         gap_arm="arm_mc",
         gap_z=ARM_MC_Z,
         z=(MC_GAP_LENGTH - MC_DISK_SPACING) / 2,  # 0.0425, distance 162.0275
@@ -160,7 +166,7 @@ DISKS: dict[str, TRexDisk] = {
         beam_angle=0,
         zero_angle=0,
         slit_height=0.045,
-        mode_slit={"FF": 1, "RR": 0},
+        mode_slit={"FF": 1, "RF": 1, "FR": 0, "RR": 0},
         gap_arm="arm_mc",
         gap_z=ARM_MC_Z,
         z=(MC_GAP_LENGTH + MC_DISK_SPACING) / 2,  # 0.0525, distance 162.0375
@@ -215,7 +221,8 @@ def chopper_timings(
     source_frequency:
         Pulse frequency of the source, in Hz.
     mode:
-        ``"FF"`` for high flux, ``"RR"`` for high resolution.
+        A mode of :data:`Mode`: ``"FF"`` for high flux, ``"RR"`` for high resolution, or
+        ``"RF"`` or ``"FR"`` between.
     t0_offset:
         Time from the start of the pulse at which the neutrons the choppers are phased to leave
         the moderator, in s.
@@ -228,7 +235,7 @@ def chopper_timings(
     Raises
     ------
     ValueError
-        If ``mode`` is not ``"FF"`` or ``"RR"``, if ``rrm`` is negative, or if ``lambda0`` is
+        If ``mode`` is not a mode of :data:`Mode`, if ``rrm`` is negative, or if ``lambda0`` is
         ``None`` while ``rrm`` is not 0.
 
     Examples
@@ -240,7 +247,7 @@ def chopper_timings(
     (185.0, 0.0)
     """
     if mode not in get_args(Mode):
-        raise ValueError(f"mode {mode!r} is not 'FF' or 'RR'")
+        raise ValueError(f"mode {mode!r} is not one of {', '.join(get_args(Mode))}")
     if rrm < 0:
         raise ValueError(f"rrm {rrm} is negative")
     if rrm == 0:
