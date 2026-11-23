@@ -1,9 +1,11 @@
-# Elastic plane
+# Diffraction
 
 `TRexWithLa2Ni7`, in
-[`mcdgs.diagnostics.trex.elastic_plane`](https://github.com/bingli621/mcdgs/blob/main/src/mcdgs/diagnostics/trex/elastic_plane.py),
+[`mcdgs.diagnostics.trex.diffraction`](https://github.com/bingli621/mcdgs/blob/main/src/mcdgs/diagnostics/trex/diffraction.py),
 puts the La2Ni7 crystal on `sample_pos` and reduces every neutron that reaches the banana
-detector to its momentum transfer Q. It uses the sub-pulses and incident energies of
+detector to its momentum transfer Q. It keeps every neutron in the arrival window of its
+sub-pulse, whatever its energy transfer: the inelastic scattering is weak next to the Bragg
+peaks, so the plane is a diffraction pattern. It uses the sub-pulses and incident energies of
 [Incident energy](incident-energy.md), and the [reduction package](../../reference/reduction.md)
 throughout. The result is the horizontal plane of Q, where each of the 15 sub-pulses draws its
 own arc.
@@ -70,7 +72,7 @@ bottom, which are furthest from the sample. Together they cover 2.09 sr, close t
 
 ## The plane
 
-![The intensity in (Qx, Qz) of the 15 sub-pulses, near the horizontal plane, on a log scale](figures/elastic-plane/trex_elastic_plane.png)
+![The intensity in (Qx, Qz) of the 15 sub-pulses, near the horizontal plane, on a log scale](figures/diffraction/trex_diffraction.png)
 
 `plot_plane` keeps the neutrons near the horizontal plane, |Qy| < 0.5 Å⁻¹, sums them over Qy
 and draws them in (Qx, Qz). The detector also sees reflections well above and below the plane,
@@ -115,15 +117,15 @@ The crystal scatters 0.03 to 0.5 % of each sub-pulse into the detector.
 The figure needs McStas, so it is not made with the site. To run McStas and make it, run:
 
 ```bash
-pixi run python -c "from mcdgs.diagnostics.trex.elastic_plane import main; main()"
+pixi run python -c "from mcdgs.diagnostics.trex.diffraction import main; main()"
 ```
 
 At its defaults, `main` runs both parts, 1e9 rays from the masked source with seed 1, as for
 the figure here. It prints the sub-pulses and saves the figure to
-`mcdgs_workspace/results/trex_elastic_plane/`, or to the folder given as `out`.
+`mcdgs_workspace/results/trex_diffraction/`, or to the folder given as `out`.
 Running the module, as `pixi run docs-diagnostics` does, only reduces the runs again, without
 McStas:
 
 ```bash
-pixi run python -m mcdgs.diagnostics.trex.elastic_plane
+pixi run python -m mcdgs.diagnostics.trex.diffraction
 ```

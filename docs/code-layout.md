@@ -64,7 +64,7 @@ classDiagram
     class diagnostics {
         <<package>>
         compare
-        trex.overview to trex.elastic_scan
+        trex.overview to trex.diffraction_scan
     }
     instruments ..> core
     samples ..> core

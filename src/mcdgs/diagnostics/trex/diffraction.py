@@ -1,4 +1,7 @@
-"""The horizontal scattering plane of T-Rex with a La2Ni7 crystal, in (Qx, Qz).
+"""Diffraction from a La2Ni7 crystal on T-Rex: the horizontal scattering plane, in (Qx, Qz).
+
+Every neutron in the arrival window of its sub-pulse counts, whatever its energy transfer: the
+inelastic scattering is weak next to the Bragg peaks, so the plane is a diffraction pattern.
 
 :class:`TRexWithLa2Ni7` is :class:`.TRex` with the La2Ni7 crystal of :func:`.la2ni7` on
 ``sample_pos``, with the beamstop and the banana detector, which lists every neutron reaching
@@ -35,12 +38,12 @@ through the origin, where the detector covers it.
 :func:`main` is :func:`simulate`, which runs McStas, then :func:`analyze`, which reduces and
 draws. Run it to do both::
 
-    pixi run python -c "from mcdgs.diagnostics.trex.elastic_plane import main; main()"
+    pixi run python -c "from mcdgs.diagnostics.trex.diffraction import main; main()"
 
 Running the module only reduces the runs again, without McStas, with :func:`analyze`;
 :func:`reduce_runs` gives the sub-pulses and the neutrons alone::
 
-    pixi run python -m mcdgs.diagnostics.trex.elastic_plane
+    pixi run python -m mcdgs.diagnostics.trex.diffraction
 """
 
 from pathlib import Path
@@ -59,7 +62,7 @@ from mcdgs.reduction.binning import bin_edges
 from mcdgs.reduction.inelastic import normalized_events
 from mcdgs.samples import la2ni7
 
-NAME = "trex_elastic_plane"
+NAME = "trex_diffraction"
 TO_SAMPLE = f"{NAME}_run_to_sample"  # the run folder of the first part, source -> sample_pos
 FROM_SAMPLE = f"{NAME}_run_from_sample"  # that of the second part, sample_pos -> detector
 Q_STEP = 0.02  # 1/Å, the bin width in Qx and Qz
@@ -276,7 +279,7 @@ def simulate(ncount: float = 1e9, seed: int = 1) -> tuple[Path, Path]:
         Number of McStas rays of the first part. With the masked source nearly every ray reaches
         the sample: 1e8 rays leave about as many neutrons in the beam file as 1e10 of the plain
         source, and 1e9 about ten times as many. The second part, and every angle of
-        :mod:`.diagnostics.trex.elastic_scan`, runs every neutron of the beam file.
+        :mod:`.diagnostics.trex.diffraction_scan`, runs every neutron of the beam file.
     seed:
         Seed of the random numbers of the first part; the second part takes ``seed + 1``.
 
@@ -327,12 +330,12 @@ def analyze(
     """Reduce the two parts of a McStas run, print the sub-pulses and save the (Qx, Qz) plane.
 
     It runs no McStas, so it can run again on the same runs; :func:`main` runs them first. The
-    figure is ``trex_elastic_plane.png``, from :func:`plot_plane`.
+    figure is ``trex_diffraction.png``, from :func:`plot_plane`.
 
     Parameters
     ----------
     out:
-        Folder of the figure. If ``None``, ``trex_elastic_plane`` in the results folder of
+        Folder of the figure. If ``None``, ``trex_diffraction`` in the results folder of
         :meth:`.Workspace.find`.
     to_sample, from_sample:
         The folders of the two parts, as :func:`reduce_runs`.

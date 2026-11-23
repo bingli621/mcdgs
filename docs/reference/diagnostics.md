@@ -13,8 +13,8 @@ documentation. See [Source](../instruments/trex/source.md),
 [Masked source](../instruments/trex/masked-source.md),
 [Incident energy](../instruments/trex/incident-energy.md),
 [Elastic resolution](../instruments/trex/elastic-resolution-incoherent.md),
-[Elastic plane](../instruments/trex/elastic-plane.md) and
-[Rotation scan](../instruments/trex/elastic-scan.md) for what they show for T-Rex, and
+[Diffraction](../instruments/trex/diffraction.md) and
+[Rotation scan](../instruments/trex/diffraction-scan.md) for what they show for T-Rex, and
 [Source](../instruments/cspec/source.md) for CSPEC.
 [Run McStasScript's diagnostics](../how-to/run-mcstasscript-diagnostics.md) has the code of
 `guides_diagnostics`, and [Guide transmission](../instruments/trex/guides.md) its figures.
@@ -51,9 +51,9 @@ documentation. See [Source](../instruments/trex/source.md),
 
 ::: mcdgs.diagnostics.trex.elastic_resolution_incoherent
 
-::: mcdgs.diagnostics.trex.elastic_plane
+::: mcdgs.diagnostics.trex.diffraction
 
-::: mcdgs.diagnostics.trex.elastic_scan
+::: mcdgs.diagnostics.trex.diffraction_scan
 
 ::: mcdgs.diagnostics.trex.guides_diagnostics
 

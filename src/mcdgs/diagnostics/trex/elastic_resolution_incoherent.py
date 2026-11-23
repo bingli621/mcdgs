@@ -11,10 +11,10 @@ sample. The cylinder scatters only once, into the window of
 :func:`.solid_angles.detector_window`, which covers the banana detector.
 
 :func:`main` runs it in two parts, with :class:`.Simulation`, as
-:mod:`.diagnostics.trex.elastic_plane` does: from the source to ``sample_pos``, which dumps the
+:mod:`.diagnostics.trex.diffraction` does: from the source to ``sample_pos``, which dumps the
 beam there into a beam file, then from that beam through the vanadium to the detector.
 
-The reduction is that of :mod:`.diagnostics.trex.sample_runs`, as for the elastic plane:
+The reduction is that of :mod:`.diagnostics.trex.sample_runs`, as for diffraction:
 
 1. :func:`.sample_runs.subpulse_timing` finds the sub-pulses at the pre-sample and beamstop
    monitors of the first part, with their incident energy and the time they reach the sample.

@@ -1,6 +1,6 @@
 """What the T-Rex diagnostics with a sample share: the two parts of a run split at the sample.
 
-A diagnostic with a sample, such as :mod:`.diagnostics.trex.elastic_plane`, runs McStas in two
+A diagnostic with a sample, such as :mod:`.diagnostics.trex.diffraction`, runs McStas in two
 parts with :class:`.Simulation`: from the source to ``SAMPLE``, which holds the monitors of
 ``MONITORS`` and dumps the beam there into a beam file, then from that beam through the sample to
 ``DETECTOR``. This module reduces both parts, with :mod:`mcdgs.reduction`:

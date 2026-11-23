@@ -32,8 +32,8 @@ nav = [
       { "Masked source" = "instruments/trex/masked-source.md" },
       { "Incident energy" = "instruments/trex/incident-energy.md" },
       { "Elastic resolution" = "instruments/trex/elastic-resolution-incoherent.md" },
-      { "Elastic plane" = "instruments/trex/elastic-plane.md" },
-      { "Rotation scan" = "instruments/trex/elastic-scan.md" },
+      { "Diffraction" = "instruments/trex/diffraction.md" },
+      { "Rotation scan" = "instruments/trex/diffraction-scan.md" },
     ] },
     { "CSPEC" = [
       "instruments/cspec/index.md",

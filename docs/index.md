@@ -32,7 +32,7 @@ print(trex)  # every parameter and component, with its position in the lab frame
 | [Chopper acceptance](instruments/trex/choppers.md#acceptance-diagram) | The acceptance diagram of the choppers, exact and without neutrons, with scippneutron. |
 | Reading the output | Monitors and detector pixels from McStas NeXus files; the neutrons at each tof detector; the time and wavelength map of a monitor from both, on the same bins, to compare them. |
 | [Parameters files](reference/io.md) | Save an instrument to a YAML file and load it back. A file need only hold what differs from the instrument the code makes. |
-| [Reduction](reference/reduction.md) | The incident energy of each sub-pulse from two monitors, and the energy and momentum transfer of each neutron, per incident neutron and per steradian: the [elastic plane](instruments/trex/elastic-plane.md) of a crystal. S(Q,E) is not written yet. |
+| [Reduction](reference/reduction.md) | The incident energy of each sub-pulse from two monitors, and the energy and momentum transfer of each neutron, per incident neutron and per steradian: the [diffraction](instruments/trex/diffraction.md) of a crystal. S(Q,E) is not written yet. |
 
 ## Where to go next
 
@@ -50,8 +50,8 @@ print(trex)  # every parameter and component, with its position in the lab frame
   [masked source](instruments/trex/masked-source.md), the
   [incident energy](instruments/trex/incident-energy.md), the
   [elastic resolution](instruments/trex/elastic-resolution-incoherent.md) from vanadium, and the
-  [elastic plane](instruments/trex/elastic-plane.md) and
-  [rotation scan](instruments/trex/elastic-scan.md) of a crystal.
+  [diffraction](instruments/trex/diffraction.md) and
+  [rotation scan](instruments/trex/diffraction-scan.md) of a crystal.
 - [How-to guides](how-to/run-a-simulation.md): run a McStas scan, simulate the choppers with tof,
   read the output.
 - [Reference](reference/core.md): the Python API, generated from the source.
