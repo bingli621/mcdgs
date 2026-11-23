@@ -473,9 +473,9 @@ def slit_opening(pair: ChopperPair) -> float:
 def sample_path_spread(radius: float, two_theta_ranges: tuple[tuple[float, float], ...]) -> float:
     """Return the spread of the flight path from the sample of eq. (20) of Gaspar (2007).
 
-    On the elastic line, eq. (20) is ``v Δt_s = sqrt(c² sin² 2θ + a² (1 - cos 2θ)²)``, for a
-    rectangle of half-width ``c`` across the beam and half-thickness ``a`` along it. For the
-    cylinder, both are its ``radius``. It is averaged over ``two_theta_ranges`` as a root mean
+    On the elastic line, eq. (20) is ``v Δt_s = sqrt(c² sin² 2θ + d² (1 - cos 2θ)²)``, for a
+    rectangle of half-width ``c`` across the beam and half-thickness ``d`` along it, which Gaspar
+    calls ``a``, here kept for the arc of a slit. For the cylinder, both are its ``radius``. It is averaged over ``two_theta_ranges`` as a root mean
     square, evenly per degree.
 
     Parameters

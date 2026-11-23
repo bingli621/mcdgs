@@ -33,31 +33,41 @@ divergence, the sample and the detector thickness. $2 E_i v_0$ is his $647.2 / \
 eq. (19) of Gaspar (2007) at $E_i = E_f$.
 
 Lechner gives $\tau_1$ and $\tau_2$ as the FWHM of the chopper pulses, without a formula for them.
-The usual one, for a pair of counter-rotating disks with a slit of arc $a$ at the rim moving at the
-rim speed $u$, is eq. (1) of Gaspar (2007):
+The usual one is eq. (1) of Gaspar (2007), for a pair of counter-rotating disks:
 
 $$
-\tau = \frac{a}{2u}.
+\tau = \frac{b}{2\pi f D} = \frac{a}{2u},
 $$
+
+where, in the notation of Gaspar, $b$ is the width of the slit, $f$ the rotation frequency of the
+disks and $D$ their diameter. Here, $a$ is the same width, measured as an arc along the rim,
+$a = \alpha R$ for a slit of opening angle $\alpha$ on a disk of radius $R$, and $u = 2\pi f R =
+\pi f D$ is the speed of the rim, the speed at which the slit crosses the beam. The second form
+reads as: two slits of width $a$ crossing each other at a relative speed $2u$. For T-Rex, with
+$R$ = 0.35 m:
+
+| Pair | $\alpha$, F / R | $a$, F / R | $f$ | $u$ | $\tau = a / (2u)$, F / R |
+| --- | --- | --- | --- | --- | --- |
+| Pulse-shaping, $\tau_1$ | 35° / 20° | 213.8 / 122.2 mm | 189 Hz | 415.6 m/s | 257 / 147 µs |
+| Monochromatic, $\tau_2$ | 4.4° / 2.5° | 26.9 / 15.3 mm | 252 Hz | 554.2 m/s | 24.3 / 13.8 µs |
 
 For $\Delta L$, only the sample counts here, as the simulated detector has no depth. Eq. (20) of
-Gaspar (2007) gives, on the elastic line, for a rectangle of half-width $c$ and half-thickness $a$,
+Gaspar (2007) gives, on the elastic line, for a rectangular sample of half-width $c$ across the
+beam and half-thickness $d$ along it (Gaspar calls it $a$),
 
 $$
-\Delta L = \sqrt{c^2 \sin^2 2\theta + a^2 \left(1 - \cos 2\theta\right)^2}.
+\Delta L = \sqrt{c^2 \sin^2 2\theta + d^2 \left(1 - \cos 2\theta\right)^2},
 $$
 
-For the vanadium cylinder of radius 1 cm, both $c$ and $a$ are taken as the radius, and
-$\Delta L$ is averaged as a root mean square over the scattering angles the reduction keeps,
-−36° to −5° and 5° to 144°. For T-Rex:
+with $2\theta$ the scattering angle. For the vanadium cylinder of radius 1 cm, both $c$ and $d$ are
+taken as the radius, and $\Delta L$ is averaged as a root mean square over the scattering angles
+the reduction keeps, −36° to −5° and 5° to 144°. The distances of T-Rex:
 
 | | |
 | --- | --- |
 | $L_{PM}$, pulse-shaping to monochromatic choppers | 54.03 m |
 | $L_{MS}$, monochromatic choppers to sample | 1.77 m |
 | $L_2$, sample to detector | 3.00 m |
-| $\tau_1$ from the slit, F / R | 257 / 147 µs |
-| $\tau_2$ from the slit, F / R | 24.3 / 13.8 µs |
 
 At the sub-pulse of $\lambda_0$ = 2 Å, 20.45 meV, each term and all three together:
 
