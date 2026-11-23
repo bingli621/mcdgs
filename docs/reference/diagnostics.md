@@ -12,6 +12,7 @@ documentation. See [Source](../instruments/trex/source.md),
 [Neutrons on sample](../instruments/trex/neutrons-on-sample.md),
 [Masked source](../instruments/trex/masked-source.md),
 [Incident energy](../instruments/trex/incident-energy.md),
+[Elastic resolution](../instruments/trex/elastic-resolution-incoherent.md),
 [Elastic plane](../instruments/trex/elastic-plane.md) and
 [Rotation scan](../instruments/trex/elastic-scan.md) for what they show for T-Rex, and
 [Source](../instruments/cspec/source.md) for CSPEC.
@@ -45,6 +46,8 @@ documentation. See [Source](../instruments/trex/source.md),
 ::: mcdgs.diagnostics.trex.masked_source
 
 ::: mcdgs.diagnostics.trex.incident_energy
+
+::: mcdgs.diagnostics.trex.elastic_resolution_incoherent
 
 ::: mcdgs.diagnostics.trex.elastic_plane
 

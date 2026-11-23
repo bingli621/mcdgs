@@ -48,7 +48,8 @@ print(trex)  # every parameter and component, with its position in the lab frame
   the [time-distance diagram](instruments/trex/time-distance.md), the
   [neutrons on the sample](instruments/trex/neutrons-on-sample.md), the
   [masked source](instruments/trex/masked-source.md), the
-  [incident energy](instruments/trex/incident-energy.md), and the
+  [incident energy](instruments/trex/incident-energy.md), the
+  [elastic resolution](instruments/trex/elastic-resolution-incoherent.md) from vanadium, and the
   [elastic plane](instruments/trex/elastic-plane.md) and
   [rotation scan](instruments/trex/elastic-scan.md) of a crystal.
 - [How-to guides](how-to/run-a-simulation.md): run a McStas scan, simulate the choppers with tof,
