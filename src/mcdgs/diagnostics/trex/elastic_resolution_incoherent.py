@@ -61,6 +61,7 @@ from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
 from mcdgs.mcstas import Simulation, Workspace
 from mcdgs.reduction.binning import bin_edges
 from mcdgs.reduction.inelastic import DEFAULT_ENERGY_TRANSFER_RATIO, normalized_events
+from mcdgs.reduction.mdnorm import momentum_transfer, q_e_coverage
 from mcdgs.samples import vanadium
 
 NAME = "trex_elastic_resolution_incoherent"
@@ -75,13 +76,10 @@ FIT_FRACTION = 0.2
 SHIFT = 0.4  # each sub-pulse is lifted above the one below by this much of the highest bin
 FONT_SIZE = 14  # pt, of every text of the figure
 MAP_Q_STEP = 0.05  # 1/Å, the bin width in |Q| of the S(Q,E) maps; in E, ENERGY_STEP
-# the unit of the maps, as scipp cannot print meV and 1/Å together but in SI units
-MAP_UNIT = "1/(sr·meV·Å⁻¹)"
 MAP_COLUMNS = 3  # the maps of the sub-pulses, in rows of this many
-# meV Å², ħ²/2m of the neutron: E = HBAR2_OVER_2M k²
-HBAR2_OVER_2M = float(
-    (sc.constants.hbar**2 / (2 * sc.constants.neutron_mass)).to(unit="meV*Å**2").value
-)
+# the top of the color scale of the maps, as a percentile of the bins with neutrons: a bin on the
+# edge of the coverage, with little of it, can stand far above the rest
+MAP_PERCENTILE = 99.9
 
 
 # --8<-- [start:instrument]
@@ -428,69 +426,34 @@ def plot_spectra(
     return fig
 
 
-def momentum_transfer(
-    incident_energy: float, energy_transfer: np.ndarray, two_theta: float
-) -> np.ndarray:
-    """Return |Q| of a neutron of an incident energy and energy transfer, scattered by 2θ.
-
-    ``Q² = ki² + kf² - 2 ki kf cos 2θ``, with ``E = HBAR2_OVER_2M k²``.
-
-    Parameters
-    ----------
-    incident_energy:
-        Ei, in meV.
-    energy_transfer:
-        E = Ei - Ef, in meV, below Ei.
-    two_theta:
-        The scattering angle, in deg.
-
-    Returns
-    -------
-    :
-        |Q| for each energy transfer, in 1/Å.
-
-    Examples
-    --------
-    Elastic and scattered straight back, Q is 2 ki:
-
-    >>> ki = np.sqrt(20.0 / HBAR2_OVER_2M)
-    >>> bool(np.isclose(momentum_transfer(20.0, np.array([0.0]), 180.0)[0], 2 * ki))
-    True
-    """
-    ki = np.sqrt(incident_energy / HBAR2_OVER_2M)
-    kf = np.sqrt((incident_energy - energy_transfer) / HBAR2_OVER_2M)
-    return np.sqrt(ki**2 + kf**2 - 2 * ki * kf * np.cos(np.radians(two_theta)))
-
-
 def q_e_maps(
     events: sc.DataArray,
     pulses: sc.DataArray,
+    two_theta: sc.Variable,
     solid_angle: sc.Variable,
-    two_theta_limits: tuple[float, float],
     window: tuple[float, float] = DEFAULT_ENERGY_TRANSFER_RATIO,
     energy_step: float = ENERGY_STEP,
     q_step: float = MAP_Q_STEP,
 ) -> sc.DataArray:
-    """Histogram the neutrons of each sub-pulse in |Q| and E, as :func:`energy_spectra` does in E.
+    """Return S(Q, E) of each sub-pulse: its neutrons in |Q| and E, over the coverage of each bin.
 
     Every sub-pulse has the same bins, so that all the maps span the same range: in E those of
     :func:`energy_spectra`, wide enough for the arrival window of the highest Ei, and in |Q|
-    from 0 to the largest |Q| the detector reaches, at the largest 2θ and the highest Ei. The
-    intensity is that of :func:`energy_spectra` per bin of |Q| too, so a map summed over |Q|
-    gives the spectrum of its sub-pulse. It is averaged over the solid angle of the whole
-    detector, not normalized by the coverage of each bin.
+    from 0 to the largest |Q| the detector reaches, at the largest 2θ and the highest Ei. In
+    each bin, the fraction of the incident neutrons of the sub-pulse scattered into it is
+    divided by its coverage from :func:`.q_e_coverage`: the solid angle of every pixel times
+    the length in E of its trajectory inside the bin. That is S(Q, E) per steradian and per meV,
+    whatever the part of the detector that sees the bin: the normalization of MDNorm, in |Q|.
 
     Parameters
     ----------
     events:
-        The neutrons of :func:`.normalized_events`, in 1/sr, with their
-        ``subpulse``, ``energy_transfer``, ``Q`` and the ``solid_angle`` of their pixel.
+        The neutrons of :func:`.normalized_events`, in 1/sr, with their ``subpulse``,
+        ``energy_transfer``, ``Q`` and the ``solid_angle`` of their pixel.
     pulses:
         The sub-pulses of :func:`.sample_runs.subpulse_timing`.
-    solid_angle:
-        The solid angle of all the pixels the neutrons come from, in sr.
-    two_theta_limits:
-        The smallest and the largest 2θ of those pixels, in deg.
+    two_theta, solid_angle:
+        The scattering angle and the solid angle of each pixel the neutrons come from.
     window:
         The smallest and the largest ``E / Ei`` of the arrival windows, as
         :func:`.arrival_window`.
@@ -500,101 +463,62 @@ def q_e_maps(
     Returns
     -------
     :
-        The intensity per incident neutron, per steradian, per meV and per 1/Å
-        (``MAP_UNIT``), along ``subpulse``, ``energy_transfer`` and ``Q``, with the bin edges
-        ``energy_transfer`` and ``Q``, in meV and 1/Å, and the ``incident_energy`` of each
-        sub-pulse.
+        S(Q, E) per steradian and per meV, along ``subpulse``, ``energy_transfer`` and ``Q``,
+        with the bin edges ``energy_transfer`` and ``Q``, in meV and 1/Å, and the
+        ``incident_energy`` of each sub-pulse. A bin no trajectory of its sub-pulse crosses,
+        which it cannot reach, is NaN.
     """
-    energies = pulses.coords["incident_energy"].to(unit="meV").values
-    highest = float(energies.max())
+    energies = pulses.coords["incident_energy"].to(unit="meV")
+    highest = float(energies.max().value)
     limit = np.ceil(max(map(abs, window)) * highest)
     energy = bin_edges("energy_transfer", -limit, limit, energy_step, unit="meV")
     # the largest |Q| of all: at the largest 2θ, and the largest kf, of the highest Ei
-    reach = momentum_transfer(highest, np.array([window[0] * highest]), two_theta_limits[1])[0]
+    largest = float(two_theta.to(unit="deg").max().value)
+    reach = float(momentum_transfer(highest, window[0] * highest, largest))
     q = bin_edges("Q", 0.0, float(np.ceil(reach)), q_step, unit="1/Å")
     fractions = events.copy(deep=False)
     fractions.data = events.data * events.coords["solid_angle"]  # of the incident neutrons
     fractions.coords["energy_transfer"] = events.coords["energy_transfer"].to(unit="meV")
     fractions.coords["Q"] = events.coords["Q"].to(unit="1/Å")
     grouped = fractions.group(sc.arange("subpulse", pulses.sizes["subpulse"]))
-    maps = grouped.hist(energy_transfer=energy, Q=q) / solid_angle.to(unit="sr")
-    maps = maps / sc.scalar(energy_step, unit="meV") / sc.scalar(q_step, unit="1/Å")
+    scattered = grouped.hist(energy_transfer=energy, Q=q).transpose(
+        ["subpulse", "energy_transfer", "Q"]
+    )
+    coverage = sc.concat(
+        [
+            q_e_coverage(two_theta, solid_angle, sc.scalar(ei, unit="meV"), energy, q, window)
+            for ei in energies.values  # one sub-pulse at a time
+        ],
+        "subpulse",
+    ).to(unit="sr*meV")
+    covered = coverage.values > 0
+    values = np.full(covered.shape, np.nan)
+    values[covered] = scattered.values[covered] / coverage.values[covered]
+    per_coverage = sc.scalar(1.0, unit=scattered.unit) / sc.scalar(1.0, unit=coverage.unit)
+    maps = sc.DataArray(
+        sc.array(dims=scattered.dims, values=values) * per_coverage,
+        coords={"energy_transfer": energy, "Q": q},
+    )
     maps.coords["incident_energy"] = pulses.coords["incident_energy"].copy()
     return maps
 
 
-def coverage(
-    incident_energy: float,
-    energy_transfer: np.ndarray,
-    q: np.ndarray,
-    two_theta_limits: tuple[float, float],
-    window: tuple[float, float] = DEFAULT_ENERGY_TRANSFER_RATIO,
-) -> np.ndarray:
-    """Return which points of (E, |Q|) a sub-pulse can reach on the detector.
-
-    A point is reached if its E lies in the arrival window, ``window`` times Ei, and its |Q|
-    between those of the smallest and the largest 2θ at that E, from :func:`momentum_transfer`.
-
-    Parameters
-    ----------
-    incident_energy:
-        Ei, in meV.
-    energy_transfer, q:
-        The E of each row and the |Q| of each column, in meV and 1/Å.
-    two_theta_limits:
-        The smallest and the largest 2θ of the pixels, in deg.
-    window:
-        The smallest and the largest ``E / Ei`` of the arrival windows, as
-        :func:`.arrival_window`.
-
-    Returns
-    -------
-    :
-        True where the point is reached, along E and |Q|.
-
-    Examples
-    --------
-    Elastic, 20 meV reach |Q| from 0.27 to 5.9 1/Å between 5° and 144°; 30 meV of energy loss
-    is beyond the window:
-
-    >>> covered = coverage(20.0, np.array([0.0, 30.0]), np.array([0.1, 3.0, 6.0]), (5.0, 144.0))
-    >>> covered.tolist()
-    [[False, True, False], [False, False, False]]
-    """
-    inside = (energy_transfer >= window[0] * incident_energy) & (
-        energy_transfer <= window[1] * incident_energy
-    )
-    reachable = np.where(inside, energy_transfer, 0.0)  # kf is real only inside the window
-    low, high = (momentum_transfer(incident_energy, reachable, t) for t in two_theta_limits)
-    return inside[:, None] & (q[None, :] >= low[:, None]) & (q[None, :] <= high[:, None])
-
-
-def plot_q_e_maps(
-    maps: sc.DataArray,
-    two_theta_limits: tuple[float, float],
-    title: str,
-    window: tuple[float, float] = DEFAULT_ENERGY_TRANSFER_RATIO,
-    columns: int = MAP_COLUMNS,
-) -> Figure:
+def plot_q_e_maps(maps: sc.DataArray, title: str, columns: int = MAP_COLUMNS) -> Figure:
     """Draw the S(Q,E) map of every sub-pulse, |Q| across and E up, from the highest Ei.
 
     Every map spans the same range of |Q| and E, that of the bins of :func:`q_e_maps`, and they
-    share one linear color scale, turbo, from 0 to the highest bin of all. A bin the sub-pulse
-    reaches, as :func:`coverage` finds, has the color of its value, the bottom of the scale if
-    it is empty; a bin it cannot reach is white. So the colored area of each map is its coverage:
-    its arrival window, ``window`` times its Ei, between the smallest and the largest 2θ.
+    share one linear color scale, turbo, from 0 to the ``MAP_PERCENTILE`` percentile of the bins
+    with neutrons, of all the maps. A bin the sub-pulse
+    reaches has the color of its value, the bottom of the scale if it is empty; a bin it cannot
+    reach, NaN in :func:`q_e_maps`, is white. So the colored area of each map is its coverage:
+    its arrival window between the smallest and the largest 2θ of the pixels.
 
     Parameters
     ----------
     maps:
         The maps of :func:`q_e_maps`.
-    two_theta_limits:
-        The smallest and the largest 2θ of the pixels, in deg.
     title:
         The title of the figure.
-    window:
-        The smallest and the largest ``E / Ei`` of the arrival windows, as
-        :func:`.arrival_window`.
     columns:
         The number of maps in a row.
 
@@ -606,12 +530,10 @@ def plot_q_e_maps(
     maps = maps.transpose(["subpulse", "energy_transfer", "Q"])
     q = maps.coords["Q"].to(unit="1/Å").values
     energy = maps.coords["energy_transfer"].to(unit="meV").values
-    q_centers = (q[:-1] + q[1:]) / 2
-    energy_centers = (energy[:-1] + energy[1:]) / 2
     energies = maps.coords["incident_energy"].to(unit="meV").values
     order = np.argsort(-energies)  # the highest Ei first
     rows = -(-order.size // columns)
-    top = float(maps.values.max())
+    top = float(np.nanpercentile(maps.values[maps.values > 0], MAP_PERCENTILE))
     cmap = plt.get_cmap("turbo").with_extremes(bad="white")
     with plt.rc_context({"font.size": FONT_SIZE}):
         fig, axes = plt.subplots(
@@ -630,12 +552,7 @@ def plot_q_e_maps(
             mesh = ax.pcolormesh(
                 q,
                 energy,
-                # white only where the sub-pulse cannot reach; there, any neutron is still shown
-                np.ma.masked_where(
-                    ~coverage(ei, energy_centers, q_centers, two_theta_limits, window)
-                    & (maps.values[i] <= 0),
-                    maps.values[i],
-                ),
+                np.ma.masked_invalid(maps.values[i]),  # white where the sub-pulse cannot reach
                 cmap=cmap,
                 vmin=0.0,
                 vmax=top,
@@ -654,7 +571,8 @@ def plot_q_e_maps(
                 mesh,
                 ax=axes,
                 shrink=0.6,
-                label=f"S(Q, E) [{MAP_UNIT}], not normalized by the coverage of each bin",
+                extend="max",
+                label="S(Q, E) [1/(sr·meV)], normalized by the coverage of each bin",
             )
     return fig
 
@@ -665,7 +583,6 @@ class Reduction(NamedTuple):
     pulses: sc.DataArray  # the sub-pulses of :func:`.sample_runs.subpulse_timing`
     spectra: sc.DataArray  # of :func:`energy_spectra`
     maps: sc.DataArray  # of :func:`q_e_maps`
-    two_theta_limits: tuple[float, float]  # deg, the smallest and the largest 2θ of the pixels
 
 
 def simulate(ncount: float = 1e9, seed: int = 1) -> tuple[Path, Path]:
@@ -722,14 +639,10 @@ def reduce_runs(
     binned = scattered_pixels(runs.read_detector(from_sample))
     pixels = runs.pixel_solid_angle(binned)
     events = normalized_events(binned, pulses, pixels)
-    solid_angle = pixels.sum()
-    angles = two_theta(binned)
-    limits = (float(angles.min().value), float(angles.max().value))
     return Reduction(
         pulses,
-        energy_spectra(events, pulses, solid_angle),
-        q_e_maps(events, pulses, solid_angle, limits),
-        limits,
+        energy_spectra(events, pulses, pixels.sum()),
+        q_e_maps(events, pulses, two_theta(binned), pixels),
     )
 
 
@@ -758,7 +671,7 @@ def analyze(
     :
         The paths of the files.
     """
-    pulses, spectra, maps, limits = reduce_runs(to_sample, from_sample)
+    pulses, spectra, maps = reduce_runs(to_sample, from_sample)
     folder = cli.output_folder(out, NAME)
     conditions = define_instrument().running_conditions()
     lines = fit_elastic_lines(spectra)
@@ -772,7 +685,7 @@ def analyze(
         f"{conditions}",
     )
     files.append(cli.save_figure(fig, folder / f"{NAME}.png"))
-    fig = plot_q_e_maps(maps, limits, f"T-Rex, vanadium: S(Q, E) of each sub-pulse\n{conditions}")
+    fig = plot_q_e_maps(maps, f"T-Rex, vanadium: S(Q, E) of each sub-pulse\n{conditions}")
     files.append(cli.save_figure(fig, folder / f"{NAME}_sqe.png"))
     return files
 
