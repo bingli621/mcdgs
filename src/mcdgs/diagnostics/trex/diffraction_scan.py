@@ -43,7 +43,7 @@ from mcdgs.diagnostics.trex import diffraction as plane
 from mcdgs.diagnostics.trex import sample_runs as runs
 from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
 from mcdgs.mcstas import Simulation, Workspace, numeric_parameters
-from mcdgs.reduction.binning import bin_edges
+from mcdgs.reduction.binning import bin_edges, bins_title
 from mcdgs.reduction.inelastic import normalized_events
 from mcdgs.samples import la2ni7
 
@@ -282,7 +282,8 @@ def plot_scan(maps: sc.DataArray, title: str) -> Figure:
     maps:
         The maps of :func:`reduce_angles`, along ``omega``, in the order of the scan.
     title:
-        The title of the figure; the angles summed are added below it.
+        The title of the figure; the bins, with the angles summed over, are added below it, as
+        :func:`.bins_title`.
 
     Returns
     -------
@@ -290,10 +291,12 @@ def plot_scan(maps: sc.DataArray, title: str) -> Figure:
         The figure, Qx along ``IN_PLANE`` and Qz along (0 0 1).
     """
     hkl = " ".join(str(i) for i in IN_PLANE)
-    omegas = maps.coords["omega"].to(unit="deg").values
+    summed = maps.sum("omega")
+    omegas = maps.coords["omega"].to(unit="deg")
+    bins = plane.plot_bins(summed, QY_HALF_WIDTH)
     return plane.draw_plane(
-        maps.sum("omega"),
-        f"{title}\n{angles_summed(omegas, len(omegas))}",
+        summed,
+        f"{title}\n{bins}, {bins_title({'omega': omegas})}",
         xlabel=f"Qx [1/Å], along ({hkl})",
         ylabel="Qz [1/Å], along (0 0 1)",
     )
@@ -313,7 +316,7 @@ def animate(maps: sc.DataArray, path: Path, title: str, fps: int = FRAMES_PER_SE
     path:
         The GIF to write.
     title:
-        The title of every frame; the angles so far are added below it.
+        The title of every frame; the bins and the angles so far are added below it.
     fps:
         Frames per second.
 
@@ -327,10 +330,11 @@ def animate(maps: sc.DataArray, path: Path, title: str, fps: int = FRAMES_PER_SE
     summed = np.cumsum(values, axis=0)  # frame n: the angles up to n
     fig = plot_scan(maps, title)  # the axes and the color scale of the whole scan
     (mesh,) = fig.axes[0].collections
+    bins = plane.plot_bins(maps.sum("omega"), QY_HALF_WIDTH)
 
     def frame(n: int) -> list[Artist]:
         mesh.set_array(np.ma.masked_less_equal(summed[n], 0))
-        fig.suptitle(f"{title}\n{angles_summed(omegas, n + 1)}")
+        fig.suptitle(f"{title}\n{bins}, {angles_summed(omegas, n + 1)}")
         return [mesh]
 
     animation = FuncAnimation(fig, frame, frames=len(omegas))
@@ -368,7 +372,7 @@ def analyze(
     hkl = " ".join(str(i) for i in IN_PLANE)
     title = (
         f"T-Rex, La2Ni7 ({hkl}) in plane\n{define_instrument().running_conditions()}\n"
-        f"|Qy| < {QY_HALF_WIDTH:g} 1/Å, in the frame of the crystal at omega = 0"
+        "Q in the frame of the crystal at omega = 0"
     )
     folder = cli.output_folder(out, NAME)
     gif = animate(maps, folder / f"{NAME}.gif", title)

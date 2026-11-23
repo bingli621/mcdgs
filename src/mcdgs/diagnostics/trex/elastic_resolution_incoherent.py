@@ -59,7 +59,7 @@ from mcdgs.diagnostics.trex import sample_runs as runs
 from mcdgs.diagnostics.trex.solid_angles import detector_window
 from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
 from mcdgs.mcstas import Simulation, Workspace
-from mcdgs.reduction.binning import bin_edges
+from mcdgs.reduction.binning import bin_edges, bins_title
 from mcdgs.reduction.inelastic import DEFAULT_ENERGY_TRANSFER_RATIO, normalized_events
 from mcdgs.reduction.mdnorm import momentum_transfer, q_e_coverage
 from mcdgs.samples import vanadium
@@ -390,7 +390,7 @@ def plot_spectra(
 
     with plt.rc_context({"font.size": FONT_SIZE}):  # every text of the figure
         fig, ax = plt.subplots(figsize=(13, 12), layout="constrained")
-        fig.suptitle(title)
+        fig.suptitle(f"{title}\n{bins_title({'E': spectra.coords['energy_transfer']})}")
         for i, (values, variances, ei, color, level) in enumerate(
             zip(spectra.values, spectra.variances, energies, colors, levels)
         ):
@@ -545,7 +545,9 @@ def plot_q_e_maps(maps: sc.DataArray, title: str, columns: int = MAP_COLUMNS) ->
             layout="constrained",
             squeeze=False,
         )
-        fig.suptitle(title)
+        fig.suptitle(
+            f"{title}\n{bins_title({'|Q|': maps.coords['Q'], 'E': maps.coords['energy_transfer']})}"
+        )
         mesh = None
         for ax, i in zip(axes.flat, order):
             ei = float(energies[i])

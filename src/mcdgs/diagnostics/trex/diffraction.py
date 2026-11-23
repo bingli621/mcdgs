@@ -58,8 +58,8 @@ from mcdgs.diagnostics import cli
 from mcdgs.diagnostics.trex import sample_runs as runs
 from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
 from mcdgs.mcstas import Simulation, Workspace
-from mcdgs.reduction.binning import bin_edges
-from mcdgs.reduction.inelastic import normalized_events
+from mcdgs.reduction.binning import bin_edges, bins_title
+from mcdgs.reduction.inelastic import DEFAULT_ENERGY_TRANSFER_RATIO, normalized_events
 from mcdgs.samples import la2ni7
 
 NAME = "trex_diffraction"
@@ -153,7 +153,8 @@ def plot_plane(
     sees reflections well above and below the plane, which a sum over all Qy would project
     onto it.
 
-    It is drawn on the log color scale of :func:`draw_plane`.
+    It is drawn on the log color scale of :func:`draw_plane`, with the bins of
+    :func:`plot_bins` under the title.
 
     Parameters
     ----------
@@ -180,7 +181,42 @@ def plot_plane(
         start, stop = np.floor(values.min() * 10) / 10, np.ceil(values.max() * 10) / 10
         edges[name] = bin_edges(name, start, stop, step, unit="1/Å")
     plane = events.hist(Qz=edges["Qz"], Qx=edges["Qx"])  # summed over the slice in Qy
-    return draw_plane(plane, f"{title}\n|Qy| < {qy_half_width:g} 1/Å")
+    return draw_plane(plane, f"{title}\n{plot_bins(plane, qy_half_width)}")
+
+
+def plot_bins(
+    plane: sc.DataArray,
+    qy_half_width: float = QY_HALF_WIDTH,
+    window: tuple[float, float] = DEFAULT_ENERGY_TRANSFER_RATIO,
+) -> str:
+    """Write the bins of a (Qz, Qx) plane for its title, with :func:`.bins_title`.
+
+    Qx and Qz are binned; the plane is summed over the slice in Qy and over the arrival window of
+    each sub-pulse in E / Ei.
+
+    Parameters
+    ----------
+    plane:
+        The histogram, with the bin edges ``Qx`` and ``Qz``.
+    qy_half_width:
+        Half the width of the slice in Qy, in 1/Å.
+    window:
+        The smallest and the largest ``E / Ei`` of the arrival windows, as
+        :func:`.arrival_window`.
+
+    Returns
+    -------
+    :
+        The bins, as ``Qx=(start, stop, step) [1/Å]``.
+    """
+    return bins_title(
+        {
+            "Qx": plane.coords["Qx"],
+            "Qz": plane.coords["Qz"],
+            "Qy": bin_edges("Qy", -qy_half_width, qy_half_width, unit="1/Å"),
+            "E/Ei": bin_edges("E/Ei", *window),
+        }
+    )
 
 
 def beyond_direct_beam_max(

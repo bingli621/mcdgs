@@ -2,7 +2,8 @@
 
 :func:`bin_edges` gives evenly spaced edges, such as in Q and energy transfer, and
 :func:`monitor_bins` the edges of the axes of a McStas monitor, so that anything else is read on
-the bins of McStas.
+the bins of McStas. :func:`bins_title` writes the bins of a histogram for the title of its
+figure.
 """
 
 from collections.abc import Mapping
@@ -10,7 +11,7 @@ from collections.abc import Mapping
 import numpy as np
 import scipp as sc
 
-__all__ = ["MONITOR_COORDINATES", "bin_edges", "monitor_bins"]
+__all__ = ["MONITOR_COORDINATES", "bin_edges", "bins_title", "monitor_bins"]
 
 # the variables of a McStas monitor that are coordinates of the neutrons, by McStas name: the
 # coordinate, as scippneutron and tof name it, and the unit of McStas
@@ -101,3 +102,45 @@ def monitor_bins(limits: Mapping[str, tuple[float, float, int]]) -> dict[str, sc
             coordinate, unit = MONITOR_COORDINATES[variable]
             bins[coordinate] = sc.linspace(coordinate, start, stop, n_bins + 1, unit=unit)
     return bins
+
+
+def bins_title(bins: Mapping[str, sc.Variable], per_line: int = 2) -> str:
+    """Write the bins of a histogram as ``name=(start, stop, step) [unit]``, for its title.
+
+    It is the form of the bins themselves, as :func:`bin_edges` takes them: a dimension that is
+    binned has its step, one that is summed over, a single bin, has none, ``name=(start, stop)``.
+    So the title tells which ranges a figure shows and which it sums over.
+
+    Parameters
+    ----------
+    bins:
+        The bin edges of each dimension, evenly spaced, by the name to write, such as
+        ``{"Qx": ..., "Qy": ...}``. Evenly spaced points, such as the angles of a scan, are
+        written the same way.
+    per_line:
+        How many dimensions to write on a line.
+
+    Returns
+    -------
+    :
+        The bins, ``per_line`` to a line, without a unit where there is none.
+
+    Examples
+    --------
+    >>> print(bins_title({
+    ...     "Qx": bin_edges("Qx", -2.0, 1.5, 0.1, unit="1/Å"),
+    ...     "Qy": bin_edges("Qy", -0.5, 0.5, unit="1/Å"),
+    ...     "E/Ei": bin_edges("E/Ei", -0.8, 0.8),
+    ... }))
+    Qx=(-2, 1.5, 0.1) [1/Å], Qy=(-0.5, 0.5) [1/Å]
+    E/Ei=(-0.8, 0.8)
+    """
+    parts = []
+    for name, edges in bins.items():
+        values = edges.values
+        numbers = [f"{values[0]:.3g}", f"{values[-1]:.3g}"]
+        if values.size > 2:
+            numbers.append(f"{values[1] - values[0]:.3g}")
+        unit = "" if edges.unit in (None, sc.units.dimensionless) else f" [{edges.unit}]"
+        parts.append(f"{name}=({', '.join(numbers)}){unit}")
+    return "\n".join(", ".join(parts[i : i + per_line]) for i in range(0, len(parts), per_line))
