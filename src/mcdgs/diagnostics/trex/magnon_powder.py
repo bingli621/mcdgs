@@ -56,9 +56,11 @@ from mcdgs.samples.inelastic.powder import MAGNON_TOP, magnon_band
 NAME = "trex_magnon_powder"
 SQW_NAME = "magnon_powder.sqw"  # in the builds folder of the workspace
 MODES: tuple[Mode, ...] = ("FF",)  # high flux
-P_INTERACT = 0.5  # the fraction of the neutrons made to scatter in the powder
-ENERGY_STEP = 0.1  # meV, the bin width in E of the maps
-Q_STEP = 0.05  # 1/Å, the bin width in |Q| of the maps
+P_INTERACT = 0.9  # the fraction of the neutrons made to scatter in the powder
+SAMPLE_SPLIT = 4  # each neutron of the beam goes through the powder this many times
+NCOUNT = 5e9  # McStas rays of the first part, from the masked source
+ENERGY_STEP = 0.25  # meV, the bin width in E of the maps
+Q_STEP = 0.1  # 1/Å, the bin width in |Q| of the maps
 # the E of the maps: the magnon is created only, so from a little below 0 to past the band
 ENERGY_RANGE = (-2.0, MAGNON_TOP + 3.0)  # meV
 EDGE_COLOR = "white"  # of the edges of the band of the model, over the maps
@@ -83,7 +85,8 @@ def sample(sqw_file: str | Path | None = None) -> Isotropic_Sqw:
     """Return the powder of :func:`.magnon_powder`, scattering once towards the detector.
 
     It scatters within ``d_phi`` of the horizontal plane, the height of the window of
-    :func:`.solid_angles.detector_window`, and makes ``P_INTERACT`` of the neutrons scatter.
+    :func:`.solid_angles.detector_window`, and makes ``P_INTERACT`` of the neutrons scatter. Each
+    neutron goes through it ``SAMPLE_SPLIT`` times (McStas SPLIT), to fill S(Q, E) more smoothly.
 
     Parameters
     ----------
@@ -96,6 +99,7 @@ def sample(sqw_file: str | Path | None = None) -> Isotropic_Sqw:
         order=1,
         d_phi=detector_window()["focus_ah"],
         p_interact=P_INTERACT,
+        split=SAMPLE_SPLIT,
     )
 
 
@@ -154,7 +158,7 @@ def run_names(mode: Mode) -> tuple[str, str]:
 
 
 def simulate(
-    ncount: float = 1e9, seed: int = 1, modes: tuple[Mode, ...] = MODES
+    ncount: float = NCOUNT, seed: int = 1, modes: tuple[Mode, ...] = MODES
 ) -> dict[Mode, tuple[Path, Path]]:
     """Write the S(|Q|, E) of the powder, then run :class:`TRexMagnonPowder` in each mode.
 
@@ -326,7 +330,7 @@ def analyze(out: Path | None = None, modes: tuple[Mode, ...] = MODES) -> list[Pa
     return files
 
 
-def main(out: Path | None = None, ncount: float = 1e9, seed: int = 1) -> list[Path]:
+def main(out: Path | None = None, ncount: float = NCOUNT, seed: int = 1) -> list[Path]:
     """Run McStas in every mode with :func:`simulate`, then reduce and draw with :func:`analyze`.
 
     Parameters

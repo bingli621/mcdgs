@@ -16,6 +16,7 @@ def test_the_powder_reads_the_table_of_the_workspace_and_scatters_once_towards_t
     assert sample.Sqw_coh == str(path)
     assert (sample.name, sample.order, sample.p_interact) == ("sample", 1, diagnostic.P_INTERACT)
     assert sample.d_phi == pytest.approx(detector_window()["focus_ah"])
+    assert sample.split == diagnostic.SAMPLE_SPLIT
 
 
 def test_the_instrument_has_the_powder_on_the_sample_position(tmp_path):

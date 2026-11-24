@@ -30,7 +30,7 @@ edges.
 | S(\|Q\|, E) | 0 to 10 Å⁻¹ in steps of 0.02 Å⁻¹, 0 to 20.2 meV in steps of 0.02 meV, each row normalized to one magnon |
 | Cross-sections | 5 b coherent per 64 Å³ cell, only the scale of the intensity; no absorption, no incoherent scattering |
 | Taken as it is | `T=-1`: no detailed balance, the magnon is only created; `classical=0`, `norm=1` |
-| Scattering | single scattering only (`order=1`), within `d_phi` = 52° of the horizontal plane, half of the neutrons made to scatter (`p_interact=0.5`) |
+| Scattering | single scattering only (`order=1`), within `d_phi` = 52° of the horizontal plane, 90% of the neutrons made to scatter (`p_interact=0.9`), each neutron sent through it 4 times (`SPLIT 4`) |
 | Detector | the banana detector, as for vanadium |
 
 The magnetic form factor and the polarization factor are left out, so the intensity does not
@@ -51,12 +51,12 @@ absolute.
 
 `simulate` runs FF only, the default `lambda0` = 2 Å and `rrm` = 18, with the masked source, in
 the two parts of [Diffraction](diffraction.md#two-runs-split-at-the-sample): from the source to
-`sample_pos` with 1e9 rays, then from that beam through the powder to the detector.
+`sample_pos` with 5e9 rays, then from that beam through the powder to the detector.
 
 `reduce_runs` is the reduction of the vanadium: the sub-pulses of `subpulse_timing`, the pixels
 past 5° from the beam, the neutrons of each sub-pulse divided by the solid angle of their pixel
 and by its flux, and `q_e_maps`, S(Q, E) normalized by the coverage of each bin, in bins of
-0.1 meV and 0.05 Å⁻¹.
+0.25 meV and 0.1 Å⁻¹.
 
 ## S(Q, E)
 
