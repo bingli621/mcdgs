@@ -51,7 +51,8 @@ absolute.
 
 `simulate` runs FF only, the default `lambda0` = 2 Å and `rrm` = 18, with the masked source, in
 the two parts of [Diffraction](diffraction.md#two-runs-split-at-the-sample): from the source to
-`sample_pos` with 5e9 rays, then from that beam through the powder to the detector.
+`sample_pos` with 5e9 rays, then from that beam through the powder to the detector. Each neutron of
+the beam goes through the powder 4 times, which gives 67 million detector events.
 
 `reduce_runs` is the reduction of the vanadium: the sub-pulses of `subpulse_timing`, the pixels
 past 5° from the beam, the neutrons of each sub-pulse divided by the solid angle of their pixel
@@ -66,10 +67,30 @@ sub-pulse cannot reach. Over each map, dashed white lines show the lowest and th
 of the magnon at each |Q|, without resolution. How far the intensity spreads past them is the
 resolution of that sub-pulse.
 
-- **The highest Ei see the whole band**, 5 to 20 meV, and blur it the most: their resolution
-  is several meV.
-- **The lowest Ei see only its bottom.** Their arrival window ends at 0.8 Ei, about 9 meV for
-  the 11.4 meV sub-pulse, but they resolve the gap and the dispersion at small |Q| best.
+![S(Q, E) of the powder magnon in each of the 15 sub-pulses in FF, |Q| across and E up, from the highest Ei to the lowest, normalized by the coverage of each bin, with the edges of the band of the model as dashed white lines](figures/magnon-powder/trex_magnon_powder_ff_sqe.png)
+
+The powder magnon is not a smooth band. At every zone center, |Q| = (2π/a)√(h² + k² + l²) =
+1.57, 2.22, 2.72, 3.14 Å⁻¹, ..., the lower edge drops back to the gap, and a dark V of little
+intensity rises from it. Between the Vs, bright arches run across the band. At small |Q| the
+steep dispersion, from 5 meV to about 10 meV below 1 Å⁻¹, is the left edge of the intensity.
+How sharply each sub-pulse draws this pattern is its resolution:
+
+- **The highest Ei, 47 to 36 meV (0 to 2), see the whole band but blur it.** The Vs and the
+  arches merge into one broad blob, from about 8 to 17 meV, and the gap at 5 meV is a soft
+  floor. Sub-pulse 0, in the tail of the source spectrum, has the fewest neutrons: it is the
+  noisiest, and its hottest bins set the top of the color scale.
+- **From 23 to 14 meV (6 to 11), the pattern is sharp.** The Vs, the arches, the gap and the
+  dispersion at small |Q| all have clear edges, though these sub-pulses see only the band below
+  0.8 Ei.
+- **The lowest Ei, 13 to 11 meV (12 to 14), see only the bottom of the band**, up to about
+  9 meV for the 11.4 meV sub-pulse, and are faint and grainy. About a fifth of the neutrons
+  that should scatter are transmitted instead, as McStas reports, because it finds no (|Q|, E)
+  of the table that sends them towards the detector. That loss is heaviest where little of the
+  band can be reached, so the intensity of these sub-pulses is somewhat too low.
+
+Below the gap, from about 9 to 14, there is faint intensity that the model does not have. It is
+not understood yet: one candidate is neutrons given to the wrong sub-pulse, and so the wrong
+energy transfer.
 
 ## Making the figure
 
