@@ -84,19 +84,19 @@ agree with McStas by construction, and what the guides take out of the beam woul
 ### The transmission, at the beam monitor
 
 With the scale alone, tof at the beam monitor would have the whole beam of the source, as no
-neutron is lost on its way. The transmission T is the factor on top of the scale that stands for
+neutron is lost on its way. The transmission $T$ is the factor on top of the scale that stands for
 what the guides take out:
 
-```text
-tof intensity at the beam monitor = tof counts × scale × T
-```
+$$
+\text{tof intensity at the beam monitor} = \text{tof counts} \times \text{scale} \times T
+$$
 
 It is tuned so that tof matches McStas. By default, the argument `transmission=None` of `main`,
 both have the same total at the beam monitor:
 
-```text
-T = McStas total at the beam monitor / (tof neutrons at the beam monitor × scale)
-```
+$$
+T = \frac{\text{McStas total at the beam monitor}}{\text{tof neutrons at the beam monitor} \times \text{scale}}
+$$
 
 Each step is a function of its own: `read_mcstas_maps` and `read_tof_maps` read the monitors of
 both models, `rescale_tof_to_mcstas` sets the scale at the source monitor and,
@@ -171,7 +171,7 @@ is the total through the opening:
 | -------- | --- | ------------------- |
 | Total rate | sum of all bins | 1.47e11 n/s |
 | Per pulse | total / 14 Hz | 1.05e10 n per pulse |
-| Per area | total / (6 cm × 4.63 cm) | 5.28e9 n/s/cm² |
+| Per area | $\text{total} / (6\ \text{cm} \times 4.63\ \text{cm})$ | 5.28e9 n/s/cm² |
 
 Halving the widths of the bins halves each value of the map, but leaves these sums unchanged;
 only a change of the window changes them. Divide a bin by its widths, 0.05 ms and 0.02 Å, for a
@@ -189,14 +189,14 @@ instantaneous rate (n/s) = time profile (n/s per bin) / 14 Hz / 0.05 ms
 
 Its maximum is the peak rate. At the beam monitor it is 1.69e12 n/s at 5.27 ms, some 11 times the
 average. That is what the length of the pulse at the monitor suggests: most of the 1.05e10
-neutrons of a pulse arrive within about 6 ms, and 1.05e10 / 6 ms ≈ 1.7e12 n/s.
+neutrons of a pulse arrive within about 6 ms, and $1.05 \times 10^{10} / 6\ \text{ms} \approx 1.7 \times 10^{12}$ n/s.
 
 ### What the monitor counts
 
-A beam monitor must leave the beam almost unchanged, so it detects only a small fraction ε of the
-neutrons, typically 1e-5 to 1e-3. For ³He, ¹⁰B and most gas monitors ε grows about as the
+A beam monitor must leave the beam almost unchanged, so it detects only a small fraction $\varepsilon$ of the
+neutrons, typically 1e-5 to 1e-3. For ³He, ¹⁰B and most gas monitors $\varepsilon$ grows about as the
 wavelength, so a cold beam counts more than its flux alone suggests. `count_rate` weights each
-bin of the map by ε at the center of its wavelength bin, sums over wavelength for the time
+bin of the map by $\varepsilon$ at the center of its wavelength bin, sums over wavelength for the time
 profile in counts/s, and gives its average and its peak:
 
 <!-- fmt:off -->
@@ -207,41 +207,41 @@ profile in counts/s, and gives its average and its peak:
 
 Without an efficiency it gives the rates of the flux above.
 
-### Example: ε = C λ
+### Example: $\varepsilon = C \lambda$
 
-Take a monitor whose efficiency grows as the wavelength, ε(λ) = C λ, with C = 5e-5 per Å: ε is
+Take a monitor whose efficiency grows as the wavelength, $\varepsilon(\lambda) = C \lambda$, with $C$ = 5e-5 per Å: $\varepsilon$ is
 1e-4 at 2 Å and 5e-4 at 10 Å. `main` prints its rates:
 
 ```python
 count_rate(intensity, bins, lambda wavelength: 5e-5 * wavelength)
 ```
 
-| | Flux, ε = 1 | ε = C λ |
+| | Flux, $\varepsilon = 1$ | $\varepsilon = C \lambda$ |
 | --- | --- | --- |
 | Average rate | 1.47e11 n/s | 2.21e7 counts/s |
 | Peak rate | 1.69e12 n/s at 5.27 ms | 2.33e8 counts/s at 6.12 ms |
 
-- **The average is C times the mean wavelength.** Summed over the map, ε = C λ gives
-  C × ⟨λ⟩ × total, with ⟨λ⟩ the mean wavelength of McStas, 3.02 Å: the monitor counts as if it
-  had ε = 1.5e-4 for every neutron, more than its 1e-4 at 2 Å, since the beam after the guides
+- **The average is $C$ times the mean wavelength.** Summed over the map, $\varepsilon = C \lambda$ gives
+  $C \times \langle\lambda\rangle \times \text{total}$, with $\langle\lambda\rangle$ the mean wavelength of McStas, 3.02 Å: the monitor counts as if it
+  had $\varepsilon$ = 1.5e-4 for every neutron, more than its 1e-4 at 2 Å, since the beam after the guides
   is cold.
 - **The peak moves later.** The long wavelengths arrive later and count more, so the peak of the
   counts is at 6.12 ms, not at the 5.27 ms of the flux.
-- **Both rates scale with C.** With another C, multiply them by its ratio to 5e-5.
+- **Both rates scale with $C$.** With another $C$, multiply them by its ratio to 5e-5.
 
 ### Choosing
 
-Compare the peak rate with what the monitor can count. While peak rate × τ is small, a counting
-monitor with a dead time τ loses a fraction of about peak rate × τ of its counts; keep it below
+Compare the peak rate with what the monitor can count. While $\text{peak rate} \times \tau$ is small, a counting
+monitor with a dead time $\tau$ loses a fraction of about $\text{peak rate} \times \tau$ of its counts; keep it below
 0.1, or the monitor no longer counts in proportion to the beam. Near 1 and above, it saturates:
-it cannot count much faster than 1/τ, whatever the beam. If peak rate × τ is too large, take a
-lower ε, a smaller opening, or a faster monitor. Leave a factor of 2 to 10 for a higher source
+it cannot count much faster than $1/\tau$, whatever the beam. If $\text{peak rate} \times \tau$ is too large, take a
+lower $\varepsilon$, a smaller opening, or a faster monitor. Leave a factor of 2 to 10 for a higher source
 power and for the model.
 
-In the example, with a dead time of 100 ns, peak rate × τ is 2.33e8 counts/s × 100 ns ≈ 23, far
+In the example, with a dead time of 100 ns, $\text{peak rate} \times \tau$ is $2.33 \times 10^{8}\ \text{counts/s} \times 100\ \text{ns} \approx 23$, far
 above 0.1: the monitor is saturated, at most 1e7 counts/s. To bring it to 0.1, the peak must drop
-to 1e6 counts/s, some 230 times lower: C of about 2e-7 per Å, ε of 4e-7 at 2 Å, below the usual
-range of beam monitors. A monitor of the usual ε needs a smaller opening as well, or stands
+to 1e6 counts/s, some 230 times lower: $C$ of about 2e-7 per Å, $\varepsilon$ of 4e-7 at 2 Å, below the usual
+range of beam monitors. A monitor of the usual $\varepsilon$ needs a smaller opening as well, or stands
 further downstream, after the choppers, where the beam is weaker and its band narrower. Put the
 `Monitor_nD` there, with the opening of the real monitor, and repeat.
 

@@ -11,7 +11,7 @@ from the length of the flight and the time it takes. The calculation is a graph 
 !!! warning "The two monitors need 5 µs time bins"
 
     The flight between the monitors takes only 1.1 to 2.2 ms, so Ei is very sensitive to timing:
-    a time error δt gives an error of 2 δt / t in Ei. In bins of 0.05 ms, as the other monitors
+    a time error $\delta t$ gives an error of $2\,\delta t / t$ in Ei. In bins of 0.05 ms, as the other monitors
     of T-Rex have, the mean time of a sub-pulse is off by up to half a bin, and Ei by up to 1 %.
     The pre-sample and beamstop monitors therefore have bins of 5 µs, which bring the error down
     to 0.1 %. See [Why the time bins matter](#why-the-time-bins-matter).
@@ -99,10 +99,10 @@ Apart from `time_of_flight`, its kernels are scippneutron's:
 | Coordinate | Kernel | Computes |
 | ---------- | ------ | -------- |
 | `source_position`, `position` | the names `start_position` and `end_position` | the ends of the flight |
-| `Ltotal` | `total_straight_beam_length_no_scatter` | L = \|position − source_position\| |
-| `tof` | `time_of_flight` | t = time_at_end − time_at_start |
-| `incident_wavelength` | `wavelength_from_tof` | λ = h t / (m<sub>n</sub> L) |
-| `incident_energy` | `incident_energy_from_wavelength` | Ei = h² / (2 m<sub>n</sub> λ²) |
+| `Ltotal` | `total_straight_beam_length_no_scatter` | $L = \lvert \texttt{position} - \texttt{source\_position} \rvert$ |
+| `tof` | `time_of_flight` | $t = \texttt{time\_at\_end} - \texttt{time\_at\_start}$ |
+| `incident_wavelength` | `wavelength_from_tof` | $\lambda = h t / (m_n L)$ |
+| `incident_energy` | `incident_energy_from_wavelength` | $E_i = h^2 / (2 m_n \lambda^2)$ |
 
 In scippneutron the flight runs from a source to a position, as for a neutron that flies from the
 moderator to a detector without scattering. Here it runs between any two points, so the graph
@@ -181,16 +181,16 @@ monitors needs no such assumption, which is why two monitors are the usual way t
 
 ## Why the time bins matter
 
-Ei = ½ m<sub>n</sub> (L / t)², so a relative error in the time gives twice that in Ei:
+$E_i = \tfrac{1}{2} m_n (L / t)^2$, so a relative error in the time gives twice that in Ei:
 
-```text
-δEi / Ei = 2 δt / t
-```
+$$
+\frac{\delta E_i}{E_i} = 2\,\frac{\delta t}{t}
+$$
 
 The same timing error therefore matters some 50 times more between the monitors than from the
 source:
 
-| Flight | L | t, for sub-pulse 7 | δEi / Ei for δt = 10 µs |
+| Flight | $L$ | $t$, for sub-pulse 7 | $\delta E_i / E_i$ for $\delta t$ = 10 µs |
 | ------ | - | ------------------ | ----------------------- |
 | Between the monitors | 3.299 m | 1.668 ms | 1.2 % |
 | From the source to the pre-sample monitor | 163.499 m | 82.66 ms | 0.02 % |

@@ -62,17 +62,19 @@ of the guide system, 1.90424 m downstream.
 
 The source simulates only the wavelengths that can reach the sample position in one frame: those
 arriving there within one source period, 1/14 Hz, plus the length of the pulse, 3.5 ms, from
-t = L λ / 3956 with L = 160.004 m and λ in Å. 3956 m·Å/s is h/m_n, Planck's constant over the
+$t = L \lambda / 3956$ with $L$ = 160.004 m and $\lambda$ in Å. 3956 m·Å/s is $h/m_n$, Planck's constant over the
 neutron mass. The band is then
 
-Δλ = 3956 m·Å/s × (1/14 Hz + 3.5 ms) / 160.004 m = 1.853 Å,
+$$
+\Delta\lambda = \frac{3956\ \text{m Å/s} \times (1/14\ \text{Hz} + 3.5\ \text{ms})}{160.004\ \text{m}} = 1.853\ \text{Å},
+$$
 
 centered on `lambda0` and cut to 0.1 to 10 Å, the widest band of `ESS_butterfly`. A new
 `lambda0`, through `update_params`, gives the source its band.
 
 The entrance of the guide system, the opening of W03-01-011, is 45 mm wide and 43 mm high, and
 16.3 mm off the axis of the source. The focusing rectangle is centered on the axis, so it is
-2 × (16.3 + 22.5) = 77.6 mm wide, to reach the far wall of the entrance on both sides, and as
+$2 \times (16.3 + 22.5) = 77.6$ mm wide, to reach the far wall of the entrance on both sides, and as
 high as the entrance. Seen from every point of the moderator it then covers the whole opening,
 and the flux into the guide is right.
 
@@ -84,8 +86,8 @@ spectrum of McStas is that of tof's pulse of beam port W3, with its thermal peak
 
 CSPEC_nl-specs_1.E.xlsx gives each element of the guide in ISCS, the frame of the insert of beam
 port W3, in mm: x along the insert, y across it, z up. Each element has its start in ISCS and
-two angles, those of the trajectory at its middle: χ, down and back up in the vertical
-S-bender, and φ, sideways in the horizontal curve. The element runs straight from its start at
+two angles, those of the trajectory at its middle: $\chi$, down and back up in the vertical
+S-bender, and $\varphi$, sideways in the horizontal curve. The element runs straight from its start at
 those angles.
 
 `arm_iscs` is that frame in the McStas frame of the source. It is at the origin of ISCS,
@@ -189,9 +191,11 @@ beam at 180° from its zero mark, one whose axle is below at 0°. The delay is t
 neutron takes to reach the disk, plus `t0_offset`, less the time the disk takes to turn from its
 zero mark to the first slit:
 
-delay = `t0_offset` + L / v(`lambda0`) − phase / (360° × ν),
+$$
+\text{delay} = \texttt{t0\_offset} + \frac{L}{v(\texttt{lambda0})} - \frac{\text{phase}}{360° \times \nu},
+$$
 
-with L the flight path, ν the signed frequency and phase the angle from the center of the first
+with $L$ the flight path, $\nu$ the signed frequency and phase the angle from the center of the first
 slit to the beam, 180° for a disk with its axle above and 0° below.
 
 The slit edges of each disk reach McStas as an array of their own, declared in the `.instr`

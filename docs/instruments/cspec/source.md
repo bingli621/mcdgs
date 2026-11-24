@@ -73,8 +73,8 @@ source stays at 0.05 m and the monitor at its distance from the moderator: see
 McStas sets the weights of its rays itself, in n/s; each tof neutron has weight 1. tof takes its
 weight from McStas: the scale, the McStas total over the tof total, is the n/s each tof neutron
 stands for. Scaled, tof has the level of McStas, and the shape in time and wavelength of its own
-model: the comparison is of shapes, not of absolute flux. A bin of N neutrons has the Poisson
-error √N. [Source of T-Rex](../trex/source.md#counts-and-intensity) explains both in full, and
+model: the comparison is of shapes, not of absolute flux. A bin of $N$ neutrons has the Poisson
+error $\sqrt{N}$. [Source of T-Rex](../trex/source.md#counts-and-intensity) explains both in full, and
 what the scale depends on.
 
 ## The figure
@@ -120,9 +120,9 @@ The same run with 1e5 neutrons in both models, seed 1:
 ![McStas and tof at the entrance of the guide system of CSPEC, with 1e5 neutrons in both models](figures/source/cspec_source_1e5.png)
 
 The McStas total is 5.55e11 n/s, 0.4 % above that at 1e6, and each tof neutron stands for
-5.55e6 n/s, ten times as much, as a tenth of the neutrons share the same flux. `scale × neutrons`,
+5.55e6 n/s, ten times as much, as a tenth of the neutrons share the same flux. $\texttt{scale} \times \texttt{neutrons}$,
 the n/s of the whole tof pulse, stays the same to within the noise of the McStas total. The means
-are those at 1e6 to 0.01 ms and 0.01 Å, and the error bars are about √10 times longer.
+are those at 1e6 to 0.01 ms and 0.01 Å, and the error bars are about $\sqrt{10}$ times longer.
 
 ### With the band of lambda0 = 3 Å
 

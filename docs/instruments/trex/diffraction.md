@@ -68,7 +68,7 @@ The reduction is shared with the other diagnostics with a sample, in `sample_run
 
 The pixels of the detector cover 4.4 × 10⁻⁵ to 5.9 × 10⁻⁵ sr each, the least at the top and the
 bottom, which are furthest from the sample. Together they cover 2.09 sr, close to the
-π (sin 15° + sin 25°) = 2.14 sr of the whole detector.
+$\pi (\sin 15° + \sin 25°) = 2.14$ sr of the whole detector.
 
 ## The plane
 

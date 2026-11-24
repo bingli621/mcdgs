@@ -124,7 +124,7 @@ wavelength is 2.60 Å after the source, 3.58 Å before `bw1`, 3.36 Å at the end
   times the height of the guide, so it bounces off the bottom wall all the way.
 - **Below 0.5 Å, the curve takes almost everything.** Over its 90 m the 12 km curve leaves no
   line of sight through the 60 mm guide, so a neutron must reflect off its walls to pass. The
-  angle that needs, about √(2 × 60 mm / 12 km) = 0.18°, is the critical angle of m 2.5 at
+  angle that needs, about $\sqrt{2 \times 60\ \text{mm} / 12\ \text{km}} = 0.18°$, is the critical angle of m 2.5 at
   about 0.7 Å: shorter wavelengths fall off, to 15 % below 0.5 Å.
 
 Overall, from the source to the sample position, about 3 % pass at 1 to 4 Å, both peaks

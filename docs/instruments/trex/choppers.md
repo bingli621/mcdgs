@@ -15,8 +15,8 @@ multiplication factor `rrm`; `lambda0` sets the delays, below.
 | Choppers | Frequency | At `rrm` = 18 |
 | -------- | --------- | ------------- |
 | Bandwidth, `bw1` and `bw2` | 14 Hz, the source frequency | 14 Hz |
-| Pulse-shaping, `ps1` and `ps2` | 0.75 × `rrm` × 14 Hz, `ps2` with the opposite sign | 189 Hz and −189 Hz |
-| Monochromatic, `mc1` and `mc2` | `rrm` × 14 Hz | 252 Hz |
+| Pulse-shaping, `ps1` and `ps2` | $0.75 \times \texttt{rrm} \times 14$ Hz, `ps2` with the opposite sign | 189 Hz and −189 Hz |
+| Monochromatic, `mc1` and `mc2` | $\texttt{rrm} \times 14$ Hz | 252 Hz |
 
 - **Bandwidth choppers.** They turn once per pulse and open once, so they pass one band of
   wavelengths from each pulse: the band that reaches the sample within one source period.
@@ -27,11 +27,11 @@ multiplication factor `rrm`; `lambda0` sets the delays, below.
 - **Pulse-shaping choppers.** They cut each sub-pulse short at the moderator end, and must open
   once for each sub-pulse that the monochromatic choppers pass. Two sub-pulses that leave the
   moderator together, one opening of the monochromatic choppers apart, differ in wavelength by a
-  fixed step, Δλ. Their times of flight differ in proportion to the flight path, so they reach
-  the pulse-shaping choppers, at 108 m, 108/162 = 2/3 as far apart in time as the monochromatic
+  fixed step, $\Delta\lambda$. Their times of flight differ in proportion to the flight path, so they reach
+  the pulse-shaping choppers, at 108 m, $108/162 = 2/3$ as far apart in time as the monochromatic
   choppers, at 162 m. The pulse-shaping choppers must therefore open 3/2 times as often. Their
   disks have two slits of each kind, 180° apart, so they open twice per turn and turn at
-  3/2 × 1/2 = 0.75 times the frequency of the monochromatic choppers.
+  $3/2 \times 1/2 = 0.75$ times the frequency of the monochromatic choppers.
 
 **Counter-rotation.** Both pairs are counter-rotating: the slit edges of the two disks of a pair
 cross the beam in opposite directions, so a pair opens and closes the beam faster than one disk.
@@ -49,17 +49,19 @@ The two pairs do this in different ways:
 so that the slit of the mode is centered on the beam when a neutron of wavelength `lambda0`,
 leaving the moderator at `t0_offset`, reaches it:
 
-delay = `t0_offset` + L × `lambda0` / 3956 m·Å/s − θ / (360° × ν),
+$$
+\text{delay} = \texttt{t0\_offset} + \frac{L \times \texttt{lambda0}}{3956\ \text{m Å/s}} - \frac{\theta}{360° \times \nu},
+$$
 
-with L the flight path to the disk, ν its signed frequency and θ the angle the disk turns from
-its zero mark to put the slit of the mode on the beam. In `"RR"` θ is 0: a narrow slit is
+with $L$ the flight path to the disk, $\nu$ its signed frequency and $\theta$ the angle the disk turns from
+its zero mark to put the slit of the mode on the beam. In `"RR"` $\theta$ is 0: a narrow slit is
 centered at `beam_angle` from the zero mark, so it is on the beam at the delay. In `"FF"` it is
 55° on the pulse-shaping choppers, 175° on `mc1` and 185° on `mc2`, the angle to their wide
-slits; the bandwidth choppers have one slit, at θ = 0 in every mode. In `"RF"` and `"FR"`, each
-pair takes the θ of its letter: in `"RF"` 0 on the pulse-shaping choppers and the angles of `"FF"`
+slits; the bandwidth choppers have one slit, at $\theta = 0$ in every mode. In `"RF"` and `"FR"`, each
+pair takes the $\theta$ of its letter: in `"RF"` 0 on the pulse-shaping choppers and the angles of `"FF"`
 on the monochromatic ones, in `"FR"` the other way around.
 
-| Chopper | Flight path L | λ0 arrives at | θ in `"FF"` | Delay |
+| Chopper | Flight path $L$ | λ0 arrives at | $\theta$ in `"FF"` | Delay |
 | ------- | ------------- | ------------- | ----------- | ----- |
 | `bw1` | 31.964 m | 17.860 ms | 0° | 17.860 ms |
 | `bw2` | 39.955 m | 21.900 ms | 0° | 21.900 ms |
@@ -68,7 +70,7 @@ on the monochromatic ones, in `"FR"` the other way around.
 | `mc1` | 162.0275 m | 83.614 ms | 175° | 81.685 ms |
 | `mc2` | 162.0375 m | 83.619 ms | 185° | 81.580 ms |
 
-The frequency of `ps2` is negative, so θ / (360° × ν) is too, and its delay comes after the
+The frequency of `ps2` is negative, so $\theta / (360° \times \nu)$ is too, and its delay comes after the
 arrival rather than before it. [Chopper timing](details.md#chopper-timing) gives where the flight
 paths come from.
 

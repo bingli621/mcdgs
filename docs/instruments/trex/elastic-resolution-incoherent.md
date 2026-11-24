@@ -66,7 +66,7 @@ figures below are of FF, except in [FF and RR](#ff-and-rr) and
    [Incident energy](incident-energy.md#finding-the-sub-pulses).
 2. **The pixels.** `read_detector`, of `sample_runs`, reads the neutrons of the banana detector,
    by pixel.
-   `scattered_pixels` leaves out the pixels within 5° of the beam (2θ < 5°). Those see the
+   `scattered_pixels` leaves out the pixels within 5° of the beam ($2\theta$ < 5°). Those see the
    direct beam that passes the beamstop: 2.69 million of the 4.09 million neutrons, on 405
    pixels. The 38,760 pixels kept cover 2.11 sr.
 3. **The windows.** `events_to_q_and_energy` gives each pixel and sub-pulse the arrival window
@@ -79,8 +79,8 @@ figures below are of FF, except in [FF and RR](#ff-and-rr) and
 5. **The spectra.** `energy_spectra` sums the neutrons of each sub-pulse into 0.05 meV bins of
    E. It weights each one by the solid angle of its pixel and divides by the 2.11 sr of all the
    pixels. The result is the intensity averaged over the detector, per neutron at the
-   pre-sample monitor, per steradian and per meV. Each neutron of weight w counts with the
-   variance w², so a bin has the error √Σw².
+   pre-sample monitor, per steradian and per meV. Each neutron of weight $w$ counts with the
+   variance $w^2$, so a bin has the error $\sqrt{\sum w^2}$.
 
 ## S(Q, E)
 
@@ -92,21 +92,21 @@ figures below are of FF, except in [FF and RR](#ff-and-rr) and
 detector reaches. `plot_q_e_maps` draws the 15 maps from the highest Ei to the lowest, on shared
 axes and one linear scale in turbo.
 
-**Normalized by the coverage of each bin.** A pixel at the scattering angle 2θ sees every E of
+**Normalized by the coverage of each bin.** A pixel at the scattering angle $2\theta$ sees every E of
 the arrival window, each at its own |Q|: a line through the map, its trajectory.
 `q_e_coverage`, in the [reduction package](../../reference/reduction.md), sums for each bin the
 solid angle of every pixel times the length in E of its trajectory inside the bin, in sr·meV.
 Each bin holds the fraction of the incident neutrons of its sub-pulse scattered into it;
 divided by its coverage, it is S(Q, E) per steradian and per meV, whatever the part of the
 detector that sees the bin. This is the normalization of MDNorm, for |Q| rather than the vector
-Q. The pixels are grouped by 2θ, 0.02° wide, into one trajectory each, and each bin of E is
+Q. The pixels are grouped by $2\theta$, 0.02° wide, into one trajectory each, and each bin of E is
 followed at four points: the whole normalization takes a few seconds.
 
 **Colored is reached, white is not.** A bin that no trajectory crosses has no coverage: the
 sub-pulse cannot reach it, and it is white. A bin it reaches has the color of its value, the
 bottom of the scale if it holds no neutron. So the colored area of each map is its coverage: E
 in its arrival window, −0.8 Ei to 0.8 Ei, and |Q| between those of the smallest and the largest
-2θ of the pixels, 5° and 143.7°, at that E. The lower the Ei, the smaller the part of the
+$2\theta$ of the pixels, 5° and 143.7°, at that E. The lower the Ei, the smaller the part of the
 common range it covers: ±9 meV and |Q| below 5.2 Å⁻¹ at 11.4 meV.
 
 - **Only the elastic line.** Each map holds one band at E = 0, as wide as the resolution of its
@@ -115,8 +115,8 @@ common range it covers: ±9 meV and |Q| below 5.2 Å⁻¹ at 11.4 meV.
   inelastically here, and the sample scatters only once.
 - **The line is flat in |Q|.** Vanadium scatters alike in every direction, and the
   normalization takes out how much of the detector sees each |Q|. Before it, the band was twice
-  as bright at 2θ below 36°, where the detector covers both sides of the beam, and grew toward
-  backscattering, where a bin of |Q| spans more of 2θ. Summed over E, the line of sub-pulse 0
+  as bright at $2\theta$ below 36°, where the detector covers both sides of the beam, and grew toward
+  backscattering, where a bin of |Q| spans more of $2\theta$. Summed over E, the line of sub-pulse 0
   stays between 0.0067 and 0.0073 per steradian from 0.5 to 8.5 Å⁻¹.
 - **What is left is absorption.** At the longest wavelengths the line rises toward high |Q|, by
   about 20 % for sub-pulse 14. The 20 mm cylinder absorbs less of what it scatters backward than
@@ -157,13 +157,15 @@ window shows.
 `fit_elastic_lines` fits a Gaussian to the line of each sub-pulse against Ef, weighting each bin
 by its error:
 
-I(Ef) = h exp(−(Ef − Ec)² / 2σ²), with FWHM = 2 √(2 ln 2) σ ≈ 2.355 σ.
+$$
+I(E_f) = h \exp\left(-\frac{(E_f - E_c)^2}{2\sigma^2}\right), \qquad \text{FWHM} = 2\sqrt{2 \ln 2}\,\sigma \approx 2.355\,\sigma.
+$$
 
-σ is the standard deviation of the Gaussian, not its width: the full width at half maximum is
+$\sigma$ is the standard deviation of the Gaussian, not its width: the full width at half maximum is
 2.355 times larger. The fit keeps only the core of each line, the bins of at least 20 % of the
 highest. The tails are not Gaussian, and a bin there holds few neutrons, some of tiny weight,
 whose variance is no error for the bin. Fitted over every bin, the tails pull the Gaussian
-narrow, with χ² per degree of freedom of up to 540. Over the core it is 0.7 to 1.8.
+narrow, with $\chi^2$ per degree of freedom of up to 540. Over the core it is 0.7 to 1.8.
 
 The intensity is that of the whole spectrum, summed over E. `analyze` prints the table:
 
@@ -177,7 +179,7 @@ sub-pulse and its time at the sample agree with what the detector sees.
 ![The elastic line of each of the 15 sub-pulses in RR, stacked from the highest Ei at the top to the lowest at the bottom, each with its Gaussian fit](figures/elastic-resolution-incoherent/trex_elastic_resolution_incoherent_rr.png)
 
 The same spectra and fits in RR. Every line is narrower than in FF, and the fits are as good,
-with χ² per degree of freedom from 0.5 to 1.6. Each sub-pulse has nearly the Ei it has in FF: they
+with $\chi^2$ per degree of freedom from 0.5 to 1.6. Each sub-pulse has nearly the Ei it has in FF: they
 differ by 0.6 % at most, 46.91 meV against 47.17 meV for the highest:
 
 --8<-- "docs/instruments/trex/figures/elastic-resolution-incoherent/trex_elastic_resolution_incoherent_rr_lines.txt"

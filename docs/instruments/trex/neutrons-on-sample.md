@@ -42,19 +42,21 @@ the neutrons unchanged:
 tof is brought to n/s as on [Beam monitor](beam-monitor.md#scale-and-transmission). The scale is
 set at the source monitor, at the entrance of guide 1, where both models see the same beam: at
 the defaults of `main`, 3.889e11 n/s in McStas over 1e7 tof neutrons, 3.889e4 n/s per tof
-neutron. At the sample monitor a transmission T on top of it stands for what the guides take out,
+neutron. At the sample monitor a transmission $T$ on top of it stands for what the guides take out,
 tuned so that both models have the same total there:
 
-```text
-T = McStas total at the sample monitor / (tof neutrons at the sample monitor × scale)
-  = 2.496e7 n/s / (40,494 × 3.889e4 n/s) = 0.0159
-```
+$$
+\begin{aligned}
+T &= \frac{\text{McStas total at the sample monitor}}{\text{tof neutrons at the sample monitor} \times \text{scale}} \\
+  &= \frac{2.496 \times 10^{7}\ \text{n/s}}{40{,}494 \times 3.889 \times 10^{4}\ \text{n/s}} = 0.0159
+\end{aligned}
+$$
 
 In McStas, 2.496e7 n/s reach the sample, 6.42e-5 of the beam that enters guide 1. In tof, whose
 choppers are the only thing in the way, 40,494 of 1e7 neutrons do, 4.05e-3. The guides from
 guide 1 to the sample thus pass 1.6 % of what the choppers let through.
 
-Each tof neutron at the sample stands for 3.889e4 × 0.0159 = 620 n/s, so tof cannot show
+Each tof neutron at the sample stands for $3.889 \times 10^{4} \times 0.0159 = 620$ n/s, so tof cannot show
 anything weaker than that.
 
 ## The figures
@@ -111,8 +113,8 @@ center of the map has an error of about 30 %, so the structure within the spot i
 
 ## What reaches the sample
 
-Every neutron's departure time from the moderator follows from its time of arrival t and
-wavelength λ: t − λ L / (3956 m·Å/s), with L = 163.8 m. The patches fall into two kinds:
+Every neutron's departure time from the moderator follows from its time of arrival $t$ and
+wavelength $\lambda$: $t - \lambda L / (3956\ \text{m Å/s})$, with $L$ = 163.8 m. The patches fall into two kinds:
 
 | Kind | McStas | tof | Wavelength | Intensity of each | Left the moderator |
 | ---- | ------ | --- | ---------- | ----------------- | ------------------ |

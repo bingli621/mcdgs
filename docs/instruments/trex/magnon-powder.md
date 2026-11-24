@@ -12,15 +12,17 @@ figure shows how each sub-pulse blurs a dispersive excitation over its whole Q�
 
 The powder is `magnon_powder`, an `Isotropic_Sqw`, in `samples/inelastic/powder.py`. It reads a
 table of S(|Q|, E) that `write_magnon_sqw` writes. The magnon is that of a simple-cubic
-ferromagnet with exchange J between nearest neighbors, spins S and an anisotropy gap:
+ferromagnet with exchange $J$ between nearest neighbors, spins $S$ and an anisotropy gap $\Delta$:
 
-ħω(**q**) = Δ + 4JS (3 − cos qₓa − cos q_y a − cos q_z a)
+$$
+\hbar\omega(\mathbf{q}) = \Delta + 4JS\,(3 - \cos q_x a - \cos q_y a - \cos q_z a)
+$$
 
-With a = 4 Å, Δ = 5 meV and JS = 0.625 meV, the band runs from the 5 meV gap at the zone
-center to 20 meV at the zone corner, (π/a)(1, 1, 1). A powder sees, at each |Q|, every
+With $a$ = 4 Å, $\Delta$ = 5 meV and $JS$ = 0.625 meV, the band runs from the 5 meV gap at the zone
+center to 20 meV at the zone corner, $(\pi/a)(1, 1, 1)$. A powder sees, at each |Q|, every
 wavevector of that length. `write_magnon_sqw` averages the magnon over 20,000 directions on a
-Fibonacci lattice of the sphere and smooths each row with a Gaussian of σ = 0.03 meV, far below
-the resolution of T-Rex. At small |Q| the powder band is a narrow dispersive line, Δ + 2JS(|Q|a)².
+Fibonacci lattice of the sphere and smooths each row with a Gaussian of $\sigma$ = 0.03 meV, far below
+the resolution of T-Rex. At small |Q| the powder band is a narrow dispersive line, $\Delta + 2JS\,(\lvert Q \rvert a)^2$.
 At larger |Q| it is a band between a lowest and a highest energy, `magnon_band`, with sharp
 edges.
 
@@ -69,7 +71,7 @@ resolution of that sub-pulse.
 
 ![S(Q, E) of the powder magnon in each of the 15 sub-pulses in FF, |Q| across and E up, from the highest Ei to the lowest, normalized by the coverage of each bin, with the edges of the band of the model as dashed white lines](figures/magnon-powder/trex_magnon_powder_ff_sqe.png)
 
-The powder magnon is not a smooth band. At every zone center, |Q| = (2π/a)√(h² + k² + l²) =
+The powder magnon is not a smooth band. At every zone center, $\lvert Q \rvert = (2\pi/a)\sqrt{h^2 + k^2 + l^2}$ =
 1.57, 2.22, 2.72, 3.14 Å⁻¹, ..., the lower edge drops back to the gap, and a dark V of little
 intensity rises from it. Between the Vs, bright arches run across the band. At small |Q| the
 steep dispersion, from 5 meV to about 10 meV below 1 Å⁻¹, is the left edge of the intensity.
@@ -89,8 +91,9 @@ How sharply each sub-pulse draws this pattern is its resolution:
   band can be reached, so the intensity of these sub-pulses is somewhat too low.
 
 Below the gap, from about 9 to 14, there is faint intensity that the model does not have. It is
-not understood yet: one candidate is neutrons given to the wrong sub-pulse, and so the wrong
-energy transfer.
+frame overlap: neutrons of one sub-pulse that lose enough energy in the powder reach the detector
+in the arrival window of the next sub-pulse, so the reduction gives them the Ei of that one, and
+so a wrong energy transfer.
 
 ## Making the figure
 

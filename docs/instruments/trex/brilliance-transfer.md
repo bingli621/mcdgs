@@ -17,8 +17,8 @@ n/s/cm²/sr/Å. The area is a patch of a plane across the beam, and the solid an
 directions in which the neutrons cross it. Along the beam the brilliance can only fall
 (Liouville's theorem), so the brilliance in a window over that of the moderator is at most 1.
 The windows are 1 × 1 cm on the beam axis, with the directions within ±0.25°, ±0.5° or ±1° of
-the axis, both horizontally and vertically: a square pyramid of solid angle 4 asin(sin² δ) for
-a half divergence δ, 3.05e-4 sr at ±0.5°. The module runs `TRex` as
+the axis, both horizontally and vertically: a square pyramid of solid angle $4 \arcsin(\sin^2 \delta)$ for
+a half divergence $\delta$, 3.05e-4 sr at ±0.5°. The module runs `TRex` as
 [Guide transmission](guides.md) does, in the white beam with every chopper parked, first with the
 bender out, through guide 4a, then with it in, through the bender and guide 4b. On each path it
 reads the rays at two points: before the beam monitor, at the exit of the extraction, and before

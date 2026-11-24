@@ -19,7 +19,7 @@ t + L/v, and passes if the disk is open then. Before the run, the component comp
 disk, which (1/v, t) pairs pass it, and keeps the region all the disks pass: a union of convex
 polygons. Nothing is binned, so the region is exact.
 
-The source samples 1/v and t uniformly, over the band of `lambda0` and over 3 × 2.857 = 8.571 ms
+The source samples $1/v$ and $t$ uniformly, over the band of `lambda0` and over $3 \times 2.857 = 8.571$ ms
 of emission. A ray drawn outside the region is drawn again inside it, and every ray's weight is
 multiplied by the acceptance, the share of the sampled plane the region covers. Since both
 coordinates are sampled uniformly and independently, this leaves the intensity unchanged:

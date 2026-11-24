@@ -61,10 +61,12 @@ is `-`. `position` is where it ends up in the lab frame. Lengths are in m and an
 
 The source simulates only the wavelengths that can reach the sample position in one frame: those
 arriving there within one source period, 1/14 Hz, plus the length of the pulse, 3.5 ms, from
-t = L λ / 3956 with L = 163.8 m and λ in Å. 3956 m·Å/s is h/m_n, Planck's constant over the
+$t = L \lambda / 3956$ with $L$ = 163.8 m and $\lambda$ in Å. 3956 m·Å/s is $h/m_n$, Planck's constant over the
 neutron mass, so a neutron of 1 Å flies at 3956 m/s. The band is then
 
-Δλ = 3956 m·Å/s × (1/14 Hz + 3.5 ms) / 163.8 m = 1.810 Å,
+$$
+\Delta\lambda = \frac{3956\ \text{m Å/s} \times (1/14\ \text{Hz} + 3.5\ \text{ms})}{163.8\ \text{m}} = 1.810\ \text{Å},
+$$
 
 centered on `lambda0` and cut to 0.1 to 10 Å, the widest band of `ESS_butterfly`. The 3.5 ms is
 longer than the 2.857 ms of the ESS pulse in McStas, to keep its tail. A new `lambda0`, through
@@ -247,8 +249,8 @@ Each chopper takes its frequency, delay and park angle from the McStas instrumen
 | Choppers | Frequency |
 | -------- | --------- |
 | `bw1`, `bw2` | 14 Hz, the source frequency |
-| `ps1`, `ps2` | 0.75 × `rrm` × 14 Hz, counter-rotating: `ps2` turns the other way |
-| `mc1`, `mc2` | `rrm` × 14 Hz, counter-rotating: they turn the same way on opposite sides of the beam |
+| `ps1`, `ps2` | $0.75 \times \texttt{rrm} \times 14$ Hz, counter-rotating: `ps2` turns the other way |
+| `mc1`, `mc2` | $\texttt{rrm} \times 14$ Hz, counter-rotating: they turn the same way on opposite sides of the beam |
 
 [Choppers](choppers.md#frequencies) explains these frequencies and the counter-rotation.
 
