@@ -12,12 +12,12 @@ figure shows how each sub-pulse blurs a dispersive excitation over its whole Q�
 
 The powder is `magnon_powder`, an `Isotropic_Sqw`, in `samples/inelastic/powder.py`. It reads a
 table of S(|Q|, E) that `write_magnon_sqw` writes. The magnon is that of a simple-cubic
-ferromagnet with exchange J between nearest neighbours, spins S and an anisotropy gap:
+ferromagnet with exchange J between nearest neighbors, spins S and an anisotropy gap:
 
 ħω(**q**) = Δ + 4JS (3 − cos qₓa − cos q_y a − cos q_z a)
 
 With a = 4 Å, Δ = 5 meV and JS = 0.625 meV, the band runs from the 5 meV gap at the zone
-centre to 20 meV at the zone corner, (π/a)(1, 1, 1). A powder sees, at each |Q|, every
+center to 20 meV at the zone corner, (π/a)(1, 1, 1). A powder sees, at each |Q|, every
 wavevector of that length. `write_magnon_sqw` averages the magnon over 20,000 directions on a
 Fibonacci lattice of the sphere and smooths each row with a Gaussian of σ = 0.03 meV, far below
 the resolution of T-Rex. At small |Q| the powder band is a narrow dispersive line, Δ + 2JS(|Q|a)².

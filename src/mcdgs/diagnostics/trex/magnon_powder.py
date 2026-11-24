@@ -13,8 +13,9 @@ of the window of :func:`.solid_angles.detector_window`, which covers the banana 
 
 It runs in the mode of ``MODES``, ``"FF"``, the wide slits of the choppers, for high flux; a
 caller may pass others. :func:`simulate` writes the S(|Q|, E) file of the powder into the builds
-folder of the workspace, :func:`sqw_path`, then runs each mode in two parts, with :class:`.Simulation`, as the vanadium does: from the source to ``sample_pos``, then
-from the beam there through the powder to the detector, into the folders of :func:`run_names`.
+folder of the workspace, :func:`sqw_path`, then runs each mode in two parts, with
+:class:`.Simulation`, as the vanadium does: from the source to ``sample_pos``, then from the beam
+there through the powder to the detector, into the folders of :func:`run_names`.
 
 The reduction is that of the vanadium (:func:`.elastic_resolution_incoherent.reduce_runs`): the
 sub-pulses, the pixels past ``MIN_TWO_THETA`` from the beam, the neutrons of each sub-pulse
@@ -134,7 +135,8 @@ def define_instrument(mode: Mode = "FF") -> TRexMagnonPowder:
         The slits of the pulse-shaping and monochromatic choppers: ``"FF"``, the default, for
         high flux, ``"RR"`` for high resolution, or ``"RF"`` or ``"FR"`` between.
     """
-    return TRexMagnonPowder(params=Params(mode=mode))
+    params = Params(mode=mode)  # the default control parameters, in the mode
+    return TRexMagnonPowder(params=params)
 
 
 # --8<-- [end:instrument]
