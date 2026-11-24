@@ -37,6 +37,7 @@ nav = [
       { "Incident energy" = "instruments/trex/incident-energy.md" },
       { "Elastic resolution" = "instruments/trex/elastic-resolution-incoherent.md" },
       { "Analytic resolution" = "instruments/trex/elastic-resolution-model.md" },
+      { "Powder magnon" = "instruments/trex/magnon-powder.md" },
       { "Diffraction" = "instruments/trex/diffraction.md" },
       { "Rotation scan" = "instruments/trex/diffraction-scan.md" },
     ] },

@@ -4,9 +4,15 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from mcdgs.core.components import Incoherent, Phonon_simple, Single_crystal
+from mcdgs.core.components import Incoherent, Isotropic_Sqw, Phonon_simple, Single_crystal
 from mcdgs.core.components.crystal import CIF_DIR
-from mcdgs.samples import aluminum, la2ni7, lead, vanadium
+from mcdgs.samples import aluminum, la2ni7, lead, magnon_powder, vanadium, write_magnon_sqw
+from mcdgs.samples.inelastic.powder import (
+    MAGNON_JS,
+    magnon_band,
+    magnon_energies,
+    sphere_directions,
+)
 
 ALUMINUM = {  # the parameters of aluminum()
     "xwidth": 0.005, "yheight": 0.005, "zdepth": 0.005, "order": 1, "mosaic": 5.0,
@@ -133,3 +139,64 @@ def test_the_focusing_window_of_vanadium_is_given_by_the_caller():
     sample = vanadium(target_index=2, focus_aw=60, focus_ah=10, order=1, pack=0.6)
     assert (sample.target_index, sample.focus_aw, sample.focus_ah) == (2, 60, 10)
     assert (sample.order, sample.pack) == (1, 0.6)
+
+
+def test_the_magnon_powder_reads_its_file_and_is_placed_like_any_component():
+    sample = magnon_powder("/data/m.sqw", name="sample", at=[0, 0, 0.1], relative="arm")
+    assert type(sample) is Isotropic_Sqw
+    assert (sample.name, sample.Sqw_coh, sample.Sqw_inc) == ("sample", "/data/m.sqw", None)
+    assert (sample.at, sample.relative) == ([0, 0, 0.1], "arm")
+    assert (magnon_powder(Path("m.sqw")).at, magnon_powder("m.sqw").relative) == ([0, 0, 0], None)
+
+
+def test_the_magnon_powder_is_the_vanadium_cylinder_taking_its_table_as_it_is():
+    sample = magnon_powder("m.sqw")
+    assert (sample.radius, sample.yheight) == (vanadium().radius, vanadium().yheight)
+    assert (sample.T, sample.classical, sample.norm) == (-1, 0, 1)  # no balance, no scaling
+    assert (sample.sigma_inc, sample.sigma_abs) == (-1, 0)  # only the magnon
+    assert sample.rho == pytest.approx(1 / 4.0**3)
+    assert (sample.order, sample.d_phi) == (0, 0)  # focusing is up to the caller
+    assert magnon_powder("m.sqw", order=1, d_phi=50).d_phi == 50
+
+
+def test_the_magnon_has_its_gap_at_the_zone_center_and_its_top_at_the_corner():
+    assert MAGNON_JS == pytest.approx(15 / 24)
+    assert magnon_energies(np.zeros(3)) == pytest.approx(5.0)
+    assert magnon_energies(np.full(3, np.pi / 4.0)) == pytest.approx(20.0)
+    # along [100], the zone boundary is at 2 J S * 4 above the gap
+    assert magnon_energies(np.array([np.pi / 4.0, 0, 0])) == pytest.approx(5 + 8 * MAGNON_JS)
+    # at a zone center away from the origin, the gap again
+    assert magnon_energies(np.array([2 * np.pi / 4.0, 0, 0])) == pytest.approx(5.0)
+
+
+def test_the_band_of_the_powder_lies_between_the_gap_and_the_top():
+    q = np.linspace(0, 6, 61)
+    low, high = magnon_band(q, directions=sphere_directions(2000))
+    assert np.all((5.0 - 1e-9 <= low) & (low <= high) & (high <= 20.0 + 1e-9))
+    assert low[0] == high[0] == pytest.approx(5.0)  # one wavevector at Q = 0
+    # small |Q|: nearly isotropic, a narrow band, c |Q|² on the gap
+    assert high[1] - low[1] < 0.05
+    assert low[1] == pytest.approx(5 + 2 * MAGNON_JS * (0.1 * 4.0) ** 2, rel=0.01)
+
+
+def test_the_magnon_table_is_a_density_in_energy_at_each_q(tmp_path):
+    path = write_magnon_sqw(tmp_path / "sub" / "m.sqw", q_max=2.0, q_step=0.5, directions=4000)
+    lines = path.read_text().splitlines()
+    assert lines[0].startswith("#") and "# classical 0" in lines
+    blocks, block = [], []
+    for line in lines:
+        if line.startswith("#"):
+            if block:
+                blocks.append(block)
+            block = []
+        else:
+            block.append(np.array(line.split(), dtype=float))
+    blocks.append(block)
+    (q,), (energy,), table = blocks
+    table = np.array(table)
+    assert q.tolist() == [0.0, 0.5, 1.0, 1.5, 2.0]
+    assert energy[0] == 0 and np.allclose(np.diff(energy), 0.02, atol=1e-4)  # evenly spaced
+    assert energy[-1] > 20.0  # past the top of the band
+    assert table.shape == (q.size, energy.size)
+    assert table.sum(axis=1) * 0.02 == pytest.approx(1, abs=2e-3)  # one magnon at each |Q|
+    assert energy[np.argmax(table[0])] == pytest.approx(5.0, abs=0.02)  # the gap at Q = 0

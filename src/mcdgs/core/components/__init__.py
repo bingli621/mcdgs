@@ -20,6 +20,7 @@ from .monitors import Monitor_nD
 from .optics import Beamstop, Guide_gravity, Pol_bender, Slit
 from .phonon import Phonon_simple
 from .source import ESS_butterfly
+from .sqw import Isotropic_Sqw
 
 __all__ = [
     "COMPONENTS",
@@ -29,6 +30,7 @@ __all__ = [
     "ESS_butterfly",
     "Guide_gravity",
     "Incoherent",
+    "Isotropic_Sqw",
     "Monitor_nD",
     "NXdisk_chopper",
     "Phonon_simple",

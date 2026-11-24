@@ -10,6 +10,7 @@ from mcdgs.core.components import (
     ESS_butterfly,
     Guide_gravity,
     Incoherent,
+    Isotropic_Sqw,
     Monitor_nD,
     NXdisk_chopper,
     Phonon_simple,
@@ -414,6 +415,34 @@ def test_the_incoherent_scattering_length_follows_the_density_of_atoms():
     assert Incoherent().scattering_length == pytest.approx(13.827 / 508)  # m
     assert Incoherent(pack=0.5).scattering_length == pytest.approx(2 * 13.827 / 508)
     assert Incoherent(sigma_inc=80.27, Vc=30.0).scattering_length == pytest.approx(30 / 8027)
+
+
+def test_the_isotropic_sqw_sample_defaults_are_those_of_mcstas():
+    assert Isotropic_Sqw().mcstas_parameters() == {
+        "Sqw_coh": None,
+        "Sqw_inc": None,
+        "geometry": None,
+        "radius": 0,
+        "thickness": 0,
+        "xwidth": 0,
+        "yheight": 0,
+        "zdepth": 0,
+        "threshold": 1e-20,
+        "order": 0,
+        "T": 0,
+        "verbose": 1,
+        "d_phi": 0,
+        "concentric": 0,
+        "rho": 0,
+        "sigma_abs": 0,
+        "sigma_coh": 0,
+        "sigma_inc": 0,
+        "classical": -1,
+        "density": 0,
+        "weight": 0,
+        "p_interact": -1,
+        "norm": -1,
+    }
 
 
 def test_the_aperture_is_that_of_chopper_lib():
