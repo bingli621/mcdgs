@@ -13,3 +13,5 @@ See the [technical details of CSPEC](../instruments/cspec/details.md) for the de
 ::: mcdgs.instruments.cspec.guides.bender
 
 ::: mcdgs.instruments.cspec.guides.straight
+
+::: mcdgs.instruments.cspec.detectors

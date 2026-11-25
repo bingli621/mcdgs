@@ -15,7 +15,7 @@
 * 
 * %Identification
 * Written by: Python McStas Instrument Generator
-* Date: 16:27:16 on November 25, 2026
+* Date: 17:15:40 on November 25, 2026
 * Origin: ESS DMSC
 * %INSTRUMENT_SITE: Generated_instruments
 * 
@@ -1768,6 +1768,174 @@ COMPONENT sample_monitor = Monitor_nD(
  nexus_bins = 0)
 AT (0, 0, 0) RELATIVE sample_pos
 ROTATED (0, 0, 0) RELATIVE sample_pos
+
+COMPONENT detector_panel_0 = Monitor_nD(
+ xwidth = 0.823239966741101, yheight = 3.5,
+ zdepth = 0, xmin = 0,
+ xmax = 0, ymin = 0,
+ ymax = 0, zmin = 0,
+ zmax = 0, bins = 0,
+ min = -1e+40, max = 1e+40,
+ restore_neutron = 1, radius = 0,
+ options = "mantid square, x bins=32, y bins=350, neutron pixel min=0 t lambda, list all neutrons", filename = "detector_panel_0",
+ geometry = "NULL", nowritefile = 0,
+ nexus_bins = 0)
+AT (2.381963628420358, 0, -2.564419870630105) RELATIVE sample_pos
+ROTATED (0, 137.11249999999998, 0) RELATIVE sample_pos
+
+COMPONENT detector_panel_1 = Monitor_nD(
+ xwidth = 0.823239966741101, yheight = 3.5,
+ zdepth = 0, xmin = 0,
+ xmax = 0, ymin = 0,
+ ymax = 0, zmin = 0,
+ zmax = 0, bins = 0,
+ min = -1e+40, max = 1e+40,
+ restore_neutron = 1, radius = 0,
+ options = "mantid square, x bins=32, y bins=350, neutron pixel min=11200 t lambda, list all neutrons", filename = "detector_panel_1",
+ geometry = "NULL", nowritefile = 0,
+ nexus_bins = 0)
+AT (2.9330992192118734, 0, -1.9096934231071487) RELATIVE sample_pos
+ROTATED (0, 123.0675, 0) RELATIVE sample_pos
+
+COMPONENT detector_panel_2 = Monitor_nD(
+ xwidth = 0.823239966741101, yheight = 3.5,
+ zdepth = 0, xmin = 0,
+ xmax = 0, ymin = 0,
+ ymax = 0, zmin = 0,
+ zmax = 0, bins = 0,
+ min = -1e+40, max = 1e+40,
+ restore_neutron = 1, radius = 0,
+ options = "mantid square, x bins=32, y bins=350, neutron pixel min=22400 t lambda, list all neutrons", filename = "detector_panel_2",
+ geometry = "NULL", nowritefile = 0,
+ nexus_bins = 0)
+AT (3.3088672833366286, 0, -1.1407880176722045) RELATIVE sample_pos
+ROTATED (0, 109.0225, 0) RELATIVE sample_pos
+
+COMPONENT detector_panel_3 = Monitor_nD(
+ xwidth = 0.823239966741101, yheight = 3.5,
+ zdepth = 0, xmin = 0,
+ xmax = 0, ymin = 0,
+ ymax = 0, zmin = 0,
+ zmax = 0, bins = 0,
+ min = -1e+40, max = 1e+40,
+ restore_neutron = 1, radius = 0,
+ options = "mantid square, x bins=32, y bins=350, neutron pixel min=33600 t lambda, list all neutrons", filename = "detector_panel_3",
+ geometry = "NULL", nowritefile = 0,
+ nexus_bins = 0)
+AT (3.4868009654034795, 0, -0.30367585953013276) RELATIVE sample_pos
+ROTATED (0, 94.97749999999999, 0) RELATIVE sample_pos
+
+COMPONENT detector_panel_4 = Monitor_nD(
+ xwidth = 0.823239966741101, yheight = 3.5,
+ zdepth = 0, xmin = 0,
+ xmax = 0, ymin = 0,
+ ymax = 0, zmin = 0,
+ zmax = 0, bins = 0,
+ min = -1e+40, max = 1e+40,
+ restore_neutron = 1, radius = 0,
+ options = "mantid square, x bins=32, y bins=350, neutron pixel min=44800 t lambda, list all neutrons", filename = "detector_panel_4",
+ geometry = "NULL", nowritefile = 0,
+ nexus_bins = 0)
+AT (3.4562617607446016, 0, 0.5515928219389982) RELATIVE sample_pos
+ROTATED (0, 80.9325, 0) RELATIVE sample_pos
+
+COMPONENT detector_panel_5 = Monitor_nD(
+ xwidth = 0.823239966741101, yheight = 3.5,
+ zdepth = 0, xmin = 0,
+ xmax = 0, ymin = 0,
+ ymax = 0, zmin = 0,
+ zmax = 0, bins = 0,
+ min = -1e+40, max = 1e+40,
+ restore_neutron = 1, radius = 0,
+ options = "mantid square, x bins=32, y bins=350, neutron pixel min=56000 t lambda, list all neutrons", filename = "detector_panel_5",
+ geometry = "NULL", nowritefile = 0,
+ nexus_bins = 0)
+AT (3.2190755826302717, 0, 1.3738822341502115) RELATIVE sample_pos
+ROTATED (0, 66.88749999999999, 0) RELATIVE sample_pos
+
+COMPONENT detector_panel_6 = Monitor_nD(
+ xwidth = 0.823239966741101, yheight = 3.5,
+ zdepth = 0, xmin = 0,
+ xmax = 0, ymin = 0,
+ ymax = 0, zmin = 0,
+ zmax = 0, bins = 0,
+ min = -1e+40, max = 1e+40,
+ restore_neutron = 1, radius = 0,
+ options = "mantid square, x bins=32, y bins=350, neutron pixel min=67200 t lambda, list all neutrons", filename = "detector_panel_6",
+ geometry = "NULL", nowritefile = 0,
+ nexus_bins = 0)
+AT (2.78942359245558, 0, 2.1140283871916687) RELATIVE sample_pos
+ROTATED (0, 52.8425, 0) RELATIVE sample_pos
+
+COMPONENT detector_panel_7 = Monitor_nD(
+ xwidth = 0.823239966741101, yheight = 3.5,
+ zdepth = 0, xmin = 0,
+ xmax = 0, ymin = 0,
+ ymax = 0, zmin = 0,
+ zmax = 0, bins = 0,
+ min = -1e+40, max = 1e+40,
+ restore_neutron = 1, radius = 0,
+ options = "mantid square, x bins=32, y bins=350, neutron pixel min=78400 t lambda, list all neutrons", filename = "detector_panel_7",
+ geometry = "NULL", nowritefile = 0,
+ nexus_bins = 0)
+AT (2.192994320070064, 0, 2.727778567285189) RELATIVE sample_pos
+ROTATED (0, 38.7975, 0) RELATIVE sample_pos
+
+COMPONENT detector_panel_8 = Monitor_nD(
+ xwidth = 0.823239966741101, yheight = 3.5,
+ zdepth = 0, xmin = 0,
+ xmax = 0, ymin = 0,
+ ymax = 0, zmin = 0,
+ zmax = 0, bins = 0,
+ min = -1e+40, max = 1e+40,
+ restore_neutron = 1, radius = 0,
+ options = "mantid square, x bins=32, y bins=350, neutron pixel min=89600 t lambda, list all neutrons", filename = "detector_panel_8",
+ geometry = "NULL", nowritefile = 0,
+ nexus_bins = 0)
+AT (1.4654477682601326, 0, 3.1784371691920223) RELATIVE sample_pos
+ROTATED (0, 24.752499999999998, 0) RELATIVE sample_pos
+
+COMPONENT detector_panel_9 = Monitor_nD(
+ xwidth = 0.823239966741101, yheight = 3.5,
+ zdepth = 0, xmin = 0,
+ xmax = 0, ymin = 0,
+ ymax = 0, zmin = 0,
+ zmax = 0, bins = 0,
+ min = -1e+40, max = 1e+40,
+ restore_neutron = 1, radius = 0,
+ options = "mantid square, x bins=32, y bins=350, neutron pixel min=100800 t lambda, list all neutrons", filename = "detector_panel_9",
+ geometry = "NULL", nowritefile = 0,
+ nexus_bins = 0)
+AT (0.6502833312808893, 0, 3.439059695477563) RELATIVE sample_pos
+ROTATED (0, 10.707499999999996, 0) RELATIVE sample_pos
+
+COMPONENT detector_panel_10 = Monitor_nD(
+ xwidth = 0.823239966741101, yheight = 3.5,
+ zdepth = 0, xmin = 0,
+ xmax = 0, ymin = 0,
+ ymax = 0, zmin = 0,
+ zmax = 0, bins = 0,
+ min = -1e+40, max = 1e+40,
+ restore_neutron = 1, radius = 0,
+ options = "mantid square, x bins=32, y bins=350, neutron pixel min=112000 t lambda, list all neutrons", filename = "detector_panel_10",
+ geometry = "NULL", nowritefile = 0,
+ nexus_bins = 0)
+AT (-0.6502833312808893, 0, 3.439059695477563) RELATIVE sample_pos
+ROTATED (0, -10.707499999999996, 0) RELATIVE sample_pos
+
+COMPONENT detector_panel_11 = Monitor_nD(
+ xwidth = 0.823239966741101, yheight = 3.5,
+ zdepth = 0, xmin = 0,
+ xmax = 0, ymin = 0,
+ ymax = 0, zmin = 0,
+ zmax = 0, bins = 0,
+ min = -1e+40, max = 1e+40,
+ restore_neutron = 1, radius = 0,
+ options = "mantid square, x bins=32, y bins=350, neutron pixel min=123200 t lambda, list all neutrons", filename = "detector_panel_11",
+ geometry = "NULL", nowritefile = 0,
+ nexus_bins = 0)
+AT (-1.4654477682601317, 0, 3.178437169192023) RELATIVE sample_pos
+ROTATED (0, -24.752499999999984, 0) RELATIVE sample_pos
 
 FINALLY 
 %{

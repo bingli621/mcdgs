@@ -1,4 +1,5 @@
 import math
+from itertools import pairwise
 
 import pytest
 
@@ -6,7 +7,7 @@ from mcdgs.core import speed_from_wavelength
 from mcdgs.core.components import NXdisk_chopper, Polygon_ESS_butterfly
 from mcdgs.core.components.source import L_MAX, L_MIN
 from mcdgs.instruments import CSPEC
-from mcdgs.instruments.cspec import monitors
+from mcdgs.instruments.cspec import detectors, monitors
 from mcdgs.instruments.cspec.choppers import DISKS, chopper_timings
 from mcdgs.instruments.cspec.model import Params
 from mcdgs.instruments.cspec.sources import wavelength_band
@@ -89,16 +90,64 @@ def test_the_choppers_are_in_beam_order_each_after_the_arm_of_its_gap():
         assert names.index(disk.gap_arm) < names.index(name)
 
 
-def test_the_sample_monitor_comes_last_without_a_sample():
+PANELS = [f"detector_panel_{i}" for i in range(12)]
+
+
+def test_the_detector_panels_follow_the_sample_monitor_without_a_sample():
     cspec = CSPEC()
-    assert list(cspec.components)[-2:] == ["sample_pos", "sample_monitor"]
+    assert list(cspec.components)[-14:] == ["sample_pos", "sample_monitor", *PANELS]
     assert cspec.sample is None
 
 
-def test_a_sample_goes_after_the_sample_monitor():
+def test_a_sample_goes_after_the_sample_monitor_and_before_the_detector_panels():
     cspec = CSPEC(sample=aluminum())
-    assert list(cspec.components)[-3:] == ["sample_pos", "sample_monitor", "sample"]
+    assert list(cspec.components)[-15:] == ["sample_pos", "sample_monitor", "sample", *PANELS]
     assert cspec.sample.relative == "sample_pos"
+
+
+@pytest.mark.parametrize("index", range(12))
+def test_each_detector_panel_faces_the_sample_at_its_angle_in_the_horizontal_plane(index):
+    cspec = CSPEC()
+    panel = cspec.components[f"detector_panel_{index}"]
+    angle = detectors.PANEL_ARM_ANGLES[index] + 90  # the module is on +x of its arm
+    phi = math.radians(angle)
+    assert panel.relative == "sample_pos"
+    assert panel.rotated == pytest.approx([0, angle, 0])  # its +z from the sample, outward
+    assert panel.at == pytest.approx([3.5 * math.sin(phi), 0, 3.5 * math.cos(phi)])
+    x, y, z = (
+        a - b
+        for a, b in zip(
+            cspec.positions()[f"detector_panel_{index}"],
+            cspec.positions()["sample_pos"],
+            strict=True,
+        )
+    )
+    assert math.hypot(x, y, z) == pytest.approx(3.5, abs=1e-9)
+    assert (panel.xwidth, panel.yheight) == (0.823239966741101, 3.5)
+
+
+def test_the_detector_panels_are_those_of_drcspec_and_leave_the_direct_beam_out():
+    angles = [detectors.panel_angle(i) for i in range(12)]
+    assert angles == sorted(angles, reverse=True)
+    assert angles[0] == pytest.approx(137.1125, abs=1e-9)
+    assert angles[-1] == pytest.approx(-24.7525, abs=1e-9)
+    # one module seen from the sample, less than the spacing of the modules: gaps between them
+    half_width = math.degrees(math.atan2(detectors.PANEL_WIDTH / 2, detectors.PANEL_DISTANCE))
+    assert all(a - b > 2 * half_width for a, b in pairwise(angles))
+    # the direct beam passes between panels 9 and 10, symmetric about it
+    assert angles[9] == pytest.approx(-angles[10], abs=1e-9)
+    assert angles[9] - half_width > 3
+
+
+@pytest.mark.parametrize("index", range(12))
+def test_each_detector_panel_lists_its_own_pixels(index):
+    panel = CSPEC().components[f"detector_panel_{index}"]
+    assert panel.filename == f"detector_panel_{index}"
+    assert panel.restore_neutron == 1
+    assert "mantid square" in panel.options
+    assert "x bins=32, y bins=350" in panel.options
+    assert f"pixel min={index * 11200} " in panel.options
+    assert "list all neutrons" in panel.options
 
 
 def _covers_the_band(monitor, lambda0):

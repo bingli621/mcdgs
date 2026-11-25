@@ -18,6 +18,7 @@ such as the title of a figure. ``choppers`` gives the disk choppers, and ``upstr
 guide in front of each.
 """
 
+from collections.abc import Mapping
 from dataclasses import asdict, fields, replace
 from typing import Any
 
@@ -125,7 +126,7 @@ class Instrument:
         """
         return {n: v for n, v in vars(self).items() if isinstance(v, Component)}
 
-    def add_components(self, components: dict[str, Component]) -> None:
+    def add_components(self, components: Mapping[str, Component]) -> None:
         """Set components as attributes under their names, keeping their order.
 
         Parameters

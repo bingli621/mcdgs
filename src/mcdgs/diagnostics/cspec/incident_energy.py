@@ -32,6 +32,7 @@ from scippneutron.conversion import tof as tof_kernels
 
 from mcdgs.diagnostics import cli, compare
 from mcdgs.diagnostics.incident_energy import plot_incident_energies, plot_time_profiles, save_graph
+from mcdgs.instruments.cspec.detectors import detector_panels
 from mcdgs.instruments.cspec.model import CSPEC, DEFAULT_PARAMS, Params
 from mcdgs.instruments.cspec.monitors import mc_monitor
 from mcdgs.instruments.cspec.sources import wavelength_band
@@ -53,7 +54,8 @@ METHODS = {SINGLE_MONITOR: ("tab:orange", "mc_monitor alone")}  # its color and 
 class CSPECToMcMonitor(CSPEC):
     """CSPEC from the source to the monitor after the monochromatic choppers.
 
-    W03-09-02, ``sample_pos`` and the sample monitor, after ``mc_monitor``, are left out.
+    W03-09-02, ``sample_pos``, the sample monitor and the detector panels, after ``mc_monitor``,
+    are left out.
     ``mc_monitor`` has time bins of ``MC_MONITOR_TIME_RESOLUTION``, finer than those of CSPEC.
 
     Parameters
@@ -77,6 +79,8 @@ class CSPECToMcMonitor(CSPEC):
         del self.guide_09_02
         del self.sample_pos
         del self.sample_monitor
+        for name in detector_panels():
+            delattr(self, name)
 
 
 def define_instrument() -> CSPECToMcMonitor:

@@ -25,6 +25,7 @@ from mcdgs.diagnostics.masked_source import (
     run_source,
     summary_table,
 )
+from mcdgs.instruments.cspec.detectors import detector_panels
 from mcdgs.instruments.cspec.model import CSPEC, DEFAULT_PARAMS, Params
 from mcdgs.instruments.cspec.monitors import sample_monitor
 from mcdgs.instruments.cspec.sources import wavelength_band
@@ -33,6 +34,8 @@ from mcdgs.instruments.cspec.sources import wavelength_band
 # --8<-- [start:instrument]
 class CSPECToSampleMonitor(CSPEC):
     """CSPEC from the source to its sample monitor, without a sample, with finer bins there.
+
+    The detector panels, after the sample monitor, are left out.
 
     The sample monitor spans the band of the source, with time and wavelength bins finer than
     those of CSPEC, to show the shape of each sub-pulse.
@@ -59,6 +62,9 @@ class CSPECToSampleMonitor(CSPEC):
         time_resolution: float = TIME_RESOLUTION,
     ) -> None:
         super().__init__(params=params, source_masked=source_masked)
+        # after the sample monitor
+        for name in detector_panels():
+            delattr(self, name)
         self.sample_monitor = sample_monitor(  # in its place, with finer bins
             lambda_limits=wavelength_band(params.lambda0),
             lambda_resolution=lambda_resolution,

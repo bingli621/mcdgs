@@ -4,8 +4,9 @@ CSPEC is modeled from the source to the sample position, as a chain of guides wi
 [`NXdisk_chopper`](../../reference/components.md) choppers in the gaps. The choppers are phased
 to the central wavelength `lambda0` (see [Chopper timing](#chopper-timing)). `sample_pos` is on
 the trajectory of the last guide, 160.0 m from the moderator along it. Six time and wavelength
-monitors follow the beam from the source to the sample (see [Monitors](#monitors)). There are no
-detectors, beamstop or guide exchanger yet.
+monitors follow the beam from the source to the sample (see [Monitors](#monitors)), and twelve
+detector panels surround the sample (see [Detectors](#detectors)). There is no beamstop or guide
+exchanger yet.
 
 The dimensions are from CSPEC_nl-specs_1.E.xlsx unless noted. Numbers that are not in it are
 marked FIXME in the code, and listed under
@@ -249,6 +250,34 @@ are those of the monitors of T-Rex (FIXME):
 tof takes each monitor as a detector, so the rays of the [time-distance
 diagram](time-distance.md) reach the sample.
 
+## Detectors
+
+After the sample, on `sample_pos`, come twelve detector panels, in
+[`mcdgs.instruments.cspec.detectors`](../../reference/cspec.md). They are the twelve
+`Detector_tubes` modules of drcspec, each a pack of 32 vertical tubes with 350 pixels each, made
+`Monitor_nD` rectangles of the same size, place and pixels. CSPEC_nl-specs_1.E.xlsx has no
+detector (FIXME).
+
+| Component | Where | Size | What it does |
+| --------- | ----- | ---- | ------------ |
+| `detector_panel_0` to `detector_panel_11` | Flat panels facing the sample, their centers 3.5 m from `sample_pos` in the horizontal plane, from 137.11° to −24.75°, 0° along the beam and positive toward +x | 0.823 m × 3.5 m each, centered on the height of the beam | Each lists every neutron reaching it, with its pixel, time and wavelength. The pixels are 32 across, one per tube, by 350 along the tubes, numbered as Mantid does from 11200 times the panel number |
+
+The angles of the panel centers, from the beam, are those of drcspec:
+
+| Panel | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 |
+| ----- | - | - | - | - | - | - | - | - | - | - | -- | -- |
+| Angle, deg | 137.11 | 123.07 | 109.02 | 94.98 | 80.93 | 66.89 | 52.84 | 38.80 | 24.75 | 10.71 | −10.71 | −24.75 |
+
+Seen from the sample, a panel spans ±6.7°, and the panels are 14.045° apart, so a gap of about
+0.6° separates neighbors. Panels 9 and 10 are symmetric about the beam: the direct beam passes
+between them, through a gap of ±4.0°, so there is no beamstop. Each panel gives the neutron back
+unchanged, so a neutron goes on to the next one, and reaches the one in its way.
+
+The events of each panel are read per pixel with `read_pixels` (see
+[Detector pixels](../../how-to/read-the-output.md#detector-pixels)). The tof model takes the
+straight distance from the source to each panel, some of them before the sample, so the
+[time-distance diagram](time-distance.md) leaves the panels out.
+
 ## Not in CSPEC_nl-specs_1.E.xlsx { #not-in-the-sheet }
 
 | What | Value in the model |
@@ -261,6 +290,7 @@ diagram](time-distance.md) reach the sample.
 | Radius of the disks, height of the slits | 0.35 m, 0.1 m |
 | Frequency of the pulse-shaping choppers | Half of `nu_mc` |
 | Monitors | At the places of those of drcspec; sizes and bins as in [Monitors](#monitors) |
+| Detector panels | Those of drcspec, as in [Detectors](#detectors) |
 | Guide exchanger | Not modeled |
 
 ## Parameters file

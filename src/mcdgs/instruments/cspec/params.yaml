@@ -3016,3 +3016,291 @@ sample_monitor:
   rotated: [0, 0, 0]
   relative: sample_pos
   position: [0.347329637, -0.42242, 159.999969665]
+detector_panel_0:
+  component: Monitor_nD
+  xwidth: 0.823239966741101
+  yheight: 3.5
+  zdepth: 0
+  xmin: 0
+  xmax: 0
+  ymin: 0
+  ymax: 0
+  zmin: 0
+  zmax: 0
+  bins: 0
+  min: -1.0e+40
+  max: 1.0e+40
+  restore_neutron: 1
+  radius: 0
+  options: mantid square, x bins=32, y bins=350, neutron pixel min=0 t lambda, list all neutrons
+  filename: detector_panel_0
+  nowritefile: 0
+  nexus_bins: 0
+  at: [2.381963628420358, 0, -2.564419870630105]
+  rotated: [0, 137.11249999999998, 0]
+  relative: sample_pos
+  position: [2.718312877, -0.42242, 157.425394267]
+detector_panel_1:
+  component: Monitor_nD
+  xwidth: 0.823239966741101
+  yheight: 3.5
+  zdepth: 0
+  xmin: 0
+  xmax: 0
+  ymin: 0
+  ymax: 0
+  zmin: 0
+  zmax: 0
+  bins: 0
+  min: -1.0e+40
+  max: 1.0e+40
+  restore_neutron: 1
+  radius: 0
+  options: mantid square, x bins=32, y bins=350, neutron pixel min=11200 t lambda, list all neutrons
+  filename: detector_panel_1
+  nowritefile: 0
+  nexus_bins: 0
+  at: [2.9330992192118734, 0, -1.9096934231071487]
+  rotated: [0, 123.0675, 0]
+  relative: sample_pos
+  position: [3.272241304, -0.42242, 158.077759546]
+detector_panel_2:
+  component: Monitor_nD
+  xwidth: 0.823239966741101
+  yheight: 3.5
+  zdepth: 0
+  xmin: 0
+  xmax: 0
+  ymin: 0
+  ymax: 0
+  zmin: 0
+  zmax: 0
+  bins: 0
+  min: -1.0e+40
+  max: 1.0e+40
+  restore_neutron: 1
+  radius: 0
+  options: mantid square, x bins=32, y bins=350, neutron pixel min=22400 t lambda, list all neutrons
+  filename: detector_panel_2
+  nowritefile: 0
+  nexus_bins: 0
+  at: [3.3088672833366286, 0, -1.1407880176722045]
+  rotated: [0, 109.0225, 0]
+  relative: sample_pos
+  position: [3.651291732, -0.42242, 158.845052146]
+detector_panel_3:
+  component: Monitor_nD
+  xwidth: 0.823239966741101
+  yheight: 3.5
+  zdepth: 0
+  xmin: 0
+  xmax: 0
+  ymin: 0
+  ymax: 0
+  zmin: 0
+  zmax: 0
+  bins: 0
+  min: -1.0e+40
+  max: 1.0e+40
+  restore_neutron: 1
+  radius: 0
+  options: mantid square, x bins=32, y bins=350, neutron pixel min=33600 t lambda, list all neutrons
+  filename: detector_panel_3
+  nowritefile: 0
+  nexus_bins: 0
+  at: [3.4868009654034795, 0, -0.30367585953013276]
+  rotated: [0, 94.97749999999999, 0]
+  relative: sample_pos
+  position: [3.832801055, -0.42242, 159.681396289]
+detector_panel_4:
+  component: Monitor_nD
+  xwidth: 0.823239966741101
+  yheight: 3.5
+  zdepth: 0
+  xmin: 0
+  xmax: 0
+  ymin: 0
+  ymax: 0
+  zmin: 0
+  zmax: 0
+  bins: 0
+  min: -1.0e+40
+  max: 1.0e+40
+  restore_neutron: 1
+  radius: 0
+  options: mantid square, x bins=32, y bins=350, neutron pixel min=44800 t lambda, list all neutrons
+  filename: detector_panel_4
+  nowritefile: 0
+  nexus_bins: 0
+  at: [3.4562617607446016, 0, 0.5515928219389982]
+  rotated: [0, 80.9325, 0]
+  relative: sample_pos
+  position: [3.805916984, -0.42242, 160.536787666]
+detector_panel_5:
+  component: Monitor_nD
+  xwidth: 0.823239966741101
+  yheight: 3.5
+  zdepth: 0
+  xmin: 0
+  xmax: 0
+  ymin: 0
+  ymax: 0
+  zmin: 0
+  zmax: 0
+  bins: 0
+  min: -1.0e+40
+  max: 1.0e+40
+  restore_neutron: 1
+  radius: 0
+  options: mantid square, x bins=32, y bins=350, neutron pixel min=56000 t lambda, list all neutrons
+  filename: detector_panel_5
+  nowritefile: 0
+  nexus_bins: 0
+  at: [3.2190755826302717, 0, 1.3738822341502115]
+  rotated: [0, 66.88749999999999, 0]
+  relative: sample_pos
+  position: [3.572246894, -0.42242, 161.360083148]
+detector_panel_6:
+  component: Monitor_nD
+  xwidth: 0.823239966741101
+  yheight: 3.5
+  zdepth: 0
+  xmin: 0
+  xmax: 0
+  ymin: 0
+  ymax: 0
+  zmin: 0
+  zmax: 0
+  bins: 0
+  min: -1.0e+40
+  max: 1.0e+40
+  restore_neutron: 1
+  radius: 0
+  options: mantid square, x bins=32, y bins=350, neutron pixel min=67200 t lambda, list all neutrons
+  filename: detector_panel_6
+  nowritefile: 0
+  nexus_bins: 0
+  at: [2.78942359245558, 0, 2.1140283871916687]
+  rotated: [0, 52.8425, 0]
+  relative: sample_pos
+  position: [3.145761724, -0.42242, 162.102058592]
+detector_panel_7:
+  component: Monitor_nD
+  xwidth: 0.823239966741101
+  yheight: 3.5
+  zdepth: 0
+  xmin: 0
+  xmax: 0
+  ymin: 0
+  ymax: 0
+  zmin: 0
+  zmax: 0
+  bins: 0
+  min: -1.0e+40
+  max: 1.0e+40
+  restore_neutron: 1
+  radius: 0
+  options: mantid square, x bins=32, y bins=350, neutron pixel min=78400 t lambda, list all neutrons
+  filename: detector_panel_7
+  nowritefile: 0
+  nexus_bins: 0
+  at: [2.192994320070064, 0, 2.727778567285189]
+  rotated: [0, 38.7975, 0]
+  relative: sample_pos
+  position: [2.551960661, -0.42242, 162.718351913]
+detector_panel_8:
+  component: Monitor_nD
+  xwidth: 0.823239966741101
+  yheight: 3.5
+  zdepth: 0
+  xmin: 0
+  xmax: 0
+  ymin: 0
+  ymax: 0
+  zmin: 0
+  zmax: 0
+  bins: 0
+  min: -1.0e+40
+  max: 1.0e+40
+  restore_neutron: 1
+  radius: 0
+  options: mantid square, x bins=32, y bins=350, neutron pixel min=89600 t lambda, list all neutrons
+  filename: detector_panel_8
+  nowritefile: 0
+  nexus_bins: 0
+  at: [1.4654477682601326, 0, 3.1784371691920223]
+  rotated: [0, 24.752499999999998, 0]
+  relative: sample_pos
+  position: [1.82634657, -0.42242, 163.172115455]
+detector_panel_9:
+  component: Monitor_nD
+  xwidth: 0.823239966741101
+  yheight: 3.5
+  zdepth: 0
+  xmin: 0
+  xmax: 0
+  ymin: 0
+  ymax: 0
+  zmin: 0
+  zmax: 0
+  bins: 0
+  min: -1.0e+40
+  max: 1.0e+40
+  restore_neutron: 1
+  radius: 0
+  options: mantid square, x bins=32, y bins=350, neutron pixel min=100800 t lambda, list all neutrons
+  filename: detector_panel_9
+  nowritefile: 0
+  nexus_bins: 0
+  at: [0.6502833312808893, 0, 3.439059695477563]
+  rotated: [0, 10.707499999999996, 0]
+  relative: sample_pos
+  position: [1.012303305, -0.42242, 163.436219077]
+detector_panel_10:
+  component: Monitor_nD
+  xwidth: 0.823239966741101
+  yheight: 3.5
+  zdepth: 0
+  xmin: 0
+  xmax: 0
+  ymin: 0
+  ymax: 0
+  zmin: 0
+  zmax: 0
+  bins: 0
+  min: -1.0e+40
+  max: 1.0e+40
+  restore_neutron: 1
+  radius: 0
+  options: mantid square, x bins=32, y bins=350, neutron pixel min=112000 t lambda, list all neutrons
+  filename: detector_panel_10
+  nowritefile: 0
+  nexus_bins: 0
+  at: [-0.6502833312808893, 0, 3.439059695477563]
+  rotated: [0, -10.707499999999996, 0]
+  relative: sample_pos
+  position: [-0.288251483, -0.42242, 163.441776841]
+detector_panel_11:
+  component: Monitor_nD
+  xwidth: 0.823239966741101
+  yheight: 3.5
+  zdepth: 0
+  xmin: 0
+  xmax: 0
+  ymin: 0
+  ymax: 0
+  zmin: 0
+  zmax: 0
+  bins: 0
+  min: -1.0e+40
+  max: 1.0e+40
+  restore_neutron: 1
+  radius: 0
+  options: mantid square, x bins=32, y bins=350, neutron pixel min=123200 t lambda, list all neutrons
+  filename: detector_panel_11
+  nowritefile: 0
+  nexus_bins: 0
+  at: [-1.4654477682601317, 0, 3.178437169192023]
+  rotated: [0, -24.752499999999984, 0]
+  relative: sample_pos
+  position: [-1.104522205, -0.42242, 163.18464017]

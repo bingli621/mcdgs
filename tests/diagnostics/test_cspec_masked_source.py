@@ -12,7 +12,7 @@ from mcdgs.instruments.cspec.model import CSPEC
 def test_the_instrument_ends_at_the_sample_monitor_with_finer_bins():
     plain = define_instrument()
     names = list(plain.components)
-    assert names == list(CSPEC().components)
+    assert names == [n for n in CSPEC().components if not n.startswith("detector_panel_")]
     assert names[-1] == "sample_monitor"
     (time_start, time_stop, time_bins), (lambda_start, lambda_stop, lambda_bins) = (
         plain.sample_monitor.bin_limits.values()

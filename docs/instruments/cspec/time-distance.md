@@ -11,7 +11,9 @@ choppers, but takes the guides, the bender and the slits as letting everything t
 tof takes each [monitor](details.md#monitors) of CSPEC as a detector, the last one
 `sample_monitor` at the sample position, so the rays run on from the last chopper, `mc2`, to the
 sample. The
-instrument is CSPEC at its default parameters:
+instrument is CSPEC at its default parameters, without the [detector
+panels](details.md#detectors), which tof would put at their straight distances from the source,
+some before the sample:
 
 <!-- fmt:off -->
 ```python

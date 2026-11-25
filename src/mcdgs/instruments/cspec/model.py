@@ -8,6 +8,7 @@ from mcdgs.core.components import Arm, Component, Guide_gravity, NXdisk_chopper,
 from mcdgs.core.components.masked_source import Polygon_ESS_butterfly, chopper_train
 
 from .choppers import chopper, chopper_timings
+from .detectors import detector_panels
 from .guides.bender import guides_bender
 from .guides.frame import arm_iscs
 from .guides.straight import guides_straight, sample_pos
@@ -150,6 +151,8 @@ class CSPEC(Instrument):
         self.sample_pos = sample_pos()
         self.sample_monitor = sample_monitor(lambda_limits=band)
         self.sample = None if sample is None else replace(sample, relative="sample_pos")
+        # detectors: the direct beam passes between the two panels closest to it
+        self.add_components(detector_panels())
 
         # each chopper with its flight path, in its place; the masked source is masked by these
         # same choppers
