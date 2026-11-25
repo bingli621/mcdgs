@@ -7,6 +7,7 @@ from mcdgs.core.components import NXdisk_chopper, Polygon_ESS_butterfly
 from mcdgs.instruments import CSPEC
 from mcdgs.instruments.cspec.choppers import DISKS, chopper_timings
 from mcdgs.instruments.cspec.model import Params
+from mcdgs.instruments.cspec.sources import wavelength_band
 from mcdgs.samples import aluminum
 
 
@@ -35,16 +36,31 @@ def test_the_choppers_are_in_beam_order_each_after_the_arm_of_its_gap():
         assert names.index(disk.gap_arm) < names.index(name)
 
 
-def test_the_sample_position_comes_last_without_a_sample():
+def test_the_sample_monitor_comes_last_without_a_sample():
     cspec = CSPEC()
-    assert list(cspec.components)[-1] == "sample_pos"
+    assert list(cspec.components)[-2:] == ["sample_pos", "sample_monitor"]
     assert cspec.sample is None
 
 
-def test_a_sample_goes_after_the_sample_position():
+def test_a_sample_goes_after_the_sample_monitor():
     cspec = CSPEC(sample=aluminum())
-    assert list(cspec.components)[-2:] == ["sample_pos", "sample"]
+    assert list(cspec.components)[-3:] == ["sample_pos", "sample_monitor", "sample"]
     assert cspec.sample.relative == "sample_pos"
+
+
+def _covers_the_band(monitor, lambda0):
+    """The wavelength axis of ``monitor`` starts at the band of ``lambda0``, in whole bins."""
+    start, stop, _ = monitor.bin_limits["lambda"]
+    band_start, band_stop = wavelength_band(lambda0)
+    return start == pytest.approx(band_start) and band_stop <= stop < band_stop + 0.02
+
+
+def test_the_sample_monitor_spans_the_band_of_lambda0_also_after_an_update():
+    cspec = CSPEC()
+    assert _covers_the_band(cspec.sample_monitor, 3.0)
+    cspec.update_params(lambda0=4.0)
+    assert _covers_the_band(cspec.sample_monitor, 4.0)
+    assert list(cspec.components)[-2:] == ["sample_pos", "sample_monitor"]
 
 
 def test_each_chopper_window_is_as_wide_as_the_exit_of_the_guide_in_front():

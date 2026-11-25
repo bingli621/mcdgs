@@ -2,9 +2,10 @@
 
 CSPEC is modeled from the source to the sample position, as a chain of guides with its
 [`NXdisk_chopper`](../../reference/components.md) choppers in the gaps. The choppers are phased
-to the central wavelength `lambda0` (see [Chopper timing](#chopper-timing)). There are no
-monitors, detectors, beamstop or guide exchanger yet. `sample_pos` is on the trajectory of the
-last guide, 160.0 m from the moderator along it.
+to the central wavelength `lambda0` (see [Chopper timing](#chopper-timing)). `sample_pos` is on
+the trajectory of the last guide, 160.0 m from the moderator along it, with a monitor there,
+`sample_monitor` (see [Sample monitor](#sample-monitor)). There are no detectors, beamstop or
+guide exchanger yet.
 
 The dimensions are from CSPEC_nl-specs_1.E.xlsx unless noted. Numbers that are not in it are
 marked FIXME in the code, and listed under
@@ -203,6 +204,22 @@ later still.
 The slit edges of each disk reach McStas as an array of their own, declared in the `.instr`
 file as `<name>_slit_edges`. See the [McStas instrument file](instr-file.md).
 
+## Sample monitor
+
+`sample_monitor` is a `Monitor_nD` at `sample_pos`, before the sample, 0.1 m wide and high
+(FIXME), larger than the beam. It records the beam reaching the sample as one 2D map of time
+against wavelength, and leaves the neutrons unchanged. Its wavelength axis is the band the
+source simulates for `lambda0`, and its time axis the window in which that band reaches it. The
+bins are those of the sample monitor of T-Rex (FIXME):
+
+| Axis | Bin width |
+| ---- | --------- |
+| Time | 0.05 ms |
+| Wavelength | 0.02 Å |
+
+A new `lambda0` in `update_params` creates it again with the new band. tof takes it as a
+detector, so the rays of the [time-distance diagram](time-distance.md) reach the sample.
+
 ## Not in CSPEC_nl-specs_1.E.xlsx { #not-in-the-sheet }
 
 | What | Value in the model |
@@ -214,6 +231,7 @@ file as `<name>_slit_edges`. See the [McStas instrument file](instr-file.md).
 | Slits and axles of the disks | Those of drcspec |
 | Radius of the disks, height of the slits | 0.35 m, 0.1 m |
 | Frequency of the pulse-shaping choppers | Half of `nu_mc` |
+| Size and bins of `sample_monitor` | 0.1 m × 0.1 m, 0.05 ms and 0.02 Å, as T-Rex |
 | Guide exchanger | Not modeled |
 
 ## Parameters file

@@ -11,6 +11,7 @@ from .choppers import chopper, chopper_timings
 from .guides.bender import guides_bender
 from .guides.frame import arm_iscs
 from .guides.straight import guides_straight, sample_pos
+from .monitors import sample_monitor
 from .sources import masked_source, source, wavelength_band
 
 
@@ -124,8 +125,9 @@ class CSPEC(Instrument):
         self.mc1 = NXdisk_chopper()
         self.mc2 = NXdisk_chopper()
         self.add_components(to_guide_exchanger)
-        # sample position
+        # sample position, and the beam reaching it
         self.sample_pos = sample_pos()
+        self.sample_monitor = sample_monitor(lambda_limits=band)
         self.sample = None if sample is None else replace(sample, relative="sample_pos")
 
         # each chopper with its flight path, in its place; the masked source is masked by these
@@ -150,9 +152,9 @@ class CSPEC(Instrument):
     def update_params(self, **values: Any) -> None:
         """Change control parameters.
 
-        A new ``lambda0`` also gives the source the band of :func:`.sources.wavelength_band`.
-        The source keeps everything else, so a masked source stays masked, also in an instrument
-        a parameters file made.
+        A new ``lambda0`` also gives the source the band of :func:`.sources.wavelength_band`, and
+        creates the sample monitor again with it. The source keeps everything else, so a masked
+        source stays masked, also in an instrument a parameters file made.
 
         Parameters
         ----------
@@ -168,6 +170,7 @@ class CSPEC(Instrument):
         if "lambda0" in values:
             band = wavelength_band(self.params.lambda0)
             self.source = replace(self.source, Lmin=band[0], Lmax=band[1])
+            self.sample_monitor = sample_monitor(lambda_limits=band)
 
     def running_conditions(self) -> str:
         """Describe the settings of CSPEC in one line, such as the title of a figure.

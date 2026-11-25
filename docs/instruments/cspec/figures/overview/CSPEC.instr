@@ -15,7 +15,7 @@
 * 
 * %Identification
 * Written by: Python McStas Instrument Generator
-* Date: 14:46:17 on November 25, 2026
+* Date: 14:53:51 on November 25, 2026
 * Origin: ESS DMSC
 * %INSTRUMENT_SITE: Generated_instruments
 * 
@@ -1660,6 +1660,20 @@ ROTATED (0, 0.7448451336700711, 0) RELATIVE arm_iscs
 COMPONENT sample_pos = Arm()
 AT (1.7106400000000002, -0.42242, 159.96676000000002) RELATIVE arm_iscs
 ROTATED (-0.0, 0.7448451336700711, 0) RELATIVE arm_iscs
+
+COMPONENT sample_monitor = Monitor_nD(
+ xwidth = 0.1, yheight = 0.1,
+ zdepth = 0, xmin = 0,
+ xmax = 0, ymin = 0,
+ ymax = 0, zmin = 0,
+ zmax = 0, bins = 0,
+ min = -1e+40, max = 1e+40,
+ restore_neutron = 1, radius = 0,
+ options = "time limits=[0.08387241884369258 0.16232241884369258] bins=1569 lambda limits=[2.0737109801003992 3.9337109801003995] bins=93", filename = "sample_monitor",
+ geometry = "NULL", nowritefile = 0,
+ nexus_bins = 0)
+AT (0, 0, 0) RELATIVE sample_pos
+ROTATED (0, 0, 0) RELATIVE sample_pos
 
 FINALLY 
 %{

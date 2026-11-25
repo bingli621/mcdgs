@@ -15,7 +15,8 @@ documentation. See [Source](../instruments/trex/source.md),
 [Elastic resolution](../instruments/trex/elastic-resolution-incoherent.md),
 [Diffraction](../instruments/trex/diffraction.md) and
 [Rotation scan](../instruments/trex/diffraction-scan.md) for what they show for T-Rex, and
-[Source](../instruments/cspec/source.md) for CSPEC.
+[Source](../instruments/cspec/source.md) and
+[Time-distance diagram](../instruments/cspec/time-distance.md) for CSPEC.
 [Run McStasScript's diagnostics](../how-to/run-mcstasscript-diagnostics.md) has the code of
 `guides_diagnostics`, and [Guide transmission](../instruments/trex/guides.md) its figures.
 
@@ -26,6 +27,8 @@ documentation. See [Source](../instruments/trex/source.md),
 ::: mcdgs.diagnostics.drawing
 
 ::: mcdgs.diagnostics.phase_space
+
+::: mcdgs.diagnostics.time_distance
 
 ::: mcdgs.diagnostics.trex.overview
 
@@ -67,3 +70,5 @@ documentation. See [Source](../instruments/trex/source.md),
 
 ::: mcdgs.diagnostics.cspec.source
 
+
+::: mcdgs.diagnostics.cspec.time_distance

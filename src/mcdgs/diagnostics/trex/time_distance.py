@@ -4,7 +4,8 @@
 
 - ``trex_time_distance.png``: the time-distance diagram of two pulses, from
   :func:`.time_distance_diagram`;
-- ``trex_time_distance_params.txt``: the parameters of that run, from :func:`parameters_table`.
+- ``trex_time_distance_params.txt``: the parameters of that run, from
+  :func:`.time_distance.parameters_table`.
 
 It needs only mcdgs and tof. Run the module for them::
 
@@ -13,11 +14,10 @@ It needs only mcdgs and tof. Run the module for them::
 
 from pathlib import Path
 
-from mcdgs.core import evaluate
-from mcdgs.core.components import NXdisk_chopper
 from mcdgs.diagnostics import cli
+from mcdgs.diagnostics.time_distance import parameters_table
 from mcdgs.instruments.trex.model import Params, TRex
-from mcdgs.tof import beamline, time_distance_diagram
+from mcdgs.tof import time_distance_diagram
 
 N_PULSES = 2
 """Pulses of the diagram."""
@@ -37,80 +37,26 @@ def define_instrument() -> TRex:
 """Most rays drawn per pulse, in gray, of the neutrons a chopper stops."""
 
 
-def parameters_table(
-    trex: TRex,
-    *,
-    neutrons: int,
-    seed: int | None,
-    n_pulses: int,
-    visible_rays: int,
-    blocked_rays: int,
-) -> str:
-    """Return the parameters of a tof run of T-Rex as Markdown tables.
-
-    Three tables: the tof run, with the band of the source; the control parameters that set the
-    choppers; and each chopper, with its distance from the source, frequency and delay.
+def control_parameters(trex: TRex) -> list[tuple[str, str]]:
+    """Return the control parameters of T-Rex that set the choppers, as formatted rows.
 
     Parameters
     ----------
     trex:
-        The instrument, at the parameters of the run.
-    neutrons:
-        Number of tof neutrons per pulse.
-    seed:
-        Seed of the random numbers.
-    n_pulses:
-        Number of pulses.
-    visible_rays, blocked_rays:
-        Most rays drawn per pulse, of the neutrons that reach the sample and that are stopped.
+        The instrument.
 
     Returns
     -------
     :
-        The tables, separated by blank lines.
+        ``mode``, ``lambda0``, ``rrm`` and ``t0_offset``, each with its value and unit.
     """
-    source, after_source = beamline(trex)
-    params = trex.numeric_instr_params()
-    lmin = float(evaluate(source.Lmin, params))
-    lmax = float(evaluate(source.Lmax, params))
-    run = [
-        (
-            "Source",
-            f"ESS pulse of beam port {source.sector}{source.beamline} at {source.frequency:g} Hz",
-        ),
-        ("Band of the source", f"{lmin:.3f} to {lmax:.3f} Å"),
-        ("`neutrons`, per pulse", f"{neutrons:,}"),
-        ("`n_pulses`", n_pulses),
-        ("`seed`", seed),
-        ("`visible_rays`, per pulse", f"{visible_rays:,}"),
-        ("`blocked_rays`, per pulse", f"{blocked_rays:,}"),
-    ]
     p = trex.params
-    control = [
+    return [
         ("`mode`", f'`"{p.mode}"`'),
         ("`lambda0`", f"{p.lambda0:g} Å"),
-        ("`rrm`", p.rrm),
+        ("`rrm`", f"{p.rrm}"),
         ("`t0_offset`", f"{p.t0_offset * 1e3:g} ms"),
     ]
-    choppers = [
-        (
-            f"`{name}`",
-            f"{distance:.3f} m",
-            f"{float(evaluate(component.nu, params)):g} Hz",
-            f"{float(evaluate(component.delay, params)) * 1e3:.3f} ms",
-        )
-        for name, component, distance in after_source
-        if isinstance(component, NXdisk_chopper)
-    ]
-    return "\n".join(
-        [
-            cli.markdown_table(["tof run", "Value"], run),
-            cli.markdown_table(["Control parameter", "Value"], control),
-            cli.markdown_table(
-                ["Chopper", "Distance from the source", "Frequency", "Delay"], choppers
-            ),
-        ]
-    )
 
 
 def main(out: Path | None = None, neutrons: int = 1_000_000, seed: int = 1) -> list[Path]:
@@ -148,6 +94,7 @@ def main(out: Path | None = None, neutrons: int = 1_000_000, seed: int = 1) -> l
 
     table = parameters_table(
         trex,
+        control_parameters(trex),
         neutrons=neutrons,
         seed=seed,
         n_pulses=N_PULSES,
