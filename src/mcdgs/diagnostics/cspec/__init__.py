@@ -11,4 +11,5 @@ In the order of the beam, which is also the order ``pixi run docs-diagnostics`` 
 7. :mod:`.neutrons_on_sample`: the neutrons at the sample monitor.
 8. :mod:`.masked_source`: the plain and the masked source, at the sample monitor.
 9. :mod:`.incident_energy`: the incident energy of each sub-pulse.
+10. :mod:`.elastic_resolution_incoherent`: the elastic resolution, from vanadium.
 """

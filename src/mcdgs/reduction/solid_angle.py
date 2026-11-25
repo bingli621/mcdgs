@@ -2,7 +2,8 @@
 
 :func:`rectangle_solid_angle` takes the center and size of each pixel, and the way the detector
 faces the sample: a cylinder around a vertical axis through the sample, as the banana detector of
-T-Rex, or a sphere around it. The solid angle follows from the four corners of the pixel, split
+T-Rex, or a sphere around it; or the normal of each pixel itself, such as that of a flat panel.
+The solid angle follows from the four corners of the pixel, split
 into two triangles, each with the formula of A. Van Oosterom and J. Strackee, "The Solid Angle of
 a Plane Triangle", IEEE Trans. Biomed. Eng. 30, 125 (1983).
 """
@@ -74,6 +75,7 @@ def rectangle_solid_angle(
     width: sc.Variable,
     height: sc.Variable,
     shape: DetectorShape = "cylinder",
+    normal: sc.Variable | None = None,
 ) -> sc.Variable:
     """Return the solid angle of rectangular pixels, seen from the sample.
 
@@ -91,6 +93,9 @@ def rectangle_solid_angle(
         The size of each pixel. They may be scalars, or have the dimensions of ``position``.
     shape:
         How the detector faces the sample, as :func:`pixel_normal`.
+    normal:
+        The outward normal of each pixel, horizontal, with the dimensions of ``position`` or
+        one for all, in place of that of ``shape``: for a flat panel, the normal of the panel.
 
     Returns
     -------
@@ -111,7 +116,8 @@ def rectangle_solid_angle(
     2.09440 sr
     """
     relative = position - sample_position.to(unit=position.unit)
-    normal = pixel_normal(relative, shape)
+    if normal is None:
+        normal = pixel_normal(relative, shape)
     across = _unit(  # horizontal, across the normal
         sc.spatial.as_vectors(normal.fields.z, sc.zeros_like(normal.fields.y), -normal.fields.x)
     )

@@ -43,6 +43,7 @@ from matplotlib.lines import Line2D
 
 from mcdgs.core.components import Isotropic_Sqw
 from mcdgs.diagnostics import cli
+from mcdgs.diagnostics import elastic_resolution as resolution
 from mcdgs.diagnostics.trex import elastic_resolution_incoherent as vanadium
 from mcdgs.diagnostics.trex import sample_runs as runs
 from mcdgs.diagnostics.trex.solid_angles import detector_window
@@ -221,13 +222,13 @@ def reduce_runs(
     to_sample = Path(to_sample or workspace.run_folder(to_name))
     from_sample = Path(from_sample or workspace.run_folder(from_name))
     pulses = runs.subpulse_timing_of_run(to_sample, define_instrument(mode))
-    binned = vanadium.scattered_pixels(runs.read_detector(from_sample))
+    binned = resolution.scattered_pixels(runs.read_detector(from_sample), vanadium.MIN_TWO_THETA)
     pixels = runs.pixel_solid_angle(binned)
     events = normalized_events(binned, pulses, pixels)
-    maps = vanadium.q_e_maps(
+    maps = resolution.q_e_maps(
         events,
         pulses,
-        vanadium.two_theta(binned),
+        resolution.two_theta(binned),
         pixels,
         energy_step=ENERGY_STEP,
         q_step=Q_STEP,
@@ -275,7 +276,7 @@ def plot_magnon_maps(maps: sc.DataArray, title: str) -> Figure:
         The figure.
     """
     maps = crop(maps)
-    fig = vanadium.plot_q_e_maps(maps, title)
+    fig = resolution.plot_q_e_maps(maps, title)
     q_edges = maps.coords["Q"].to(unit="1/Å").values
     q = np.linspace(q_edges[0], q_edges[-1], 400)
     low, high = magnon_band(q)

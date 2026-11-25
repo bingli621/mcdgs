@@ -46,6 +46,15 @@ def test_a_cylinder_pixel_above_the_beam_is_seen_at_a_slant():
     assert sphere.value == pytest.approx(1e-4 / r2, rel=1e-4)
 
 
+def test_a_pixel_of_a_flat_panel_is_seen_at_a_slant_across_it():
+    # on a panel facing along z at 3 m, a pixel 1 m to the side is seen at cos(θ) / r²
+    position = sc.vector([1.0, 0.0, 3.0], unit="m")
+    size = sc.scalar(0.01, unit="m")
+    r2 = 10.0
+    flat = rectangle_solid_angle(position, ORIGIN, size, size, normal=sc.vector([0.0, 0.0, 1.0]))
+    assert flat.value == pytest.approx(1e-4 * (3.0 / math.sqrt(r2)) / r2, rel=1e-4)
+
+
 def test_the_sample_need_not_be_at_the_origin():
     sample = sc.vector([1.0, 2.0, 160.0], unit="m")
     omega = rectangle_solid_angle(
