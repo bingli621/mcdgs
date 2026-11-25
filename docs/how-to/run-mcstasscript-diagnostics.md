@@ -19,7 +19,8 @@ the first 6 m.
 
 ```python
 from mcdgs.diagnostics import cli
-from mcdgs.diagnostics.trex.guides_diagnostics import WAVELENGTH_BINS, plot_transmission
+from mcdgs.diagnostics.guides_diagnostics import WAVELENGTH_BINS, plot_transmission
+from mcdgs.diagnostics.trex.guides_diagnostics import OVERALL, POINT_NAMES, SECTIONS
 from mcdgs.instruments.trex.model import Params, TRex
 from mcdgs.mcstas import McStasScriptDiagnostics
 ```
