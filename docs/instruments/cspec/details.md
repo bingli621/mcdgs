@@ -201,10 +201,10 @@ neutron takes to reach the disk, plus `t0_offset`, less the time the disk takes 
 zero mark to the first slit:
 
 $$
-\text{delay} = \texttt{t0\_offset} + \frac{L}{v(\texttt{lambda0})} - \frac{\text{phase}}{360° \times \nu},
+\text{delay} = t_0 + \frac{L}{v(\lambda_0)} - \frac{\text{phase}}{360° \times \nu},
 $$
 
-with $L$ the flight path, $\nu$ the signed frequency and phase the angle from the center of the first
+with $t_0$ = `t0_offset`, $\lambda_0$ = `lambda0`, $L$ the flight path, $\nu$ the signed frequency and phase the angle from the center of the first
 slit to the beam, 180° for a disk with its axle above and 0° below. `bw3` turns `bw3_delay`
 later still.
 

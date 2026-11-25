@@ -50,10 +50,10 @@ so that the slit of the mode is centered on the beam when a neutron of wavelengt
 leaving the moderator at `t0_offset`, reaches it:
 
 $$
-\text{delay} = \texttt{t0\_offset} + \frac{L \times \texttt{lambda0}}{3956\ \text{m Å/s}} - \frac{\theta}{360° \times \nu},
+\text{delay} = t_0 + \frac{L \lambda_0}{3956\ \text{m Å/s}} - \frac{\theta}{360° \times \nu},
 $$
 
-with $L$ the flight path to the disk, $\nu$ its signed frequency and $\theta$ the angle the disk turns from
+with $t_0$ = `t0_offset`, $\lambda_0$ = `lambda0`, $L$ the flight path to the disk, $\nu$ its signed frequency and $\theta$ the angle the disk turns from
 its zero mark to put the slit of the mode on the beam. In `"RR"` $\theta$ is 0: a narrow slit is
 centered at `beam_angle` from the zero mark, so it is on the beam at the delay. In `"FF"` it is
 55° on the pulse-shaping choppers, 175° on `mc1` and 185° on `mc2`, the angle to their wide

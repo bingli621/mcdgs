@@ -99,8 +99,8 @@ Apart from `time_of_flight`, its kernels are scippneutron's:
 | Coordinate | Kernel | Computes |
 | ---------- | ------ | -------- |
 | `source_position`, `position` | the names `start_position` and `end_position` | the ends of the flight |
-| `Ltotal` | `total_straight_beam_length_no_scatter` | $L = \lvert \texttt{position} - \texttt{source\_position} \rvert$ |
-| `tof` | `time_of_flight` | $t = \texttt{time\_at\_end} - \texttt{time\_at\_start}$ |
+| `Ltotal` | `total_straight_beam_length_no_scatter` | $L = \lvert \texttt{position} - \texttt{source_position} \rvert$ |
+| `tof` | `time_of_flight` | $t = \texttt{time_at_end} - \texttt{time_at_start}$ |
 | `incident_wavelength` | `wavelength_from_tof` | $\lambda = h t / (m_n L)$ |
 | `incident_energy` | `incident_energy_from_wavelength` | $E_i = h^2 / (2 m_n \lambda^2)$ |
 
