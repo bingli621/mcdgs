@@ -14,10 +14,12 @@ from mcdgs.core.components import (
     Polygon_ESS_butterfly,
     Progress_bar,
 )
+from mcdgs.instruments.cspec.model import CSPEC
 from mcdgs.instruments.trex.choppers import DISKS
 from mcdgs.instruments.trex.model import TRex
 from mcdgs.samples import aluminum
-from mcdgs.tof import build_tof
+from mcdgs.tof import beamline, build_tof
+from mcdgs.tof.builder import DETECTOR
 
 
 @dataclass(frozen=True)
@@ -101,14 +103,31 @@ def test_monitors_become_detectors_and_the_rest_is_left_out():
         assert model.detectors[name].distance.value == pytest.approx(np.hypot(x, z)), name
 
 
-def test_a_banana_detector_is_its_radius_beyond_the_sample():
+def test_the_banana_detector_is_one_detector_its_radius_beyond_the_sample():
     trex = TRex()
     model = build_tof(trex, neutrons=1000, seed=1)
-    sample = model.detectors["sample_monitor"].distance.value
-    banana = model.detectors["banana_detector"].distance.value
-    # within 1 mm: the banana's center is 0.3 m below the sample, off the straight line
-    assert banana - sample == pytest.approx(trex.banana_detector.curved_radius, abs=1e-3)
-    assert banana > model.detectors["beamstop_monitor"].distance.value
+    sample = {n: d for n, _, d in beamline(trex)[1]}["sample_pos"]
+    detector = model.detectors[DETECTOR].distance.value
+    assert "banana_detector" not in model.detectors
+    assert detector - sample == pytest.approx(trex.banana_detector.curved_radius, abs=1e-12)
+    assert detector > model.detectors["beamstop_monitor"].distance.value
+
+
+def test_the_detector_panels_of_cspec_are_one_detector_as_far_beyond_the_sample():
+    cspec = CSPEC()
+    model = build_tof(cspec, neutrons=1000, seed=1)
+    sample = {n: d for n, _, d in beamline(cspec)[1]}["sample_pos"]
+    assert [n for n in model.detectors if "detector" in n] == [DETECTOR]
+    assert model.detectors[DETECTOR].distance.value - sample == pytest.approx(3.5, abs=1e-12)
+    assert list(model.detectors)[-2:] == ["sample_monitor", DETECTOR]
+
+
+def test_detector_components_at_different_distances_from_the_sample_raise():
+    cspec = CSPEC()
+    panel = cspec.detector_panel_11
+    cspec.detector_panel_11 = replace(panel, at=[2 * v for v in panel.at])
+    with pytest.raises(ValueError, match="detector_panel_11"):
+        build_tof(cspec, neutrons=1000, seed=1)
 
 
 def test_the_model_runs():
@@ -184,7 +203,7 @@ def test_trex_choppers_are_placed_in_beam_order():
         "pre_sample_monitor",
         "beamstop_monitor",
         "sample_monitor",
-        "banana_detector",
+        DETECTOR,
     ]
 
 

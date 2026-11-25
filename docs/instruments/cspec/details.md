@@ -248,7 +248,7 @@ are those of the monitors of T-Rex (FIXME):
 | The others | 0.05 ms | 0.02 Å |
 
 tof takes each monitor as a detector, so the rays of the [time-distance
-diagram](time-distance.md) reach the sample.
+diagram](time-distance.md) reach the sample, and go on to the [detector](#detectors).
 
 ## Detectors
 
@@ -274,9 +274,8 @@ between them, through a gap of ±4.0°, so there is no beamstop. Each panel give
 unchanged, so a neutron goes on to the next one, and reaches the one in its way.
 
 The events of each panel are read per pixel with `read_pixels` (see
-[Detector pixels](../../how-to/read-the-output.md#detector-pixels)). The tof model takes the
-straight distance from the source to each panel, some of them before the sample, so the
-[time-distance diagram](time-distance.md) leaves the panels out.
+[Detector pixels](../../how-to/read-the-output.md#detector-pixels)). In the tof model, the twelve
+panels are one detector, `detector`, 3.5 m beyond the sample, where their neutrons arrive.
 
 ## Not in CSPEC_nl-specs_1.E.xlsx { #not-in-the-sheet }
 

@@ -1,7 +1,7 @@
 # Time-distance diagram
 
 The time-distance diagram follows neutrons of T-Rex from the moderator, through the
-[choppers](choppers.md), to the sample. Time runs across and distance from the source up. Each
+[choppers](choppers.md), to the sample and the detector. Time runs across and distance from the source up. Each
 neutron is a straight line whose slope is its speed, so the slow, long wavelengths lean further
 to the right. It comes from a [tof](../../how-to/simulate-the-choppers-with-tof.md) run. tof
 follows each neutron through the choppers, but takes the guides, the bender and the slits as
@@ -37,11 +37,11 @@ choppers follow from the control parameters, as [Choppers](choppers.md) explains
 
 ![The time-distance diagram of T-Rex, two pulses at the default parameters](figures/time-distance/trex_time_distance.png)
 
-- **Colored lines** are neutrons that reach the banana detector, colored by wavelength.
+- **Colored lines** are neutrons that reach the detector, the banana, colored by wavelength.
 - **Gray lines** are neutrons that a chopper stops. Each one ends at the chopper that stops it.
 - **Black lines** are the choppers. Each gap in a line is a time when that chopper is open.
 - **Thick gray lines** are the pulse at the moderator, 0 to about 6 ms, and the detectors: `beam_monitor` near the bottom, and `pre_sample_monitor`,
-  `sample_monitor`, `beamstop_monitor` and `banana_detector` within 3.3 m of each other at
+  `sample_monitor`, `beamstop_monitor` and `detector` within 3.3 m of each other at
   the top, where their labels overlap.
 
 The second pulse starts 1/14 s, about 71 ms, after the first. Each pulse goes through the

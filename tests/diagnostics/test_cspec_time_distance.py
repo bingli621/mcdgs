@@ -2,23 +2,22 @@ import matplotlib
 
 matplotlib.use("Agg")
 
-import pytest
-
 from mcdgs.diagnostics.cspec.time_distance import define_instrument, main
 from mcdgs.instruments import CSPEC
-from mcdgs.tof import beamline
+from mcdgs.tof import build_tof
+from mcdgs.tof.builder import DETECTOR
 
 
-def test_the_sample_monitor_is_at_the_sample_position_after_the_choppers():
-    cspec = define_instrument()
-    assert list(cspec.components)[-2:] == ["sample_pos", "sample_monitor"]
-    assert cspec.positions()["sample_monitor"] == pytest.approx(CSPEC().positions()["sample_pos"])
+def test_the_instrument_is_cspec_at_its_defaults():
+    assert define_instrument() == CSPEC()
 
 
-def test_tof_reaches_the_sample_monitor_after_the_last_chopper():
-    _, after_source = beamline(define_instrument())
-    distances = {name: distance for name, _, distance in after_source}
-    assert distances["sample_monitor"] == max(distances.values()) > distances["mc2"]
+def test_tof_reaches_the_detector_beyond_the_sample_monitor_after_the_last_chopper():
+    model = build_tof(define_instrument(), neutrons=1000, seed=1)
+    distances = {name: d.distance.value for name, d in model.detectors.items()}
+    last_chopper = model.choppers["mc2"].distance.value
+    assert distances[DETECTOR] == max(distances.values()) > distances["sample_monitor"]
+    assert distances["sample_monitor"] > last_chopper
 
 
 def test_main_draws_the_diagram_and_lists_its_parameters(tmp_path):

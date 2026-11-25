@@ -1,8 +1,6 @@
 """The time-distance diagram of CSPEC, from its tof model.
 
-tof takes the sample monitor of CSPEC as a detector, so the rays reach the sample. The detector
-panels are left out: tof would put each at its straight distance from the source, some before the
-sample.
+tof takes the sample monitor of CSPEC as a detector, so the rays reach the sample.
 
 :func:`main` writes, at the default control parameters:
 
@@ -20,7 +18,6 @@ from pathlib import Path
 
 from mcdgs.diagnostics import cli
 from mcdgs.diagnostics.time_distance import parameters_table
-from mcdgs.instruments.cspec.detectors import detector_panels
 from mcdgs.instruments.cspec.model import CSPEC, Params
 from mcdgs.tof import time_distance_diagram
 
@@ -34,12 +31,9 @@ BLOCKED_RAYS = 5000
 
 # --8<-- [start:instrument]
 def define_instrument() -> CSPEC:
-    """Return the instrument of this diagnostic: :class:`.CSPEC` at its defaults, to the sample."""
+    """Return the instrument of this diagnostic: :class:`.CSPEC` at its default parameters."""
     params = Params()  # the default control parameters
-    cspec = CSPEC(params=params)
-    for name in detector_panels():  # after the sample monitor
-        delattr(cspec, name)
-    return cspec
+    return CSPEC(params=params)
 
 
 # --8<-- [end:instrument]

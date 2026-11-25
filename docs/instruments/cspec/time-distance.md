@@ -1,7 +1,7 @@
 # Time-distance diagram
 
 The time-distance diagram follows neutrons of CSPEC from the moderator, through the choppers, to
-the sample. Time runs across and distance from the source up. Each neutron is a straight line
+the sample and the detector. Time runs across and distance from the source up. Each neutron is a straight line
 whose slope is its speed, so the slow, long wavelengths lean further to the right. It comes from
 a [tof](../../how-to/simulate-the-choppers-with-tof.md) run. tof follows each neutron through the
 choppers, but takes the guides, the bender and the slits as letting everything through.
@@ -9,11 +9,9 @@ choppers, but takes the guides, the bender and the slits as letting everything t
 ## The code
 
 tof takes each [monitor](details.md#monitors) of CSPEC as a detector, the last one
-`sample_monitor` at the sample position, so the rays run on from the last chopper, `mc2`, to the
-sample. The
-instrument is CSPEC at its default parameters, without the [detector
-panels](details.md#detectors), which tof would put at their straight distances from the source,
-some before the sample:
+`sample_monitor` at the sample position, and the twelve [detector panels](details.md#detectors)
+as one detector, `detector`, 3.5 m beyond the sample. So the rays run on from the last chopper,
+`mc2`, to the sample and the detector. The instrument is CSPEC at its default parameters:
 
 <!-- fmt:off -->
 ```python
@@ -48,12 +46,13 @@ from the control parameters, as [Chopper timing](details.md#chopper-timing) expl
 
 ![The time-distance diagram of CSPEC, two pulses at the default parameters](figures/time-distance/cspec_time_distance.png)
 
-- **Colored lines** are neutrons that reach `sample_monitor`, colored by wavelength.
+- **Colored lines** are neutrons that reach the detector, colored by wavelength.
 - **Gray lines** are neutrons that a chopper stops. Each one ends at the chopper that stops it.
 - **Black lines** are the choppers. Each gap in a line is a time when that chopper is open.
 - **Thick gray lines** are the pulse at the moderator and the monitors: `source_monitor` and
   `beam_monitor` near the bottom, `bwfa_monitor` at 28 m, `psc_monitor` at 106 m, and
-  `mc_monitor` and `sample_monitor` at 158.5 and 160 m, where their labels overlap.
+  `mc_monitor` and `sample_monitor` at 158.5 and 160 m, where their labels overlap, and
+  `detector` at 163.5 m.
 
 The second pulse starts 1/14 s, about 71 ms, after the first. Each pulse goes through the
 choppers in the same way:

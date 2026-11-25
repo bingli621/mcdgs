@@ -198,3 +198,13 @@ class Monitor_nD(Component):
         if not curved:
             return None
         return self.radius or (self.xwidth / 2 if self.xwidth else self.zdepth / 2)
+
+    @property
+    def lists_pixels(self) -> bool:
+        """Whether it lists each neutron with its pixel, as a detector does.
+
+        True if ``options`` records ``pixel`` in a ``list``, which
+        :func:`mcdgs.mcstas.reader.read_pixels` needs; a monitor that histograms is False.
+        """
+        options = self.options or ""
+        return "pixel" in options and "list" in options

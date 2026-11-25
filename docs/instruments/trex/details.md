@@ -238,7 +238,7 @@ beam reaches the banana detector at about ±1° to ±1.5°.
 
 The events of `banana_detector` are read per pixel with `read_pixels` (see
 [Detector pixels](../../how-to/read-the-output.md#detector-pixels)). In the tof model, the
-banana detector is 3 m beyond the sample, where its neutrons arrive.
+banana detector is the detector, `detector`, 3 m beyond the sample, where its neutrons arrive.
 
 ## Chopper timing
 

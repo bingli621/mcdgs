@@ -8,9 +8,14 @@ takes only the components tof understands, by type:
   :class:`tof.Source`, which must be the only source;
 - each ``NXdisk_chopper`` becomes a :class:`tof.Chopper`, through scippneutron's
   :class:`DiskChopper` (:func:`disk_chopper`), as both follow NeXus;
-- each ``Monitor_nD`` becomes a :class:`tof.Detector`, which records the neutrons reaching it.
-  An instrument without one gives a model without detectors. A curved one, such as a banana,
-  is centered on the sample: its detector is its radius further on.
+- each ``Monitor_nD`` that histograms, a monitor, becomes a :class:`tof.Detector`, which records
+  the neutrons reaching it. A curved one is centered on its position: its detector is its radius
+  further on.
+- the ``Monitor_nD`` that list pixels, the detector, whether one banana or several panels,
+  become one :class:`tof.Detector`, ``DETECTOR``, where the first of them is in beam order. It is
+  as far beyond the sample as they are (:func:`sample_to_detector`), which they must agree on.
+
+An instrument without a ``Monitor_nD`` gives a model without detectors.
 
 Every other component, such as the optics, the markers or a sample, is left out.
 
@@ -41,6 +46,31 @@ from mcdgs.core.components import Component, ESS_butterfly, Monitor_nD, NXdisk_c
 
 # tof's pulse of the ESS moderator by beam port, ``sector`` and ``beamline``; else ``"ess"``
 TOF_SOURCES = {"W7": "ess-trex", "W3": "ess-cspec"}
+DETECTOR = "detector"  # the one tof detector of the Monitor_nD that list pixels
+DETECTOR_TOLERANCE = 1e-6  # m, how far apart the components of the detector may put it
+
+
+def sample_to_detector(component: Monitor_nD, params: Mapping[str, float]) -> float:
+    """Return how far a detector component is from the sample, the component it is relative to.
+
+    A curved one, such as a banana, is centered on the sample, or on the vertical through it:
+    its radius. A flat one, such as a panel facing the sample: the distance of its center.
+
+    Parameters
+    ----------
+    component:
+        The detector component, relative to the sample.
+    params:
+        Instrument parameter values, for an ``at`` given as expressions.
+
+    Returns
+    -------
+    :
+        The distance in m.
+    """
+    if component.curved_radius is not None:
+        return component.curved_radius
+    return float(np.linalg.norm([float(evaluate(v, params)) for v in component.at]))
 
 
 def disk_chopper(
@@ -158,16 +188,18 @@ def build_tof(
     Returns
     -------
     :
-        The tof model: the source, then the choppers and the detectors (one per ``Monitor_nD``)
-        in beam order, each named after its component.
+        The tof model: the source, then the choppers and the detectors in beam order: one per
+        monitor, named after it, and ``DETECTOR`` for every ``Monitor_nD`` that lists pixels.
 
     Raises
     ------
     ValueError
         If the instrument has no ``ESS_butterfly`` or ``Polygon_ESS_butterfly``, or more than
-        one; or if a chopper is parked.
+        one; if a chopper is parked; or if the components of the detector are not all as far
+        from the sample, or not relative to a component after the source.
     """
     source, after_source = beamline(instrument)
+    distances = {name: distance for name, _, distance in after_source}
     params = instrument.numeric_instr_params()
     # the pulse of the moderator's beam port, else tof's standard ESS pulse, where tof sampled
     # it. cold_frac, yheight, the focusing and the performance factors are not used
@@ -182,13 +214,29 @@ def build_tof(
             seed=seed,
         )  # type: ignore
     )
+    detector: float | None = None  # where the detector is, once its first component is found
     for name, component, distance in after_source:
         match component:
             case NXdisk_chopper():
                 # tof's conversion turns the signed frequency into a direction, and the phase
                 disk = disk_chopper(component, distance, params)
                 model.add(tof.Chopper.from_diskchopper(disk, name=name))
-            case Monitor_nD():  # a curved one is centered on the sample: its radius further on
+            case Monitor_nD() if component.lists_pixels:  # part of the detector
+                if component.relative not in distances:
+                    raise ValueError(
+                        f"{name}: the detector must be relative to the sample, after the source, "
+                        f"not to {component.relative!r}"
+                    )
+                reached = distances[component.relative] + sample_to_detector(component, params)
+                if detector is None:
+                    detector = reached
+                    model.add(tof.Detector(distance=sc.scalar(reached, unit="m"), name=DETECTOR))  # type: ignore
+                elif abs(reached - detector) > DETECTOR_TOLERANCE:
+                    raise ValueError(
+                        f"{name}: {reached:g} m from the source, the detector {detector:g} m: tof "
+                        "has one detector, all of it as far from the sample"
+                    )
+            case Monitor_nD():  # a curved one is centered on its position: its radius further on
                 reached = distance + (component.curved_radius or 0)
                 model.add(tof.Detector(distance=sc.scalar(reached, unit="m"), name=name))  # type: ignore
             case _:
