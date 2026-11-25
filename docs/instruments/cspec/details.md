@@ -21,14 +21,14 @@ component with its position. The code is in
 | Parameter | Default | Meaning |
 | --------- | ------- | ------- |
 | `t0_offset` | 1.7 ms | Time from the start of the pulse at which the neutrons the choppers are phased to leave the moderator. |
-| `lambda0` | 3.0 Å | Central wavelength. |
-| `nu_mc` | 224 Hz | Frequency of the monochromatic choppers. |
+| `lambda0` | 3.0 Å | Central wavelength. `None` is the white beam, 0.1 to 10 Å, with `nu_mc` 0 only: turning choppers need a wavelength to be phased to. |
+| `nu_mc` | 224 Hz | Frequency of the monochromatic choppers. 0 parks every chopper on its first slit, the bandwidth choppers too (see [Chopper timing](#chopper-timing)). |
 | `n` | 1 | The RRM chopper turns at `nu_mc / n`. |
 | `bw3_delay` | 0.0 s | Delay added to that of the bandwidth chopper `bw3`. |
 | `omega` | 0.0 deg | Goniometer rotation about +y. |
 
 `omega` reaches McStas as it is. `lambda0`, `nu_mc`, `n`, `t0_offset` and `bw3_delay` reach it
-through the frequency and delay of each chopper.
+through the frequency, delay and park angle of each chopper.
 
 ## Instrument layout
 
@@ -177,8 +177,8 @@ side.
 
 ## Chopper timing
 
-Each chopper takes its frequency and delay from the McStas instrument parameters `nu_<name>` and
-`delay_<name>`, computed from `lambda0`, `nu_mc`, `n`, `t0_offset` and `bw3_delay`, as in drcspec:
+Each chopper takes its frequency, delay and park angle from the McStas instrument parameters
+`nu_<name>`, `delay_<name>` and `park_<name>`, computed from `lambda0`, `nu_mc`, `n`, `t0_offset` and `bw3_delay`, as in drcspec:
 
 | Choppers | Frequency |
 | -------- | --------- |
@@ -200,6 +200,12 @@ $$
 with $L$ the flight path, $\nu$ the signed frequency and phase the angle from the center of the first
 slit to the beam, 180° for a disk with its axle above and 0° below. `bw3` turns `bw3_delay`
 later still.
+
+`nu_mc` 0 parks every chopper, the bandwidth choppers too: `nu_<name>` and `delay_<name>` are 0,
+and `park_<name>` stands the disk still with its first slit centered on the beam, turned by the
+same phase, 180° or 0°. While a disk turns, `park_<name>` is 0, and McStas does not read it. With
+the choppers parked, `lambda0` may be `None`, the white beam, and `bw3_delay` is not used. The
+masked source needs the choppers turning, so it is refused with `nu_mc` 0.
 
 The slit edges of each disk reach McStas as an array of their own, declared in the `.instr`
 file as `<name>_slit_edges`. See the [McStas instrument file](instr-file.md).

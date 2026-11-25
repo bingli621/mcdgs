@@ -1,9 +1,10 @@
 """The choppers of CSPEC and their timing.
 
-:func:`chopper` creates one disk by name. The disks take their frequency ``nu`` and their delay
-from the instrument parameters ``nu_<name>`` and ``delay_<name>``, which :func:`chopper_timings`
-computes from the central wavelength and the frequencies of the monochromatic and the RRM
-choppers.
+:func:`chopper` creates one disk by name. The disks take their frequency ``nu``, their delay and
+their ``park_angle`` from the instrument parameters ``nu_<name>``, ``delay_<name>`` and
+``park_<name>``, which :func:`chopper_timings` computes from the central wavelength and the
+frequencies of the monochromatic and the RRM choppers. A frequency of 0 of the monochromatic
+choppers parks every disk on its first slit.
 
 CSPEC_nl-specs_1.E.xlsx gives where the first disk of the pulse-shaping and of the monochromatic
 choppers turns, and where each bandwidth chopper turns: the distance from the start of its gap,
@@ -24,6 +25,7 @@ the sheet, plus the disk's place in the gap.
 """
 
 from dataclasses import dataclass
+from typing import NamedTuple
 
 from mcdgs.core import speed_from_wavelength
 from mcdgs.core.components import Guide_gravity, NXdisk_chopper
@@ -161,14 +163,33 @@ DISKS: dict[str, CSPECDisk] = {
 }
 
 
+class ChopperTiming(NamedTuple):
+    """The timing of one chopper, as the instrument parameters of its ``NXdisk_chopper``.
+
+    Attributes
+    ----------
+    nu:
+        Signed rotation frequency, in Hz. 0 parks the disk.
+    delay:
+        Time at which the disk's zero mark is on the beam, in s. 0 while parked.
+    park_angle:
+        Where the zero mark stands while parked, in deg: on the first slit. 0 while turning,
+        where ``NXdisk_chopper`` does not read it.
+    """
+
+    nu: float
+    delay: float
+    park_angle: float
+
+
 def chopper_timings(
-    lambda0: float,
+    lambda0: float | None,
     nu_mc: float,
     n: int,
     source_frequency: float,
     t0_offset: float,
     bw3_delay: float = 0.0,
-) -> dict[str, tuple[float, float]]:
+) -> dict[str, ChopperTiming]:
     """Compute the timing of every chopper.
 
     The bandwidth choppers turn at the source frequency, the monochromatic choppers at ``nu_mc``,
@@ -177,12 +198,16 @@ def chopper_timings(
     disk has its first slit centered on the beam when a neutron of wavelength ``lambda0``,
     leaving at ``t0_offset``, reaches it. ``bw3`` turns ``bw3_delay`` later still.
 
+    ``nu_mc`` 0 parks every disk, the bandwidth choppers too: each stands still with its first
+    slit on the beam, its zero mark turned by :meth:`CSPECDisk.phase`. Nothing is then phased to
+    a wavelength, so ``lambda0`` may be ``None``, and ``bw3_delay`` is not used.
+
     Parameters
     ----------
     lambda0:
-        Central wavelength, in Å.
+        Central wavelength, in Å. ``None`` only with ``nu_mc`` 0.
     nu_mc:
-        Frequency of the monochromatic choppers, in Hz.
+        Frequency of the monochromatic choppers, in Hz. 0 parks every chopper.
     n:
         The RRM chopper turns at ``nu_mc / n``.
     source_frequency:
@@ -196,9 +221,27 @@ def chopper_timings(
     Returns
     -------
     :
-        Signed rotation frequency in Hz, and time at which the disk's zero mark is on the beam
-        in s, by chopper name, in beam order.
+        The timing of each chopper by name, in beam order.
+
+    Raises
+    ------
+    ValueError
+        If ``nu_mc`` is negative, or if ``lambda0`` is ``None`` while ``nu_mc`` is not 0.
+
+    Examples
+    --------
+    >>> chopper_timings(None, 0.0, 1, 14, 0.0017)["bw1"]
+    ChopperTiming(nu=0.0, delay=0.0, park_angle=180.0)
     """
+    if nu_mc < 0:
+        raise ValueError(f"nu_mc {nu_mc} is negative")
+    if nu_mc == 0:
+        return {
+            name: ChopperTiming(nu=0.0, delay=0.0, park_angle=disk.phase())
+            for name, disk in DISKS.items()
+        }
+    if lambda0 is None:
+        raise ValueError("lambda0 is None: the choppers have no wavelength to be phased to")
     nu_psc = PSC_FREQUENCY_RATIO * nu_mc
     nu = {
         "bw1": source_frequency,
@@ -215,9 +258,9 @@ def chopper_timings(
     for name, disk in DISKS.items():
         arrival = t0_offset + disk.distance / speed
         # the zero mark passes the beam earlier, for the disk to have turned to the slit
-        timings[name] = (nu[name], arrival - disk.phase() / (360 * nu[name]))
-    nu_bw3, delay_bw3 = timings["bw3"]
-    timings["bw3"] = (nu_bw3, delay_bw3 + bw3_delay)
+        delay = arrival - disk.phase() / (360 * nu[name])
+        timings[name] = ChopperTiming(nu=nu[name], delay=delay, park_angle=0.0)
+    timings["bw3"] = timings["bw3"]._replace(delay=timings["bw3"].delay + bw3_delay)
     return timings
 
 
@@ -235,9 +278,9 @@ def chopper(name: str, upstream_guide: Guide_gravity | None) -> tuple[NXdisk_cho
     Returns
     -------
     :
-        A new chopper, relative to the arm of its gap, with its frequency and delay given by
-        the instrument parameters ``nu_<name>`` and ``delay_<name>``, and a beam window of
-        ``upstream_guide.w2``, or 0 without a guide; and the disk's flight path from the
+        A new chopper, relative to the arm of its gap, with its frequency, delay and park
+        angle given by the instrument parameters ``nu_<name>``, ``delay_<name>`` and
+        ``park_<name>``, and a beam window of ``upstream_guide.w2``, or 0 without a guide; and the disk's flight path from the
         moderator, in m, which the chopper does not know.
     """
     disk = DISKS[name]
@@ -248,6 +291,7 @@ def chopper(name: str, upstream_guide: Guide_gravity | None) -> tuple[NXdisk_cho
         xwidth=0.0 if upstream_guide is None else float(upstream_guide.w2),
         nu=f"nu_{name}",
         delay=f"delay_{name}",
+        park_angle=f"park_{name}",
         beam_angle=disk.beam_angle,
         zero_angle=disk.zero_angle,
         abs_out=0,

@@ -4,7 +4,7 @@ import pytest
 
 from mcdgs.core import speed_from_wavelength
 from mcdgs.core.components import NXdisk_chopper, Polygon_ESS_butterfly
-from mcdgs.core.components.source import L_MIN
+from mcdgs.core.components.source import L_MAX, L_MIN
 from mcdgs.instruments import CSPEC
 from mcdgs.instruments.cspec import monitors
 from mcdgs.instruments.cspec.choppers import DISKS, chopper_timings
@@ -150,10 +150,10 @@ def test_the_frequencies_are_those_of_drcspec():
 @pytest.mark.parametrize("name", DISKS)
 def test_the_first_slit_is_on_the_beam_when_the_central_wavelength_arrives(name):
     lambda0, t0_offset = 4.0, 0.002
-    nu, delay = chopper_timings(lambda0, 168.0, 3, 14, t0_offset)[name]
+    timing = chopper_timings(lambda0, 168.0, 3, 14, t0_offset)[name]
     arrival = t0_offset + DISKS[name].distance / speed_from_wavelength(lambda0)
     # the angle the disk has turned past its zero mark at the arrival, in the sense of nu
-    turned = 360 * nu * (arrival - delay)
+    turned = 360 * timing.nu * (arrival - timing.delay)
     assert turned % 360 == pytest.approx(DISKS[name].phase() % 360)
 
 
@@ -175,25 +175,64 @@ def test_the_rrm_chopper_is_halfway_from_the_start_of_its_gap_to_mc1():
 def test_each_chopper_takes_its_timing_from_the_instrument_parameters():
     cspec = CSPEC()
     values = {p.name: p.value for p in cspec.instr_params}
-    for name, (nu, delay) in chopper_timings(3.0, 224.0, 1, 14, 0.0017).items():
+    for name, timing in chopper_timings(3.0, 224.0, 1, 14, 0.0017).items():
         assert cspec.components[name].nu == f"nu_{name}"
-        assert values[f"nu_{name}"] == nu
-        assert values[f"delay_{name}"] == delay
+        assert cspec.components[name].park_angle == f"park_{name}"
+        assert values[f"nu_{name}"] == timing.nu
+        assert values[f"delay_{name}"] == timing.delay
+        assert values[f"park_{name}"] == timing.park_angle
 
 
 def test_bw3_delay_delays_bw3_alone_by_as_much():
     timings = chopper_timings(3.0, 224.0, 1, 14, 0.0017)
     cspec = CSPEC(params=Params(bw3_delay=0.0025))
     values = {p.name: p.value for p in cspec.instr_params}
-    for name, (_, delay) in timings.items():
+    for name, timing in timings.items():
         shift = 0.0025 if name == "bw3" else 0.0
-        assert values[f"delay_{name}"] == pytest.approx(delay + shift, rel=1e-12)
+        assert values[f"delay_{name}"] == pytest.approx(timing.delay + shift, rel=1e-12)
 
 
-def test_without_lambda0_the_choppers_have_no_timing():
+def test_without_lambda0_turning_choppers_have_no_timing():
     cspec = CSPEC(params=Params(lambda0=None))
     with pytest.raises(ValueError, match="lambda0"):
         _ = cspec.instr_params
+
+
+def test_nu_mc_0_parks_every_chopper_on_its_first_slit():
+    timings = chopper_timings(None, 0.0, 1, 14, 0.0017, bw3_delay=0.0025)
+    for name, timing in timings.items():
+        assert (timing.nu, timing.delay) == (0, 0), name
+        # as NXdisk_chopper: parked, the disk angle on the beam is beam_angle minus park_angle
+        on_beam = DISKS[name].beam_angle - timing.park_angle
+        center, _ = DISKS[name].slits[0]
+        assert (on_beam - center) % 360 == pytest.approx(0), name
+
+
+def test_turning_choppers_have_no_park_angle():
+    timings = chopper_timings(3.0, 224.0, 1, 14, 0.0017)
+    assert {timing.park_angle for timing in timings.values()} == {0}
+
+
+def test_a_negative_nu_mc_is_refused():
+    with pytest.raises(ValueError, match="negative"):
+        chopper_timings(3.0, -224.0, 1, 14, 0.0017)
+
+
+def test_the_white_beam_with_the_choppers_parked_runs():
+    cspec = CSPEC(params=Params(lambda0=None, nu_mc=0.0))
+    values = {p.name: p.value for p in cspec.instr_params}
+    assert {values[f"nu_{name}"] for name in DISKS} == {0}
+    assert (cspec.source.Lmin, cspec.source.Lmax) == (L_MIN, L_MAX)
+    assert cspec.running_conditions() == "CSPEC · white beam · choppers parked"
+
+
+def test_the_masked_source_needs_the_choppers_turning():
+    with pytest.raises(ValueError, match="masked source"):
+        CSPEC(params=Params(nu_mc=0.0), source_masked=True)
+    cspec = CSPEC(source_masked=True)
+    with pytest.raises(ValueError, match="masked source"):
+        cspec.update_params(nu_mc=0.0)
+    assert cspec.params.nu_mc == 224.0  # left as it was
 
 
 def test_a_masked_source_is_masked_by_the_eight_choppers():

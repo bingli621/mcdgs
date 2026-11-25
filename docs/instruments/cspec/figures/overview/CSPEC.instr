@@ -15,7 +15,7 @@
 * 
 * %Identification
 * Written by: Python McStas Instrument Generator
-* Date: 15:24:50 on November 25, 2026
+* Date: 16:13:09 on November 25, 2026
 * Origin: ESS DMSC
 * %INSTRUMENT_SITE: Generated_instruments
 * 
@@ -29,20 +29,28 @@
 * omega: [unit] rotation of the goniometer about +Y
 * nu_bw1: [unit] rotation frequency of chopper bw1
 * delay_bw1: [unit] delay of chopper bw1
+* park_bw1: [unit] park angle of chopper bw1
 * nu_bw2: [unit] rotation frequency of chopper bw2
 * delay_bw2: [unit] delay of chopper bw2
+* park_bw2: [unit] park angle of chopper bw2
 * nu_bw3: [unit] rotation frequency of chopper bw3
 * delay_bw3: [unit] delay of chopper bw3
+* park_bw3: [unit] park angle of chopper bw3
 * nu_ps1: [unit] rotation frequency of chopper ps1
 * delay_ps1: [unit] delay of chopper ps1
+* park_ps1: [unit] park angle of chopper ps1
 * nu_ps2: [unit] rotation frequency of chopper ps2
 * delay_ps2: [unit] delay of chopper ps2
+* park_ps2: [unit] park angle of chopper ps2
 * nu_rrm: [unit] rotation frequency of chopper rrm
 * delay_rrm: [unit] delay of chopper rrm
+* park_rrm: [unit] park angle of chopper rrm
 * nu_mc1: [unit] rotation frequency of chopper mc1
 * delay_mc1: [unit] delay of chopper mc1
+* park_mc1: [unit] park angle of chopper mc1
 * nu_mc2: [unit] rotation frequency of chopper mc2
 * delay_mc2: [unit] delay of chopper mc2
+* park_mc2: [unit] park angle of chopper mc2
 * 
 * %Link 
 * 
@@ -53,20 +61,28 @@ DEFINE INSTRUMENT CSPEC (
 omega = 0.0, // rotation of the goniometer about +Y
 nu_bw1 = 14, // rotation frequency of chopper bw1
 delay_bw1 = -0.022689750848650027, // delay of chopper bw1
+park_bw1 = 0.0, // park angle of chopper bw1
 nu_bw2 = 14, // rotation frequency of chopper bw2
 delay_bw2 = -0.01850219986577695, // delay of chopper bw2
+park_bw2 = 0.0, // park angle of chopper bw2
 nu_bw3 = 14, // rotation frequency of chopper bw3
 delay_bw3 = 0.04531678167909277, // delay of chopper bw3
+park_bw3 = 0.0, // park angle of chopper bw3
 nu_ps1 = 112.0, // rotation frequency of chopper ps1
 delay_ps1 = 0.07736803111099774, // delay of chopper ps1
+park_ps1 = 0.0, // park angle of chopper ps1
 nu_ps2 = -112.0, // rotation frequency of chopper ps2
 delay_ps2 = 0.08183990017768984, // delay of chopper ps2
+park_ps2 = 0.0, // park angle of chopper ps2
 nu_rrm = 224.0, // rotation frequency of chopper rrm
 delay_rrm = 0.12188091846898148, // delay of chopper rrm
+park_rrm = 0.0, // park angle of chopper rrm
 nu_mc1 = 224.0, // rotation frequency of chopper mc1
 delay_mc1 = 0.11966705907449036, // delay of chopper mc1
+park_mc1 = 0.0, // park angle of chopper mc1
 nu_mc2 = -224.0, // rotation frequency of chopper mc2
-delay_mc2 = 0.12190678528403961 // delay of chopper mc2
+delay_mc2 = 0.12190678528403961, // delay of chopper mc2
+park_mc2 = 0.0 // park angle of chopper mc2
 )
 
 DECLARE 
@@ -309,7 +325,7 @@ COMPONENT bw1 = NXdisk_chopper(
  slit_edges = bw1_slit_edges, n_edges = 2,
  radius = 0.35, yheight = 0.1,
  xwidth = 0.07, nu = nu_bw1,
- delay = delay_bw1, park_angle = 0,
+ delay = delay_bw1, park_angle = park_bw1,
  beam_angle = 180, zero_angle = 0,
  jitter = 0, abs_out = 0,
  verbose = 1)
@@ -388,7 +404,7 @@ COMPONENT bw2 = NXdisk_chopper(
  slit_edges = bw2_slit_edges, n_edges = 2,
  radius = 0.35, yheight = 0.1,
  xwidth = 0.07, nu = nu_bw2,
- delay = delay_bw2, park_angle = 0,
+ delay = delay_bw2, park_angle = park_bw2,
  beam_angle = 180, zero_angle = 0,
  jitter = 0, abs_out = 0,
  verbose = 1)
@@ -1157,7 +1173,7 @@ COMPONENT bw3 = NXdisk_chopper(
  slit_edges = bw3_slit_edges, n_edges = 2,
  radius = 0.35, yheight = 0.1,
  xwidth = 0.11466, nu = nu_bw3,
- delay = delay_bw3, park_angle = 0,
+ delay = delay_bw3, park_angle = park_bw3,
  beam_angle = 180, zero_angle = 0,
  jitter = 0, abs_out = 0,
  verbose = 1)
@@ -1204,7 +1220,7 @@ COMPONENT ps1 = NXdisk_chopper(
  slit_edges = ps1_slit_edges, n_edges = 6,
  radius = 0.35, yheight = 0.1,
  xwidth = 0.11466, nu = nu_ps1,
- delay = delay_ps1, park_angle = 0,
+ delay = delay_ps1, park_angle = park_ps1,
  beam_angle = 180, zero_angle = 0,
  jitter = 0, abs_out = 0,
  verbose = 1)
@@ -1215,7 +1231,7 @@ COMPONENT ps2 = NXdisk_chopper(
  slit_edges = ps2_slit_edges, n_edges = 6,
  radius = 0.35, yheight = 0.1,
  xwidth = 0.11466, nu = nu_ps2,
- delay = delay_ps2, park_angle = 0,
+ delay = delay_ps2, park_angle = park_ps2,
  beam_angle = 0, zero_angle = 0,
  jitter = 0, abs_out = 0,
  verbose = 1)
@@ -1676,7 +1692,7 @@ COMPONENT rrm = NXdisk_chopper(
  slit_edges = rrm_slit_edges, n_edges = 2,
  radius = 0.35, yheight = 0.1,
  xwidth = 0.02242747203925759, nu = nu_rrm,
- delay = delay_rrm, park_angle = 0,
+ delay = delay_rrm, park_angle = park_rrm,
  beam_angle = 0, zero_angle = 0,
  jitter = 0, abs_out = 0,
  verbose = 1)
@@ -1687,7 +1703,7 @@ COMPONENT mc1 = NXdisk_chopper(
  slit_edges = mc1_slit_edges, n_edges = 2,
  radius = 0.35, yheight = 0.1,
  xwidth = 0.02242747203925759, nu = nu_mc1,
- delay = delay_mc1, park_angle = 0,
+ delay = delay_mc1, park_angle = park_mc1,
  beam_angle = 180, zero_angle = 0,
  jitter = 0, abs_out = 0,
  verbose = 1)
@@ -1698,7 +1714,7 @@ COMPONENT mc2 = NXdisk_chopper(
  slit_edges = mc2_slit_edges, n_edges = 2,
  radius = 0.35, yheight = 0.1,
  xwidth = 0.02242747203925759, nu = nu_mc2,
- delay = delay_mc2, park_angle = 0,
+ delay = delay_mc2, park_angle = park_mc2,
  beam_angle = 0, zero_angle = 0,
  jitter = 0, abs_out = 0,
  verbose = 1)

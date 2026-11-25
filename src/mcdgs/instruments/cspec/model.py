@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any
 
 from mcdgs.core import InstrParam, Instrument, param
 from mcdgs.core.components import Arm, Component, Guide_gravity, NXdisk_chopper, Progress_bar
-from mcdgs.core.components.masked_source import chopper_train
+from mcdgs.core.components.masked_source import Polygon_ESS_butterfly, chopper_train
 
 from .choppers import chopper, chopper_timings
 from .guides.bender import guides_bender
@@ -37,10 +37,10 @@ class Params:
     lambda0:
         Central wavelength, in Å. ``None`` is the white beam: the source simulates the whole
         of ``L_MIN`` to ``L_MAX``. The choppers then have no wavelength to be phased to, so
-        only an instrument that parks them can run.
+        ``nu_mc`` must be 0, which parks them.
     nu_mc:
         Frequency of the monochromatic choppers, in Hz. The pulse-shaping choppers turn at half
-        of it.
+        of it. 0 parks every chopper, the bandwidth choppers too, on its first slit.
     n:
         The RRM chopper turns at ``nu_mc / n``.
     bw3_delay:
@@ -63,6 +63,9 @@ class Params:
 
 DEFAULT_PARAMS = Params()  # frozen, so one shared default is safe
 
+# the masked source emits where the choppers open as they turn: parked, they do not
+MASKED_PARKED = "nu_mc 0 parks the choppers, and the masked source needs them turning"
+
 
 class CSPEC(Instrument):
     """The CSPEC instrument.
@@ -77,12 +80,14 @@ class CSPEC(Instrument):
         Control parameters.
     source_masked:
         True uses :func:`.sources.masked_source`, the source masked by the eight choppers, for
-        many more neutrons through them per ray; False uses :func:`.sources.source`.
+        many more neutrons through them per ray; False uses :func:`.sources.source`. Not with
+        ``nu_mc`` 0: the masked source needs the choppers turning.
 
     Raises
     ------
     ValueError
-        If ``sample`` is relative to a component other than ``sample_pos``.
+        If ``sample`` is relative to a component other than ``sample_pos``, or if
+        ``source_masked`` is True while ``nu_mc`` is 0.
     """
 
     params_class = Params
@@ -102,6 +107,8 @@ class CSPEC(Instrument):
     ) -> None:
         if sample is not None and sample.relative not in (None, "sample_pos"):
             raise ValueError(f"the sample is relative to {sample.relative!r}, not to 'sample_pos'")
+        if source_masked and params.nu_mc == 0:
+            raise ValueError(MASKED_PARKED)
         super().__init__(params)
 
         to_gap_bbg, to_bwc1, to_bwc2, to_gap_bwfa, to_end_of_bender = guides_bender()
@@ -167,8 +174,9 @@ class CSPEC(Instrument):
         """Change control parameters.
 
         A new ``lambda0`` also gives the source the band of :func:`.sources.wavelength_band`, and
-        creates the time and wavelength monitors again with it, all but the source monitor. The source keeps everything else, so a masked
-        source stays masked, also in an instrument a parameters file made.
+        creates the time and wavelength monitors again with it, all but the source monitor. The
+        source keeps everything else, so a masked source stays masked, also in an instrument a
+        parameters file made.
 
         Parameters
         ----------
@@ -179,7 +187,12 @@ class CSPEC(Instrument):
         ------
         TypeError
             If a name is not a field of :class:`Params`.
+        ValueError
+            If ``nu_mc`` becomes 0 with the masked source; the parameters are then left as they
+            were.
         """
+        if values.get("nu_mc") == 0 and isinstance(self.source, Polygon_ESS_butterfly):
+            raise ValueError(MASKED_PARKED)
         super().update_params(**values)
         if "lambda0" in values:
             band = wavelength_band(self.params.lambda0)
@@ -193,15 +206,21 @@ class CSPEC(Instrument):
     def running_conditions(self) -> str:
         """Describe the settings of CSPEC in one line, such as the title of a figure.
 
-        The name and ``lambda0``, then the signed frequencies of the pulse-shaping (PS), RRM and
-        monochromatic (MC) choppers, in beam order.
+        The name and ``lambda0`` or the white beam, then the signed frequencies of the
+        pulse-shaping (PS), RRM and monochromatic (MC) choppers, in beam order, or that the
+        choppers are parked, with ``nu_mc`` 0.
 
         Returns
         -------
         :
-            Such as ``"CSPEC · λ0 = 3 Å · PS 7/-7 Hz · RRM 14 Hz · MC 14/-14 Hz"``.
+            Such as ``"CSPEC · λ0 = 3 Å · PS 7/-7 Hz · RRM 14 Hz · MC 14/-14 Hz"``, or
+            ``"CSPEC · white beam · choppers parked"``.
         """
-        parts = [self.name, f"λ0 = {self.params.lambda0:g} Å"]
+        lambda0 = self.params.lambda0
+        parts = [self.name, "white beam" if lambda0 is None else f"λ0 = {lambda0:g} Å"]
+        if self.params.nu_mc == 0:
+            parts.append("choppers parked")
+            return " · ".join(parts)
         for group in ("ps", "rrm", "mc"):
             frequencies = "/".join(f"{nu:g}" for nu in self.chopper_frequencies(group).values())
             parts.append(f"{group.upper()} {frequencies} Hz")
@@ -222,21 +241,23 @@ class CSPEC(Instrument):
     def _chopper_instr_params(self) -> list[InstrParam]:
         """Return the McStas instrument parameters of the choppers.
 
-        The frequency and delay of each chopper, computed from ``lambda0``, ``nu_mc``, ``n``,
-        ``t0_offset`` and ``bw3_delay`` with :func:`.chopper_timings`.
+        The frequency, delay and park angle of each chopper, computed from ``lambda0``,
+        ``nu_mc``, ``n``, ``t0_offset`` and ``bw3_delay`` with :func:`.chopper_timings`.
 
         Returns
         -------
         :
-            ``nu_<name>`` and ``delay_<name>`` of each chopper, in beam order.
+            ``nu_<name>``, ``delay_<name>`` and ``park_<name>`` of each chopper, in beam order.
 
         Raises
         ------
         ValueError
-            If ``lambda0`` is ``None``: the choppers have no wavelength to be phased to.
+            If ``lambda0`` is ``None`` while ``nu_mc`` is not 0: turning choppers have no
+            wavelength to be phased to; or if ``nu_mc`` is 0 with the masked source, as an
+            instrument read from a file can have.
         """
-        if self.params.lambda0 is None:
-            raise ValueError("lambda0 is None: the choppers have no wavelength to be phased to")
+        if self.params.nu_mc == 0 and isinstance(self.source, Polygon_ESS_butterfly):
+            raise ValueError(MASKED_PARKED)
         timings = chopper_timings(
             self.params.lambda0,
             self.params.nu_mc,
@@ -247,9 +268,12 @@ class CSPEC(Instrument):
         )
         return [
             p
-            for name, (nu, delay) in timings.items()
+            for name, timing in timings.items()
             for p in (
-                InstrParam(f"nu_{name}", nu, "Hz", f"rotation frequency of chopper {name}"),
-                InstrParam(f"delay_{name}", delay, "s", f"delay of chopper {name}"),
+                InstrParam(f"nu_{name}", timing.nu, "Hz", f"rotation frequency of chopper {name}"),
+                InstrParam(f"delay_{name}", timing.delay, "s", f"delay of chopper {name}"),
+                InstrParam(
+                    f"park_{name}", timing.park_angle, "deg", f"park angle of chopper {name}"
+                ),
             )
         ]
