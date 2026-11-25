@@ -27,6 +27,6 @@ instrument file.
 
 ![The legend of show_diagram(): the colors of the kinds of McStas component, and the blue and red arrows](figures/overview/cspec_diagram_legend.png)
 
-??? abstract "show_diagram()"
+???+ abstract "show_diagram()"
 
     ![McStasScript's diagram of the components of CSPEC and what each is placed relative to](figures/overview/cspec_diagram.png)
