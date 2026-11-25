@@ -2,9 +2,9 @@
 
 :class:`TRexToSample` is :class:`.TRex` up to its sample monitor, at ``sample_pos``: without a
 sample, and without the beamstop and the banana detector after it. Its control parameters are
-those of :class:`.TRex`. After the sample monitor it has :func:`sample_xy_monitor`, in the same
+those of :class:`.TRex`. After the sample monitor it has :func:`.sample_xy_monitor`, in the same
 place, which records where the neutrons cross the sample position: one map of x against y.
-:func:`read_xy_map` reads that map from the McStas run and :func:`plot_xy_map` draws it, with
+:func:`.read_xy_map` reads that map from the McStas run and :func:`.plot_xy_map` draws it, with
 its profile along each axis. tof has no x and y, so the map is that of McStas alone.
 
 tof has no guides: every neutron its choppers let through reaches the sample. As in
@@ -18,13 +18,13 @@ The choppers cut the beam into sub-pulses, a bin or two wide and about 4 ms apar
 :func:`.plot_comparison` draws both models twice, with the points of the wavelength spectrum and
 the time profile joined by lines: first all on linear scales, then all on log scales, the maps
 ``LOG_DECADES`` deep, so that the weak bins show too. :func:`.find_patches` finds the patches of
-each model, the sub-pulses and any weak ones between them, and :func:`plot_patches` draws the
+each model, the sub-pulses and any weak ones between them, and :func:`.plot_patches` draws the
 center of mass of each in time and wavelength, with its width as error bars.
 
 :func:`subpulse_windows` reduces the tof run as :mod:`.diagnostics.trex.diffraction` reduces McStas:
 the sub-pulses at the pre-sample and beamstop monitors give their incident energy and the time
 they reach the sample, and :func:`.arrival_window` when the neutrons of each reach the banana
-detector. :func:`windows_table` lists them.
+detector. :func:`.windows_table` lists them.
 
 :func:`main` runs both models, reads the intensity of each on the bins of the monitors, scales
 tof at the source monitor, tunes the transmission at the sample monitor and saves the figures,
@@ -36,24 +36,22 @@ Run the module to do it::
 
 from pathlib import Path
 
-import matplotlib.pyplot as plt
-import numpy as np
 import scipp as sc
 import tof
-from matplotlib.artist import Artist
-from matplotlib.colors import LogNorm
-from matplotlib.figure import Figure
-from matplotlib.lines import Line2D
-from matplotlib.patches import Patch
-from scippneutron.conversion import tof as tof_kernels
 
-from mcdgs.core import bins_from_limits
-from mcdgs.core.components import Monitor_nD
 from mcdgs.diagnostics import cli, compare
+from mcdgs.diagnostics.neutrons_on_sample import (
+    elastic_arrival,
+    plot_patches,
+    plot_xy_map,
+    read_xy_map,
+    sample_xy_monitor,
+    windows_table,
+)
 from mcdgs.instruments.trex.detectors import BANANA_RADIUS
 from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
 from mcdgs.instruments.trex.monitors import SAMPLE_MONITOR_HEIGHT, SAMPLE_MONITOR_WIDTH
-from mcdgs.mcstas import Run, Simulation, read_mcstas_maps
+from mcdgs.mcstas import Simulation, read_mcstas_maps
 from mcdgs.reduction.binning import monitor_bins
 from mcdgs.reduction.inelastic import DEFAULT_ENERGY_TRANSFER_RATIO, arrival_window, time_at_sample
 from mcdgs.reduction.patches import find_patches, subpulse_flight
@@ -61,9 +59,6 @@ from mcdgs.tof import build_tof, read_tof_maps
 
 LOG_DECADES = 3  # the log color scale of the maps spans this many decades below the highest bin
 MONITORS = ("pre_sample_monitor", "beamstop_monitor")  # give the incident energy, in beam order
-SAMPLE_XY_MONITOR_RESOLUTION = 0.002  # m, the width of a bin of x and of y, 2 mm
-
-
 
 
 # --8<-- [start:instrument]
@@ -71,7 +66,7 @@ class TRexToSample(TRex):
     """T-Rex from the source to the sample monitor, without a sample.
 
     The beamstop and the banana detector, after the sample, are left out. In their place is
-    :func:`sample_xy_monitor`, at ``sample_pos`` as the sample monitor.
+    :func:`.sample_xy_monitor`, at ``sample_pos`` as the sample monitor.
 
     Parameters
     ----------
@@ -88,7 +83,7 @@ class TRexToSample(TRex):
         # after the sample monitor
         del self.beamstop
         del self.banana_detector
-        self.sample_xy_monitor = sample_xy_monitor()
+        self.sample_xy_monitor = sample_xy_monitor(SAMPLE_MONITOR_WIDTH, SAMPLE_MONITOR_HEIGHT)
 
 
 def define_instrument() -> TRexToSample:
@@ -98,14 +93,6 @@ def define_instrument() -> TRexToSample:
 
 
 # --8<-- [end:instrument]
-
-
-
-
-
-
-
-
 
 
 def subpulse_windows(
@@ -158,14 +145,12 @@ def subpulse_windows(
     )
     pulses.coords.update(window)
     # a neutron that flies through the sample without changing its speed
-    at_sample = pulses.coords["time_at_sample"]
-    flight = tof_kernels.tof_from_wavelength(
-        wavelength=pulses.coords["incident_wavelength"], Ltotal=sc.scalar(BANANA_RADIUS, unit="m")
+    pulses.coords["elastic_arrival"] = elastic_arrival(
+        pulses.coords["time_at_sample"],
+        pulses.coords["incident_wavelength"],
+        sc.scalar(BANANA_RADIUS, unit="m"),
     )
-    pulses.coords["elastic_arrival"] = at_sample + flight.to(unit=at_sample.unit)
     return pulses
-
-
 
 
 def main(
@@ -180,9 +165,9 @@ def main(
     The figures are ``trex_neutrons_on_sample.png``, on linear scales, and
     ``trex_neutrons_on_sample_log.png``, on log scales, from :func:`.plot_comparison`; and
     ``trex_neutrons_on_sample_patches.png``, the center of mass of each patch, from
-    :func:`plot_patches`. ``trex_neutrons_on_sample_windows.txt`` is the table of the arrival
-    windows of tof, from :func:`windows_table`. ``trex_neutrons_on_sample_xy.png`` is the x and y
-    map of McStas at the sample position, from :func:`plot_xy_map`.
+    :func:`.plot_patches`. ``trex_neutrons_on_sample_windows.txt`` is the table of the arrival
+    windows of tof, from :func:`.windows_table`. ``trex_neutrons_on_sample_xy.png`` is the x and y
+    map of McStas at the sample position, from :func:`.plot_xy_map`.
 
     Parameters
     ----------

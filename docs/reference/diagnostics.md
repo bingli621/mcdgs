@@ -20,6 +20,7 @@ documentation. See [Source](../instruments/trex/source.md),
 [Beam monitor](../instruments/cspec/beam-monitor.md),
 [Choppers](../instruments/cspec/choppers.md),
 [Time-distance diagram](../instruments/cspec/time-distance.md),
+[Neutrons on sample](../instruments/cspec/neutrons-on-sample.md),
 [Masked source](../instruments/cspec/masked-source.md) and
 [Incident energy](../instruments/cspec/incident-energy.md) for CSPEC.
 [Run McStasScript's diagnostics](../how-to/run-mcstasscript-diagnostics.md) has the code of
@@ -42,6 +43,8 @@ documentation. See [Source](../instruments/trex/source.md),
 ::: mcdgs.diagnostics.masked_source
 
 ::: mcdgs.diagnostics.incident_energy
+
+::: mcdgs.diagnostics.neutrons_on_sample
 
 ::: mcdgs.diagnostics.trex.overview
 
@@ -90,6 +93,8 @@ documentation. See [Source](../instruments/trex/source.md),
 ::: mcdgs.diagnostics.cspec.choppers
 
 ::: mcdgs.diagnostics.cspec.time_distance
+
+::: mcdgs.diagnostics.cspec.neutrons_on_sample
 
 ::: mcdgs.diagnostics.cspec.masked_source
 

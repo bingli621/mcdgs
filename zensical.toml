@@ -49,6 +49,7 @@ nav = [
     { "Beam monitor" = "instruments/cspec/beam-monitor.md" },
     { "Choppers" = "instruments/cspec/choppers.md" },
     { "Time-distance diagram" = "instruments/cspec/time-distance.md" },
+    { "Neutrons on sample" = "instruments/cspec/neutrons-on-sample.md" },
     { "Masked source" = "instruments/cspec/masked-source.md" },
     { "Incident energy" = "instruments/cspec/incident-energy.md" },
   ] },
