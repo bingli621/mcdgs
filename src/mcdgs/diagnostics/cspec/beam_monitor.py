@@ -27,7 +27,6 @@ of a monitor with ε = C λ. Run the module to do it::
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import numpy as np
 import scipp as sc
@@ -68,16 +67,16 @@ class CSPECBeamMonitor(Instrument):
     params_class = CSPECBeamMonitorParams
     name = "cspec_beam_monitor"  # the McStas instrument name
 
-    if TYPE_CHECKING:  # the guides and the arm of the gap are set by name: see add_components
-
-        def __getattr__(self, name: str) -> Arm | Guide_gravity:
-            """Type the attributes that ``__init__`` sets by name."""
-            ...
-
     origin: Progress_bar
     source: ESS_butterfly
     arm_iscs: Arm
     source_monitor: Monitor_nD
+    guide_01_011: Guide_gravity
+    guide_01_012: Guide_gravity
+    guide_01_02: Guide_gravity
+    guide_01_03: Guide_gravity
+    guide_02_01: Guide_gravity
+    arm_gap_bbg: Arm
     beam_monitor: Monitor_nD
 
     def __init__(self, params: CSPECBeamMonitorParams | None = None) -> None:
