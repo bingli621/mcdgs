@@ -20,7 +20,7 @@ nav = [
     { "Code layout" = "code-layout.md" },
   ] },
   { "T-Rex" = [
-    "instruments/trex/index.md",
+    { "Overview" = "instruments/trex/index.md" },
     { "Technical details" = "instruments/trex/details.md" },
     { "McStas instrument file" = "instruments/trex/instr-file.md" },
     { "Source" = "instruments/trex/source.md" },
@@ -41,7 +41,7 @@ nav = [
     { "Rotation scan" = "instruments/trex/diffraction-scan.md" },
   ] },
   { "CSPEC" = [
-    "instruments/cspec/index.md",
+    { "Overview" = "instruments/cspec/index.md" },
     { "Technical details" = "instruments/cspec/details.md" },
     { "McStas instrument file" = "instruments/cspec/instr-file.md" },
     { "Source" = "instruments/cspec/source.md" },
@@ -81,7 +81,6 @@ features = [
   "content.action.edit",
   "content.code.copy",
   "navigation.footer",
-  "navigation.indexes",
   "navigation.instant",
   "navigation.path",
   "navigation.sections",
