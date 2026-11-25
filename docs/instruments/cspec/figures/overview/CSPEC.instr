@@ -15,7 +15,7 @@
 * 
 * %Identification
 * Written by: Python McStas Instrument Generator
-* Date: 16:13:09 on November 25, 2026
+* Date: 16:27:16 on November 25, 2026
 * Origin: ESS DMSC
 * %INSTRUMENT_SITE: Generated_instruments
 * 
@@ -71,7 +71,7 @@ park_bw3 = 0.0, // park angle of chopper bw3
 nu_ps1 = 112.0, // rotation frequency of chopper ps1
 delay_ps1 = 0.07736803111099774, // delay of chopper ps1
 park_ps1 = 0.0, // park angle of chopper ps1
-nu_ps2 = -112.0, // rotation frequency of chopper ps2
+nu_ps2 = 112.0, // rotation frequency of chopper ps2
 delay_ps2 = 0.08183990017768984, // delay of chopper ps2
 park_ps2 = 0.0, // park angle of chopper ps2
 nu_rrm = 224.0, // rotation frequency of chopper rrm
@@ -80,7 +80,7 @@ park_rrm = 0.0, // park angle of chopper rrm
 nu_mc1 = 224.0, // rotation frequency of chopper mc1
 delay_mc1 = 0.11966705907449036, // delay of chopper mc1
 park_mc1 = 0.0, // park angle of chopper mc1
-nu_mc2 = -224.0, // rotation frequency of chopper mc2
+nu_mc2 = 224.0, // rotation frequency of chopper mc2
 delay_mc2 = 0.12190678528403961, // delay of chopper mc2
 park_mc2 = 0.0 // park angle of chopper mc2
 )

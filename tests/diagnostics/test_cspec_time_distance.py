@@ -29,4 +29,4 @@ def test_main_draws_the_diagram_and_lists_its_parameters(tmp_path):
     assert "| `neutrons`, per pulse | 10,000 |" in table
     assert "| `nu_mc` | 224 Hz |" in table
     assert "| `t0_offset` | 1.7 ms |" in table
-    assert "| `mc2` | 158.511 m | −224 Hz |" in table
+    assert "| `mc2` | 158.511 m | 224 Hz |" in table

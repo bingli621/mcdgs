@@ -194,7 +194,9 @@ def chopper_timings(
 
     The bandwidth choppers turn at the source frequency, the monochromatic choppers at ``nu_mc``,
     the pulse-shaping choppers at ``PSC_FREQUENCY_RATIO`` of it and the RRM chopper at
-    ``nu_mc / n``. Both pairs are counter-rotating: ``ps2`` and ``mc2`` turn the other way. Each
+    ``nu_mc / n``. Both pairs are counter-rotating, their slit edges crossing the beam in opposite
+    directions: ``ps2`` and ``mc2`` turn the same way as ``ps1`` and ``mc1``, from the other side of
+    the beam, their axles below it where those of ``ps1`` and ``mc1`` are above. Each
     disk has its first slit centered on the beam when a neutron of wavelength ``lambda0``,
     leaving at ``t0_offset``, reaches it. ``bw3`` turns ``bw3_delay`` later still.
 
@@ -248,10 +250,10 @@ def chopper_timings(
         "bw2": source_frequency,
         "bw3": source_frequency,
         "ps1": nu_psc,
-        "ps2": -nu_psc,
+        "ps2": nu_psc,  # the same way, from below the beam: counter-rotating with ps1
         "rrm": nu_mc / n,
         "mc1": nu_mc,
-        "mc2": -nu_mc,
+        "mc2": nu_mc,  # the same way, from below the beam: counter-rotating with mc1
     }
     speed = speed_from_wavelength(lambda0)
     timings = {}

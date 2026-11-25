@@ -26,7 +26,7 @@ park_bw3   0           deg     park angle of chopper bw3
 nu_ps1     112         Hz      rotation frequency of chopper ps1
 delay_ps1  0.077368    s       delay of chopper ps1
 park_ps1   0           deg     park angle of chopper ps1
-nu_ps2     -112        Hz      rotation frequency of chopper ps2
+nu_ps2     112         Hz      rotation frequency of chopper ps2
 delay_ps2  0.0818399   s       delay of chopper ps2
 park_ps2   0           deg     park angle of chopper ps2
 nu_rrm     224         Hz      rotation frequency of chopper rrm
@@ -35,7 +35,7 @@ park_rrm   0           deg     park angle of chopper rrm
 nu_mc1     224         Hz      rotation frequency of chopper mc1
 delay_mc1  0.119667    s       delay of chopper mc1
 park_mc1   0           deg     park angle of chopper mc1
-nu_mc2     -224        Hz      rotation frequency of chopper mc2
+nu_mc2     224         Hz      rotation frequency of chopper mc2
 delay_mc2  0.121907    s       delay of chopper mc2
 park_mc2   0           deg     park angle of chopper mc2
 

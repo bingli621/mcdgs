@@ -21,7 +21,7 @@ instr_params:
   nu_ps1: {value: 112.0, unit: Hz, comment: rotation frequency of chopper ps1}
   delay_ps1: {value: 0.07736803111099774, unit: s, comment: delay of chopper ps1}
   park_ps1: {value: 0.0, unit: deg, comment: park angle of chopper ps1}
-  nu_ps2: {value: -112.0, unit: Hz, comment: rotation frequency of chopper ps2}
+  nu_ps2: {value: 112.0, unit: Hz, comment: rotation frequency of chopper ps2}
   delay_ps2: {value: 0.08183990017768984, unit: s, comment: delay of chopper ps2}
   park_ps2: {value: 0.0, unit: deg, comment: park angle of chopper ps2}
   nu_rrm: {value: 224.0, unit: Hz, comment: rotation frequency of chopper rrm}
@@ -30,7 +30,7 @@ instr_params:
   nu_mc1: {value: 224.0, unit: Hz, comment: rotation frequency of chopper mc1}
   delay_mc1: {value: 0.11966705907449036, unit: s, comment: delay of chopper mc1}
   park_mc1: {value: 0.0, unit: deg, comment: park angle of chopper mc1}
-  nu_mc2: {value: -224.0, unit: Hz, comment: rotation frequency of chopper mc2}
+  nu_mc2: {value: 224.0, unit: Hz, comment: rotation frequency of chopper mc2}
   delay_mc2: {value: 0.12190678528403961, unit: s, comment: delay of chopper mc2}
   park_mc2: {value: 0.0, unit: deg, comment: park angle of chopper mc2}
 origin:

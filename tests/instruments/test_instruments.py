@@ -117,3 +117,19 @@ def test_a_new_lambda0_keeps_the_source_masked_or_not(cls, masked):
     instrument.update_params(lambda0=4.0)
     assert isinstance(instrument.source, Polygon_ESS_butterfly) == masked
     assert instrument.source == cls(params=instrument.params, source_masked=masked).source
+
+
+@pytest.mark.parametrize("cls", INSTRUMENT_CLASSES)
+@pytest.mark.parametrize("pair", [("ps1", "ps2"), ("mc1", "mc2")])
+def test_the_disks_of_a_pair_cross_the_beam_in_opposite_directions(cls, pair):
+    # NXdisk_chopper turns every disk in one sense about its spindle, so where the beam crosses
+    # it a slit moves across the beam as sign(nu) cos(beam_angle): to +x with the axle below
+    # (0 deg) and nu positive, to -x with the axle above (180 deg)
+    instrument = cls()
+    values = {p.name: p.value for p in instrument.instr_params}
+    directions = [
+        math.copysign(1, values[f"nu_{name}"])
+        * round(math.cos(math.radians(instrument.components[name].beam_angle)))
+        for name in pair
+    ]
+    assert directions[0] == -directions[1]

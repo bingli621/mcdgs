@@ -183,9 +183,16 @@ Each chopper takes its frequency, delay and park angle from the McStas instrumen
 | Choppers | Frequency |
 | -------- | --------- |
 | `bw1`, `bw2`, `bw3` | 14 Hz, the source frequency |
-| `ps1`, `ps2` | `nu_mc` / 2, counter-rotating: `ps2` turns the other way (FIXME) |
+| `ps1`, `ps2` | `nu_mc` / 2, counter-rotating (FIXME) |
 | `rrm` | `nu_mc` / `n` |
-| `mc1`, `mc2` | `nu_mc`, counter-rotating: `mc2` turns the other way |
+| `mc1`, `mc2` | `nu_mc`, counter-rotating |
+
+Both pairs are counter-rotating: the slit edges of the two disks of a pair cross the beam in
+opposite directions, so a pair opens and closes the beam faster than one disk. The second disks,
+`ps2` and `mc2`, have their axles below the beam, where those of `ps1` and `mc1` are above, so all
+four turn the same way, with a positive frequency: turning the same way from opposite sides, the
+edges of a pair cross the beam in opposite directions, as for the monochromatic choppers of
+[T-Rex](../trex/choppers.md).
 
 Each disk has the center of its first slit on the beam when a neutron of wavelength `lambda0`,
 leaving the moderator at `t0_offset`, reaches it. A disk whose axle is above the beam has the

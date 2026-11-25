@@ -140,10 +140,10 @@ def test_the_frequencies_are_those_of_drcspec():
         "bw2": 14,
         "bw3": 14,
         "ps1": 84,
-        "ps2": -84,
+        "ps2": 84,
         "rrm": 56,
         "mc1": 168,
-        "mc2": -168,
+        "mc2": 168,
     }
 
 
@@ -244,7 +244,7 @@ def test_a_masked_source_is_masked_by_the_eight_choppers():
 def test_the_running_conditions_name_the_frequencies():
     cspec = CSPEC(params=Params(nu_mc=168.0, n=3))
     assert cspec.running_conditions() == (
-        "CSPEC · λ0 = 3 Å · PS 84/-84 Hz · RRM 56 Hz · MC 168/-168 Hz"
+        "CSPEC · λ0 = 3 Å · PS 84/84 Hz · RRM 56 Hz · MC 168/168 Hz"
     )
 
 

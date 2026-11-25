@@ -213,7 +213,7 @@ class CSPEC(Instrument):
         Returns
         -------
         :
-            Such as ``"CSPEC · λ0 = 3 Å · PS 7/-7 Hz · RRM 14 Hz · MC 14/-14 Hz"``, or
+            Such as ``"CSPEC · λ0 = 3 Å · PS 112/112 Hz · RRM 224 Hz · MC 224/224 Hz"``, or
             ``"CSPEC · white beam · choppers parked"``.
         """
         lambda0 = self.params.lambda0
