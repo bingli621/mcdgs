@@ -3,10 +3,11 @@ CSPEC 'CSPEC'
 Params:
 param      value    unit    comment
 ---------  -------  ------  -----------------------------------------------------------
-t0_offset  0        s       time added to choppers shifting to middle of the long pulse
+t0_offset  0.0017   s       time added to choppers shifting to middle of the long pulse
 lambda0    3        Å       central wavelength
-nu_mc      14       Hz      frequency of the monochromatic choppers
+nu_mc      224      Hz      frequency of the monochromatic choppers
 n          1                the RRM chopper turns at nu_mc / n
+bw3_delay  0        s       delay added to that of chopper bw3
 omega      0        deg     goniometer rotation about +Y
 
 Instrument parameters (McStas):
@@ -14,21 +15,21 @@ name       value       unit    comment
 ---------  ----------  ------  -----------------------------------
 omega      0           deg     rotation of the goniometer about +Y
 nu_bw1     14          Hz      rotation frequency of chopper bw1
-delay_bw1  -0.0243898  s       delay of chopper bw1
+delay_bw1  -0.0226898  s       delay of chopper bw1
 nu_bw2     14          Hz      rotation frequency of chopper bw2
-delay_bw2  -0.0202022  s       delay of chopper bw2
+delay_bw2  -0.0185022  s       delay of chopper bw2
 nu_bw3     14          Hz      rotation frequency of chopper bw3
-delay_bw3  0.0436168   s       delay of chopper bw3
-nu_ps1     7           Hz      rotation frequency of chopper ps1
-delay_ps1  0.00870375  s       delay of chopper ps1
-nu_ps2     -7          Hz      rotation frequency of chopper ps2
-delay_ps2  0.0801399   s       delay of chopper ps2
-nu_rrm     14          Hz      rotation frequency of chopper rrm
-delay_rrm  0.120181    s       delay of chopper rrm
-nu_mc1     14          Hz      rotation frequency of chopper mc1
-delay_mc1  0.0844849   s       delay of chopper mc1
-nu_mc2     -14         Hz      rotation frequency of chopper mc2
-delay_mc2  0.120207    s       delay of chopper mc2
+delay_bw3  0.0453168   s       delay of chopper bw3
+nu_ps1     112         Hz      rotation frequency of chopper ps1
+delay_ps1  0.077368    s       delay of chopper ps1
+nu_ps2     -112        Hz      rotation frequency of chopper ps2
+delay_ps2  0.0818399   s       delay of chopper ps2
+nu_rrm     224         Hz      rotation frequency of chopper rrm
+delay_rrm  0.121881    s       delay of chopper rrm
+nu_mc1     224         Hz      rotation frequency of chopper mc1
+delay_mc1  0.119667    s       delay of chopper mc1
+nu_mc2     -224        Hz      rotation frequency of chopper mc2
+delay_mc2  0.121907    s       delay of chopper mc2
 
 Components, in the order of the beam (m, deg):
 name          component       at                                    rotated                      relative    position

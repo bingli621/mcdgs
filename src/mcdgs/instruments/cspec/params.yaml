@@ -1,29 +1,30 @@
 instrument: CSPEC
 name: CSPEC
 params:
-  t0_offset: {value: 0.0, unit: s, comment: time added to choppers shifting to middle of the long pulse}
+  t0_offset: {value: 0.0017, unit: s, comment: time added to choppers shifting to middle of the long pulse}
   lambda0: {value: 3.0, unit: Å, comment: central wavelength}
-  nu_mc: {value: 14.0, unit: Hz, comment: frequency of the monochromatic choppers}
+  nu_mc: {value: 224.0, unit: Hz, comment: frequency of the monochromatic choppers}
   n: {value: 1, unit: '', comment: the RRM chopper turns at nu_mc / n}
+  bw3_delay: {value: 0.0, unit: s, comment: delay added to that of chopper bw3}
   omega: {value: 0.0, unit: deg, comment: goniometer rotation about +Y}
 instr_params:
   omega: {value: 0.0, unit: deg, comment: rotation of the goniometer about +Y}
   nu_bw1: {value: 14, unit: Hz, comment: rotation frequency of chopper bw1}
-  delay_bw1: {value: -0.024389750848650027, unit: s, comment: delay of chopper bw1}
+  delay_bw1: {value: -0.022689750848650027, unit: s, comment: delay of chopper bw1}
   nu_bw2: {value: 14, unit: Hz, comment: rotation frequency of chopper bw2}
-  delay_bw2: {value: -0.020202199865776947, unit: s, comment: delay of chopper bw2}
+  delay_bw2: {value: -0.01850219986577695, unit: s, comment: delay of chopper bw2}
   nu_bw3: {value: 14, unit: Hz, comment: rotation frequency of chopper bw3}
-  delay_bw3: {value: 0.043616781679092775, unit: s, comment: delay of chopper bw3}
-  nu_ps1: {value: 7.0, unit: Hz, comment: rotation frequency of chopper ps1}
-  delay_ps1: {value: 0.008703745396712037, unit: s, comment: delay of chopper ps1}
-  nu_ps2: {value: -7.0, unit: Hz, comment: rotation frequency of chopper ps2}
-  delay_ps2: {value: 0.08013990017768985, unit: s, comment: delay of chopper ps2}
-  nu_rrm: {value: 14.0, unit: Hz, comment: rotation frequency of chopper rrm}
-  delay_rrm: {value: 0.12018091846898149, unit: s, comment: delay of chopper rrm}
-  nu_mc1: {value: 14.0, unit: Hz, comment: rotation frequency of chopper mc1}
-  delay_mc1: {value: 0.08448491621734752, unit: s, comment: delay of chopper mc1}
-  nu_mc2: {value: -14.0, unit: Hz, comment: rotation frequency of chopper mc2}
-  delay_mc2: {value: 0.12020678528403962, unit: s, comment: delay of chopper mc2}
+  delay_bw3: {value: 0.04531678167909277, unit: s, comment: delay of chopper bw3}
+  nu_ps1: {value: 112.0, unit: Hz, comment: rotation frequency of chopper ps1}
+  delay_ps1: {value: 0.07736803111099774, unit: s, comment: delay of chopper ps1}
+  nu_ps2: {value: -112.0, unit: Hz, comment: rotation frequency of chopper ps2}
+  delay_ps2: {value: 0.08183990017768984, unit: s, comment: delay of chopper ps2}
+  nu_rrm: {value: 224.0, unit: Hz, comment: rotation frequency of chopper rrm}
+  delay_rrm: {value: 0.12188091846898148, unit: s, comment: delay of chopper rrm}
+  nu_mc1: {value: 224.0, unit: Hz, comment: rotation frequency of chopper mc1}
+  delay_mc1: {value: 0.11966705907449036, unit: s, comment: delay of chopper mc1}
+  nu_mc2: {value: -224.0, unit: Hz, comment: rotation frequency of chopper mc2}
+  delay_mc2: {value: 0.12190678528403961, unit: s, comment: delay of chopper mc2}
 origin:
   component: Progress_bar
   percent: 10

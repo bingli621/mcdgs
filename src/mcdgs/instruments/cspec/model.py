@@ -35,17 +35,20 @@ class Params:
         of it.
     n:
         The RRM chopper turns at ``nu_mc / n``.
+    bw3_delay:
+        Delay added to that of the bandwidth chopper ``bw3``, in s.
     omega:
         Goniometer rotation about +y, in deg.
     """
 
     t0_offset: float = param(
-        0.0, "s", "time added to choppers shifting to middle of the long pulse"
+        1.7e-3, "s", "time added to choppers shifting to middle of the long pulse"
     )
 
     lambda0: float | None = param(3.0, "Å", "central wavelength")
-    nu_mc: float = param(14.0, "Hz", "frequency of the monochromatic choppers")
+    nu_mc: float = param(224.0, "Hz", "frequency of the monochromatic choppers")
     n: int = param(1, "", "the RRM chopper turns at nu_mc / n")
+    bw3_delay: float = param(0.0, "s", "delay added to that of chopper bw3")
 
     omega: float = param(0.0, "deg", "goniometer rotation about +Y")
 
@@ -198,8 +201,8 @@ class CSPEC(Instrument):
     def _chopper_instr_params(self) -> list[InstrParam]:
         """Return the McStas instrument parameters of the choppers.
 
-        The frequency and delay of each chopper, computed from ``lambda0``, ``nu_mc``, ``n`` and
-        ``t0_offset`` with :func:`.chopper_timings`.
+        The frequency and delay of each chopper, computed from ``lambda0``, ``nu_mc``, ``n``,
+        ``t0_offset`` and ``bw3_delay`` with :func:`.chopper_timings`.
 
         Returns
         -------
@@ -219,6 +222,7 @@ class CSPEC(Instrument):
             self.params.n,
             self.source.frequency,
             self.params.t0_offset,
+            self.params.bw3_delay,
         )
         return [
             p

@@ -15,7 +15,7 @@
 * 
 * %Identification
 * Written by: Python McStas Instrument Generator
-* Date: 10:08:50 on November 18, 2026
+* Date: 14:46:17 on November 25, 2026
 * Origin: ESS DMSC
 * %INSTRUMENT_SITE: Generated_instruments
 * 
@@ -52,21 +52,21 @@
 DEFINE INSTRUMENT CSPEC (
 omega = 0.0, // rotation of the goniometer about +Y
 nu_bw1 = 14, // rotation frequency of chopper bw1
-delay_bw1 = -0.024389750848650027, // delay of chopper bw1
+delay_bw1 = -0.022689750848650027, // delay of chopper bw1
 nu_bw2 = 14, // rotation frequency of chopper bw2
-delay_bw2 = -0.020202199865776947, // delay of chopper bw2
+delay_bw2 = -0.01850219986577695, // delay of chopper bw2
 nu_bw3 = 14, // rotation frequency of chopper bw3
-delay_bw3 = 0.043616781679092775, // delay of chopper bw3
-nu_ps1 = 7.0, // rotation frequency of chopper ps1
-delay_ps1 = 0.008703745396712037, // delay of chopper ps1
-nu_ps2 = -7.0, // rotation frequency of chopper ps2
-delay_ps2 = 0.08013990017768985, // delay of chopper ps2
-nu_rrm = 14.0, // rotation frequency of chopper rrm
-delay_rrm = 0.12018091846898149, // delay of chopper rrm
-nu_mc1 = 14.0, // rotation frequency of chopper mc1
-delay_mc1 = 0.08448491621734752, // delay of chopper mc1
-nu_mc2 = -14.0, // rotation frequency of chopper mc2
-delay_mc2 = 0.12020678528403962 // delay of chopper mc2
+delay_bw3 = 0.04531678167909277, // delay of chopper bw3
+nu_ps1 = 112.0, // rotation frequency of chopper ps1
+delay_ps1 = 0.07736803111099774, // delay of chopper ps1
+nu_ps2 = -112.0, // rotation frequency of chopper ps2
+delay_ps2 = 0.08183990017768984, // delay of chopper ps2
+nu_rrm = 224.0, // rotation frequency of chopper rrm
+delay_rrm = 0.12188091846898148, // delay of chopper rrm
+nu_mc1 = 224.0, // rotation frequency of chopper mc1
+delay_mc1 = 0.11966705907449036, // delay of chopper mc1
+nu_mc2 = -224.0, // rotation frequency of chopper mc2
+delay_mc2 = 0.12190678528403961 // delay of chopper mc2
 )
 
 DECLARE 

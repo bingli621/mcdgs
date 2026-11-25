@@ -96,10 +96,19 @@ def test_the_rrm_chopper_is_halfway_from_the_start_of_its_gap_to_mc1():
 def test_each_chopper_takes_its_timing_from_the_instrument_parameters():
     cspec = CSPEC()
     values = {p.name: p.value for p in cspec.instr_params}
-    for name, (nu, delay) in chopper_timings(3.0, 14.0, 1, 14, 0.0).items():
+    for name, (nu, delay) in chopper_timings(3.0, 224.0, 1, 14, 0.0017).items():
         assert cspec.components[name].nu == f"nu_{name}"
         assert values[f"nu_{name}"] == nu
         assert values[f"delay_{name}"] == delay
+
+
+def test_bw3_delay_delays_bw3_alone_by_as_much():
+    timings = chopper_timings(3.0, 224.0, 1, 14, 0.0017)
+    cspec = CSPEC(params=Params(bw3_delay=0.0025))
+    values = {p.name: p.value for p in cspec.instr_params}
+    for name, (_, delay) in timings.items():
+        shift = 0.0025 if name == "bw3" else 0.0
+        assert values[f"delay_{name}"] == pytest.approx(delay + shift, rel=1e-12)
 
 
 def test_without_lambda0_the_choppers_have_no_timing():

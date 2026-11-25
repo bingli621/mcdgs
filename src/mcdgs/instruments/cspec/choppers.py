@@ -162,7 +162,12 @@ DISKS: dict[str, CSPECDisk] = {
 
 
 def chopper_timings(
-    lambda0: float, nu_mc: float, n: int, source_frequency: float, t0_offset: float
+    lambda0: float,
+    nu_mc: float,
+    n: int,
+    source_frequency: float,
+    t0_offset: float,
+    bw3_delay: float = 0.0,
 ) -> dict[str, tuple[float, float]]:
     """Compute the timing of every chopper.
 
@@ -170,7 +175,7 @@ def chopper_timings(
     the pulse-shaping choppers at ``PSC_FREQUENCY_RATIO`` of it and the RRM chopper at
     ``nu_mc / n``. Both pairs are counter-rotating: ``ps2`` and ``mc2`` turn the other way. Each
     disk has its first slit centered on the beam when a neutron of wavelength ``lambda0``,
-    leaving at ``t0_offset``, reaches it.
+    leaving at ``t0_offset``, reaches it. ``bw3`` turns ``bw3_delay`` later still.
 
     Parameters
     ----------
@@ -185,6 +190,8 @@ def chopper_timings(
     t0_offset:
         Time from the start of the pulse at which the neutrons the choppers are phased to leave
         the moderator, in s.
+    bw3_delay:
+        Delay added to that of ``bw3``, in s.
 
     Returns
     -------
@@ -209,6 +216,8 @@ def chopper_timings(
         arrival = t0_offset + disk.distance / speed
         # the zero mark passes the beam earlier, for the disk to have turned to the slit
         timings[name] = (nu[name], arrival - disk.phase() / (360 * nu[name]))
+    nu_bw3, delay_bw3 = timings["bw3"]
+    timings["bw3"] = (nu_bw3, delay_bw3 + bw3_delay)
     return timings
 
 

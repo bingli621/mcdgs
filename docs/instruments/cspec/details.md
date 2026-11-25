@@ -19,14 +19,15 @@ component with its position. The code is in
 
 | Parameter | Default | Meaning |
 | --------- | ------- | ------- |
-| `t0_offset` | 0.0 s | Time from the start of the pulse at which the neutrons the choppers are phased to leave the moderator. |
+| `t0_offset` | 1.7 ms | Time from the start of the pulse at which the neutrons the choppers are phased to leave the moderator. |
 | `lambda0` | 3.0 Å | Central wavelength. |
-| `nu_mc` | 14 Hz | Frequency of the monochromatic choppers. |
+| `nu_mc` | 224 Hz | Frequency of the monochromatic choppers. |
 | `n` | 1 | The RRM chopper turns at `nu_mc / n`. |
+| `bw3_delay` | 0.0 s | Delay added to that of the bandwidth chopper `bw3`. |
 | `omega` | 0.0 deg | Goniometer rotation about +y. |
 
-`omega` reaches McStas as it is. `lambda0`, `nu_mc`, `n` and `t0_offset` reach it through the
-frequency and delay of each chopper.
+`omega` reaches McStas as it is. `lambda0`, `nu_mc`, `n`, `t0_offset` and `bw3_delay` reach it
+through the frequency and delay of each chopper.
 
 ## Instrument layout
 
@@ -176,7 +177,7 @@ side.
 ## Chopper timing
 
 Each chopper takes its frequency and delay from the McStas instrument parameters `nu_<name>` and
-`delay_<name>`, computed from `lambda0`, `nu_mc`, `n` and `t0_offset`, as in drcspec:
+`delay_<name>`, computed from `lambda0`, `nu_mc`, `n`, `t0_offset` and `bw3_delay`, as in drcspec:
 
 | Choppers | Frequency |
 | -------- | --------- |
@@ -196,7 +197,8 @@ $$
 $$
 
 with $L$ the flight path, $\nu$ the signed frequency and phase the angle from the center of the first
-slit to the beam, 180° for a disk with its axle above and 0° below.
+slit to the beam, 180° for a disk with its axle above and 0° below. `bw3` turns `bw3_delay`
+later still.
 
 The slit edges of each disk reach McStas as an array of their own, declared in the `.instr`
 file as `<name>_slit_edges`. See the [McStas instrument file](instr-file.md).
