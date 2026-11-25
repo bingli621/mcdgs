@@ -5,8 +5,7 @@ W03-01-011, the first optics of CSPEC, 1.90424 m from the source and 16.3 mm off
 the opening of that guide. Nothing stands between the two, so McStas and tof should see the same
 pulse there: only their models of the ESS moderator differ.
 
-The model of CSPEC has no monitors: :func:`source_monitor` is this diagnostic's own, placed as
-the entrance of W03-01-011 is in :class:`.CSPEC`.
+The monitor is the source monitor of :class:`.CSPEC`, from :func:`.monitors.source_monitor`.
 
 Counts and intensity, scale and error bars are as at the source of T-Rex: McStas sets the
 weights of its rays itself, in n/s, while each tof neutron has weight 1, so tof takes its weight
@@ -26,62 +25,13 @@ from pathlib import Path
 
 from mcdgs.core import Instrument, param
 from mcdgs.core.components import Arm, ESS_butterfly, Monitor_nD
-from mcdgs.core.components.monitors import time_lambda_options
 from mcdgs.diagnostics import cli, compare
-from mcdgs.instruments.cspec.guides.bender import (
-    GUIDE_01_011_IN_HEIGHT,
-    GUIDE_01_011_IN_WIDTH,
-    GUIDE_START_Z,
-    guides_bender,
-)
-from mcdgs.instruments.cspec.guides.frame import MM_PER_M, arm_iscs
+from mcdgs.instruments.cspec.guides.frame import arm_iscs
+from mcdgs.instruments.cspec.monitors import source_monitor
 from mcdgs.instruments.cspec.sources import source, wavelength_band
 from mcdgs.mcstas import Simulation, read_mcstas_maps
 from mcdgs.reduction.binning import monitor_bins
 from mcdgs.tof import build_tof, read_tof_maps
-
-SOURCE_MONITOR_LAMBDA_RESOLUTION = 0.05  # Å, the width of a wavelength bin, as for T-Rex
-SOURCE_MONITOR_TIME_RESOLUTION = 5e-5  # s, the width of a time bin, 0.05 ms, as for T-Rex
-
-
-def source_monitor(
-    lambda_resolution: float = SOURCE_MONITOR_LAMBDA_RESOLUTION,
-    time_resolution: float = SOURCE_MONITOR_TIME_RESOLUTION,
-) -> Monitor_nD:
-    """Create the time and wavelength monitor at the entrance of W03-01-011.
-
-    It is the entrance of W03-01-011: its opening, at the place and with the rotation of that
-    guide on ``arm_iscs``, so it counts what enters the guide system. It records one 2D map of
-    time against wavelength, and leaves the neutrons unchanged. Its axes are those of
-    :func:`.time_lambda_options` at ``GUIDE_START_Z``, without limits: the widest band the
-    source simulates, ``L_MIN`` to ``L_MAX``, and the time window in which it reaches the
-    monitor.
-
-    Parameters
-    ----------
-    lambda_resolution:
-        Width of a wavelength bin, in Å. The axis has the fewest bins that cover the band, see
-        :func:`.bins_from_limits`.
-    time_resolution:
-        Width of a time bin, in s, likewise.
-
-    Returns
-    -------
-    :
-        A new monitor, relative to ``arm_iscs``.
-    """
-    to_bwc1, _, _ = guides_bender()
-    entrance = to_bwc1["guide_01_011"]
-    return Monitor_nD(
-        xwidth=GUIDE_01_011_IN_WIDTH / MM_PER_M,
-        yheight=GUIDE_01_011_IN_HEIGHT / MM_PER_M,
-        restore_neutron=1,
-        options=time_lambda_options(GUIDE_START_Z, None, None, lambda_resolution, time_resolution),
-        filename="source_monitor",  # the name of the monitor, in both models
-        at=list(entrance.at),
-        rotated=list(entrance.rotated),
-        relative=entrance.relative,
-    )
 
 
 # --8<-- [start:instrument]

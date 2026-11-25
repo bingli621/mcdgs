@@ -62,6 +62,30 @@ arm_iscs:
   rotated: [0, -0.5, 0]
   relative: null
   position: [0.032710383, 0.0, 0.024372748]
+source_monitor:
+  component: Monitor_nD
+  xwidth: 0.045
+  yheight: 0.043
+  zdepth: 0
+  xmin: 0
+  xmax: 0
+  ymin: 0
+  ymax: 0
+  zmin: 0
+  zmax: 0
+  bins: 0
+  min: -1.0e+40
+  max: 1.0e+40
+  restore_neutron: 1
+  radius: 0
+  options: time limits=[4.813507662104022e-05 0.00834813507662104] bins=166 lambda limits=[0.1 10.0] bins=198
+  filename: source_monitor
+  nowritefile: 0
+  nexus_bins: 0
+  at: [-5.029695736993744e-06, 0.0, 1.8799388780356139]
+  rotated: [0, 0, 0]
+  relative: arm_iscs
+  position: [0.0163, 0.0, 1.90424]
 guide_01_011:
   component: Guide_gravity
   w1: 0.045
@@ -207,6 +231,36 @@ guide_02_01:
   rotated: [0.11604185844508956, 0.04641674337803581, 0]
   relative: arm_iscs
   position: [-0.012973909, -0.002779782, 5.386115198]
+arm_gap_bbg:
+  component: Arm
+  at: [0.0015249079936713117, -0.0038248430180987053, 5.877935729218592]
+  rotated: [0.12572842616902005, 0.050291370467607996, 0]
+  relative: arm_iscs
+  position: [-0.017058782, -0.003824843, 5.902097971]
+beam_monitor:
+  component: Monitor_nD
+  xwidth: 0.07
+  yheight: 0.055
+  zdepth: 0
+  xmin: 0
+  xmax: 0
+  ymin: 0
+  ymax: 0
+  zmin: 0
+  zmax: 0
+  bins: 0
+  min: -1.0e+40
+  max: 1.0e+40
+  restore_neutron: 1
+  radius: 0
+  options: time limits=[0.0031006116295246083 0.00940061162952461] bins=126 lambda limits=[2.0737109801003992 3.9337109801003995] bins=93
+  filename: beam_monitor
+  nowritefile: 0
+  nexus_bins: 0
+  at: [0, 0, 0.0125]
+  rotated: [0, 0, 0]
+  relative: arm_gap_bbg
+  position: [-0.017156892, -0.003852273, 5.914597556]
 guide_03_01:
   component: Guide_gravity
   w1: 0.07
@@ -661,6 +715,36 @@ guide_05_10:
   rotated: [0.8825225799763698, 0.35300903199054806, 0]
   relative: arm_iscs
   position: [-0.124897836, -0.177232219, 26.222104546]
+arm_gap_bwfa:
+  component: Arm
+  at: [0.08117908441059442, -0.20264604015198587, 27.847882602045512]
+  rotated: [0.9127819135317164, 0.36511276541268667, 0]
+  relative: arm_iscs
+  position: [-0.12912916, -0.20264604, 27.8719034]
+bwfa_monitor:
+  component: Monitor_nD
+  xwidth: 0.07
+  yheight: 0.055
+  zdepth: 0
+  xmin: 0
+  xmax: 0
+  ymin: 0
+  ymax: 0
+  zmin: 0
+  zmax: 0
+  bins: 0
+  min: -1.0e+40
+  max: 1.0e+40
+  restore_neutron: 1
+  radius: 0
+  options: time limits=[0.014621602531090044 0.031221602531090045] bins=332 lambda limits=[2.0737109801003992 3.9337109801003995] bins=93
+  filename: bwfa_monitor
+  nowritefile: 0
+  nexus_bins: 0
+  at: [0, 0, 0.02]
+  rotated: [0, 0, 0]
+  relative: arm_gap_bwfa
+  position: [-0.129176222, -0.202964641, 27.891900807]
 guide_06_011:
   component: Guide_gravity
   w1: 0.07
@@ -1974,6 +2058,30 @@ ps2:
   rotated: [0, 0, 0]
   relative: arm_psc
   position: [0.115386649, -0.422420856, 105.675145164]
+psc_monitor:
+  component: Monitor_nD
+  xwidth: 0.11466
+  yheight: 0.07389
+  zdepth: 0
+  xmin: 0
+  xmax: 0
+  ymin: 0
+  ymax: 0
+  zmin: 0
+  zmax: 0
+  bins: 0
+  min: -1.0e+40
+  max: 1.0e+40
+  restore_neutron: 1
+  radius: 0
+  options: time limits=[0.055417836857964795 0.1084678368579648] bins=1061 lambda limits=[2.0737109801003992 3.9337109801003995] bins=93
+  filename: psc_monitor
+  nowritefile: 0
+  nexus_bins: 0
+  at: [0, 0, 0.06501]
+  rotated: [0, 0, 0]
+  relative: arm_psc
+  position: [0.115567411, -0.422420856, 105.717444778]
 guide_08_01:
   component: Guide_gravity
   w1: 0.11466
@@ -2817,6 +2925,30 @@ mc2:
   rotated: [0, 0, 0]
   relative: arm_mc
   position: [0.341169974, -0.422420856, 158.50998271]
+mc_monitor:
+  component: Monitor_nD
+  xwidth: 0.02258
+  yheight: 0.049
+  zdepth: 0
+  xmin: 0
+  xmax: 0
+  ymin: 0
+  ymax: 0
+  zmin: 0
+  zmax: 0
+  bins: 0
+  min: -1.0e+40
+  max: 1.0e+40
+  restore_neutron: 1
+  radius: 0
+  options: time limits=[0.08309524273864433 0.1608452427386443] bins=1555 lambda limits=[2.0737109801003992 3.9337109801003995] bins=93
+  filename: mc_monitor
+  nowritefile: 0
+  nexus_bins: 0
+  at: [0, 0, 0.065595]
+  rotated: [0, 0, 0]
+  relative: arm_mc
+  position: [0.34120149, -0.422420856, 158.517357643]
 guide_09_02:
   component: Guide_gravity
   w1: 0.02258

@@ -3,9 +3,9 @@
 CSPEC is modeled from the source to the sample position, as a chain of guides with its
 [`NXdisk_chopper`](../../reference/components.md) choppers in the gaps. The choppers are phased
 to the central wavelength `lambda0` (see [Chopper timing](#chopper-timing)). `sample_pos` is on
-the trajectory of the last guide, 160.0 m from the moderator along it, with a monitor there,
-`sample_monitor` (see [Sample monitor](#sample-monitor)). There are no detectors, beamstop or
-guide exchanger yet.
+the trajectory of the last guide, 160.0 m from the moderator along it. Six time and wavelength
+monitors follow the beam from the source to the sample (see [Monitors](#monitors)). There are no
+detectors, beamstop or guide exchanger yet.
 
 The dimensions are from CSPEC_nl-specs_1.E.xlsx unless noted. Numbers that are not in it are
 marked FIXME in the code, and listed under
@@ -204,21 +204,34 @@ later still.
 The slit edges of each disk reach McStas as an array of their own, declared in the `.instr`
 file as `<name>_slit_edges`. See the [McStas instrument file](instr-file.md).
 
-## Sample monitor
+## Monitors
 
-`sample_monitor` is a `Monitor_nD` at `sample_pos`, before the sample, 0.1 m wide and high
-(FIXME), larger than the beam. It records the beam reaching the sample as one 2D map of time
-against wavelength, and leaves the neutrons unchanged. Its wavelength axis is the band the
-source simulates for `lambda0`, and its time axis the window in which that band reaches it. The
-bins are those of the sample monitor of T-Rex (FIXME):
+Each monitor is a `Monitor_nD` that records one 2D map of time against wavelength and leaves the
+neutrons unchanged. They are at the places of the monitors of drcspec, in the gaps of
+CSPEC_nl-specs_1.E.xlsx, which has no monitors of its own. The flight path is along the
+trajectory, from the moderator.
 
-| Axis | Bin width |
-| ---- | --------- |
-| Time | 0.05 ms |
-| Wavelength | 0.02 Å |
+| Monitor | Where | Flight path, m | Opening, mm |
+| ------- | ----- | -------------- | ----------- |
+| `source_monitor` | Entrance of W03-01-011, where the guide system begins | 1.904 | 45 × 43, that of W03-01-011 |
+| `beam_monitor` | Middle of the gap after the BBG, row 22, 25 mm long, on `arm_gap_bbg` | 5.915 | 70 × 55, the entrance of W03-03-01 (FIXME) |
+| `bwfa_monitor` | Middle of the gap after the BWFA, row 50, 40 mm long, which the sheet keeps "for monitor etc.", on `arm_gap_bwfa` | 27.894 | 70 × 55, the entrance of W03-06-011 (FIXME) |
+| `psc_monitor` | Gap of the pulse-shaping choppers, halfway from `ps2` to its end (FIXME), on `arm_psc` | 105.721 | 114.66 × 73.89, the entrance of W03-08-01 (FIXME) |
+| `mc_monitor` | Gap of the monochromatic choppers, halfway from `mc2` to its end (FIXME), on `arm_mc` | 158.521 | 22.58 × 49, the entrance of W03-09-02 (FIXME) |
+| `sample_monitor` | `sample_pos`, before the sample | 160.004 | 100 × 100 (FIXME), larger than the beam |
 
-A new `lambda0` in `update_params` creates it again with the new band. tof takes it as a
-detector, so the rays of the [time-distance diagram](time-distance.md) reach the sample.
+`source_monitor` spans the widest band the source simulates, 0.1 to 10 Å, whatever `lambda0`.
+The others span the band the source simulates for `lambda0`, and the time in which that band
+reaches them. A new `lambda0` in `update_params` creates them again with the new band. The bins
+are those of the monitors of T-Rex (FIXME):
+
+| Monitors | Time bin | Wavelength bin |
+| -------- | -------- | -------------- |
+| `source_monitor` | 0.05 ms | 0.05 Å |
+| The others | 0.05 ms | 0.02 Å |
+
+tof takes each monitor as a detector, so the rays of the [time-distance
+diagram](time-distance.md) reach the sample.
 
 ## Not in CSPEC_nl-specs_1.E.xlsx { #not-in-the-sheet }
 
@@ -231,7 +244,7 @@ detector, so the rays of the [time-distance diagram](time-distance.md) reach the
 | Slits and axles of the disks | Those of drcspec |
 | Radius of the disks, height of the slits | 0.35 m, 0.1 m |
 | Frequency of the pulse-shaping choppers | Half of `nu_mc` |
-| Size and bins of `sample_monitor` | 0.1 m × 0.1 m, 0.05 ms and 0.02 Å, as T-Rex |
+| Monitors | At the places of those of drcspec; sizes and bins as in [Monitors](#monitors) |
 | Guide exchanger | Not modeled |
 
 ## Parameters file

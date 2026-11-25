@@ -8,8 +8,9 @@ choppers, but takes the guides, the bender and the slits as letting everything t
 
 ## The code
 
-tof takes [`sample_monitor`](details.md#sample-monitor), the monitor of CSPEC at the sample
-position, as a detector, so the rays run on from the last chopper, `mc2`, to the sample. The
+tof takes each [monitor](details.md#monitors) of CSPEC as a detector, the last one
+`sample_monitor` at the sample position, so the rays run on from the last chopper, `mc2`, to the
+sample. The
 instrument is CSPEC at its default parameters:
 
 <!-- fmt:off -->
@@ -48,7 +49,9 @@ from the control parameters, as [Chopper timing](details.md#chopper-timing) expl
 - **Colored lines** are neutrons that reach `sample_monitor`, colored by wavelength.
 - **Gray lines** are neutrons that a chopper stops. Each one ends at the chopper that stops it.
 - **Black lines** are the choppers. Each gap in a line is a time when that chopper is open.
-- **Thick gray lines** are the pulse at the moderator and `sample_monitor`, at 160 m.
+- **Thick gray lines** are the pulse at the moderator and the monitors: `source_monitor` and
+  `beam_monitor` near the bottom, `bwfa_monitor` at 28 m, `psc_monitor` at 106 m, and
+  `mc_monitor` and `sample_monitor` at 158.5 and 160 m, where their labels overlap.
 
 The second pulse starts 1/14 s, about 71 ms, after the first. Each pulse goes through the
 choppers in the same way:

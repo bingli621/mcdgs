@@ -71,11 +71,11 @@ def test_the_guide_system_starts_at_its_onset_in_mcstas(placed):
 
 
 def test_each_guide_ends_where_the_next_element_starts():
-    # the gaps between the elements are 1 to 40 mm, and a chopper gap starts at the guide exit
+    # the gaps between the elements are 1 to 40 mm, and the arm of a gap starts at the guide exit
     components = _components()
     placed = place_absolute(components, {})
     guides = [n for n, c in components.items() if isinstance(c, Guide_gravity)]
-    starts = [n for n in components if n.startswith(("guide_", "arm_bwc", "arm_psc", "arm_mc"))]
+    starts = [n for n in components if n.startswith(("guide_", "arm_"))]
     for name in guides:
         following = starts[starts.index(name) + 1 :]
         if not following:

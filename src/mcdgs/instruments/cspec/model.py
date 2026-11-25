@@ -11,7 +11,14 @@ from .choppers import chopper, chopper_timings
 from .guides.bender import guides_bender
 from .guides.frame import arm_iscs
 from .guides.straight import guides_straight, sample_pos
-from .monitors import sample_monitor
+from .monitors import (
+    beam_monitor,
+    bwfa_monitor,
+    mc_monitor,
+    psc_monitor,
+    sample_monitor,
+    source_monitor,
+)
 from .sources import masked_source, source, wavelength_band
 
 
@@ -97,9 +104,9 @@ class CSPEC(Instrument):
             raise ValueError(f"the sample is relative to {sample.relative!r}, not to 'sample_pos'")
         super().__init__(params)
 
-        to_bwc1, to_bwc2, to_end_of_bender = guides_bender()
+        to_gap_bbg, to_bwc1, to_bwc2, to_gap_bwfa, to_end_of_bender = guides_bender()
         to_bwc3, to_psc, to_mc, to_guide_exchanger = guides_straight()
-        # the source simulates the band of lambda0
+        # the source simulates the band of lambda0, and the time and wavelength monitors span it
         band = wavelength_band(self.params.lambda0)
 
         # the choppers and the masked source need the guides in place: they are set at the end,
@@ -108,11 +115,16 @@ class CSPEC(Instrument):
         self.source = source(*band)
         # the frame of the sheet, which every guide and gap hangs off
         self.arm_iscs = arm_iscs()
+        self.source_monitor = source_monitor()  # the entrance of W03-01-011, the widest band
         # the S-bender
+        self.add_components(to_gap_bbg)
+        self.beam_monitor = beam_monitor(lambda_limits=band)
         self.add_components(to_bwc1)
         self.bw1 = NXdisk_chopper()
         self.add_components(to_bwc2)
         self.bw2 = NXdisk_chopper()
+        self.add_components(to_gap_bwfa)
+        self.bwfa_monitor = bwfa_monitor(lambda_limits=band)
         self.add_components(to_end_of_bender)
         # the straight guides
         self.add_components(to_bwc3)
@@ -120,10 +132,12 @@ class CSPEC(Instrument):
         self.add_components(to_psc)
         self.ps1 = NXdisk_chopper()
         self.ps2 = NXdisk_chopper()
+        self.psc_monitor = psc_monitor(lambda_limits=band)
         self.add_components(to_mc)
         self.rrm = NXdisk_chopper()
         self.mc1 = NXdisk_chopper()
         self.mc2 = NXdisk_chopper()
+        self.mc_monitor = mc_monitor(lambda_limits=band)
         self.add_components(to_guide_exchanger)
         # sample position, and the beam reaching it
         self.sample_pos = sample_pos()
@@ -153,7 +167,7 @@ class CSPEC(Instrument):
         """Change control parameters.
 
         A new ``lambda0`` also gives the source the band of :func:`.sources.wavelength_band`, and
-        creates the sample monitor again with it. The source keeps everything else, so a masked
+        creates the time and wavelength monitors again with it, all but the source monitor. The source keeps everything else, so a masked
         source stays masked, also in an instrument a parameters file made.
 
         Parameters
@@ -170,6 +184,10 @@ class CSPEC(Instrument):
         if "lambda0" in values:
             band = wavelength_band(self.params.lambda0)
             self.source = replace(self.source, Lmin=band[0], Lmax=band[1])
+            self.beam_monitor = beam_monitor(lambda_limits=band)
+            self.bwfa_monitor = bwfa_monitor(lambda_limits=band)
+            self.psc_monitor = psc_monitor(lambda_limits=band)
+            self.mc_monitor = mc_monitor(lambda_limits=band)
             self.sample_monitor = sample_monitor(lambda_limits=band)
 
     def running_conditions(self) -> str:

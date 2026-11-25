@@ -9,7 +9,8 @@ Over these rows the trajectory turns down and back up in a vertical S-bender, 16
 which takes the beam 422 mm down, and sideways in a horizontal curve, 4000 m in radius, by
 0.745 deg. Both end at row 77, after which the guide is straight: see :mod:`.straight`.
 
-The gaps of the bandwidth choppers 1 and 2 are arms, for the choppers to be placed relative to.
+The gaps of the bandwidth choppers 1 and 2 are arms, for the choppers to be placed relative to,
+and so are the gap after the BBG, row 22, and the gap after the BWFA, row 50, for the monitors.
 """
 
 from mcdgs.core.components import Component
@@ -33,6 +34,11 @@ GUIDE_01_01_MIDDLE_HEIGHT = (GUIDE_01_011_IN_HEIGHT + GUIDE_01_012_OUT_HEIGHT) /
 # the flight path from the moderator to the start of each chopper gap, along the trajectory
 ARM_BWC1_PATH = 14.918415010646674  # m, cell U31
 ARM_BWC2_PATH = 20.440446374181604  # m, cell U39
+# and to the start of each gap that holds a monitor, with the length of the gap
+ARM_GAP_BBG_PATH = 5.902560084976208  # m, cell U21
+GAP_BBG_LENGTH = 25  # mm, cell T22
+ARM_GAP_BWFA_PATH = 27.87374092726933  # m, cell U49
+GAP_BWFA_LENGTH = 40  # mm, cell T50
 
 
 def guides_bender() -> list[dict[str, Component]]:
@@ -41,10 +47,10 @@ def guides_bender() -> list[dict[str, Component]]:
     Returns
     -------
     :
-        Components by name, in beam order, in three pieces: up to ``arm_bwc1``, up to
-        ``arm_bwc2``, and the rest.
+        Components by name, in beam order, in five pieces: up to ``arm_gap_bbg``, up to
+        ``arm_bwc1``, up to ``arm_bwc2``, up to ``arm_gap_bwfa``, and the rest.
     """
-    to_bwc1: dict[str, Component] = {
+    to_gap_bbg: dict[str, Component] = {
         "guide_01_011": guide(  # row 14, straight: the trajectory turns from row 15 on
             x=1879.938878035614,  # cell H14
             y=-0.0050296957369937445,  # cell I14
@@ -125,6 +131,15 @@ def guides_bender() -> list[dict[str, Component]]:
             mleft=3,  # cell AD21
             mright=3.5,  # cell AE21
         ),
+        "arm_gap_bbg": arm(  # row 22, the gap after the BBG
+            x=5877.935729218592,  # cell H22
+            y=1.5249079936713117,  # cell I22
+            z=-3.824843018098705,  # cell J22
+            chi=-0.12572842616902005,  # cell F22
+            phi=-0.050291370467607996,  # cell G22
+        ),
+    }
+    to_bwc1: dict[str, Component] = {
         "guide_03_01": guide(  # row 23
             x=5902.935659397056,  # cell H23
             y=1.5468517408535696,  # cell I23
@@ -286,7 +301,7 @@ def guides_bender() -> list[dict[str, Component]]:
             phi=-0.2585670495548678,  # cell G40
         ),
     }
-    to_end_of_bender: dict[str, Component] = {
+    to_gap_bwfa: dict[str, Component] = {
         "guide_05_06": guide(  # row 41
             x=20445.3877852614,  # cell H41
             y=40.79418647538609,  # cell I41
@@ -367,6 +382,15 @@ def guides_bender() -> list[dict[str, Component]]:
             mleft=3,  # cell AD49
             mright=3.5,  # cell AE49
         ),
+        "arm_gap_bwfa": arm(  # row 50, the gap after the BWFA, "40mm gap for monitor etc."
+            x=27847.882602045513,  # cell H50
+            y=81.17908441059441,  # cell I50
+            z=-202.64604015198586,  # cell J50
+            chi=-0.9127819135317165,  # cell F50
+            phi=-0.36511276541268667,  # cell G50
+        ),
+    }
+    to_end_of_bender: dict[str, Component] = {
         "guide_06_011": guide(  # row 51
             x=27887.876714137048,  # cell H51
             y=81.43397948136817,  # cell I51
@@ -592,4 +616,4 @@ def guides_bender() -> list[dict[str, Component]]:
             mright=3,  # cell AE76
         ),
     }
-    return [to_bwc1, to_bwc2, to_end_of_bender]
+    return [to_gap_bbg, to_bwc1, to_bwc2, to_gap_bwfa, to_end_of_bender]

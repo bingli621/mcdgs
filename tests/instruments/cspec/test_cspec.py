@@ -4,11 +4,14 @@ import pytest
 
 from mcdgs.core import speed_from_wavelength
 from mcdgs.core.components import NXdisk_chopper, Polygon_ESS_butterfly
+from mcdgs.core.components.source import L_MIN
 from mcdgs.instruments import CSPEC
+from mcdgs.instruments.cspec import monitors
 from mcdgs.instruments.cspec.choppers import DISKS, chopper_timings
 from mcdgs.instruments.cspec.model import Params
 from mcdgs.instruments.cspec.sources import wavelength_band
 from mcdgs.samples import aluminum
+from mcdgs.tof import beamline
 
 
 def _close(a, b):
@@ -23,8 +26,58 @@ def _close(a, b):
     return a == b and type(a) is type(b)
 
 
-def test_the_source_comes_first_then_the_frame_of_the_sheet():
-    assert list(CSPEC().components)[:4] == ["origin", "source", "arm_iscs", "guide_01_011"]
+def test_the_source_comes_first_then_the_frame_of_the_sheet_and_the_source_monitor():
+    assert list(CSPEC().components)[:5] == [
+        "origin",
+        "source",
+        "arm_iscs",
+        "source_monitor",
+        "guide_01_011",
+    ]
+
+
+MONITORS = [
+    "source_monitor",
+    "beam_monitor",
+    "bwfa_monitor",
+    "psc_monitor",
+    "mc_monitor",
+    "sample_monitor",
+]
+# each monitor in a gap, between the component before it and the guide after it
+GAP_MONITORS = {
+    "beam_monitor": ("arm_gap_bbg", "guide_03_01", monitors.BEAM_MONITOR_PATH),
+    "bwfa_monitor": ("arm_gap_bwfa", "guide_06_011", monitors.BWFA_MONITOR_PATH),
+    "psc_monitor": ("ps2", "guide_08_01", monitors.PSC_MONITOR_PATH),
+    "mc_monitor": ("mc2", "guide_09_02", monitors.MC_MONITOR_PATH),
+}
+
+
+def test_the_monitors_are_in_beam_order():
+    names = [n for n in CSPEC().components if n.endswith("_monitor")]
+    assert names == MONITORS
+
+
+@pytest.mark.parametrize("name", GAP_MONITORS)
+def test_each_gap_monitor_is_between_its_neighbors_in_order_and_in_space(name):
+    before, after, path = GAP_MONITORS[name]
+    cspec = CSPEC()
+    names = list(cspec.components)
+    assert names.index(before) < names.index(name) < names.index(after)
+    _, after_source = beamline(cspec)
+    distance = {n: d for n, _, d in after_source}
+    assert distance[before] < distance[name] < distance[after]
+    # the straight line from the source is a few mm shorter than the path along the curved
+    # trajectory, as for the choppers
+    assert distance[name] == pytest.approx(path, abs=5e-3)
+
+
+@pytest.mark.parametrize("name", GAP_MONITORS)
+def test_each_gap_monitor_is_as_large_as_the_entrance_of_the_guide_after_it(name):
+    cspec = CSPEC()
+    guide = cspec.components[GAP_MONITORS[name][1]]
+    monitor = cspec.components[name]
+    assert (monitor.xwidth, monitor.yheight) == pytest.approx((guide.w1, guide.h1))
 
 
 def test_the_choppers_are_in_beam_order_each_after_the_arm_of_its_gap():
@@ -55,12 +108,22 @@ def _covers_the_band(monitor, lambda0):
     return start == pytest.approx(band_start) and band_stop <= stop < band_stop + 0.02
 
 
-def test_the_sample_monitor_spans_the_band_of_lambda0_also_after_an_update():
+@pytest.mark.parametrize("name", MONITORS[1:])
+def test_the_monitors_span_the_band_of_lambda0_also_after_an_update(name):
     cspec = CSPEC()
-    assert _covers_the_band(cspec.sample_monitor, 3.0)
+    assert _covers_the_band(cspec.components[name], 3.0)
+    order = list(cspec.components)
     cspec.update_params(lambda0=4.0)
-    assert _covers_the_band(cspec.sample_monitor, 4.0)
-    assert list(cspec.components)[-2:] == ["sample_pos", "sample_monitor"]
+    assert _covers_the_band(cspec.components[name], 4.0)
+    assert list(cspec.components) == order
+
+
+def test_the_source_monitor_spans_the_widest_band_whatever_lambda0():
+    cspec = CSPEC()
+    limits = cspec.source_monitor.bin_limits
+    cspec.update_params(lambda0=4.0)
+    assert cspec.source_monitor.bin_limits == limits
+    assert limits["lambda"][0] == pytest.approx(L_MIN)
 
 
 def test_each_chopper_window_is_as_wide_as_the_exit_of_the_guide_in_front():

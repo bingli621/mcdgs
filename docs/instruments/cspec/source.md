@@ -17,8 +17,9 @@ It is the smallest CSPEC: three components and no McStas instrument parameters.
 | `arm_iscs` | The ISCS frame of CSPEC_nl-specs_1.E.xlsx, as in `CSPEC` (see [The ISCS frame](details.md#the-iscs-frame)). |
 | `source_monitor` | A `Monitor_nD` that is the entrance of W03-01-011: its opening, 45 mm wide and 43 mm high, placed on `arm_iscs` as that guide is in `CSPEC`, 1.90424 m from the source and 16.3 mm off its axis. |
 
-`CSPEC` has no monitors, so `source_monitor()` is this diagnostic's own. It records one 2D map of
-time against wavelength, with the same bins as the source monitor of T-Rex:
+`source_monitor()` is the source monitor of `CSPEC`, from `mcdgs.instruments.cspec.monitors`
+(see [Monitors](details.md#monitors)). It records one 2D map of time against wavelength, with the
+same bins as the source monitor of T-Rex:
 
 | Axis | Range | Bins | Bin width |
 | ---- | ----- | ---- | --------- |
