@@ -32,6 +32,8 @@ The reduction is that of T-Rex, with the sub-pulses of :mod:`.diagnostics.cspec.
 :func:`.fit_elastic_lines` fits a Gaussian to the elastic line of each sub-pulse, against the
 final energy Ef, and gives its FWHM. :func:`.plot_spectra` draws the spectra with their errors and
 their Gaussians, against E, and :func:`.plot_q_e_maps` the S(Q, E) map of each sub-pulse.
+:func:`plot_resolution` draws the FWHM and the flux of each sub-pulse against Ei, as the first
+three panels of :func:`.trex.elastic_resolution_incoherent.plot_resolutions`.
 
 :func:`main` is :func:`simulate`, which runs McStas, then :func:`analyze`, which reduces and
 draws. Run it to do both::
@@ -47,14 +49,17 @@ import math
 from pathlib import Path
 from typing import NamedTuple
 
+import matplotlib.pyplot as plt
 import numpy as np
 import scipp as sc
+from matplotlib.figure import Figure
 
 from mcdgs.core.components import Incoherent
 from mcdgs.diagnostics import cli
 from mcdgs.diagnostics.cspec.incident_energy import MC_MONITOR_TIME_RESOLUTION
 from mcdgs.diagnostics.elastic_resolution import (
     BEAM_DIRECTION,
+    FONT_SIZE,
     energy_spectra,
     fit_elastic_lines,
     lines_table,
@@ -360,13 +365,69 @@ def reduce_runs(
     )
 
 
+def plot_resolution(lines: sc.Dataset, pulses: sc.DataArray, title: str) -> Figure:
+    """Draw the FWHM of the elastic line and the flux of each sub-pulse against Ei.
+
+    Three panels on one Ei axis, each with one linear y axis, as the first three of
+    :func:`.trex.elastic_resolution_incoherent.plot_resolutions`: the FWHM, the FWHM as a
+    fraction of Ei, and the flux at ``mc_monitor``. Each sub-pulse is a point, not joined. The
+    FWHM has the error of the fit of :func:`.fit_elastic_lines`; the flux has none:
+    :func:`.find_patches` sums the intensity of the monitor without its errors, which are small
+    from 1e9 rays.
+
+    Parameters
+    ----------
+    lines:
+        The fits of :func:`.fit_elastic_lines`.
+    pulses:
+        The sub-pulses of :func:`subpulse_timing`, with their flux.
+    title:
+        The title of the figure.
+
+    Returns
+    -------
+    :
+        The figure.
+    """
+    ei = lines.coords["incident_energy"].to(unit="meV").values
+    fwhm = lines["fwhm"]
+    error = np.sqrt(fwhm.variances)
+    style = {"color": "C0", "fmt": "o", "ms": 7, "capsize": 3}
+    with plt.rc_context({"font.size": FONT_SIZE}):
+        fig, axes = plt.subplots(1, 3, figsize=(21, 6), sharex=True, layout="constrained")
+        fig.suptitle(title)
+        absolute, relative, flux_panel = axes
+        absolute.errorbar(ei, fwhm.values, yerr=error, **style)
+        relative.errorbar(ei, 100 * fwhm.values / ei, yerr=100 * error / ei, **style)
+        flux_panel.plot(
+            pulses.coords["incident_energy"].to(unit="meV").values,
+            pulses.to(unit="1/s").values / 1e6,
+            linestyle="none",
+            marker="o",
+            ms=7,
+            color="C0",
+        )
+        absolute.set(ylabel="FWHM [meV]", title="The width of the elastic line")
+        relative.set(ylabel="FWHM / Ei [%]", title="As a fraction of Ei")
+        flux_panel.set(
+            ylabel="Neutrons through the whole monitor [$10^6$ n/s]",
+            title="The flux at mc_monitor",
+        )
+        for ax in axes:
+            ax.set(xlabel="Ei [meV]")
+            ax.grid(True, alpha=0.3)
+            ax.set_ylim(bottom=0)
+    return fig
+
+
 def analyze(out: Path | None = None) -> list[Path]:
     """Reduce the runs, and save their spectra, their fits and their S(Q, E) maps.
 
     It runs no McStas, so it can run again on the same runs; :func:`main` runs them first. The
     files are ``cspec_elastic_resolution_incoherent.png``, from :func:`.plot_spectra`,
-    ``cspec_elastic_resolution_incoherent_lines.txt``, the table of :func:`.lines_table`, and
-    ``cspec_elastic_resolution_incoherent_sqe.png``, from :func:`.plot_q_e_maps`.
+    ``cspec_elastic_resolution_incoherent_lines.txt``, the table of :func:`.lines_table`,
+    ``cspec_elastic_resolution_incoherent_sqe.png``, from :func:`.plot_q_e_maps`, and
+    ``cspec_elastic_resolution_incoherent_resolution.png``, from :func:`plot_resolution`.
 
     Parameters
     ----------
@@ -395,6 +456,12 @@ def analyze(out: Path | None = None) -> list[Path]:
     files.append(cli.save_figure(fig, folder / f"{NAME}.png"))
     fig = plot_q_e_maps(maps, f"CSPEC, vanadium: S(Q, E) of each sub-pulse\n{conditions}")
     files.append(cli.save_figure(fig, folder / f"{NAME}_sqe.png"))
+    fig = plot_resolution(
+        lines,
+        pulses,
+        f"CSPEC, vanadium: the resolution and the flux of each sub-pulse\n{conditions}",
+    )
+    files.append(cli.save_figure(fig, folder / f"{NAME}_resolution.png"))
     return files
 
 

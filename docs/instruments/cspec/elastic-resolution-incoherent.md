@@ -147,6 +147,27 @@ the Ei of the mean wavelength at 2.33 Å, as these sub-pulses most likely leave 
 little before `t0_offset`. The rest has not been studied yet. It is small next to the width of
 each line, 2.6 to 3.9 % of Ei.
 
+## The resolution against Ei
+
+![The FWHM of the elastic line of each of the 14 sub-pulses against its Ei, the FWHM as a fraction of Ei, and the flux of each sub-pulse at mc_monitor](figures/elastic-resolution-incoherent/cspec_elastic_resolution_incoherent_resolution.png)
+
+`plot_resolution` draws, against Ei, the FWHM of each sub-pulse, the FWHM as a fraction of Ei,
+and the flux of each sub-pulse at `mc_monitor`, as the first three panels of
+[T-Rex](../trex/elastic-resolution-incoherent.md#all-four-modes). CSPEC runs at the default
+settings of the choppers only, so there is one point per sub-pulse and no ratio between modes.
+The FWHM has the error of its fit; the flux has no error bars, since the sub-pulses are found
+from the intensity of the monitor alone.
+
+- **The width grows almost linearly with Ei**, from 0.16 meV at 6.1 meV to 0.59 meV at
+  15.0 meV, and faster than Ei: as a fraction of Ei it goes from 2.6 % to 3.9 %.
+- **The flux is flat in the middle of the band and falls at both ends.** From 7.9 to 12.5 meV
+  each sub-pulse brings 6.7 to 7.3 × 10⁶ n/s to `mc_monitor`. It falls to 2.7 × 10⁶ n/s at
+  15.0 meV and to 4.0 × 10⁶ n/s at 6.1 meV, at the edges of the band.
+- **The last sub-pulse stands apart in all three panels.** At 5.7 meV it brings
+  1.9 × 10⁵ n/s, a fortieth of the middle of the band, and its line is 0.10 meV wide, 1.8 % of
+  Ei, below the trend of the others. As on [the spectra](#the-spectra), the bandwidth choppers
+  most likely cut it short; this has not been checked.
+
 ## Making the figures
 
 The figures need McStas, so they are not made with the site. To run McStas and make them, run:
@@ -156,7 +177,7 @@ pixi run python -c "from mcdgs.diagnostics.cspec.elastic_resolution_incoherent i
 ```
 
 At its defaults, `main` runs both parts, 1e9 rays from the masked source with seed 1, as for the
-figures here. It prints the table and saves the two figures and the table to
+figures here. It prints the table and saves the three figures and the table to
 `mcdgs_workspace/results/cspec_elastic_resolution_incoherent/`, or to the folder given as `out`.
 Running the module, as `pixi run docs-diagnostics` does, only reduces the runs again, without
 McStas:
