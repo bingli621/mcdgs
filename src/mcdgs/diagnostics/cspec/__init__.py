@@ -8,4 +8,5 @@ In the order of the beam, which is also the order ``pixi run docs-diagnostics`` 
 4. :mod:`.beam_monitor`: the beam at the beam monitor, after the BBG.
 5. :mod:`.choppers`: each disk, and the acceptance diagram of the cascade.
 6. :mod:`.time_distance`: the time-distance diagram.
+7. :mod:`.masked_source`: the plain and the masked source, at the sample monitor.
 """

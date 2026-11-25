@@ -18,8 +18,9 @@ documentation. See [Source](../instruments/trex/source.md),
 [Source](../instruments/cspec/source.md),
 [Guide transmission](../instruments/cspec/guides.md),
 [Beam monitor](../instruments/cspec/beam-monitor.md),
-[Choppers](../instruments/cspec/choppers.md) and
-[Time-distance diagram](../instruments/cspec/time-distance.md) for CSPEC.
+[Choppers](../instruments/cspec/choppers.md),
+[Time-distance diagram](../instruments/cspec/time-distance.md) and
+[Masked source](../instruments/cspec/masked-source.md) for CSPEC.
 [Run McStasScript's diagnostics](../how-to/run-mcstasscript-diagnostics.md) has the code of
 `guides_diagnostics`, and [Guide transmission](../instruments/trex/guides.md) its figures.
 
@@ -36,6 +37,8 @@ documentation. See [Source](../instruments/trex/source.md),
 ::: mcdgs.diagnostics.beam_monitor
 
 ::: mcdgs.diagnostics.guides_diagnostics
+
+::: mcdgs.diagnostics.masked_source
 
 ::: mcdgs.diagnostics.trex.overview
 
@@ -84,3 +87,5 @@ documentation. See [Source](../instruments/trex/source.md),
 ::: mcdgs.diagnostics.cspec.choppers
 
 ::: mcdgs.diagnostics.cspec.time_distance
+
+::: mcdgs.diagnostics.cspec.masked_source

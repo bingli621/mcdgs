@@ -49,6 +49,7 @@ nav = [
     { "Beam monitor" = "instruments/cspec/beam-monitor.md" },
     { "Choppers" = "instruments/cspec/choppers.md" },
     { "Time-distance diagram" = "instruments/cspec/time-distance.md" },
+    { "Masked source" = "instruments/cspec/masked-source.md" },
   ] },
   { "How-to guides" = [
     { "Run a McStas simulation" = "how-to/run-a-simulation.md" },
