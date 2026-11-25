@@ -39,6 +39,7 @@ from matplotlib.figure import Figure
 from mcdgs.core import rotation
 from mcdgs.core.components import Single_crystal
 from mcdgs.diagnostics import cli
+from mcdgs.diagnostics import diffraction as pattern
 from mcdgs.diagnostics.trex import diffraction as plane
 from mcdgs.diagnostics.trex import sample_runs as runs
 from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
@@ -55,9 +56,9 @@ SCAN_SPLIT = 10  # McStas SPLIT on the crystal, at each angle
 Q_LIMIT = (
     10.0  # 1/Å: the map spans -Q_LIMIT to Q_LIMIT in Qx and Qz, beyond 2 ki of every sub-pulse
 )
-Q_STEP = plane.Q_STEP
+Q_STEP = pattern.Q_STEP
 FRAMES_PER_SECOND = 4  # of the GIF, one frame per angle
-QY_HALF_WIDTH = plane.QY_HALF_WIDTH
+QY_HALF_WIDTH = pattern.QY_HALF_WIDTH
 
 
 # --8<-- [start:instrument]
@@ -293,8 +294,8 @@ def plot_scan(maps: sc.DataArray, title: str) -> Figure:
     hkl = " ".join(str(i) for i in IN_PLANE)
     summed = maps.sum("omega")
     omegas = maps.coords["omega"].to(unit="deg")
-    bins = plane.plot_bins(summed, QY_HALF_WIDTH)
-    return plane.draw_plane(
+    bins = pattern.plot_bins(summed, QY_HALF_WIDTH)
+    return pattern.draw_plane(
         summed,
         f"{title}\n{bins}, {bins_title({'omega': omegas})}",
         xlabel=f"Qx [1/Å], along ({hkl})",
@@ -330,7 +331,7 @@ def animate(maps: sc.DataArray, path: Path, title: str, fps: int = FRAMES_PER_SE
     summed = np.cumsum(values, axis=0)  # frame n: the angles up to n
     fig = plot_scan(maps, title)  # the axes and the color scale of the whole scan
     (mesh,) = fig.axes[0].collections
-    bins = plane.plot_bins(maps.sum("omega"), QY_HALF_WIDTH)
+    bins = pattern.plot_bins(maps.sum("omega"), QY_HALF_WIDTH)
 
     def frame(n: int) -> list[Artist]:
         mesh.set_array(np.ma.masked_less_equal(summed[n], 0))

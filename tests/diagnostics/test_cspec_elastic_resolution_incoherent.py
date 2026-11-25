@@ -6,12 +6,11 @@ import scipp as sc
 
 from mcdgs.diagnostics.cspec.elastic_resolution_incoherent import (
     FOCUS_MARGIN,
-    MONITOR,
     define_instrument,
     detector_window,
-    pixel_solid_angle,
 )
 from mcdgs.diagnostics.cspec.incident_energy import MC_MONITOR_TIME_RESOLUTION
+from mcdgs.diagnostics.cspec.sample_runs import MONITOR, pixel_solid_angle
 from mcdgs.instruments.cspec.detectors import (
     PANEL_ARM_ANGLES,
     PANEL_DISTANCE,

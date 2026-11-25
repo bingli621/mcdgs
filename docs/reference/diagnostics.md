@@ -22,8 +22,9 @@ documentation. See [Source](../instruments/trex/source.md),
 [Time-distance diagram](../instruments/cspec/time-distance.md),
 [Neutrons on sample](../instruments/cspec/neutrons-on-sample.md),
 [Masked source](../instruments/cspec/masked-source.md),
-[Incident energy](../instruments/cspec/incident-energy.md) and
-[Elastic resolution](../instruments/cspec/elastic-resolution-incoherent.md) for CSPEC.
+[Incident energy](../instruments/cspec/incident-energy.md),
+[Elastic resolution](../instruments/cspec/elastic-resolution-incoherent.md) and
+[Diffraction](../instruments/cspec/diffraction.md) for CSPEC.
 [Run McStasScript's diagnostics](../how-to/run-mcstasscript-diagnostics.md) has the code of
 `guides_diagnostics`, and [Guide transmission](../instruments/trex/guides.md) its figures.
 
@@ -48,6 +49,8 @@ documentation. See [Source](../instruments/trex/source.md),
 ::: mcdgs.diagnostics.neutrons_on_sample
 
 ::: mcdgs.diagnostics.elastic_resolution
+
+::: mcdgs.diagnostics.diffraction
 
 ::: mcdgs.diagnostics.trex.overview
 
@@ -103,4 +106,8 @@ documentation. See [Source](../instruments/trex/source.md),
 
 ::: mcdgs.diagnostics.cspec.incident_energy
 
+::: mcdgs.diagnostics.cspec.sample_runs
+
 ::: mcdgs.diagnostics.cspec.elastic_resolution_incoherent
+
+::: mcdgs.diagnostics.cspec.diffraction

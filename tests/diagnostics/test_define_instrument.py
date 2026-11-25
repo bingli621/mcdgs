@@ -11,6 +11,7 @@ from mcdgs.core import Instrument
 SHARED = {  # used by the diagnostics, not one itself
     "mcdgs.diagnostics.trex.sample_runs",
     "mcdgs.diagnostics.trex.elastic_resolution_model",
+    "mcdgs.diagnostics.cspec.sample_runs",
 }
 MODULES = sorted(
     name
@@ -23,7 +24,7 @@ MODULES = sorted(
 def test_every_diagnostic_is_listed():
     trex = [m for m in MODULES if m.startswith(trex_diagnostics.__name__)]
     cspec = [m for m in MODULES if m.startswith(cspec_diagnostics.__name__)]
-    assert (len(trex), len(cspec)) == (17, 10)
+    assert (len(trex), len(cspec)) == (17, 11)
 
 
 @pytest.mark.parametrize("name", MODULES)

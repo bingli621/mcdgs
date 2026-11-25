@@ -53,6 +53,7 @@ nav = [
     { "Masked source" = "instruments/cspec/masked-source.md" },
     { "Incident energy" = "instruments/cspec/incident-energy.md" },
     { "Elastic resolution" = "instruments/cspec/elastic-resolution-incoherent.md" },
+    { "Diffraction" = "instruments/cspec/diffraction.md" },
   ] },
   { "How-to guides" = [
     { "Run a McStas simulation" = "how-to/run-a-simulation.md" },

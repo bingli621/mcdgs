@@ -12,4 +12,7 @@ In the order of the beam, which is also the order ``pixi run docs-diagnostics`` 
 8. :mod:`.masked_source`: the plain and the masked source, at the sample monitor.
 9. :mod:`.incident_energy`: the incident energy of each sub-pulse.
 10. :mod:`.elastic_resolution_incoherent`: the elastic resolution, from vanadium.
+11. :mod:`.diffraction`: the horizontal scattering plane of a La2Ni7 crystal.
+
+:mod:`.sample_runs` reduces the runs split at the sample of the diagnostics with a sample.
 """
