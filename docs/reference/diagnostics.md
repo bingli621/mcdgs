@@ -17,7 +17,8 @@ documentation. See [Source](../instruments/trex/source.md),
 [Rotation scan](../instruments/trex/diffraction-scan.md) for what they show for T-Rex, and
 [Source](../instruments/cspec/source.md),
 [Guide transmission](../instruments/cspec/guides.md),
-[Beam monitor](../instruments/cspec/beam-monitor.md) and
+[Beam monitor](../instruments/cspec/beam-monitor.md),
+[Choppers](../instruments/cspec/choppers.md) and
 [Time-distance diagram](../instruments/cspec/time-distance.md) for CSPEC.
 [Run McStasScript's diagnostics](../how-to/run-mcstasscript-diagnostics.md) has the code of
 `guides_diagnostics`, and [Guide transmission](../instruments/trex/guides.md) its figures.
@@ -79,5 +80,7 @@ documentation. See [Source](../instruments/trex/source.md),
 ::: mcdgs.diagnostics.cspec.guides_diagnostics
 
 ::: mcdgs.diagnostics.cspec.beam_monitor
+
+::: mcdgs.diagnostics.cspec.choppers
 
 ::: mcdgs.diagnostics.cspec.time_distance

@@ -217,6 +217,9 @@ masked source needs the choppers turning, so it is refused with `nu_mc` 0.
 The slit edges of each disk reach McStas as an array of their own, declared in the `.instr`
 file as `<name>_slit_edges`. See the [McStas instrument file](instr-file.md).
 
+[Choppers](choppers.md#delays) gives the delay of each disk at the default parameters, draws each
+disk and the acceptance diagram of the cascade.
+
 ## Monitors
 
 Each monitor is a `Monitor_nD` that records one 2D map of time against wavelength and leaves the

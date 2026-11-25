@@ -47,6 +47,7 @@ nav = [
     { "Source" = "instruments/cspec/source.md" },
     { "Guide transmission" = "instruments/cspec/guides.md" },
     { "Beam monitor" = "instruments/cspec/beam-monitor.md" },
+    { "Choppers" = "instruments/cspec/choppers.md" },
     { "Time-distance diagram" = "instruments/cspec/time-distance.md" },
   ] },
   { "How-to guides" = [
