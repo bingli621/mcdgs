@@ -201,7 +201,7 @@ profile in counts/s, and gives its average and its peak:
 
 <!-- fmt:off -->
 ```python
---8<-- "src/mcdgs/diagnostics/trex/beam_monitor.py:count_rate"
+--8<-- "src/mcdgs/diagnostics/beam_monitor.py:count_rate"
 ```
 <!-- fmt:on -->
 

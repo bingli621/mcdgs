@@ -46,6 +46,7 @@ nav = [
       { "Technical details" = "instruments/cspec/details.md" },
       { "McStas instrument file" = "instruments/cspec/instr-file.md" },
       { "Source" = "instruments/cspec/source.md" },
+      { "Beam monitor" = "instruments/cspec/beam-monitor.md" },
       { "Time-distance diagram" = "instruments/cspec/time-distance.md" },
     ] },
   ] },

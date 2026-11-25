@@ -23,7 +23,7 @@ MODULES = sorted(
 def test_every_diagnostic_is_listed():
     trex = [m for m in MODULES if m.startswith(trex_diagnostics.__name__)]
     cspec = [m for m in MODULES if m.startswith(cspec_diagnostics.__name__)]
-    assert (len(trex), len(cspec)) == (17, 3)
+    assert (len(trex), len(cspec)) == (17, 4)
 
 
 @pytest.mark.parametrize("name", MODULES)
