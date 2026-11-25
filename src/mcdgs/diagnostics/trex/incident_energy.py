@@ -24,25 +24,24 @@ wavelength and the incident energy, through a graph of scippneutron's kernels. T
 wavelength of each sub-pulse at the pre-sample monitor, which the monitors record, gives the
 incident energy it should have.
 
-:func:`plot_time_profiles` draws the intensity of both monitors against time,
-:func:`plot_incident_energies` the incident energy of each sub-pulse, and :func:`save_graph` the
-graph. Run the module to do it::
+:func:`.plot_time_profiles` draws the intensity of both monitors against time,
+:func:`.plot_incident_energies` the incident energy of each sub-pulse, and :func:`.save_graph` the
+graph, all of :mod:`mcdgs.diagnostics.incident_energy`. Run the module to do it::
 
     pixi run python -m mcdgs.diagnostics.trex.incident_energy
 """
 
 from pathlib import Path
 
-import matplotlib.pyplot as plt
 import scipp as sc
-from matplotlib.figure import Figure
 from scippneutron.conversion import tof as tof_kernels
 
 from mcdgs.diagnostics import cli, compare
+from mcdgs.diagnostics.incident_energy import plot_incident_energies, plot_time_profiles, save_graph
 from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
 from mcdgs.mcstas import Simulation, read_mcstas_maps
 from mcdgs.reduction.binning import monitor_bins
-from mcdgs.reduction.incident_energy import EI_GRAPH, incident_flight
+from mcdgs.reduction.incident_energy import incident_flight
 from mcdgs.reduction.patches import MIN_FRACTION, find_patches, subpulse_flight
 from mcdgs.samples import la2ni7
 from mcdgs.tof import build_tof, read_tof_maps
@@ -52,6 +51,13 @@ MONITOR_LABELS = {
     "pre_sample_monitor": "Pre-sample monitor",
     "beamstop_monitor": "Beamstop monitor",
 }
+# the methods of the incident energy, the prefix of the coordinates of each flight
+TWO_MONITORS, SINGLE_MONITOR = "from_two_monitors", "from_single_monitor"
+METHODS = {  # each method, its color and its label
+    TWO_MONITORS: ("tab:blue", "between the monitors"),
+    SINGLE_MONITOR: ("tab:orange", "pre-sample monitor alone"),
+}
+FLIGHT_COORDS = ("Ltotal", "tof", "incident_wavelength", "incident_energy")  # of each flight
 
 
 # --8<-- [start:instrument]
@@ -127,8 +133,9 @@ def subpulse_flights(
     :
         The intensity of each sub-pulse at the pre-sample monitor, along ``subpulse``, with the
         times at both monitors; the coordinates of :func:`.incident_flight` between the
-        monitors, ``Ltotal``, ``tof``, ``incident_wavelength`` and ``incident_energy``, and from
-        the source, with the prefix ``one_monitor_``; and ``reference_energy``, from the mean
+        monitors, ``Ltotal``, ``tof``, ``incident_wavelength`` and ``incident_energy``, with the
+        prefix ``from_two_monitors_``, and from the source, with the prefix
+        ``from_single_monitor_``; and ``reference_energy``, from the mean
         wavelength at the pre-sample monitor.
 
     Raises
@@ -165,8 +172,9 @@ def subpulse_flights(
     flights.coords["reference_energy"] = tof_kernels.energy_from_wavelength(
         wavelength=flights.coords.pop("wavelength_at_start")
     )
-    for name, value in from_source.items():
-        flights.coords[f"one_monitor_{name}"] = value
+    for name in FLIGHT_COORDS:
+        flights.coords[f"{TWO_MONITORS}_{name}"] = flights.coords.pop(name)
+        flights.coords[f"{SINGLE_MONITOR}_{name}"] = from_source[name]
     return flights
 
 
@@ -180,8 +188,8 @@ def print_incident_energies(flights: dict[str, sc.DataArray]) -> None:
     """
     for model, f in flights.items():
         print(
-            f"{model}: flight path {f.coords['Ltotal'].value:.4f} m between the monitors, "
-            f"{f.coords['one_monitor_Ltotal'].value:.4f} m from the source"
+            f"{model}: flight path {f.coords[f'{TWO_MONITORS}_Ltotal'].value:.4f} m between the "
+            f"monitors, {f.coords[f'{SINGLE_MONITOR}_Ltotal'].value:.4f} m from the source"
         )
         print(
             "  sub-pulse  t_pre [ms]  tof [ms]  λi [Å]  Ei [meV]  ΔEi/Ei"
@@ -191,10 +199,10 @@ def print_incident_energies(flights: dict[str, sc.DataArray]) -> None:
         for i, (t, flight, wavelength, ei, one, ref) in enumerate(
             zip(
                 f.coords["time_at_pre_sample_monitor"].values,
-                f.coords["tof"].to(unit="ms").values,
-                f.coords["incident_wavelength"].to(unit="Å").values,
-                f.coords["incident_energy"].to(unit="meV").values,
-                f.coords["one_monitor_incident_energy"].to(unit="meV").values,
+                f.coords[f"{TWO_MONITORS}_tof"].to(unit="ms").values,
+                f.coords[f"{TWO_MONITORS}_incident_wavelength"].to(unit="Å").values,
+                f.coords[f"{TWO_MONITORS}_incident_energy"].to(unit="meV").values,
+                f.coords[f"{SINGLE_MONITOR}_incident_energy"].to(unit="meV").values,
                 reference,
             )
         ):
@@ -203,127 +211,6 @@ def print_incident_energies(flights: dict[str, sc.DataArray]) -> None:
                 f"  {(ei - ref) / ref:+7.2%}  {one:15.3f}  {(one - ref) / ref:+7.2%}"
                 f"  {ref:15.3f}"
             )
-
-
-def plot_time_profiles(comparisons: list[compare.MonitorComparison], title: str) -> Figure:
-    """Draw the intensity of each monitor against time, summed over wavelength, in both models.
-
-    Each monitor has its own color; McStas is a solid line, tof a dashed one.
-
-    Parameters
-    ----------
-    comparisons:
-        One per monitor, in beam order.
-    title:
-        The title of the figure.
-
-    Returns
-    -------
-    :
-        The figure.
-    """
-    fig, ax = plt.subplots(figsize=(11, 6), layout="constrained")
-    for color, c in zip(("tab:blue", "tab:orange"), comparisons):
-        times = sc.midpoints(c.bins["toa"]).to(unit="ms").values
-        label = MONITOR_LABELS.get(c.name, c.name)
-        ax.plot(times, c.first.values.sum(axis=1), color=color, lw=1.2, label=f"{label}, McStas")
-        ax.plot(
-            times, c.second.values.sum(axis=1), color=color, lw=1.2, ls="--", label=f"{label}, tof"
-        )
-    # the monitors have time bins of the same width
-    ylabel = compare.intensity_label(comparisons[0].first.sum("wavelength"))
-    ax.set(title=title, xlabel="Time [ms]", ylabel=ylabel)
-    ax.set_ylim(bottom=0)
-    ax.grid(True, alpha=0.4)
-    ax.legend()
-    return fig
-
-
-def plot_incident_energies(flights: dict[str, sc.DataArray], title: str) -> Figure:
-    """Draw the incident energy of each sub-pulse against its time at the pre-sample monitor.
-
-    The top panel has the incident energy of each model from the flight between the monitors
-    and from the pre-sample monitor alone, and that from the mean wavelength of McStas; the
-    bottom panel the relative difference of each from the mean wavelength of its own model.
-    The color is the method; McStas has filled circles, tof larger hollow squares.
-
-    Parameters
-    ----------
-    flights:
-        The sub-pulses of :func:`subpulse_flights`, by the name of the model: ``"McStas"`` and
-        ``"tof"``.
-    title:
-        The title of the figure.
-
-    Returns
-    -------
-    :
-        The figure.
-    """
-    fig, (energy_ax, difference_ax) = plt.subplots(
-        2, 1, figsize=(11, 8), sharex=True, height_ratios=(2, 1), layout="constrained"
-    )
-    fig.suptitle(title)
-    methods = {  # the coordinate of each method, its color and its label
-        "incident_energy": ("tab:blue", "between the monitors"),
-        "one_monitor_incident_energy": ("tab:orange", "pre-sample monitor alone"),
-    }
-    for model, f in flights.items():
-        marker, size, hollow = ("s", 9, True) if model == "tof" else ("o", 6, False)
-        times = f.coords["time_at_pre_sample_monitor"].to(unit="ms").values
-        reference = f.coords["reference_energy"].to(unit="meV").values
-        for coord, (color, method) in methods.items():
-            energy = f.coords[coord].to(unit="meV").values
-            style = {
-                "marker": marker,
-                "markersize": size,
-                "ls": "none",
-                "color": color,
-                "mfc": "none" if hollow else color,
-                "label": f"{model}, {method}",
-            }
-            energy_ax.plot(times, energy, **style)
-            difference_ax.plot(times, 100 * (energy - reference) / reference, **style)
-    mcstas = flights["McStas"]
-    energy_ax.plot(
-        mcstas.coords["time_at_pre_sample_monitor"].to(unit="ms").values,
-        mcstas.coords["reference_energy"].to(unit="meV").values,
-        marker="x",
-        ls="none",
-        color="black",
-        label="McStas, from the mean wavelength",
-    )
-    energy_ax.set(ylabel="Incident energy [meV]")
-    difference_ax.axhline(0, color="0.5", lw=0.8)
-    difference_ax.set(
-        xlabel="Time at the pre-sample monitor [ms]",
-        ylabel="Difference from λ [%]",
-    )
-    energy_ax.legend()
-    for ax in (energy_ax, difference_ax):
-        ax.grid(True, alpha=0.4)
-    return fig
-
-
-def save_graph(path: Path) -> Path:
-    """Draw ``EI_GRAPH`` with ``sc.show_graph`` and save it as an SVG file.
-
-    The coordinates are boxes and the kernels gray labels between them, with an arrow from each
-    coordinate to the kernel that takes it. It needs graphviz, which the pixi feature ``mcstas``
-    installs.
-
-    Parameters
-    ----------
-    path:
-        The file, without the extension, which graphviz adds.
-
-    Returns
-    -------
-    :
-        The path of the SVG file.
-    """
-    graph = sc.show_graph(EI_GRAPH, simplified=False)
-    return Path(graph.render(path, format="svg", cleanup=True))
 
 
 def main(
@@ -336,9 +223,9 @@ def main(
     """Run both models of :class:`TRexToBeamstopMonitor`, print Ei and save the figures.
 
     The figures are ``trex_determine_ei.png``, the time profiles, from
-    :func:`plot_time_profiles`; ``trex_determine_ei_values.png``, the incident energy of each
-    sub-pulse, from :func:`plot_incident_energies`; and ``trex_determine_ei_graph.svg``, the graph
-    of the calculation, from :func:`save_graph`.
+    :func:`.plot_time_profiles`; ``trex_determine_ei_values.png``, the incident energy of each
+    sub-pulse, from :func:`.plot_incident_energies`; and ``trex_determine_ei_graph.svg``, the graph
+    of the calculation, from :func:`.save_graph`.
 
     Parameters
     ----------
@@ -408,8 +295,14 @@ def main(
 
     conditions = instrument.running_conditions()
     folder = cli.output_folder(out, "trex_incident_energy")
-    profiles = plot_time_profiles(comparisons, f"T-Rex direct beam\n{conditions}")
-    energies = plot_incident_energies(flights, f"T-Rex incident energy per sub-pulse\n{conditions}")
+    profiles = plot_time_profiles(comparisons, f"T-Rex direct beam\n{conditions}", MONITOR_LABELS)
+    energies = plot_incident_energies(
+        flights,
+        f"T-Rex incident energy per sub-pulse\n{conditions}",
+        methods=METHODS,
+        time="time_at_pre_sample_monitor",
+        time_label="Time at the pre-sample monitor [ms]",
+    )
     files = [
         cli.save_figure(profiles, folder / f"{name}.png"),
         cli.save_figure(energies, folder / f"{name}_values.png"),

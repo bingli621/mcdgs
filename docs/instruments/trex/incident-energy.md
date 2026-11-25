@@ -137,7 +137,8 @@ The two flights differ only in what goes into the graph:
 
 **From the source**, only the pre-sample monitor is measured. For the start, every sub-pulse is
 taken to leave the moderator at `t0_offset`, the time the choppers are phased to. Its
-coordinates are kept with the prefix `one_monitor_`.
+coordinates are kept with the prefix `from_single_monitor_`, and those between the monitors with
+`from_two_monitors_`.
 
 ### The reference
 

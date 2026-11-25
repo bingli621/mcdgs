@@ -9,4 +9,5 @@ In the order of the beam, which is also the order ``pixi run docs-diagnostics`` 
 5. :mod:`.choppers`: each disk, and the acceptance diagram of the cascade.
 6. :mod:`.time_distance`: the time-distance diagram.
 7. :mod:`.masked_source`: the plain and the masked source, at the sample monitor.
+8. :mod:`.incident_energy`: the incident energy of each sub-pulse.
 """
