@@ -12,7 +12,8 @@ documentation. See [Source](../instruments/trex/source.md),
 [Neutrons on sample](../instruments/trex/neutrons-on-sample.md),
 [Masked source](../instruments/trex/masked-source.md),
 [Incident energy](../instruments/trex/incident-energy.md),
-[Elastic resolution](../instruments/trex/elastic-resolution-incoherent-short.md),
+[Elastic resolution (short wavelength)](../instruments/trex/elastic-resolution-incoherent-short.md),
+[Elastic resolution (long wavelength)](../instruments/trex/elastic-resolution-incoherent-long.md),
 [Diffraction](../instruments/trex/diffraction.md),
 [Diffraction scan](../instruments/trex/diffraction-scan.md) and
 [Powder magnon](../instruments/trex/magnon-powder.md) for what they show for T-Rex, and
