@@ -7,8 +7,9 @@ reduction, fits and figures, into the folders and files of ``NAME``. Only ``lamb
 the choppers are phased to it, and the source simulates its band. The sub-pulses have about
 a seventh of the Ei of those at 3 Å, and their elastic lines are some 0.01 meV wide, under a
 tenth of those at 3 Å, so the spectra and the S(Q, E) maps are binned in E by ``ENERGY_STEP``, a
-fiftieth of the 3 Å bins. The Gaussians are fitted within ``FIT_RANGE`` of E = 0 only: a few
-neutrons of the last sub-pulse land near E = 0.66 meV, far from its line. The S(Q, E) maps
+fiftieth of the 3 Å bins. The Gaussians are fitted within ``FIT_RANGE`` of E = 0 only: the
+elastic neutrons of a 15th sub-pulse, too weak for :func:`.sample_runs.subpulse_timing`, fall in
+the window of the last one found, near E = 0.66 meV. The S(Q, E) maps
 are drawn within ``MAP_RANGE`` of E = 0, where the lines are, with the top of their color scale
 at the ``MAP_PERCENTILE`` percentile, about 0.04: the lowest |Q| bin is a hundred times
 brighter than the line elsewhere, and saturates.

@@ -24,7 +24,8 @@ documentation. See [Source](../instruments/trex/source.md),
 [Neutrons on sample](../instruments/cspec/neutrons-on-sample.md),
 [Masked source](../instruments/cspec/masked-source.md),
 [Incident energy](../instruments/cspec/incident-energy.md),
-[Elastic resolution](../instruments/cspec/elastic-resolution-incoherent-short.md),
+[Elastic resolution (short wavelength)](../instruments/cspec/elastic-resolution-incoherent-short.md),
+[Elastic resolution (long wavelength)](../instruments/cspec/elastic-resolution-incoherent-long.md),
 [Diffraction](../instruments/cspec/diffraction.md),
 [Diffraction scan](../instruments/cspec/diffraction-scan.md) and
 [Powder magnon](../instruments/cspec/magnon-powder.md) for CSPEC.
@@ -116,6 +117,8 @@ documentation. See [Source](../instruments/trex/source.md),
 ::: mcdgs.diagnostics.cspec.sample_runs
 
 ::: mcdgs.diagnostics.cspec.elastic_resolution_incoherent_short
+
+::: mcdgs.diagnostics.cspec.elastic_resolution_incoherent_long
 
 ::: mcdgs.diagnostics.cspec.diffraction
 

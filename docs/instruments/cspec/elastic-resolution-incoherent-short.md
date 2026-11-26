@@ -1,4 +1,4 @@
-# Elastic resolution
+# Elastic resolution (short wavelength)
 
 `CSPECElasticResolution`, in
 [`mcdgs.diagnostics.cspec.elastic_resolution_incoherent_short`](https://github.com/bingli621/mcdgs/blob/main/src/mcdgs/diagnostics/cspec/elastic_resolution_incoherent_short.py),
@@ -8,7 +8,8 @@ every neutron it scatters has E = 0. The width of the line it gives is the energ
 CSPEC, one value for each of the 14 sub-pulses. Anything away from the line would come from the
 instrument or the reduction, not from the sample. It follows
 [Elastic resolution of T-Rex](../trex/elastic-resolution-incoherent.md), at the default settings
-of the choppers only.
+of the choppers only. [Elastic resolution (long wavelength)](elastic-resolution-incoherent-long.md)
+does the same at `lambda0` = 8 Å.
 
 The reduction is that of T-Rex, with the sub-pulses and incident energies of
 [Incident energy](incident-energy.md) and the
