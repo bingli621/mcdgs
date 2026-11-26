@@ -12,7 +12,7 @@ documentation. See [Source](../instruments/trex/source.md),
 [Neutrons on sample](../instruments/trex/neutrons-on-sample.md),
 [Masked source](../instruments/trex/masked-source.md),
 [Incident energy](../instruments/trex/incident-energy.md),
-[Elastic resolution](../instruments/trex/elastic-resolution-incoherent.md),
+[Elastic resolution](../instruments/trex/elastic-resolution-incoherent-short.md),
 [Diffraction](../instruments/trex/diffraction.md),
 [Diffraction scan](../instruments/trex/diffraction-scan.md) and
 [Powder magnon](../instruments/trex/magnon-powder.md) for what they show for T-Rex, and
@@ -82,7 +82,9 @@ documentation. See [Source](../instruments/trex/source.md),
 
 ::: mcdgs.diagnostics.trex.sample_runs
 
-::: mcdgs.diagnostics.trex.elastic_resolution_incoherent
+::: mcdgs.diagnostics.trex.elastic_resolution_incoherent_short
+
+::: mcdgs.diagnostics.trex.elastic_resolution_incoherent_long
 
 ::: mcdgs.diagnostics.trex.elastic_resolution_model
 

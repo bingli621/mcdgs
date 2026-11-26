@@ -7,8 +7,8 @@ panels to its energy transfer E = Ei − Ef. Vanadium scatters incoherently and 
 every neutron it scatters has E = 0. The width of the line it gives is the energy resolution of
 CSPEC, one value for each of the 14 sub-pulses. Anything away from the line would come from the
 instrument or the reduction, not from the sample. It follows
-[Elastic resolution of T-Rex](../trex/elastic-resolution-incoherent.md), at the default settings
-of the choppers only. [Elastic resolution (long wavelength)](elastic-resolution-incoherent-long.md)
+[Elastic resolution of T-Rex](../trex/elastic-resolution-incoherent-short.md), at the default
+settings of the choppers only. [Elastic resolution (long wavelength)](elastic-resolution-incoherent-long.md)
 does the same at `lambda0` = 8 Å.
 
 The reduction is that of T-Rex, with the sub-pulses and incident energies of
@@ -95,8 +95,8 @@ Both parts, with the reduction, take three and a half minutes. The sub-pulses br
 
 `q_e_maps` histograms the neutrons of each sub-pulse in |Q| and E, in bins of 0.05 meV and
 0.05 Å⁻¹, and divides each bin by its coverage, as on
-[T-Rex](../trex/elastic-resolution-incoherent.md#sq-e): S(Q, E) per steradian and per meV. Every
-map spans the same range: E from −13 to 13 meV, the arrival window of the highest Ei, and |Q|
+[T-Rex](../trex/elastic-resolution-incoherent-short.md#sq-e): S(Q, E) per steradian and per meV.
+Every map spans the same range: E from −13 to 13 meV, the arrival window of the highest Ei, and |Q|
 from 0 to 7 Å⁻¹. A bin the sub-pulse reaches has the color of its value; a bin it cannot reach
 is white.
 
@@ -133,7 +133,7 @@ at the bottom.
 
 `fit_elastic_lines` fits a Gaussian to the line of each sub-pulse against Ef, over the bins of at
 least 20 % of the highest, weighting each bin by its error, as on
-[T-Rex](../trex/elastic-resolution-incoherent.md#the-gaussian-fits):
+[T-Rex](../trex/elastic-resolution-incoherent-short.md#the-gaussian-fits):
 
 $$
 I(E_f) = h \exp\left(-\frac{(E_f - E_c)^2}{2\sigma^2}\right), \qquad \text{FWHM} = 2\sqrt{2 \ln 2}\,\sigma \approx 2.355\,\sigma.
@@ -158,7 +158,7 @@ each line, 2.6 to 3.9 % of Ei.
 
 `plot_resolution` draws, against Ei, the FWHM of each sub-pulse, the FWHM as a fraction of Ei,
 and the flux of each sub-pulse at `mc_monitor`, as the first three panels of
-[T-Rex](../trex/elastic-resolution-incoherent.md#all-four-modes). CSPEC runs at the default
+[T-Rex](../trex/elastic-resolution-incoherent-short.md#all-four-modes). CSPEC runs at the default
 settings of the choppers only, so there is one point per sub-pulse and no ratio between modes.
 The FWHM has the error of its fit; the flux has no error bars, since the sub-pulses are found
 from the intensity of the monitor alone.

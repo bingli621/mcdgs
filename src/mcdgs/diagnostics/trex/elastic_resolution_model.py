@@ -3,7 +3,7 @@
 The width of the elastic line of vanadium comes from three places: how long the pulse-shaping
 choppers are open, how long the monochromatic choppers are open, and where in the sample a neutron
 scatters. This module computes each from the geometry of :class:`.TRex`, convolves them, and fits
-a Gaussian to the result as :func:`.elastic_resolution_incoherent.fit_elastic_lines` fits the
+a Gaussian to the result as :func:`.elastic_resolution_incoherent_short.fit_elastic_lines` fits the
 simulated lines. It needs no McStas and no random numbers.
 
 :func:`literature_resolution` gives, for comparison, the same width from eq. (3) of Lechner

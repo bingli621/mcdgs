@@ -2,9 +2,10 @@
 
 :class:`TRexMagnonPowder` is :class:`.TRex` with the powder of :func:`.magnon_powder` on
 ``sample_pos``, with the beamstop and the banana detector, as
-:mod:`.diagnostics.trex.elastic_resolution_incoherent` has its vanadium: the same cylinder, the
-same choppers, so the same 15 sub-pulses, each with its own incident energy. Where vanadium
-gives one line at E = 0, the powder gives a dispersive magnon, from its gap of
+:mod:`.diagnostics.trex.elastic_resolution_incoherent_short` has its vanadium: the same
+cylinder and the same choppers, but at the default ``lambda0`` of :class:`.Params`, 2 Å, so 15
+sub-pulses, each with its own incident energy. Where vanadium gives one line at E = 0, the
+powder gives a dispersive magnon, from its gap of
 :data:`.MAGNON_GAP` at small |Q| to the top of its band, :data:`.MAGNON_TOP`. The S(|Q|, E) of
 the powder, from :func:`.write_magnon_sqw`, is a band at each |Q| between sharp edges, with a line
 far narrower than the resolution: how much each sub-pulse blurs those edges is its resolution,
@@ -17,10 +18,11 @@ folder of the workspace, :func:`sqw_path`, then runs each mode in two parts, wit
 :class:`.Simulation`, as the vanadium does: from the source to ``sample_pos``, then from the beam
 there through the powder to the detector, into the folders of :func:`run_names`.
 
-The reduction is that of the vanadium (:func:`.elastic_resolution_incoherent.reduce_runs`): the
-sub-pulses, the pixels past ``MIN_TWO_THETA`` from the beam, the neutrons of each sub-pulse
-normalized by the solid angle of their pixel and by its flux, and :func:`.q_e_maps`, S(Q, E)
-normalized by the coverage of each bin. :func:`.plot_magnon_maps` draws the 15 maps in one figure,
+The reduction is that of the vanadium
+(:func:`.elastic_resolution_incoherent_short.reduce_runs`): the sub-pulses, the pixels past
+``MIN_TWO_THETA`` from the beam, the neutrons of each sub-pulse normalized by the solid angle of
+their pixel and by its flux, and :func:`.q_e_maps`, S(Q, E) normalized by the coverage of each
+bin. :func:`.plot_magnon_maps` draws the 15 maps in one figure,
 over their whole arrival windows, energy gain and energy loss, with the edges of the band of the
 model, :func:`.magnon_band`, over them.
 
@@ -43,7 +45,7 @@ from mcdgs.core.components import Isotropic_Sqw
 from mcdgs.diagnostics import cli
 from mcdgs.diagnostics import elastic_resolution as resolution
 from mcdgs.diagnostics.magnon_powder import plot_magnon_maps
-from mcdgs.diagnostics.trex import elastic_resolution_incoherent as vanadium
+from mcdgs.diagnostics.trex import elastic_resolution_incoherent_short as vanadium
 from mcdgs.diagnostics.trex import sample_runs as runs
 from mcdgs.diagnostics.trex.solid_angles import detector_window
 from mcdgs.instruments.trex.choppers import Mode
@@ -196,8 +198,8 @@ def reduce_runs(
 ) -> tuple[sc.DataArray, sc.DataArray]:
     """Reduce the two parts of a McStas run of :func:`simulate` to S(Q, E), without McStas.
 
-    As :func:`.elastic_resolution_incoherent.reduce_runs`, with the bins ``ENERGY_STEP`` and
-    ``Q_STEP``.
+    As :func:`.elastic_resolution_incoherent_short.reduce_runs`, with the bins ``ENERGY_STEP``
+    and ``Q_STEP``.
 
     Parameters
     ----------

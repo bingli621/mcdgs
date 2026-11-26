@@ -2,7 +2,7 @@
 
 `TRexMagnonPowder`, in
 [`mcdgs.diagnostics.trex.magnon_powder`](https://github.com/bingli621/mcdgs/blob/main/src/mcdgs/diagnostics/trex/magnon_powder.py),
-replaces the vanadium of [Elastic resolution](elastic-resolution-incoherent.md) with a powder
+replaces the vanadium of [Elastic resolution](elastic-resolution-incoherent-short.md) with a powder
 that scatters from one magnon branch. It draws S(Q, E) for each of the 15 sub-pulses in one
 figure. Vanadium gives one line at E = 0, so it measures the resolution at a single energy
 transfer. The magnon spreads intensity across E and |Q|, and its band has sharp edges, so the

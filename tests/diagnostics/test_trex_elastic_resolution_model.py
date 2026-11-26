@@ -4,9 +4,9 @@ import numpy as np
 import pytest
 import scipp as sc
 
-from mcdgs.diagnostics.trex.elastic_resolution_incoherent import (
+from mcdgs.diagnostics.trex.elastic_resolution_incoherent_short import (
     MIN_TWO_THETA,
-    define_instrument,
+    TRexElasticResolution,
     sample,
 )
 from mcdgs.diagnostics.trex.elastic_resolution_model import (
@@ -30,8 +30,10 @@ TWO_THETA = ((BANANA_THETA_LIMITS[0], -MIN_TWO_THETA), (MIN_TWO_THETA, BANANA_TH
 
 
 def geometry(mode):
+    # at the default lambda0, 2 Å, of the McStas widths below, not the 1 Å of the diagnostic
+    params = Params(mode=mode)
     radius = float(sample().radius)
-    return geometry_of(define_instrument(mode), BANANA_RADIUS, radius, TWO_THETA)
+    return geometry_of(TRexElasticResolution(params=params), BANANA_RADIUS, radius, TWO_THETA)
 
 
 def half_max_width(times, values):
@@ -106,7 +108,7 @@ def test_parked_choppers_have_no_resolution():
 
 @pytest.mark.parametrize(
     ("mode", "fwhm"),
-    [  # the McStas FWHM at 20.45 meV and 15.59 meV, trex_elastic_resolution_incoherent_modes.txt
+    [  # the McStas FWHM at 20.45 meV and 15.59 meV, of the vanadium at the default 2 Å
         ("FF", (1.061, 0.720)),
         ("FR", (0.954, 0.632)),
         ("RF", (0.846, 0.571)),

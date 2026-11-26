@@ -1,6 +1,6 @@
 # Analytic elastic resolution
 
-The [elastic resolution](elastic-resolution-incoherent.md) page measures the width of the
+The [elastic resolution](elastic-resolution-incoherent-short.md) page measures the width of the
 elastic line of vanadium in McStas, in each of the four modes of the choppers. This page computes
 the same width without McStas, from the geometry of T-Rex alone: first with the formula of
 Lechner (2000) as written, then with a model that keeps his formula but changes two of its steps
@@ -71,7 +71,7 @@ the reduction keeps, −36° to −5° and 5° to 144°. The distances of T-Rex:
 
 At the sub-pulse of $\lambda_0$ = 2 Å, 20.45 meV, each term and all three together:
 
---8<-- "docs/instruments/trex/figures/elastic-resolution-incoherent/trex_elastic_resolution_incoherent_literature_terms.txt"
+--8<-- "docs/instruments/trex/figures/elastic-resolution-incoherent-short/trex_elastic_resolution_incoherent_short_literature_terms.txt"
 
 By this formula, the two chopper terms of FF are about the same, 0.61 and 0.71 meV, and FR, with
 0.75 meV, is finer than RF, with 0.81 meV. McStas gives FR 0.95 meV and RF 0.85 meV: the other
@@ -157,9 +157,9 @@ The model keeps eq. (3) of Lechner, and changes how its terms are found and comb
 At the sub-pulse of $\lambda_0$, 20.45 meV, the distributions of $\delta E$ of the three terms, and of all three
 together, in each mode:
 
-![The distribution of the error of the energy transfer from the pulse-shaping choppers, the monochromatic choppers and the sample, and of the three together, at 20.45 meV, in FF, FR, RF and RR](figures/elastic-resolution-incoherent/trex_elastic_resolution_incoherent_terms.png)
+![The distribution of the error of the energy transfer from the pulse-shaping choppers, the monochromatic choppers and the sample, and of the three together, at 20.45 meV, in FF, FR, RF and RR](figures/elastic-resolution-incoherent-short/trex_elastic_resolution_incoherent_short_terms.png)
 
---8<-- "docs/instruments/trex/figures/elastic-resolution-incoherent/trex_elastic_resolution_incoherent_terms.txt"
+--8<-- "docs/instruments/trex/figures/elastic-resolution-incoherent-short/trex_elastic_resolution_incoherent_short_terms.txt"
 
 - **The pulse-shaping choppers set the width of FF.** Their term, 1.06 meV, is the largest in FF
   and in FR; the monochromatic choppers give 0.80 meV, and the sample 0.11 meV.
@@ -177,9 +177,9 @@ dashed line is eq. (3) of Lechner as written, with the openings $a / (2u)$; the 
 same with the openings of the beam but still in quadrature, which shows what each of the two
 changes does; the solid line, the model.
 
-![The FWHM of the elastic line against Ei in FF, FR, RF and RR, from McStas, from eq. (3) of Lechner, from the same with the openings of the beam, and from the model, and each calculation over McStas](figures/elastic-resolution-incoherent/trex_elastic_resolution_incoherent_calculations.png)
+![The FWHM of the elastic line against Ei in FF, FR, RF and RR, from McStas, from eq. (3) of Lechner, from the same with the openings of the beam, and from the model, and each calculation over McStas](figures/elastic-resolution-incoherent-short/trex_elastic_resolution_incoherent_short_calculations.png)
 
---8<-- "docs/instruments/trex/figures/elastic-resolution-incoherent/trex_elastic_resolution_incoherent_calculations.txt"
+--8<-- "docs/instruments/trex/figures/elastic-resolution-incoherent-short/trex_elastic_resolution_incoherent_short_calculations.txt"
 
 - **Eq. (3) as written is too narrow**, by a similar factor at every Ei: 0.87 to 0.90 of McStas in
   FF, 0.76 to 0.81 in FR, 0.93 to 0.97 in RF and 0.89 to 0.97 in RR, for the 13 middle sub-pulses.
@@ -194,7 +194,7 @@ changes does; the solid line, the model.
 
 The model against McStas, in meV:
 
---8<-- "docs/instruments/trex/figures/elastic-resolution-incoherent/trex_elastic_resolution_incoherent_model.txt"
+--8<-- "docs/instruments/trex/figures/elastic-resolution-incoherent-short/trex_elastic_resolution_incoherent_short_model.txt"
 
 ## The ratio of the opening times, and the intensity
 
@@ -209,7 +209,7 @@ $$
 at which the two chopper terms of eq. (3) are equal: 12.3 for T-Rex. With the openings of the
 beam, at the sub-pulse nearest $\lambda_0$:
 
---8<-- "docs/instruments/trex/figures/elastic-resolution-incoherent/trex_elastic_resolution_incoherent_lechner.txt"
+--8<-- "docs/instruments/trex/figures/elastic-resolution-incoherent-short/trex_elastic_resolution_incoherent_short_lechner.txt"
 
 - **FF and RR are above the optimum**, at 15.6 and 16.1: the pulse-shaping choppers are open a
   little too long for the monochromatic ones. With the openings of the slits, FF would be at 10.6,
@@ -253,6 +253,6 @@ beam, at the sub-pulse nearest $\lambda_0$:
 ## Making the figures
 
 The figures and the tables of this page are made with those of the
-[elastic resolution](elastic-resolution-incoherent.md#making-the-figures) page, by the same
+[elastic resolution](elastic-resolution-incoherent-short.md#making-the-figures) page, by the same
 `analyze`. The calculations themselves need no McStas; the comparison needs the runs of every
 mode.

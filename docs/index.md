@@ -32,7 +32,7 @@ print(trex)  # every parameter and component, with its position in the lab frame
 | [Chopper acceptance](instruments/trex/choppers.md#acceptance-diagram) | The acceptance diagram of the choppers, exact and without neutrons, with scippneutron. |
 | Reading the output | Monitors and detector pixels from McStas NeXus files; the neutrons at each tof detector; the time and wavelength map of a monitor from both, on the same bins, to compare them. |
 | [Parameters files](reference/io.md) | Save an instrument to a YAML file and load it back. A file need only hold what differs from the instrument the code makes. |
-| [Reduction](reference/reduction.md) | The incident energy of each sub-pulse from two monitors, and the energy and momentum transfer of each neutron, per incident neutron and per steradian: the [diffraction](instruments/trex/diffraction.md) of a crystal, and S(Q, E) normalized by the coverage of each bin of (\|Q\|, E), for [vanadium](instruments/trex/elastic-resolution-incoherent.md#sq-e). |
+| [Reduction](reference/reduction.md) | The incident energy of each sub-pulse from two monitors, and the energy and momentum transfer of each neutron, per incident neutron and per steradian: the [diffraction](instruments/trex/diffraction.md) of a crystal, and S(Q, E) normalized by the coverage of each bin of (\|Q\|, E), for [vanadium](instruments/trex/elastic-resolution-incoherent-short.md#sq-e). |
 
 ## Where to go next
 
@@ -49,7 +49,7 @@ print(trex)  # every parameter and component, with its position in the lab frame
   [neutrons on the sample](instruments/trex/neutrons-on-sample.md), the
   [masked source](instruments/trex/masked-source.md), the
   [incident energy](instruments/trex/incident-energy.md), the
-  [elastic resolution](instruments/trex/elastic-resolution-incoherent.md) from vanadium, the
+  [elastic resolution](instruments/trex/elastic-resolution-incoherent-short.md) from vanadium, the
   [diffraction](instruments/trex/diffraction.md) and
   [diffraction scan](instruments/trex/diffraction-scan.md) of a crystal, and the S(Q, E) of a
   [powder magnon](instruments/trex/magnon-powder.md) in every sub-pulse.

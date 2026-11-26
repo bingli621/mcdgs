@@ -10,9 +10,9 @@ instrument, not the sample. The cylinder scatters only once, into the window of
 :func:`detector_window`, which covers the panels.
 
 :func:`main` runs it in two parts, with :class:`.Simulation`, as
-:mod:`.diagnostics.trex.elastic_resolution_incoherent` does: from the source to ``sample_pos``,
-which dumps the beam there into a beam file, then from that beam through the vanadium to the
-detector, into the folders of :func:`run_names`.
+:mod:`.diagnostics.trex.elastic_resolution_incoherent_short` does: from the source to
+``sample_pos``, which dumps the beam there into a beam file, then from that beam through the
+vanadium to the detector, into the folders of :func:`run_names`.
 
 The reduction is that of T-Rex, with the sub-pulses of :mod:`.diagnostics.cspec.incident_energy`:
 
@@ -34,7 +34,7 @@ The reduction is that of T-Rex, with the sub-pulses of :mod:`.diagnostics.cspec.
 final energy Ef, and gives its FWHM. :func:`.plot_spectra` draws the spectra with their errors and
 their Gaussians, against E, and :func:`.plot_q_e_maps` the S(Q, E) map of each sub-pulse.
 :func:`plot_resolution` draws the FWHM and the flux of each sub-pulse against Ei, as the first
-three panels of :func:`.trex.elastic_resolution_incoherent.plot_resolutions`.
+three panels of :func:`.trex.elastic_resolution_incoherent_short.plot_resolutions`.
 
 :func:`main` is :func:`simulate`, which runs McStas, then :func:`analyze`, which reduces and
 draws. Run it to do both::
@@ -244,7 +244,7 @@ def plot_resolution(lines: sc.Dataset, pulses: sc.DataArray, title: str) -> Figu
     """Draw the FWHM of the elastic line and the flux of each sub-pulse against Ei.
 
     Three panels on one Ei axis, each with one linear y axis, as the first three of
-    :func:`.trex.elastic_resolution_incoherent.plot_resolutions`: the FWHM, the FWHM as a
+    :func:`.trex.elastic_resolution_incoherent_short.plot_resolutions`: the FWHM, the FWHM as a
     fraction of Ei, and the flux at ``mc_monitor``. Each sub-pulse is a point, not joined. The
     FWHM has the error of the fit of :func:`.fit_elastic_lines`; the flux has none:
     :func:`.find_patches` sums the intensity of the monitor without its errors, which are small
