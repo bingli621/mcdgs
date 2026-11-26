@@ -4,7 +4,14 @@
 3 Å of :class:`.Params`: the same instrument, :class:`.CSPECElasticResolution` with the vanadium
 cylinder and the detector panels, the same two runs split at ``sample_pos``, and the same
 reduction, fits and figures, into the folders and files of ``NAME``. Only ``lambda0`` changes:
-the choppers are phased to it, and the source simulates its band.
+the choppers are phased to it, and the source simulates its band. The sub-pulses have about
+a seventh of the Ei of those at 3 Å, and their elastic lines are some 0.01 meV wide, under a
+tenth of those at 3 Å, so the spectra and the S(Q, E) maps are binned in E by ``ENERGY_STEP``, a
+fiftieth of the 3 Å bins. The Gaussians are fitted within ``FIT_RANGE`` of E = 0 only: a few
+neutrons of the last sub-pulse land near E = 0.66 meV, far from its line. The S(Q, E) maps
+are drawn within ``MAP_RANGE`` of E = 0, where the lines are, with the top of their color scale
+at the ``MAP_PERCENTILE`` percentile, about 0.04: the lowest |Q| bin is a hundred times
+brighter than the line elsewhere, and saturates.
 
 :func:`main` is :func:`simulate`, which runs McStas, then :func:`analyze`, which reduces and
 draws. Run it to do both::
@@ -17,6 +24,8 @@ Running the module only reduces the runs again, without McStas, with :func:`anal
 """
 
 from pathlib import Path
+
+import scipp as sc
 
 from mcdgs.diagnostics import cli
 from mcdgs.diagnostics.cspec import sample_runs as runs
@@ -40,6 +49,10 @@ from mcdgs.reduction.inelastic import normalized_events
 
 NAME = "cspec_elastic_resolution_incoherent_long"
 LAMBDA0 = 8.0  # Å, the central wavelength
+ENERGY_STEP = 0.001  # meV, the bin width in E of the spectra and maps: the lines are ~0.01 meV
+FIT_RANGE = 0.5  # meV, the fits keep the bins of |E| up to this
+MAP_RANGE = 1.0  # meV, the maps are drawn for |E| up to this
+MAP_PERCENTILE = 97.0  # the top of the color scale of the maps, of the bins with neutrons
 
 
 # --8<-- [start:instrument]
@@ -101,7 +114,7 @@ def reduce_runs(
 ) -> Reduction:
     """Reduce the two parts of a McStas run of :func:`simulate`, without running McStas.
 
-    As :func:`.elastic_resolution_incoherent_short.reduce_runs`.
+    As :func:`.elastic_resolution_incoherent_short.reduce_runs`, binned in E by ``ENERGY_STEP``.
 
     Parameters
     ----------
@@ -125,8 +138,8 @@ def reduce_runs(
     events = normalized_events(binned, pulses, pixels)
     return Reduction(
         pulses,
-        energy_spectra(events, pulses, pixels.sum()),
-        q_e_maps(events, pulses, two_theta(binned), pixels),
+        energy_spectra(events, pulses, pixels.sum(), step=ENERGY_STEP),
+        q_e_maps(events, pulses, two_theta(binned), pixels, energy_step=ENERGY_STEP),
     )
 
 
@@ -153,7 +166,8 @@ def analyze(out: Path | None = None) -> list[Path]:
     folder = cli.output_folder(out, NAME)
     pulses, spectra, maps = reduce_runs()
     conditions = define_instrument().running_conditions()
-    lines = fit_elastic_lines(spectra)
+    limit = sc.scalar(FIT_RANGE, unit="meV")
+    lines = fit_elastic_lines(spectra["energy_transfer", -limit:limit])  # the line only
     table = lines_table(lines)
     print(table, end="")
     files = [cli.save_text(table, folder / f"{NAME}_lines.txt")]
@@ -164,7 +178,12 @@ def analyze(out: Path | None = None) -> list[Path]:
         f"{conditions}",
     )
     files.append(cli.save_figure(fig, folder / f"{NAME}.png"))
-    fig = plot_q_e_maps(maps, f"CSPEC, vanadium: S(Q, E) of each sub-pulse\n{conditions}")
+    zoom = sc.scalar(MAP_RANGE, unit="meV")
+    fig = plot_q_e_maps(
+        maps["energy_transfer", -zoom:zoom],
+        f"CSPEC, vanadium: S(Q, E) of each sub-pulse\n{conditions}",
+        percentile=MAP_PERCENTILE,
+    )
     files.append(cli.save_figure(fig, folder / f"{NAME}_sqe.png"))
     fig = plot_resolution(
         lines,
