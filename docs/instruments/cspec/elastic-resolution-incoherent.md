@@ -78,11 +78,15 @@ Both parts, with the reduction, take three and a half minutes. The sub-pulses br
    scatters none.
 4. **The normalization.** `normalized_events` divides each neutron by the solid angle of its
    pixel and by the intensity of its sub-pulse at `mc_monitor`.
-5. **The spectra.** `energy_spectra` sums the neutrons of each sub-pulse into 0.05 meV bins of
-   E. It weights each one by the solid angle of its pixel and divides by the 2.40 sr of all the
-   pixels. The result is the intensity averaged over the detector, per neutron at `mc_monitor`,
-   per steradian and per meV. Each neutron of weight $w$ counts with the variance $w^2$, so a bin
-   has the error $\sqrt{\sum w^2}$.
+5. **The spectra.** `energy_spectra` sums the neutrons of each sub-pulse into 0.05 meV bins of E.
+   It weights each one by the solid angle of its pixel and divides by the 2.40 sr of all the
+   pixels. It divides each neutron by its $k_f/k_i = \sqrt{E_f/E_i}$, with the Ei of its sub-pulse,
+   as `q_e_maps` does for S(Q, E): the cross section holds that factor on top of S(Q, E), below 1
+   where the neutron loses energy and above where it gains it. Across a line as wide as 7 % of Ei
+   it runs from 0.98 to 1.02, so left in, it would lift the gain side of the line, tilt its shape
+   and pull its center towards a higher Ef. The result is S(E) averaged over the detector, per
+   neutron at `mc_monitor`, per steradian and per meV. Each neutron of weight $w$ counts with the
+   variance $w^2$, so a bin has the error $\sqrt{\sum w^2}$.
 
 ## S(Q, E)
 
@@ -139,9 +143,9 @@ over E. `analyze` prints the table:
 
 --8<-- "docs/instruments/cspec/figures/elastic-resolution-incoherent/cspec_elastic_resolution_incoherent_lines.txt"
 
-Every center lies above its Ei, from 0.06 meV, 0.39 %, at 15.0 meV down to 0.005 meV, 0.09 %, at
+Every center lies above its Ei, from 0.06 meV, 0.38 %, at 15.0 meV down to 0.004 meV, 0.08 %, at
 5.7 meV; in the middle of the band, at about 0.17 %. On T-Rex the centers are also above Ei, by
-0.02 to 0.09 meV. At the short wavelengths, part of it is the Ei of the single monitor:
+0.01 to 0.07 meV. At the short wavelengths, part of it is the Ei of the single monitor:
 [Incident energy](incident-energy.md#the-incident-energy-of-each-sub-pulse) finds it 0.17 % below
 the Ei of the mean wavelength at 2.33 Å, as these sub-pulses most likely leave the moderator a
 little before `t0_offset`. The rest has not been studied yet. It is small next to the width of

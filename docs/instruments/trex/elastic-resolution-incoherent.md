@@ -76,11 +76,15 @@ figures below are of FF, except in [FF and RR](#ff-and-rr) and
    energy transfer.
 4. **The normalization.** `normalized_events` divides each neutron by the solid angle of its
    pixel and by the intensity of its sub-pulse at the pre-sample monitor.
-5. **The spectra.** `energy_spectra` sums the neutrons of each sub-pulse into 0.05 meV bins of
-   E. It weights each one by the solid angle of its pixel and divides by the 2.11 sr of all the
-   pixels. The result is the intensity averaged over the detector, per neutron at the
-   pre-sample monitor, per steradian and per meV. Each neutron of weight $w$ counts with the
-   variance $w^2$, so a bin has the error $\sqrt{\sum w^2}$.
+5. **The spectra.** `energy_spectra` sums the neutrons of each sub-pulse into 0.05 meV bins of E.
+   It weights each one by the solid angle of its pixel and divides by the 2.11 sr of all the
+   pixels. It divides each neutron by its $k_f/k_i = \sqrt{E_f/E_i}$, with the Ei of its sub-pulse,
+   as `q_e_maps` does for S(Q, E): the cross section holds that factor on top of S(Q, E), below 1
+   where the neutron loses energy and above where it gains it. Across a line as wide as 7 % of Ei
+   it runs from 0.98 to 1.02, so left in, it would lift the gain side of the line, tilt its shape
+   and pull its center towards a higher Ef. The result is S(E) averaged over the detector, per
+   neutron at the pre-sample monitor, per steradian and per meV. Each neutron of weight $w$ counts
+   with the variance $w^2$, so a bin has the error $\sqrt{\sum w^2}$.
 
 ## S(Q, E)
 
@@ -171,7 +175,7 @@ The intensity is that of the whole spectrum, summed over E. `analyze` prints the
 
 --8<-- "docs/instruments/trex/figures/elastic-resolution-incoherent/trex_elastic_resolution_incoherent_ff_lines.txt"
 
-Every center lies within 0.1 meV of its Ei, 0.02 to 0.09 meV above it. So the Ei of each
+Every center lies within 0.07 meV of its Ei, 0.01 to 0.07 meV above it. So the Ei of each
 sub-pulse and its time at the sample agree with what the detector sees.
 
 ## FF and RR
@@ -210,7 +214,7 @@ geometry alone. `resolution_table` gives the numbers side by side:
   sample, and its spread of Ei. So the lines narrow, and fewer neutrons pass.
 - **RF does more than FR, for less.** The narrow slits of the pulse-shaping choppers alone make
   the lines 0.78 to 0.82 times as wide as in FF and keep 0.48 to 0.52 of the flux; those of the
-  monochromatic choppers alone make them 0.82 to 0.92 times as wide and keep only 0.32 to 0.35.
+  monochromatic choppers alone make them 0.83 to 0.93 times as wide and keep only 0.32 to 0.35.
   At 20.45 meV, RF has 0.85 meV with 8.6 × 10⁵ n/s, FR 0.95 meV with 5.7 × 10⁵ n/s. Only at the
   lowest Ei, 11.36 meV, is FR the narrower, 0.85 against 0.90 of FF; at the highest, 47.17 meV,
   the two are as wide.

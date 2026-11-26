@@ -10,7 +10,8 @@ does the rest:
   out the pixels close to the beam.
 - :func:`energy_spectra` sums the neutrons into a histogram of the energy transfer of each
   sub-pulse, averaged over the solid angle of the pixels: per incident neutron, per steradian and
-  per meV.
+  per meV. Like :func:`q_e_maps`, it divides each neutron by its kf/ki, with
+  :func:`scattered_fractions`, so that a line has the shape of S(E), not of (kf/ki) S(E).
 - :func:`fit_elastic_lines` fits a Gaussian to the elastic line of each sub-pulse, against the
   final energy Ef, and gives its FWHM, ``FWHM_PER_SIGMA`` times its standard deviation σ;
   :func:`lines_table` lists them, and :func:`plot_spectra` draws the spectra with their errors and
@@ -92,6 +93,39 @@ def scattered_pixels(binned: sc.DataArray, min_two_theta: float) -> sc.DataArray
     return binned[dim, np.flatnonzero(keep)]
 
 
+def scattered_fractions(events: sc.DataArray, pulses: sc.DataArray) -> sc.DataArray:
+    """Return the fraction of the incident neutrons each neutron stands for, divided by kf/ki.
+
+    Each neutron of :func:`.normalized_events` times the solid angle of its pixel is the fraction
+    of the incident neutrons of its sub-pulse it stands for. The cross section holds kf/ki on top
+    of S(Q, E): above 1 where the neutron gains energy, below where it loses it. Each neutron is
+    divided by its kf/ki, :func:`.kf_over_ki`, with the Ei of its sub-pulse, so that what is
+    summed is S(Q, E).
+
+    Parameters
+    ----------
+    events:
+        The neutrons of :func:`.normalized_events`, in 1/sr, with their ``subpulse``,
+        ``energy_transfer`` and the ``solid_angle`` of their pixel.
+    pulses:
+        The sub-pulses, with their ``incident_energy``.
+
+    Returns
+    -------
+    :
+        The neutrons, dimensionless, with their ``energy_transfer`` in meV.
+    """
+    fractions = events.copy(deep=False)
+    fractions.coords["energy_transfer"] = events.coords["energy_transfer"].to(unit="meV")
+    incident = pulses.coords["incident_energy"].to(unit="meV").values
+    ratio = kf_over_ki(
+        sc.array(dims=events.dims, values=incident[events.coords["subpulse"].values], unit="meV"),
+        fractions.coords["energy_transfer"],
+    )
+    fractions.data = events.data * events.coords["solid_angle"] / ratio
+    return fractions
+
+
 def energy_spectra(
     events: sc.DataArray,
     pulses: sc.DataArray,
@@ -101,9 +135,10 @@ def energy_spectra(
     """Sum the neutrons of each sub-pulse into a histogram of their energy transfer.
 
     Each neutron of :func:`.normalized_events` times the solid angle of its pixel
-    is the fraction of the incident neutrons of its sub-pulse it stands for. Summed over the
-    pixels and divided by their solid angle, it is the intensity averaged over the detector.
-    Each neutron of weight w counts with the variance w², so a bin has the error √Σw².
+    is the fraction of the incident neutrons of its sub-pulse it stands for, divided by its kf/ki
+    with :func:`scattered_fractions`. Summed over the pixels and divided by their solid angle, it
+    is S(E) averaged over the detector. Each neutron of weight w counts with the variance w², so a
+    bin has the error √Σw².
 
     Parameters
     ----------
@@ -129,10 +164,8 @@ def energy_spectra(
     highest = float(pulses.coords["incident_energy"].to(unit="meV").max().value)
     limit = np.ceil(max(map(abs, DEFAULT_ENERGY_TRANSFER_RATIO)) * highest)
     edges = bin_edges("energy_transfer", -limit, limit, step, unit="meV")
-    fractions = events.copy(deep=False)
-    fractions.data = events.data * events.coords["solid_angle"]  # of the incident neutrons
+    fractions = scattered_fractions(events, pulses)
     fractions.variances = fractions.values**2  # a neutron of weight w counts with variance w²
-    fractions.coords["energy_transfer"] = events.coords["energy_transfer"].to(unit="meV")
     n = pulses.sizes["subpulse"]
     grouped = fractions.group(sc.arange("subpulse", n))
     spectra = grouped.hist(energy_transfer=edges) / solid_angle.to(unit="sr")
@@ -409,17 +442,8 @@ def q_e_maps(
     largest = float(two_theta.to(unit="deg").max().value)
     reach = float(momentum_transfer(highest, window[0] * highest, largest))
     q = bin_edges("Q", 0.0, float(np.ceil(reach)), q_step, unit="1/Å")
-    fractions = events.copy(deep=False)
-    fractions.data = events.data * events.coords["solid_angle"]  # of the incident neutrons
-    fractions.coords["energy_transfer"] = events.coords["energy_transfer"].to(unit="meV")
+    fractions = scattered_fractions(events, pulses)
     fractions.coords["Q"] = events.coords["Q"].to(unit="1/Å")
-    # the incident energy of each neutron, that of its sub-pulse, to take kf/ki off S(Q, E)
-    subpulse = events.coords["subpulse"].values
-    incident = energies.values[subpulse]
-    fractions.data = fractions.data / kf_over_ki(
-        sc.array(dims=events.dims, values=incident, unit="meV"),
-        fractions.coords["energy_transfer"],
-    )
     grouped = fractions.group(sc.arange("subpulse", pulses.sizes["subpulse"]))
     scattered = grouped.hist(energy_transfer=energy, Q=q).transpose(
         ["subpulse", "energy_transfer", "Q"]
