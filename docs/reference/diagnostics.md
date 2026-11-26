@@ -13,8 +13,9 @@ documentation. See [Source](../instruments/trex/source.md),
 [Masked source](../instruments/trex/masked-source.md),
 [Incident energy](../instruments/trex/incident-energy.md),
 [Elastic resolution](../instruments/trex/elastic-resolution-incoherent.md),
-[Diffraction](../instruments/trex/diffraction.md) and
-[Rotation scan](../instruments/trex/diffraction-scan.md) for what they show for T-Rex, and
+[Diffraction](../instruments/trex/diffraction.md),
+[Diffraction scan](../instruments/trex/diffraction-scan.md) and
+[Powder magnon](../instruments/trex/magnon-powder.md) for what they show for T-Rex, and
 [Source](../instruments/cspec/source.md),
 [Guide transmission](../instruments/cspec/guides.md),
 [Beam monitor](../instruments/cspec/beam-monitor.md),
@@ -24,9 +25,9 @@ documentation. See [Source](../instruments/trex/source.md),
 [Masked source](../instruments/cspec/masked-source.md),
 [Incident energy](../instruments/cspec/incident-energy.md),
 [Elastic resolution](../instruments/cspec/elastic-resolution-incoherent.md),
-[Powder magnon](../instruments/cspec/magnon-powder.md),
-[Diffraction](../instruments/cspec/diffraction.md) and
-[Rotation scan](../instruments/cspec/diffraction-scan.md) for CSPEC.
+[Diffraction](../instruments/cspec/diffraction.md),
+[Diffraction scan](../instruments/cspec/diffraction-scan.md) and
+[Powder magnon](../instruments/cspec/magnon-powder.md) for CSPEC.
 [Run McStasScript's diagnostics](../how-to/run-mcstasscript-diagnostics.md) has the code of
 `guides_diagnostics`, and [Guide transmission](../instruments/trex/guides.md) its figures.
 
@@ -52,11 +53,11 @@ documentation. See [Source](../instruments/trex/source.md),
 
 ::: mcdgs.diagnostics.elastic_resolution
 
-::: mcdgs.diagnostics.magnon_powder
-
 ::: mcdgs.diagnostics.diffraction
 
 ::: mcdgs.diagnostics.diffraction_scan
+
+::: mcdgs.diagnostics.magnon_powder
 
 ::: mcdgs.diagnostics.trex.overview
 
@@ -84,11 +85,11 @@ documentation. See [Source](../instruments/trex/source.md),
 
 ::: mcdgs.diagnostics.trex.elastic_resolution_model
 
-::: mcdgs.diagnostics.trex.magnon_powder
-
 ::: mcdgs.diagnostics.trex.diffraction
 
 ::: mcdgs.diagnostics.trex.diffraction_scan
+
+::: mcdgs.diagnostics.trex.magnon_powder
 
 ::: mcdgs.diagnostics.trex.guides_diagnostics
 
@@ -116,8 +117,8 @@ documentation. See [Source](../instruments/trex/source.md),
 
 ::: mcdgs.diagnostics.cspec.elastic_resolution_incoherent
 
-::: mcdgs.diagnostics.cspec.magnon_powder
-
 ::: mcdgs.diagnostics.cspec.diffraction
 
 ::: mcdgs.diagnostics.cspec.diffraction_scan
+
+::: mcdgs.diagnostics.cspec.magnon_powder

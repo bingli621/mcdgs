@@ -36,9 +36,9 @@ nav = [
     { "Incident energy" = "instruments/trex/incident-energy.md" },
     { "Elastic resolution" = "instruments/trex/elastic-resolution-incoherent.md" },
     { "Analytic resolution" = "instruments/trex/elastic-resolution-model.md" },
-    { "Powder magnon" = "instruments/trex/magnon-powder.md" },
     { "Diffraction" = "instruments/trex/diffraction.md" },
-    { "Rotation scan" = "instruments/trex/diffraction-scan.md" },
+    { "Diffraction scan" = "instruments/trex/diffraction-scan.md" },
+    { "Powder magnon" = "instruments/trex/magnon-powder.md" },
   ] },
   { "CSPEC" = [
     { "Overview" = "instruments/cspec/index.md" },
@@ -53,9 +53,9 @@ nav = [
     { "Masked source" = "instruments/cspec/masked-source.md" },
     { "Incident energy" = "instruments/cspec/incident-energy.md" },
     { "Elastic resolution" = "instruments/cspec/elastic-resolution-incoherent.md" },
-    { "Powder magnon" = "instruments/cspec/magnon-powder.md" },
     { "Diffraction" = "instruments/cspec/diffraction.md" },
-    { "Rotation scan" = "instruments/cspec/diffraction-scan.md" },
+    { "Diffraction scan" = "instruments/cspec/diffraction-scan.md" },
+    { "Powder magnon" = "instruments/cspec/magnon-powder.md" },
   ] },
   { "How-to guides" = [
     { "Run a McStas simulation" = "how-to/run-a-simulation.md" },

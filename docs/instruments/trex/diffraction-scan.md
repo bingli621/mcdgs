@@ -1,4 +1,4 @@
-# Rotation scan
+# Diffraction scan
 
 `TRexWithRotatingLa2Ni7`, in
 [`mcdgs.diagnostics.trex.diffraction_scan`](https://github.com/bingli621/mcdgs/blob/main/src/mcdgs/diagnostics/trex/diffraction_scan.py),

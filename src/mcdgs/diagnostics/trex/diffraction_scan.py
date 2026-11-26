@@ -1,4 +1,4 @@
-"""A rotation scan of the La2Ni7 crystal on T-Rex, mapping the horizontal plane of reciprocal space.
+"""A diffraction scan of the La2Ni7 crystal on T-Rex, mapping the horizontal plane of reciprocal space.
 
 :class:`TRexWithRotatingLa2Ni7` is :class:`.TRex` with the La2Ni7 crystal of :func:`.la2ni7`,
 (2 1 0) in the horizontal plane, on a goniometer that turns it by the instrument parameter

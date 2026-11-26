@@ -94,37 +94,57 @@ window, $\sqrt{1.8 / 0.2}$ at $E = \mp 0.8\, E_i$.
 
 ## S(Q, E)
 
-`plot_magnon_maps` draws the 15 maps, from the highest Ei to the lowest, from −2 to 23 meV, with
-`plot_q_e_maps` of the vanadium: one linear color scale for all of them, white where the
-sub-pulse cannot reach. Over each map, dashed white lines show the lowest and the highest energy
-of the magnon at each |Q|, without resolution. How far the intensity spreads past them is the
-resolution of that sub-pulse.
+`plot_magnon_maps` draws the 15 maps, from the highest Ei to the lowest, over the whole arrival
+windows: from −38 to 38 meV, $\mp 0.8$ of the highest Ei, so both the energy the neutron gains and
+the energy it loses. It draws them with `plot_q_e_maps` of the vanadium: one linear color scale
+for all of them, up to the 99.9th percentile of the bins, white where the sub-pulse cannot reach.
+Over each map, dashed white lines show the lowest and the highest energy of the magnon at each
+|Q|, without resolution, at positive E and mirrored at negative E. How far the intensity spreads
+past them is the resolution of that sub-pulse. The sample puts nothing between the two bands nor
+beyond them, so whatever lies there comes from the instrument or the reduction.
 
-![S(Q, E) of the powder magnon in each of the 15 sub-pulses in FF, |Q| across and E up, from the highest Ei to the lowest, normalized by the coverage of each bin, with the edges of the band of the model as dashed white lines](figures/magnon-powder/trex_magnon_powder_ff_sqe.png)
+![S(Q, E) of the powder magnon in each of the 15 sub-pulses in FF, |Q| across and E up, from the highest Ei to the lowest, over the energy gain and the energy loss, normalized by the coverage of each bin, with the edges of the band of the model as dashed white lines on both sides](figures/magnon-powder/trex_magnon_powder_ff_sqe.png)
 
-The powder magnon is not a smooth band. At every zone center, $\lvert Q \rvert = (2\pi/a)\sqrt{h^2 + k^2 + l^2}$ =
-1.57, 2.22, 2.72, 3.14 Å⁻¹, ..., the lower edge drops back to the gap, and a dark V of little
-intensity rises from it. Between the Vs, bright arches run across the band. At small |Q| the
-steep dispersion, from 5 meV to about 10 meV below 1 Å⁻¹, is the left edge of the intensity.
-How sharply each sub-pulse draws this pattern is its resolution:
+The powder magnon is not a smooth band. At every zone center,
+$\lvert Q \rvert = (2\pi/a)\sqrt{h^2 + k^2 + l^2}$ = 1.57, 2.22, 2.72, 3.14 Å⁻¹, ..., the inner
+edge drops back to the gap, and a dark V of little intensity rises from it. Between the Vs,
+bright arches run across the band. At small |Q| the steep dispersion, from 5 meV to about 10 meV
+below 1 Å⁻¹, is the inner edge of the intensity. The same pattern stands at negative E, upside
+down. How sharply each sub-pulse draws it is its resolution:
 
-- **The highest Ei, 47 to 36 meV (0 to 2), see the whole band but blur it.** The Vs and the
-  arches merge into one broad blob, from about 8 to 17 meV, and the gap at 5 meV is a soft
-  floor. Sub-pulse 0, in the tail of the source spectrum, has the fewest neutrons: it is the
-  noisiest, and its hottest bins set the top of the color scale.
-- **From 23 to 14 meV (6 to 11), the pattern is sharp.** The Vs, the arches, the gap and the
-  dispersion at small |Q| all have clear edges, though these sub-pulses see only the band below
-  0.8 Ei.
-- **The lowest Ei, 13 to 11 meV (12 to 14), see only the bottom of the band**, up to about
-  9 meV for the 11.4 meV sub-pulse, and are faint and grainy. About a fifth of the neutrons
-  that should scatter are transmitted instead, as McStas reports, because it finds no (|Q|, E)
-  of the table that sends them towards the detector. That loss is heaviest where little of the
-  band can be reached, so the intensity of these sub-pulses is somewhat too low.
+- **The highest Ei, 47 to 36 meV (0 to 2), see the whole band on both sides but blur it.** The Vs
+  and the arches merge into one broad band, and the gap at 5 meV is a soft floor. Sub-pulse 0,
+  in the tail of the source spectrum, has the fewest neutrons, and is the noisiest.
+- **From 23 to 14 meV (6 to 11), the pattern is sharp**, though these sub-pulses see only the
+  band within 0.8 Ei of zero.
+- **The lowest Ei, 13 to 11 meV (12 to 14), see only the bottom of the band**, up to about 9 meV
+  on each side for the 11.4 meV sub-pulse, and are faint and grainy. About a fifth of the
+  neutrons that should scatter, 8.7 of 41.9 million, are transmitted instead, as McStas
+  reports, because it finds no (|Q|, E) of the table that sends them towards the detector. That
+  loss is heaviest where little of the band can be reached, so the intensity of these sub-pulses
+  is somewhat too low.
 
-Below the gap, from about 9 to 14, there is faint intensity that the model does not have. It is
-frame overlap: neutrons of one sub-pulse that lose enough energy in the powder reach the detector
-in the arrival window of the next sub-pulse, so the reduction gives them the Ei of that one, and
-so a wrong energy transfer.
+The two sides test the instrument against each other, since the sample scatters the same on
+both. Inside the band, over the (|Q|, |E|) both sides reach, the mean S(Q, E) of the gain side is
+0.97 to 0.99 of that of the loss side for sub-pulses 0 to 10. They part where the instrument adds
+what the sample does not have:
+
+- **Frame overlap, from sub-pulse 8 on.** A neutron that loses most of its energy, 11 to 20 meV,
+  is slow enough to reach the detector in the arrival window of a later sub-pulse, so the
+  reduction gives it the Ei of that one, and so a wrong energy transfer, anywhere across the
+  window. Between the two bands, at least one FWHM of the elastic line from their edges, there is
+  at most 0.3 % of the intensity of the band up to sub-pulse 8, then 0.6 %, 1.2 %, 2.1 %, 2.7 %,
+  4.8 % and 12 % for 9 to 14. Its neutrons come from earlier sub-pulses, so they add to the loss
+  side and the gain side falls behind: 0.94, 0.91, 0.85 and 0.66 of it for 11 to 14.
+- **Bright rows at both edges of the window**, at $\mp 0.8$ Ei, in sub-pulses 10 to 14: 1.1 to
+  1.9 times the bins next to them. They have not been explained yet.
+- **Intensity past the gain band.** Beyond the outer edge of the band, at least one FWHM of the
+  elastic line from it, the loss side is empty, but at |Q| above 1.2 Å⁻¹ the gain side holds 1 %
+  to 2 % of the band for sub-pulses 0 to 3, and 4 %, 7 % and 15 % for 4 to 6. It is most likely
+  the resolution, which broadens with Ef: a neutron that gains 20 meV leaves with 1.4 to 1.9 times
+  the energy of the elastic line, from sub-pulse 0 to 6, so the gain band is blurred more than the
+  loss band, and the more so the lower the Ei. The width of the gain band has not been measured
+  yet.
 
 ## Making the figure
 

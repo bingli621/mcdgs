@@ -14,10 +14,10 @@ In the order of the beam, which is also the order ``pixi run docs-diagnostics`` 
 10. :mod:`.incident_energy`: the incident energy of each sub-pulse.
 11. :mod:`.elastic_resolution_incoherent`: the elastic resolution of each sub-pulse, from
     vanadium.
-12. :mod:`.magnon_powder`: the S(Q, E) of a powder magnon in each sub-pulse.
-13. :mod:`.diffraction`: the diffraction of a La2Ni7 crystal, in the horizontal plane. It writes the
+12. :mod:`.diffraction`: the diffraction of a La2Ni7 crystal, in the horizontal plane. It writes the
     beam file that the next one reads.
-14. :mod:`.diffraction_scan`: a rotation scan of that crystal.
+13. :mod:`.diffraction_scan`: a diffraction scan of that crystal, turned through its angles.
+14. :mod:`.magnon_powder`: the S(Q, E) of a powder magnon in each sub-pulse.
 
 The diagnostics with a sample share :mod:`.sample_runs`, which reduces the two parts of a run
 split at the sample. It is not a diagnostic itself.

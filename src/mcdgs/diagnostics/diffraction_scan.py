@@ -1,6 +1,6 @@
-"""A rotation scan of a crystal, reduced and drawn, for any instrument.
+"""A diffraction scan of a crystal, reduced and drawn, for any instrument.
 
-The rotation scan of each instrument turns the La2Ni7 crystal of :func:`.la2ni7`, with
+The diffraction scan of each instrument turns the La2Ni7 crystal of :func:`.la2ni7`, with
 ``IN_PLANE`` in the horizontal plane, by the instrument parameter ``omega`` about the vertical,
 and runs the part from ``sample_pos`` to the detector once per angle, from the beam file of its
 diffraction diagnostic. This module does the rest:

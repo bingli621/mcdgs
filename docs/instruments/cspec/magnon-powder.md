@@ -107,45 +107,67 @@ window, $\sqrt{1.8 / 0.2}$ at $E = \mp 0.8\, E_i$.
 
 ## S(Q, E)
 
-`plot_magnon_maps` draws the 14 maps, from the highest Ei to the lowest, from −1 to 10 meV, with
-`plot_q_e_maps` of the vanadium: one linear color scale for all of them, white where the
-sub-pulse cannot reach. Over each map, dashed white lines show the lowest and the highest energy
-of the magnon at each |Q|, without resolution. How far the intensity spreads past them is the
-resolution of that sub-pulse.
+`plot_magnon_maps` draws the 14 maps, from the highest Ei to the lowest, over the whole arrival
+windows: from −13 to 13 meV, $\mp 0.8$ of the highest Ei, so both the energy the neutron gains and
+the energy it loses. It draws them with `plot_q_e_maps` of the vanadium: one linear color scale
+for all of them, white where the sub-pulse cannot reach. The scale reaches the 98th percentile of
+the bins, lower than the 99.9th of T-Rex, so that the band shows in the upper colors rather than
+only the hottest bins of sub-pulse 13. Over each map, dashed white lines show the lowest and the
+highest energy of the magnon at each |Q|, without resolution, at positive E and mirrored at
+negative E. How far the intensity spreads past them is the resolution of that sub-pulse. The
+sample puts nothing between the two bands nor beyond them, so whatever lies there comes from the
+instrument or the reduction.
 
-![S(Q, E) of the powder magnon in each of the 14 sub-pulses, |Q| across and E up, from the highest Ei to the lowest, normalized by the coverage of each bin, with the edges of the band of the model as dashed white lines](figures/magnon-powder/cspec_magnon_powder_sqe.png)
+![S(Q, E) of the powder magnon in each of the 14 sub-pulses, |Q| across and E up, from the highest Ei to the lowest, over the energy gain and the energy loss, normalized by the coverage of each bin, with the edges of the band of the model as dashed white lines on both sides](figures/magnon-powder/cspec_magnon_powder_sqe.png)
 
 The pattern is that of T-Rex, at the same |Q| and a smaller energy scale. At every zone center,
-$\lvert Q \rvert = (2\pi/a)\sqrt{h^2 + k^2 + l^2}$ = 1.57, 2.22, 2.72, 3.14 Å⁻¹, ..., the lower
+$\lvert Q \rvert = (2\pi/a)\sqrt{h^2 + k^2 + l^2}$ = 1.57, 2.22, 2.72, 3.14 Å⁻¹, ..., the inner
 edge drops back to the gap, and a dark V of little intensity rises from it. Between the Vs,
 bright arches run across the band. At small |Q| the steep dispersion, from 1 meV to about 3 meV
-at 0.8 Å⁻¹, is the bright left edge of the intensity: there the whole band is one narrow line,
-so its intensity per meV is the highest of the map.
+at 0.8 Å⁻¹, is the bright inner edge of the intensity: there the whole band is one narrow line,
+so its intensity per meV is the highest of the map. The same pattern stands at negative E,
+upside down.
 
 - **Every sub-pulse draws the pattern sharply.** The FWHM of CSPEC, from 0.6 meV at 15 meV to
   0.1 meV at 5.7 meV, is small next to the 7 meV band, so even the highest Ei, 15 to 12.5 meV
   (0 to 2), keep the Vs, the arches and the gap apart. Their edges are the softest, and they
   sharpen as Ei falls.
-- **The highest Ei, 15 to 12.5 meV (0 to 2), see the whole band**, up to |Q| of about 4 Å⁻¹.
-  The lower the Ei, the less of it: sub-pulse 6, at 9.1 meV, reaches up to 7.3 meV, and
-  sub-pulse 12, at 6.1 meV, up to 4.9 meV and 3 Å⁻¹.
-- **From sub-pulse 7 on, frame overlap adds intensity that the model does not have.** Below the
-  gap, where the model has none, sub-pulses 0 to 6 have 0.3% to 0.6% of the intensity of the band
-  between 2 and 4 meV; sub-pulses 7 to 12 have 1% to 9%. A neutron that loses 5 to 8 meV in one
-  sub-pulse is slow enough to reach the detector in the arrival window of a later one, so the
-  reduction gives it the Ei of that one, and so a wrong energy transfer. The sub-pulses follow
-  each other every 4.5 ms, and from sub-pulse 6 on, a loss of 7 to 8 meV, most of Ei, slows a
-  neutron by that much. These neutrons spread over the
-  whole window, but pile up at its end, near 0.8 Ei, where a millisecond of arrival time spans
-  the fewest meV. That is the bright stripe along the top of the maps of 8 to 11, which has 2 to
-  10 times the intensity of the bins just below it.
-- **Sub-pulse 13, the last at 5.7 meV, is mostly frame overlap.** Below the gap it has 45% of
-  the intensity of its band, which is itself three and a half times that of the others. Its arrival
-  window overlaps that of sub-pulse 12, and a neutron in both goes to 13, so it also takes the
-  neutrons of 12 that lose the most energy. Only the band edges near its small-|Q| dispersion
-  stand out.
+- **The highest Ei, 15 to 12.5 meV (0 to 2), see the whole band on both sides**, up to |Q| of
+  about 4 Å⁻¹. The lower the Ei, the less of it: sub-pulse 6, at 9.1 meV, reaches 7.3 meV on
+  each side, and sub-pulse 12, at 6.1 meV, 4.9 meV and 3 Å⁻¹.
 
-Fewer of the neutrons that should scatter are lost than on T-Rex: McStas reports that 3.4% of
+The two sides test the instrument against each other, since the sample scatters the same on
+both. Inside the band, over the (|Q|, |E|) both sides reach, the mean S(Q, E) of the gain side is
+0.96 to 0.99 of that of the loss side for sub-pulses 0 to 7. They part where the instrument adds
+what the sample does not have, more than on T-Rex: the band reaches 8 meV, most of the Ei of the
+lower sub-pulses, which follow each other every 4.5 ms.
+
+- **Frame overlap from earlier sub-pulses, from sub-pulse 7 on.** A neutron that loses 5 to 8 meV
+  is slow enough to reach the detector in the arrival window of a later sub-pulse, so the
+  reduction gives it the Ei of that one, and so a wrong energy transfer, anywhere across the
+  window. Between the two bands, at least one FWHM of the elastic line from their edges, there is
+  at most 0.1 % of the intensity of the band up to sub-pulse 6, then 0.7 % to 2.4 % for 7 to 11
+  and 6 % for 12. These neutrons add to the loss side, and the gain side falls behind: 0.86, 0.74,
+  0.47 and 0.50 of it for 8 to 11.
+- **Frame overlap from later sub-pulses, at the top of the window.** A neutron of the next
+  sub-pulse that gains 3 to 8 meV is fast enough to reach the detector at the very end of the
+  window of the one before. The reduction gives it an energy loss of about 0.8 Ei, where a
+  millisecond of arrival time spans the fewest meV, so these few neutrons pile up in the top
+  bins. That is the bright stripe along the top of the maps of 9 to 11, with 6 to 11 times the
+  intensity of the bins just below it; in 8 the stripe is 2 times, from late neutrons of 7 alone.
+- **Sub-pulse 13, the last at 5.7 meV, is mostly frame overlap.** Between the bands it has 32 %
+  of the intensity of its band, and its gain side only 0.52 of its loss side. Its arrival window
+  overlaps that of sub-pulse 12, and a neutron in both goes to 13, so it also takes the neutrons
+  of 12 that lose the most energy.
+- **Intensity past the gain band.** Beyond the outer edge of the band, at least one FWHM of the
+  elastic line from it, the loss side holds at most 0.7 % of the band up to sub-pulse 5, the gain
+  side 1 % to 4 % away from the edges of the coverage. It is most likely the resolution, which
+  broadens with Ef, so the gain band is blurred more than the loss band; its width has not been
+  measured yet. At |Q| below 1.2 Å⁻¹ the gain side holds more, 5 % to 20 % of the band, in a
+  bright streak past the band along the low-angle edge of the coverage, where each bin sees little
+  of the detector. It has not been explained yet.
+
+Fewer of the neutrons that should scatter are lost than on T-Rex: McStas reports that 3.4 % of
 them, 312,736 of 9.1 million, are transmitted instead, because it finds no (|Q|, E) of the table
 that sends them towards the detector.
 

@@ -50,9 +50,9 @@ print(trex)  # every parameter and component, with its position in the lab frame
   [masked source](instruments/trex/masked-source.md), the
   [incident energy](instruments/trex/incident-energy.md), the
   [elastic resolution](instruments/trex/elastic-resolution-incoherent.md) from vanadium, the
-  S(Q, E) of a [powder magnon](instruments/trex/magnon-powder.md) in every sub-pulse, and the
   [diffraction](instruments/trex/diffraction.md) and
-  [rotation scan](instruments/trex/diffraction-scan.md) of a crystal.
+  [diffraction scan](instruments/trex/diffraction-scan.md) of a crystal, and the S(Q, E) of a
+  [powder magnon](instruments/trex/magnon-powder.md) in every sub-pulse.
 - [How-to guides](how-to/run-a-simulation.md): run a McStas scan, simulate the choppers with tof,
   read the output.
 - [Reference](reference/core.md): the Python API, generated from the source.

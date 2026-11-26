@@ -1,11 +1,11 @@
-# Rotation scan
+# Diffraction scan
 
 `CSPECWithRotatingLa2Ni7`, in
 [`mcdgs.diagnostics.cspec.diffraction_scan`](https://github.com/bingli621/mcdgs/blob/main/src/mcdgs/diagnostics/cspec/diffraction_scan.py),
 turns the La2Ni7 crystal about the vertical, one angle at a time, and maps the horizontal plane
 of its reciprocal space. Each angle is reduced as on [Diffraction](diffraction.md); turned
 into the frame of the crystal, the angles add up to one map. It follows
-[Rotation scan of T-Rex](../trex/diffraction-scan.md), with the same crystal, orientation and
+[Diffraction scan of T-Rex](../trex/diffraction-scan.md), with the same crystal, orientation and
 angles.
 
 ## The setup
