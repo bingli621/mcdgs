@@ -20,8 +20,8 @@ there through the powder to the detector, into the folders of :func:`run_names`.
 The reduction is that of the vanadium (:func:`.elastic_resolution_incoherent.reduce_runs`): the
 sub-pulses, the pixels past ``MIN_TWO_THETA`` from the beam, the neutrons of each sub-pulse
 normalized by the solid angle of their pixel and by its flux, and :func:`.q_e_maps`, S(Q, E)
-normalized by the coverage of each bin. :func:`plot_magnon_maps` draws the 15 maps in one figure,
-with the edges of the band of the model, :func:`.magnon_band`, over them.
+normalized by the coverage of each bin. :func:`.plot_magnon_maps` draws the 15 maps in one figure,
+within ``ENERGY_RANGE``, with the edges of the band of the model, :func:`.magnon_band`, over them.
 
 :func:`main` is :func:`simulate`, which runs McStas, then :func:`analyze`, which reduces and
 draws. Run it to do both::
@@ -36,14 +36,12 @@ Running the module only reduces the runs again, without McStas, with :func:`anal
 from pathlib import Path
 
 import matplotlib.pyplot as plt
-import numpy as np
 import scipp as sc
-from matplotlib.figure import Figure
-from matplotlib.lines import Line2D
 
 from mcdgs.core.components import Isotropic_Sqw
 from mcdgs.diagnostics import cli
 from mcdgs.diagnostics import elastic_resolution as resolution
+from mcdgs.diagnostics.magnon_powder import plot_magnon_maps
 from mcdgs.diagnostics.trex import elastic_resolution_incoherent as vanadium
 from mcdgs.diagnostics.trex import sample_runs as runs
 from mcdgs.diagnostics.trex.solid_angles import detector_window
@@ -52,7 +50,7 @@ from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
 from mcdgs.mcstas import Simulation, Workspace
 from mcdgs.reduction.inelastic import normalized_events
 from mcdgs.samples import magnon_powder, write_magnon_sqw
-from mcdgs.samples.inelastic.powder import MAGNON_TOP, magnon_band
+from mcdgs.samples.inelastic.powder import MAGNON_GAP, MAGNON_JS, MAGNON_TOP
 
 NAME = "trex_magnon_powder"
 SQW_NAME = "magnon_powder.sqw"  # in the builds folder of the workspace
@@ -64,7 +62,6 @@ ENERGY_STEP = 0.25  # meV, the bin width in E of the maps
 Q_STEP = 0.1  # 1/Å, the bin width in |Q| of the maps
 # the E of the maps: the magnon is created only, so from a little below 0 to past the band
 ENERGY_RANGE = (-2.0, MAGNON_TOP + 3.0)  # meV
-EDGE_COLOR = "white"  # of the edges of the band of the model, over the maps
 
 
 def sqw_path(workspace: Workspace | None = None) -> Path:
@@ -236,72 +233,12 @@ def reduce_runs(
     return pulses, maps
 
 
-def crop(maps: sc.DataArray, energy_range: tuple[float, float] = ENERGY_RANGE) -> sc.DataArray:
-    """Keep the bins of E within ``energy_range``, in meV, of the maps of :func:`.q_e_maps`.
-
-    Examples
-    --------
-    >>> edges = sc.linspace("energy_transfer", -10.0, 10.0, 21, unit="meV")
-    >>> maps = sc.DataArray(
-    ...     sc.zeros(dims=["energy_transfer"], shape=[20]), coords={"energy_transfer": edges}
-    ... )
-    >>> cropped = crop(maps, (-2.0, 3.0))
-    >>> cropped.coords["energy_transfer"].values[[0, -1]].tolist()
-    [-2.0, 3.0]
-    """
-    low, high = (sc.scalar(value, unit="meV") for value in energy_range)
-    unit = maps.coords["energy_transfer"].unit
-    return maps["energy_transfer", low.to(unit=unit) : high.to(unit=unit)]
-
-
-def plot_magnon_maps(maps: sc.DataArray, title: str) -> Figure:
-    """Draw the S(Q, E) of every sub-pulse, with the edges of the band of the model over it.
-
-    The maps are those of :func:`.plot_q_e_maps`, within ``ENERGY_RANGE``: one panel per
-    sub-pulse, from the highest Ei, on one color scale, white where the sub-pulse cannot reach.
-    Over each, the lowest and the highest energy of the magnon at each |Q|, :func:`.magnon_band`,
-    are dashed lines: the band of the powder has sharp edges, and how far the intensity spreads
-    past them is the resolution of the sub-pulse.
-
-    Parameters
-    ----------
-    maps:
-        The maps of :func:`.q_e_maps`.
-    title:
-        The title of the figure.
-
-    Returns
-    -------
-    :
-        The figure.
-    """
-    maps = crop(maps)
-    fig = resolution.plot_q_e_maps(maps, title)
-    q_edges = maps.coords["Q"].to(unit="1/Å").values
-    q = np.linspace(q_edges[0], q_edges[-1], 400)
-    low, high = magnon_band(q)
-    panels = [ax for ax in fig.axes[: maps.sizes["subpulse"]] if ax.get_visible()]
-    for ax in panels:
-        for edge in (low, high):
-            ax.plot(q, edge, color=EDGE_COLOR, lw=0.8, ls="--")
-    if panels:
-        panels[0].legend(
-            [Line2D([], [], color=EDGE_COLOR, lw=0.8, ls="--")],
-            ["Edges of the band, without resolution"],
-            loc="upper right",
-            fontsize="small",
-            facecolor="0.3",
-            labelcolor=EDGE_COLOR,
-        )
-    return fig
-
-
 def analyze(out: Path | None = None, modes: tuple[Mode, ...] = MODES) -> list[Path]:
     """Reduce the runs of each mode and draw the S(Q, E) of all its sub-pulses.
 
     It runs no McStas, so it can run again on the same runs; :func:`main` runs them first. For
     each mode, ``m`` its name in lower case, the file is ``trex_magnon_powder_m_sqe.png``, from
-    :func:`plot_magnon_maps`.
+    :func:`.plot_magnon_maps`.
 
     Parameters
     ----------
@@ -325,6 +262,9 @@ def analyze(out: Path | None = None, modes: tuple[Mode, ...] = MODES) -> list[Pa
             maps,
             f"T-Rex, a powder magnon: S(Q, E) of each of the {pulses.sizes['subpulse']} "
             f"sub-pulses\n{conditions}",
+            ENERGY_RANGE,
+            js=MAGNON_JS,
+            gap=MAGNON_GAP,
         )
         files.append(cli.save_figure(fig, folder / f"{NAME}_{mode.lower()}_sqe.png"))
         plt.close(fig)
