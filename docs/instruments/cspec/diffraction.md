@@ -75,11 +75,12 @@ The reduction is shared with the [elastic resolution](elastic-resolution-incoher
 
 `plot_plane` keeps the neutrons near the horizontal plane, |Qy| < 0.5 Å⁻¹, sums them over Qy and
 draws them in (Qx, Qz), as on [T-Rex](../trex/diffraction.md#the-plane): a log scale in turbo,
-below the highest bin beyond |Q| = 0.2 Å⁻¹. The scale is three decades deep, one fewer than on
-T-Rex: the highest bins are where the arcs of all the sub-pulses meet, near the origin, far above
-the rest, and with four decades the incoherent arcs sat in the middle of the scale. With three
-they are blue, and the Bragg peaks and the meeting of the arcs stand out above them. A bin below
-the bottom of the scale takes its color.
+below the highest bin beyond |Q| = 0.2 Å⁻¹. The scale is two decades deep, two fewer than on
+T-Rex: the beamstop leaves no direct beam above the arcs, so the highest bins, where the arcs of
+all the sub-pulses meet near the origin, are only about two decades above the incoherent arcs,
+and a deeper scale lifts those into cyan and green. With two they are dark blue, as on T-Rex, and
+the Bragg peaks and the meeting of the arcs stand out above them. A bin below the bottom of the
+scale takes its color.
 
 - **The arcs.** Each sub-pulse has its own ki, from 1.66 to 2.69 Å⁻¹. Its elastic neutrons lie
   on a circle of radius ki through the origin, centered on ki along the beam, and the panels

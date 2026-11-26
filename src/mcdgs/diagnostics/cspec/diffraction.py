@@ -59,9 +59,10 @@ NAME = "cspec_diffraction"
 TO_SAMPLE = f"{NAME}_run_to_sample"  # the run folder of the first part, source -> sample_pos
 FROM_SAMPLE = f"{NAME}_run_from_sample"  # that of the second part, sample_pos -> detector
 SAMPLE_SPLIT = 10  # McStas SPLIT on the crystal: each neutron reaching it is repeated this often
-# the color scale spans this many decades below the highest bin, one fewer than for T-Rex: the arcs
-# of all the sub-pulses meet near the origin, so the highest bin is far above the incoherent arcs
-LOG_DECADES = 3
+# the color scale spans this many decades below the highest bin, two fewer than for T-Rex: the
+# highest bin, where the arcs of all the sub-pulses meet near the origin, is only about two decades
+# above the incoherent arcs, which a deeper scale would lift into cyan and green
+LOG_DECADES = 2
 
 
 # --8<-- [start:instrument]

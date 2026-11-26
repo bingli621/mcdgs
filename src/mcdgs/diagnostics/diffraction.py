@@ -206,8 +206,8 @@ def draw_plane(
     vmax:
         The top of the color scale. If ``None``, the highest bin beyond the direct beam.
     log_decades:
-        How many decades the color scale spans below its top. Fewer put the weak bins higher
-        on the scale.
+        How many decades the color scale spans below its top. Fewer put the weak bins lower
+        on the scale, darker.
 
     Returns
     -------
