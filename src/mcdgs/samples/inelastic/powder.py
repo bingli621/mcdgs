@@ -148,11 +148,15 @@ def write_magnon_sqw(
     At each |Q| of the table, the magnon of :func:`magnon_energies` is averaged over the
     ``directions`` of :func:`sphere_directions`: the energies they give are histogrammed and
     smoothed by a Gaussian of σ ``width``, the line of the magnon. Each row is a density in E:
-    its sum times ``e_step`` is 1, the same at every |Q|. The magnetic form factor and the
-    polarization factor are left out, so the intensity does not fall with |Q|.
+    the sum of each side times ``e_step`` is 1, one magnon, the same at every |Q|. The magnetic
+    form factor and the polarization factor are left out, so the intensity does not fall with |Q|.
 
-    The magnon is created only: E is the energy the neutron loses, from 0 to a little above the
-    top of the band, and the table holds no detailed balance (``classical`` 0 in its header).
+    E is the energy the neutron loses. The magnon is created at positive E and annihilated at
+    negative E, as often: the table is symmetric in E, from a little below the bottom of the band
+    on the gain side to a little above its top on the loss side, a Bose factor of 1, the limit of
+    a high temperature. It holds both sides itself, rather than leaving :class:`.Isotropic_Sqw` to
+    mirror one, and ``classical`` 0 in its header: with ``T=-1``, no detailed balance, the powder
+    scatters it as it is.
 
     Parameters
     ----------
@@ -178,13 +182,16 @@ def write_magnon_sqw(
     path.parent.mkdir(parents=True, exist_ok=True)
     q = np.arange(0.0, q_max + q_step / 2, q_step)
     e_max = gap + 24 * js + 6 * width
-    energy = np.arange(0.0, e_max + e_step / 2, e_step)
-    edges = np.append(energy - e_step / 2, energy[-1] + e_step / 2)
+    loss = np.arange(0.0, e_max + e_step / 2, e_step)  # E from 0 up: the magnon created
+    edges = np.append(loss - e_step / 2, loss[-1] + e_step / 2)
     unit = sphere_directions(directions)
-    table = np.empty((q.size, energy.size))
+    created = np.empty((q.size, loss.size))
     for i, length in enumerate(q):
-        table[i] = np.histogram(magnon_energies(length * unit, a, js, gap), bins=edges)[0]
-    table = gaussian_filter1d(table / (directions * e_step), width / e_step, axis=1)
+        created[i] = np.histogram(magnon_energies(length * unit, a, js, gap), bins=edges)[0]
+    created = gaussian_filter1d(created / (directions * e_step), width / e_step, axis=1)
+    # the gain side, the magnon annihilated: the loss side mirrored, a Bose factor of 1
+    energy = np.concatenate([-loss[:0:-1], loss])
+    table = np.concatenate([created[:, :0:-1], created], axis=1)
     with path.open("w") as f:
         f.write(
             "# S(|Q|, E) of the magnon of a simple-cubic ferromagnet, averaged over the "
@@ -195,7 +202,7 @@ def write_magnon_sqw(
             "# q axis values [1/Å]\n"
         )
         np.savetxt(f, q[None], fmt="%.4f")
-        f.write("# w axis values [meV], the energy the neutron loses\n")
+        f.write("# w axis values [meV], the energy the neutron loses, negative when it gains\n")
         np.savetxt(f, energy[None], fmt="%.4f")
         f.write("# sqw values [1/meV], one row per q value\n")
         np.savetxt(f, table, fmt="%.4e")

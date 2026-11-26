@@ -18,8 +18,10 @@ the folders of :func:`run_names`.
 The reduction is that of the vanadium (:func:`.elastic_resolution_incoherent.reduce_runs`): the
 sub-pulses at ``mc_monitor``, every pixel of the panels, the neutrons of each sub-pulse normalized
 by the solid angle of their pixel and by its flux, and :func:`.q_e_maps`, S(Q, E) normalized by
-the coverage of each bin. :func:`.plot_magnon_maps` draws the 14 maps in one figure, within
-``ENERGY_RANGE``, with the edges of the band of the model, :func:`.magnon_band`, over them.
+the coverage of each bin. :func:`.plot_magnon_maps` draws the 14 maps in one figure, over
+their whole arrival windows, energy gain and energy loss, on a color scale up to the
+``MAP_PERCENTILE`` percentile of the bins, with the edges of the band of the model,
+:func:`.magnon_band`, over them.
 
 :func:`main` is :func:`simulate`, which runs McStas, then :func:`analyze`, which reduces and
 draws. Run it to do both::
@@ -62,8 +64,9 @@ SAMPLE_SPLIT = 4  # each neutron of the beam goes through the powder this many t
 NCOUNT = 5e9  # McStas rays of the first part, from the masked source
 ENERGY_STEP = 0.1  # meV, the bin width in E of the maps
 Q_STEP = 0.05  # 1/Å, the bin width in |Q| of the maps
-# the E of the maps: the magnon is created only, so from a little below 0 to past the band
-ENERGY_RANGE = (-1.0, MAGNON_TOP + 2.0)  # meV
+# the top of the color scale, as a percentile of the bins with neutrons: lower than for vanadium,
+# so that the band shows in the upper colors, not only the hottest bins of the last sub-pulse
+MAP_PERCENTILE = 98.0
 
 
 def sqw_path(workspace: Workspace | None = None) -> Path:
@@ -276,9 +279,9 @@ def analyze(
         maps,
         f"CSPEC, a powder magnon: S(Q, E) of each of the {pulses.sizes['subpulse']} "
         f"sub-pulses\n{define_instrument().running_conditions()}",
-        ENERGY_RANGE,
         js=MAGNON_JS,
         gap=MAGNON_GAP,
+        percentile=MAP_PERCENTILE,
     )
     path = cli.save_figure(fig, cli.output_folder(out, NAME) / f"{NAME}_sqe.png")
     plt.close(fig)

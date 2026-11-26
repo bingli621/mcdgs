@@ -39,13 +39,14 @@ def test_the_magnon_runs_from_its_gap_to_its_top():
     assert high[1] == pytest.approx(8.0, abs=0.05)  # the corner of the zone, |Q| = √3 π / a
 
 
-def test_the_table_is_a_density_in_energy_up_to_past_the_top(tmp_path):
+def test_the_table_is_a_density_in_energy_on_both_sides_past_the_top(tmp_path):
     path = diagnostic.write_sqw(tmp_path / "m.sqw")
     lines = [line for line in path.read_text().splitlines() if not line.startswith("#")]
     q, energy = (np.array(lines[i].split(), dtype=float) for i in (0, 1))
     table = np.loadtxt(lines[2:])
     assert q[-1] == pytest.approx(diagnostic.SQW_Q_MAX)
     assert energy[1] - energy[0] == pytest.approx(diagnostic.SQW_E_STEP)
-    assert energy[-1] > diagnostic.MAGNON_TOP
+    assert energy[-1] > diagnostic.MAGNON_TOP and energy[0] == pytest.approx(-energy[-1])
     assert table.shape == (q.size, energy.size)
-    assert table.sum(axis=1) * diagnostic.SQW_E_STEP == pytest.approx(1, abs=2e-3)
+    loss = table[:, energy >= 0]  # one magnon on the loss side, and the same on the gain side
+    assert loss.sum(axis=1) * diagnostic.SQW_E_STEP == pytest.approx(1, abs=2e-3)

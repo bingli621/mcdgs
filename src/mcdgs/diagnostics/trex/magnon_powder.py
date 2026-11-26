@@ -21,7 +21,8 @@ The reduction is that of the vanadium (:func:`.elastic_resolution_incoherent.red
 sub-pulses, the pixels past ``MIN_TWO_THETA`` from the beam, the neutrons of each sub-pulse
 normalized by the solid angle of their pixel and by its flux, and :func:`.q_e_maps`, S(Q, E)
 normalized by the coverage of each bin. :func:`.plot_magnon_maps` draws the 15 maps in one figure,
-within ``ENERGY_RANGE``, with the edges of the band of the model, :func:`.magnon_band`, over them.
+over their whole arrival windows, energy gain and energy loss, with the edges of the band of the
+model, :func:`.magnon_band`, over them.
 
 :func:`main` is :func:`simulate`, which runs McStas, then :func:`analyze`, which reduces and
 draws. Run it to do both::
@@ -50,7 +51,7 @@ from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
 from mcdgs.mcstas import Simulation, Workspace
 from mcdgs.reduction.inelastic import normalized_events
 from mcdgs.samples import magnon_powder, write_magnon_sqw
-from mcdgs.samples.inelastic.powder import MAGNON_GAP, MAGNON_JS, MAGNON_TOP
+from mcdgs.samples.inelastic.powder import MAGNON_GAP, MAGNON_JS
 
 NAME = "trex_magnon_powder"
 SQW_NAME = "magnon_powder.sqw"  # in the builds folder of the workspace
@@ -60,8 +61,6 @@ SAMPLE_SPLIT = 4  # each neutron of the beam goes through the powder this many t
 NCOUNT = 5e9  # McStas rays of the first part, from the masked source
 ENERGY_STEP = 0.25  # meV, the bin width in E of the maps
 Q_STEP = 0.1  # 1/Å, the bin width in |Q| of the maps
-# the E of the maps: the magnon is created only, so from a little below 0 to past the band
-ENERGY_RANGE = (-2.0, MAGNON_TOP + 3.0)  # meV
 
 
 def sqw_path(workspace: Workspace | None = None) -> Path:
@@ -262,7 +261,6 @@ def analyze(out: Path | None = None, modes: tuple[Mode, ...] = MODES) -> list[Pa
             maps,
             f"T-Rex, a powder magnon: S(Q, E) of each of the {pulses.sizes['subpulse']} "
             f"sub-pulses\n{conditions}",
-            ENERGY_RANGE,
             js=MAGNON_JS,
             gap=MAGNON_GAP,
         )

@@ -433,13 +433,17 @@ def q_e_maps(
     return maps
 
 
-def plot_q_e_maps(maps: sc.DataArray, title: str, columns: int = MAP_COLUMNS) -> Figure:
+def plot_q_e_maps(
+    maps: sc.DataArray,
+    title: str,
+    columns: int = MAP_COLUMNS,
+    percentile: float = MAP_PERCENTILE,
+) -> Figure:
     """Draw the S(Q,E) map of every sub-pulse, |Q| across and E up, from the highest Ei.
 
     Every map spans the same range of |Q| and E, that of the bins of :func:`q_e_maps`, and they
-    share one linear color scale, turbo, from 0 to the ``MAP_PERCENTILE`` percentile of the bins
-    with neutrons, of all the maps. A bin the sub-pulse
-    reaches has the color of its value, the bottom of the scale if it is empty; a bin it cannot
+    share one linear color scale, turbo, from 0 to the ``percentile`` percentile of the bins with
+    neutrons, of all the maps. A bin the sub-pulse reaches has the color of its value, the bottom of the scale if it is empty; a bin it cannot
     reach, NaN in :func:`q_e_maps`, is white. So the colored area of each map is its coverage:
     its arrival window between the smallest and the largest 2θ of the pixels.
 
@@ -451,6 +455,9 @@ def plot_q_e_maps(maps: sc.DataArray, title: str, columns: int = MAP_COLUMNS) ->
         The title of the figure.
     columns:
         The number of maps in a row.
+    percentile:
+        The top of the color scale, as a percentile of the bins with neutrons. A lower one
+        saturates more bins, and shows the weaker ones in more of the scale.
 
     Returns
     -------
@@ -463,7 +470,7 @@ def plot_q_e_maps(maps: sc.DataArray, title: str, columns: int = MAP_COLUMNS) ->
     energies = maps.coords["incident_energy"].to(unit="meV").values
     order = np.argsort(-energies)  # the highest Ei first
     rows = -(-order.size // columns)
-    top = float(np.nanpercentile(maps.values[maps.values > 0], MAP_PERCENTILE))
+    top = float(np.nanpercentile(maps.values[maps.values > 0], percentile))
     cmap = plt.get_cmap("turbo").with_extremes(bad="white")
     with plt.rc_context({"font.size": FONT_SIZE}):
         fig, axes = plt.subplots(

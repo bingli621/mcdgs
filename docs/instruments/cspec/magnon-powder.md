@@ -39,9 +39,9 @@ lowest and a highest energy, `magnon_band`, with sharp edges.
 | | |
 | - | - |
 | Sample | a solid cylinder 20 mm across and 10 mm high, the size of the vanadium, `Isotropic_Sqw` |
-| S(\|Q\|, E) | 0 to 6 Å⁻¹ in steps of 0.02 Å⁻¹, 0 to 8.06 meV in steps of 0.005 meV, each row normalized to one magnon |
+| S(\|Q\|, E) | 0 to 6 Å⁻¹ in steps of 0.02 Å⁻¹, −8.06 to 8.06 meV in steps of 0.005 meV, symmetric in E, each side of each row normalized to one magnon |
 | Cross-sections | 5 b coherent per 64 Å³ cell, only the scale of the intensity; no absorption, no incoherent scattering |
-| Taken as it is | `T=-1`: no detailed balance, the magnon is only created; `classical=0`, `norm=1` |
+| Taken as it is | `T=-1`: no detailed balance; `classical=0`, `norm=1`; the table holds both sides, so the magnon is annihilated as often as it is created, a Bose factor of 1 |
 | Scattering | single scattering only (`order=1`), within `d_phi` = 55.1° of the horizontal plane, the height of the window of the vanadium, 90% of the neutrons made to scatter (`p_interact=0.9`), each neutron sent through it 4 times (`SPLIT 4`) |
 | Detector | the twelve detector panels, as for vanadium |
 

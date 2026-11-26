@@ -195,8 +195,10 @@ def test_the_magnon_table_is_a_density_in_energy_at_each_q(tmp_path):
     (q,), (energy,), table = blocks
     table = np.array(table)
     assert q.tolist() == [0.0, 0.5, 1.0, 1.5, 2.0]
-    assert energy[0] == 0 and np.allclose(np.diff(energy), 0.02, atol=1e-4)  # evenly spaced
+    assert np.allclose(np.diff(energy), 0.02, atol=1e-4)  # evenly spaced
     assert energy[-1] > 20.0  # past the top of the band
+    assert energy[0] == pytest.approx(-energy[-1]) and 0.0 in energy  # as far below 0 as above
+    assert np.array_equal(table, table[:, ::-1])  # created and annihilated alike: no Bose factor
     assert table.shape == (q.size, energy.size)
-    assert table.sum(axis=1) * 0.02 == pytest.approx(1, abs=2e-3)  # one magnon at each |Q|
-    assert energy[np.argmax(table[0])] == pytest.approx(5.0, abs=0.02)  # the gap at Q = 0
+    assert table[:, energy >= 0].sum(axis=1) * 0.02 == pytest.approx(1, abs=2e-3)  # one magnon
+    assert abs(energy[np.argmax(table[0])]) == pytest.approx(5.0, abs=0.02)  # the gap at Q = 0
