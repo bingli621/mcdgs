@@ -10,7 +10,7 @@ masked source simulates its band. With `bender_in`, the beam goes through the
 
 The beam on the sample is a train of 15 sub-pulses, from 2.32 to 3.68 Å, with Ei from 15.2 to
 6.0 meV. Their elastic lines are 0.16 to 0.62 meV wide in FF, 2.7 to 4.4 % of Ei, and 0.11 to
-0.37 meV in RR, 1.8 to 2.5 % of Ei. At 1 Å they are 5.3 to 23 % of Ei in FF and 3.2 to 15 % in
+0.37 meV in RR, 1.8 to 2.5 % of Ei. At 1 Å they are 5.3 to 17 % of Ei in FF and 3.3 to 9.8 % in
 RR. One setting of the reduction differs from 1 Å to follow such narrow lines. It is listed
 under [The reduction](#the-reduction).
 
@@ -52,11 +52,11 @@ outside every arrival window. One setting of `elastic_resolution_incoherent_long
 
 | | 1 Å | 3 Å | Why |
 | - | - | - | - |
-| Bins of E, spectra and S(Q, E) maps | 0.05 meV | 0.005 meV (`ENERGY_STEP`) | the lines are down to 0.11 meV wide |
+| Bins of E, spectra and S(Q, E) maps | 0.25 meV | 0.005 meV (`ENERGY_STEP`) | the lines are down to 0.11 meV wide |
 
-On 0.05 meV bins, the narrowest line of RR has only three bins above 20 % of its highest, the
-bins the fit keeps, too few to fit a Gaussian of three parameters with any degree of freedom
-left.
+On 0.05 meV bins, those of the other elastic-resolution diagnostics, the narrowest line of RR
+has only three bins above 20 % of its highest, the bins the fit keeps, too few to fit a Gaussian
+of three parameters with any degree of freedom left.
 
 ## S(Q, E)
 

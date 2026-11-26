@@ -32,7 +32,10 @@ The reduction is that of :mod:`.diagnostics.trex.sample_runs`, as for diffractio
    sub-pulse, gives them their energy transfer, and divides each by the solid angle of its pixel
    and by the flux of its sub-pulse.
 4. :func:`.energy_spectra` sums them into a histogram of the energy transfer of each sub-pulse,
-   averaged over the solid angle of the pixels: per incident neutron, per steradian and per meV.
+   averaged over the solid angle of the pixels: per incident neutron, per steradian and per meV,
+   in bins of ``ENERGY_STEP``. The lines at 1 Å are 0.9 to 38 meV wide: on finer bins, the tails
+   of the widest are so sparse that the bins left empty, which the fit drops, widen its
+   Gaussian.
 
 :func:`.fit_elastic_lines` fits a Gaussian to the elastic line of each sub-pulse, against the
 final energy Ef, and gives its FWHM, ``FWHM_PER_SIGMA`` times its standard deviation σ.
@@ -86,6 +89,7 @@ from mcdgs.samples import vanadium
 
 NAME = "trex_elastic_resolution_incoherent_short"
 LAMBDA0 = 1.0  # Å, the central wavelength
+ENERGY_STEP = 0.25  # meV, the bin width in E of the spectra and maps: the lines are 0.9 to 38 meV
 MIN_TWO_THETA = 5.0  # deg: the pixels closer to the beam see the direct beam past the beamstop
 MODES: tuple[Mode, ...] = ("FF", "FR", "RF", "RR")  # coarse to fine; FF, first, is the reference
 # C0 to C3 from the finest resolution to the coarsest
@@ -252,8 +256,8 @@ def reduce_runs(
     events = normalized_events(binned, pulses, pixels)
     return Reduction(
         pulses,
-        energy_spectra(events, pulses, pixels.sum()),
-        q_e_maps(events, pulses, two_theta(binned), pixels),
+        energy_spectra(events, pulses, pixels.sum(), step=ENERGY_STEP),
+        q_e_maps(events, pulses, two_theta(binned), pixels, energy_step=ENERGY_STEP),
     )
 
 
