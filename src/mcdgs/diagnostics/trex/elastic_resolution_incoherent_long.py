@@ -4,8 +4,9 @@
 the same instrument, :class:`.TRexElasticResolution` with the vanadium cylinder, the beamstop
 and the banana detector, the same modes of ``MODES``, the same two runs split at ``sample_pos``
 in each mode, and the same reduction, fits, analytic model and figures, into the folders and
-files of ``NAME``. Only ``lambda0`` changes: the choppers are phased to it, and the source
-simulates its band. The sub-pulses have about a ninth of the Ei of those at 1 Å, and their
+files of ``NAME``. Two parameters change: ``lambda0``, to which the choppers are phased and
+whose band the source simulates, and ``bender_in``, so the beam goes through the bender and the
+cold guide 4b instead of the thermal guide 4a. The sub-pulses have about a ninth of the Ei of those at 1 Å, and their
 elastic lines are down to about 0.1 meV wide in RR, a couple of the 0.05 meV bins at 1 Å, so the
 spectra and the S(Q, E) maps are binned in E by ``ENERGY_STEP``, a tenth of those.
 
@@ -62,12 +63,13 @@ from mcdgs.reduction.inelastic import normalized_events
 
 NAME = "trex_elastic_resolution_incoherent_long"
 LAMBDA0 = 3.0  # Å, the central wavelength
+BENDER_IN = True  # the bender and the cold guide 4b, not the thermal guide 4a
 ENERGY_STEP = 0.005  # meV, the bin width in E of the spectra and maps: the lines are ~0.1 meV
 
 
 # --8<-- [start:instrument]
 def define_instrument(mode: Mode = "FF") -> TRexElasticResolution:
-    """Return the instrument of this diagnostic: :class:`.TRexElasticResolution` at ``LAMBDA0``.
+    """Return the instrument: :class:`.TRexElasticResolution` at ``LAMBDA0``, with the bender in.
 
     Parameters
     ----------
@@ -79,8 +81,11 @@ def define_instrument(mode: Mode = "FF") -> TRexElasticResolution:
     --------
     >>> define_instrument().params.lambda0
     3.0
+    >>> define_instrument().params.bender_in
+    True
     """
-    params = Params(mode=mode, lambda0=LAMBDA0)  # the defaults otherwise, in the mode
+    # the defaults otherwise, in the mode
+    params = Params(mode=mode, lambda0=LAMBDA0, bender_in=BENDER_IN)
     return TRexElasticResolution(params=params)
 
 

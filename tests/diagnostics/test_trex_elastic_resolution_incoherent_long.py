@@ -6,9 +6,11 @@ def test_the_short_instrument_is_at_1_angstrom():
     assert short.define_instrument().params.lambda0 == 1.0
 
 
-def test_the_long_instrument_is_the_short_one_at_3_angstrom():
+def test_the_long_instrument_is_the_short_one_at_3_angstrom_with_the_bender_in():
     instrument = long.define_instrument("RR")
     assert instrument.params.lambda0 == 3.0
+    assert instrument.params.bender_in
+    assert not short.define_instrument("RR").params.bender_in
     assert instrument.params.mode == "RR"
     assert list(instrument.components) == list(short.define_instrument("RR").components)
 
