@@ -155,7 +155,7 @@ def subpulse_timing_of_run(to_sample: str | Path, instrument: CSPEC) -> sc.DataA
     return subpulse_timing(Run.load(Path(to_sample)), instrument)
 
 
-def read_detector(from_sample: str | Path) -> sc.DataArray:
+def read_detector(from_sample: str | Path, entry: int = 1) -> sc.DataArray:
     """Read the neutrons of the twelve detector panels of a run from the sample, by pixel.
 
     The run has no source: the incident beam is given by its direction, ``BEAM_DIRECTION``.
@@ -164,6 +164,8 @@ def read_detector(from_sample: str | Path) -> sc.DataArray:
     ----------
     from_sample:
         The folder of the run from the sample.
+    entry:
+        The entry to read, from 1: of a scan, the scan point.
 
     Returns
     -------
@@ -172,7 +174,7 @@ def read_detector(from_sample: str | Path) -> sc.DataArray:
         one after the other along the pixel dimension.
     """
     panels = [
-        read_events(from_sample, name, "source", SAMPLE, beam_direction=BEAM_DIRECTION)
+        read_events(from_sample, name, "source", SAMPLE, beam_direction=BEAM_DIRECTION, entry=entry)
         for name in detector_panels()
     ]
     (dim,) = panels[0].dims

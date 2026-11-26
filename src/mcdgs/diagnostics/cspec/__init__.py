@@ -14,6 +14,7 @@ In the order of the beam, which is also the order ``pixi run docs-diagnostics`` 
 10. :mod:`.elastic_resolution_incoherent`: the elastic resolution, from vanadium.
 11. :mod:`.magnon_powder`: the S(Q, E) of a powder magnon in every sub-pulse.
 12. :mod:`.diffraction`: the horizontal scattering plane of a La2Ni7 crystal.
+13. :mod:`.diffraction_scan`: a rotation scan of the crystal, mapping a plane of reciprocal space.
 
 :mod:`.sample_runs` reduces the runs split at the sample of the diagnostics with a sample.
 """

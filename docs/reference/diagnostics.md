@@ -24,8 +24,9 @@ documentation. See [Source](../instruments/trex/source.md),
 [Masked source](../instruments/cspec/masked-source.md),
 [Incident energy](../instruments/cspec/incident-energy.md),
 [Elastic resolution](../instruments/cspec/elastic-resolution-incoherent.md),
-[Powder magnon](../instruments/cspec/magnon-powder.md) and
-[Diffraction](../instruments/cspec/diffraction.md) for CSPEC.
+[Powder magnon](../instruments/cspec/magnon-powder.md),
+[Diffraction](../instruments/cspec/diffraction.md) and
+[Rotation scan](../instruments/cspec/diffraction-scan.md) for CSPEC.
 [Run McStasScript's diagnostics](../how-to/run-mcstasscript-diagnostics.md) has the code of
 `guides_diagnostics`, and [Guide transmission](../instruments/trex/guides.md) its figures.
 
@@ -54,6 +55,8 @@ documentation. See [Source](../instruments/trex/source.md),
 ::: mcdgs.diagnostics.magnon_powder
 
 ::: mcdgs.diagnostics.diffraction
+
+::: mcdgs.diagnostics.diffraction_scan
 
 ::: mcdgs.diagnostics.trex.overview
 
@@ -116,3 +119,5 @@ documentation. See [Source](../instruments/trex/source.md),
 ::: mcdgs.diagnostics.cspec.magnon_powder
 
 ::: mcdgs.diagnostics.cspec.diffraction
+
+::: mcdgs.diagnostics.cspec.diffraction_scan
