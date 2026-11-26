@@ -49,7 +49,7 @@ without McStas.
 
 ## The reduction
 
-The reduction is shared with the [elastic resolution](elastic-resolution-incoherent.md), in
+The reduction is shared with the [elastic resolution](elastic-resolution-incoherent-short.md), in
 `cspec.sample_runs`:
 
 1. **The sub-pulses.** `subpulse_timing` finds the 14 sub-pulses at `mc_monitor` of the first

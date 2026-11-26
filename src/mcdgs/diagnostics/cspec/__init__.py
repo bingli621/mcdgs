@@ -11,11 +11,12 @@ In the order of the beam, which is also the order ``pixi run docs-diagnostics`` 
 7. :mod:`.neutrons_on_sample`: the neutrons at the sample monitor.
 8. :mod:`.masked_source`: the plain and the masked source, at the sample monitor.
 9. :mod:`.incident_energy`: the incident energy of each sub-pulse.
-10. :mod:`.elastic_resolution_incoherent`: the elastic resolution, from vanadium.
+10. :mod:`.elastic_resolution_incoherent_short`: the elastic resolution, from vanadium, at 3 Å.
 11. :mod:`.diffraction`: the horizontal scattering plane of a La2Ni7 crystal.
 12. :mod:`.diffraction_scan`: a diffraction scan of the crystal, turned through its angles, mapping
     a plane of reciprocal space.
 13. :mod:`.magnon_powder`: the S(Q, E) of a powder magnon in every sub-pulse.
 
+:mod:`.elastic_resolution_incoherent_long` is the same at 8 Å, without a page of its own yet.
 :mod:`.sample_runs` reduces the runs split at the sample of the diagnostics with a sample.
 """

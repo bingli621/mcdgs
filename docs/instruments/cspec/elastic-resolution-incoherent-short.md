@@ -1,7 +1,7 @@
 # Elastic resolution
 
 `CSPECElasticResolution`, in
-[`mcdgs.diagnostics.cspec.elastic_resolution_incoherent`](https://github.com/bingli621/mcdgs/blob/main/src/mcdgs/diagnostics/cspec/elastic_resolution_incoherent.py),
+[`mcdgs.diagnostics.cspec.elastic_resolution_incoherent_short`](https://github.com/bingli621/mcdgs/blob/main/src/mcdgs/diagnostics/cspec/elastic_resolution_incoherent_short.py),
 puts a vanadium cylinder on `sample_pos` and reduces every neutron that reaches the detector
 panels to its energy transfer E = Ei − Ef. Vanadium scatters incoherently and elastically, so
 every neutron it scatters has E = 0. The width of the line it gives is the energy resolution of
@@ -39,7 +39,7 @@ of the panels at their centers, where they are nearest the sample and so the hig
 
 <!-- fmt:off -->
 ```python
---8<-- "src/mcdgs/diagnostics/cspec/elastic_resolution_incoherent.py:instrument"
+--8<-- "src/mcdgs/diagnostics/cspec/elastic_resolution_incoherent_short.py:instrument"
 ```
 <!-- fmt:on -->
 
@@ -90,7 +90,7 @@ Both parts, with the reduction, take three and a half minutes. The sub-pulses br
 
 ## S(Q, E)
 
-![S(Q, E) of each of the 14 sub-pulses, |Q| across and E up, from the highest Ei to the lowest, normalized by the coverage of each bin, colored where the detector reaches and white elsewhere](figures/elastic-resolution-incoherent/cspec_elastic_resolution_incoherent_sqe.png)
+![S(Q, E) of each of the 14 sub-pulses, |Q| across and E up, from the highest Ei to the lowest, normalized by the coverage of each bin, colored where the detector reaches and white elsewhere](figures/elastic-resolution-incoherent-short/cspec_elastic_resolution_incoherent_short_sqe.png)
 
 `q_e_maps` histograms the neutrons of each sub-pulse in |Q| and E, in bins of 0.05 meV and
 0.05 Å⁻¹, and divides each bin by its coverage, as on
@@ -110,7 +110,7 @@ is white.
 
 ## The spectra
 
-![The intensity of each of the 14 sub-pulses against the energy transfer, stacked from the highest Ei at the top to the lowest at the bottom, each with its Gaussian fit](figures/elastic-resolution-incoherent/cspec_elastic_resolution_incoherent.png)
+![The intensity of each of the 14 sub-pulses against the energy transfer, stacked from the highest Ei at the top to the lowest at the bottom, each with its Gaussian fit](figures/elastic-resolution-incoherent-short/cspec_elastic_resolution_incoherent_short.png)
 
 As on T-Rex, the figure is linear and spans the whole energy coverage: each sub-pulse is drawn
 over its arrival window, −0.8 Ei to 0.8 Ei, empty bins included. Each bin is a point with its
@@ -141,7 +141,7 @@ $$
 $\chi^2$ per degree of freedom is 0.4 to 2.6. The intensity is that of the whole spectrum, summed
 over E. `analyze` prints the table:
 
---8<-- "docs/instruments/cspec/figures/elastic-resolution-incoherent/cspec_elastic_resolution_incoherent_lines.txt"
+--8<-- "docs/instruments/cspec/figures/elastic-resolution-incoherent-short/cspec_elastic_resolution_incoherent_short_lines.txt"
 
 Every center lies above its Ei, from 0.06 meV, 0.38 %, at 15.0 meV down to 0.004 meV, 0.08 %, at
 5.7 meV; in the middle of the band, at about 0.17 %. On T-Rex the centers are also above Ei, by
@@ -153,7 +153,7 @@ each line, 2.6 to 3.9 % of Ei.
 
 ## The resolution against Ei
 
-![The FWHM of the elastic line of each of the 14 sub-pulses against its Ei, the FWHM as a fraction of Ei, and the flux of each sub-pulse at mc_monitor](figures/elastic-resolution-incoherent/cspec_elastic_resolution_incoherent_resolution.png)
+![The FWHM of the elastic line of each of the 14 sub-pulses against its Ei, the FWHM as a fraction of Ei, and the flux of each sub-pulse at mc_monitor](figures/elastic-resolution-incoherent-short/cspec_elastic_resolution_incoherent_short_resolution.png)
 
 `plot_resolution` draws, against Ei, the FWHM of each sub-pulse, the FWHM as a fraction of Ei,
 and the flux of each sub-pulse at `mc_monitor`, as the first three panels of
@@ -177,15 +177,15 @@ from the intensity of the monitor alone.
 The figures need McStas, so they are not made with the site. To run McStas and make them, run:
 
 ```bash
-pixi run python -c "from mcdgs.diagnostics.cspec.elastic_resolution_incoherent import main; main()"
+pixi run python -c "from mcdgs.diagnostics.cspec.elastic_resolution_incoherent_short import main; main()"
 ```
 
 At its defaults, `main` runs both parts, 1e9 rays from the masked source with seed 1, as for the
 figures here. It prints the table and saves the three figures and the table to
-`mcdgs_workspace/results/cspec_elastic_resolution_incoherent/`, or to the folder given as `out`.
+`mcdgs_workspace/results/cspec_elastic_resolution_incoherent_short/`, or to the folder given as `out`.
 Running the module, as `pixi run docs-diagnostics` does, only reduces the runs again, without
 McStas:
 
 ```bash
-pixi run python -m mcdgs.diagnostics.cspec.elastic_resolution_incoherent
+pixi run python -m mcdgs.diagnostics.cspec.elastic_resolution_incoherent_short
 ```

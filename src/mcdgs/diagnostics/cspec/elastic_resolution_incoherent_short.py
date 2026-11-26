@@ -39,11 +39,11 @@ three panels of :func:`.trex.elastic_resolution_incoherent.plot_resolutions`.
 :func:`main` is :func:`simulate`, which runs McStas, then :func:`analyze`, which reduces and
 draws. Run it to do both::
 
-    pixi run python -c "from mcdgs.diagnostics.cspec.elastic_resolution_incoherent import main; main()"
+    pixi run python -c "from mcdgs.diagnostics.cspec.elastic_resolution_incoherent_short import main; main()"
 
 Running the module only reduces the runs again, without McStas, with :func:`analyze`::
 
-    pixi run python -m mcdgs.diagnostics.cspec.elastic_resolution_incoherent
+    pixi run python -m mcdgs.diagnostics.cspec.elastic_resolution_incoherent_short
 """
 
 import math
@@ -80,7 +80,7 @@ from mcdgs.mcstas import Simulation, Workspace
 from mcdgs.reduction.inelastic import normalized_events
 from mcdgs.samples import vanadium
 
-NAME = "cspec_elastic_resolution_incoherent"
+NAME = "cspec_elastic_resolution_incoherent_short"
 FOCUS_MARGIN = 1.0  # deg, the focusing window of the sample is this much wider than the detector
 
 
@@ -172,7 +172,7 @@ def run_names() -> tuple[str, str]:
     Examples
     --------
     >>> run_names()[0]
-    'cspec_elastic_resolution_incoherent_run_to_sample'
+    'cspec_elastic_resolution_incoherent_short_run_to_sample'
     """
     return f"{NAME}_run_to_sample", f"{NAME}_run_from_sample"
 
@@ -299,16 +299,16 @@ def analyze(out: Path | None = None) -> list[Path]:
     """Reduce the runs, and save their spectra, their fits and their S(Q, E) maps.
 
     It runs no McStas, so it can run again on the same runs; :func:`main` runs them first. The
-    files are ``cspec_elastic_resolution_incoherent.png``, from :func:`.plot_spectra`,
-    ``cspec_elastic_resolution_incoherent_lines.txt``, the table of :func:`.lines_table`,
-    ``cspec_elastic_resolution_incoherent_sqe.png``, from :func:`.plot_q_e_maps`, and
-    ``cspec_elastic_resolution_incoherent_resolution.png``, from :func:`plot_resolution`.
+    files are ``cspec_elastic_resolution_incoherent_short.png``, from :func:`.plot_spectra`,
+    ``cspec_elastic_resolution_incoherent_short_lines.txt``, the table of :func:`.lines_table`,
+    ``cspec_elastic_resolution_incoherent_short_sqe.png``, from :func:`.plot_q_e_maps`, and
+    ``cspec_elastic_resolution_incoherent_short_resolution.png``, from :func:`plot_resolution`.
 
     Parameters
     ----------
     out:
-        Folder of the files. If ``None``, ``cspec_elastic_resolution_incoherent`` in the results
-        folder of :meth:`.Workspace.find`.
+        Folder of the files. If ``None``, ``cspec_elastic_resolution_incoherent_short`` in the
+        results folder of :meth:`.Workspace.find`.
 
     Returns
     -------

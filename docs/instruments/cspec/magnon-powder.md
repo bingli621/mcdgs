@@ -2,7 +2,7 @@
 
 `CSPECMagnonPowder`, in
 [`mcdgs.diagnostics.cspec.magnon_powder`](https://github.com/bingli621/mcdgs/blob/main/src/mcdgs/diagnostics/cspec/magnon_powder.py),
-replaces the vanadium of [Elastic resolution](elastic-resolution-incoherent.md) with a powder
+replaces the vanadium of [Elastic resolution](elastic-resolution-incoherent-short.md) with a powder
 that scatters from one magnon branch. It draws S(Q, E) for each of the 14 sub-pulses in one
 figure. Vanadium gives one line at E = 0, so it measures the resolution at a single energy
 transfer. The magnon spreads intensity across E and |Q|, and its band has sharp edges, so the
@@ -32,7 +32,7 @@ at the same |Q|. With $\Delta$ = 1 meV and $JS$ = 7/24 meV = 0.292 meV, the band
 each |Q|, every wavevector of that length. `write_magnon_sqw` averages the magnon over 20,000
 directions on a Fibonacci lattice of the sphere and smooths each row with a Gaussian of
 $\sigma$ = 0.01 meV, a quarter of the narrowest FWHM of CSPEC, 0.10 meV, from
-[Elastic resolution](elastic-resolution-incoherent.md). At small |Q| the powder band is a narrow
+[Elastic resolution](elastic-resolution-incoherent-short.md). At small |Q| the powder band is a narrow
 dispersive line, $\Delta + 2JS\,(\lvert Q \rvert a)^2$. At larger |Q| it is a band between a
 lowest and a highest energy, `magnon_band`, with sharp edges.
 
@@ -79,7 +79,7 @@ when the instrument starts, in both parts of the run, so the path is absolute.
 
 `simulate` runs the default control parameters, `lambda0` = 3 Å, `nu_mc` = 224 Hz, with the
 masked source, in the two parts of
-[Elastic resolution](elastic-resolution-incoherent.md#two-runs-split-at-the-sample):
+[Elastic resolution](elastic-resolution-incoherent-short.md#two-runs-split-at-the-sample):
 
 1. **From the source to `sample_pos`**, with 5e9 rays, in 17.5 minutes.
 2. **From that beam through the powder to the panels**, in 22 seconds. Each neutron of the beam

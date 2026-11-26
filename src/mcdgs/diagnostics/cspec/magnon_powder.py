@@ -1,22 +1,22 @@
 """The S(Q, E) of a powder magnon in every sub-pulse of CSPEC: the resolution across the train.
 
 :class:`CSPECMagnonPowder` is :class:`.CSPEC` with the powder of :func:`.magnon_powder` on
-``sample_pos``, and the detector panels, as :mod:`.diagnostics.cspec.elastic_resolution_incoherent`
-has its vanadium: the same cylinder, the same choppers, so the same 14 sub-pulses, each with its
-own incident energy. It follows :mod:`.diagnostics.trex.magnon_powder`, with a magnon in reach of
+``sample_pos``, and the detector panels, as
+:mod:`.diagnostics.cspec.elastic_resolution_incoherent_short` has its vanadium: the same
+cylinder, the same choppers, so the same 14 sub-pulses, each with its own incident energy. It follows :mod:`.diagnostics.trex.magnon_powder`, with a magnon in reach of
 the sub-pulses of CSPEC, which have about a third of the Ei of those of T-Rex: the same cell of
 :data:`.MAGNON_A`, so the same zone centers in |Q|, with a gap of ``MAGNON_GAP`` and a top of
 ``MAGNON_TOP``, and a line of ``MAGNON_WIDTH``, far narrower than the resolution of CSPEC. The
 powder scatters once, within ``d_phi`` of the horizontal plane: the height of the window of
-:func:`.elastic_resolution_incoherent.detector_window`, which covers the panels.
+:func:`.elastic_resolution_incoherent_short.detector_window`, which covers the panels.
 
 :func:`simulate` writes the S(|Q|, E) file of the powder into the builds folder of the workspace,
 :func:`sqw_path`, then runs in two parts, with :class:`.Simulation`, as the vanadium does: from
 the source to ``sample_pos``, then from the beam there through the powder to the detector, into
 the folders of :func:`run_names`.
 
-The reduction is that of the vanadium (:func:`.elastic_resolution_incoherent.reduce_runs`): the
-sub-pulses at ``mc_monitor``, every pixel of the panels, the neutrons of each sub-pulse normalized
+The reduction is that of the vanadium
+(:func:`.elastic_resolution_incoherent_short.reduce_runs`): the sub-pulses at ``mc_monitor``, every pixel of the panels, the neutrons of each sub-pulse normalized
 by the solid angle of their pixel and by its flux, and :func:`.q_e_maps`, S(Q, E) normalized by
 the coverage of each bin. :func:`.plot_magnon_maps` draws the 14 maps in one figure, over
 their whole arrival windows, energy gain and energy loss, on a color scale up to the
@@ -41,7 +41,7 @@ import scipp as sc
 from mcdgs.core.components import Isotropic_Sqw
 from mcdgs.diagnostics import cli
 from mcdgs.diagnostics import elastic_resolution as resolution
-from mcdgs.diagnostics.cspec import elastic_resolution_incoherent as vanadium
+from mcdgs.diagnostics.cspec import elastic_resolution_incoherent_short as vanadium
 from mcdgs.diagnostics.cspec import sample_runs as runs
 from mcdgs.diagnostics.magnon_powder import plot_magnon_maps
 from mcdgs.instruments.cspec.model import CSPEC, DEFAULT_PARAMS, Params
@@ -114,7 +114,7 @@ def sample(sqw_file: str | Path | None = None) -> Isotropic_Sqw:
     """Return the powder of :func:`.magnon_powder`, scattering once towards the detector.
 
     It scatters within ``d_phi`` of the horizontal plane, the height of the window of
-    :func:`.elastic_resolution_incoherent.detector_window`, and makes ``P_INTERACT`` of the
+    :func:`.elastic_resolution_incoherent_short.detector_window`, and makes ``P_INTERACT`` of the
     neutrons scatter. Each neutron goes through it ``SAMPLE_SPLIT`` times (McStas SPLIT), to
     fill S(Q, E) more smoothly.
 
@@ -217,7 +217,7 @@ def reduce_runs(
 ) -> tuple[sc.DataArray, sc.DataArray]:
     """Reduce the two parts of a McStas run of :func:`simulate` to S(Q, E), without McStas.
 
-    As :func:`.elastic_resolution_incoherent.reduce_runs`, with the bins ``ENERGY_STEP`` and
+    As :func:`.elastic_resolution_incoherent_short.reduce_runs`, with the bins ``ENERGY_STEP`` and
     ``Q_STEP``. Every pixel is kept: the direct beam passes between the two panels closest to it.
 
     Parameters

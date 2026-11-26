@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 import scipp as sc
 
-from mcdgs.diagnostics.cspec.elastic_resolution_incoherent import (
+from mcdgs.diagnostics.cspec.elastic_resolution_incoherent_short import (
     FOCUS_MARGIN,
     define_instrument,
     detector_window,
