@@ -1,0 +1,6 @@
+| Mode | Pulse-shaping | Monochromatic | Sample | All three | All three / Ei |
+| ---- | ------------- | ------------- | ------ | --------- | -------------- |
+| FF | 1.062 meV | 0.802 meV | 0.111 meV | 1.104 meV | 5.40 % |
+| FR | 1.062 meV | 0.443 meV | 0.111 meV | 0.973 meV | 4.76 % |
+| RF | 0.488 meV | 0.802 meV | 0.111 meV | 0.871 meV | 4.26 % |
+| RR | 0.487 meV | 0.443 meV | 0.111 meV | 0.604 meV | 2.95 % |

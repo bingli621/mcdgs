@@ -11,6 +11,7 @@ masked source simulates its band. With `bender_in`, the beam goes through the
 The beam on the sample is a train of 15 sub-pulses, from 2.32 to 3.68 Å, with Ei from 15.2 to
 6.0 meV. Their elastic lines are 0.16 to 0.62 meV wide in FF, 2.7 to 4.4 % of Ei, and 0.11 to
 0.37 meV in RR, 1.8 to 2.5 % of Ei. At 1 Å they are 5.3 to 17 % of Ei in FF and 3.3 to 9.8 % in
+RR, and at [2 Å](elastic-resolution-incoherent-middle.md) 3.5 to 7.4 % in FF and 2.2 to 4.3 % in
 RR. One setting of the reduction differs from 1 Å to follow such narrow lines. It is listed
 under [The reduction](#the-reduction).
 

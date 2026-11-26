@@ -13,6 +13,7 @@ documentation. See [Source](../instruments/trex/source.md),
 [Masked source](../instruments/trex/masked-source.md),
 [Incident energy](../instruments/trex/incident-energy.md),
 [Elastic resolution (short wavelength)](../instruments/trex/elastic-resolution-incoherent-short.md),
+[Elastic resolution (middle wavelength)](../instruments/trex/elastic-resolution-incoherent-middle.md),
 [Elastic resolution (long wavelength)](../instruments/trex/elastic-resolution-incoherent-long.md),
 [Diffraction](../instruments/trex/diffraction.md),
 [Diffraction scan](../instruments/trex/diffraction-scan.md) and
@@ -84,6 +85,8 @@ documentation. See [Source](../instruments/trex/source.md),
 ::: mcdgs.diagnostics.trex.sample_runs
 
 ::: mcdgs.diagnostics.trex.elastic_resolution_incoherent_short
+
+::: mcdgs.diagnostics.trex.elastic_resolution_incoherent_middle
 
 ::: mcdgs.diagnostics.trex.elastic_resolution_incoherent_long
 

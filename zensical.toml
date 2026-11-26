@@ -35,6 +35,7 @@ nav = [
     { "Masked source" = "instruments/trex/masked-source.md" },
     { "Incident energy" = "instruments/trex/incident-energy.md" },
     { "Elastic resolution (short wavelength)" = "instruments/trex/elastic-resolution-incoherent-short.md" },
+    { "Elastic resolution (middle wavelength)" = "instruments/trex/elastic-resolution-incoherent-middle.md" },
     { "Elastic resolution (long wavelength)" = "instruments/trex/elastic-resolution-incoherent-long.md" },
     { "Analytic resolution" = "instruments/trex/elastic-resolution-model.md" },
     { "Diffraction" = "instruments/trex/diffraction.md" },

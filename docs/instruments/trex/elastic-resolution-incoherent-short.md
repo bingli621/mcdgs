@@ -7,8 +7,9 @@ detector to its energy transfer E = Ei − Ef. Vanadium scatters incoherently an
 every neutron it scatters has E = 0. The width of the line it gives is the energy resolution of
 T-Rex, one value for each of the 12 sub-pulses at `lambda0` = 1 Å. Anything away from the line
 would come from the instrument or the reduction, not from the sample.
-[Elastic resolution (long wavelength)](elastic-resolution-incoherent-long.md) does the same at
-`lambda0` = 3 Å, with the bender in.
+[Elastic resolution (middle wavelength)](elastic-resolution-incoherent-middle.md) does the same
+at `lambda0` = 2 Å, and [Elastic resolution (long wavelength)](elastic-resolution-incoherent-long.md)
+at 3 Å, with the bender in.
 
 The reduction is the one used on [Diffraction](diffraction.md), with the sub-pulses and
 incident energies of [Incident energy](incident-energy.md) and the
