@@ -15,8 +15,9 @@ does the rest:
   final energy Ef, and gives its FWHM, ``FWHM_PER_SIGMA`` times its standard deviation σ;
   :func:`lines_table` lists them, and :func:`plot_spectra` draws the spectra with their errors and
   their Gaussians, against E.
-- :func:`q_e_maps` histograms the neutrons of each sub-pulse in |Q| and E as well, and
-  :func:`plot_q_e_maps` draws the maps of all of them in one figure.
+- :func:`q_e_maps` histograms the neutrons of each sub-pulse in |Q| and E as well, divided by
+  their kf/ki, into S(Q, E), and :func:`plot_q_e_maps` draws the maps of all of them in one
+  figure.
 
 The sub-pulses are a data array along ``subpulse``, with their flux and the coordinates
 ``incident_energy``, ``incident_wavelength`` and ``time_at_sample``, as
@@ -31,7 +32,7 @@ from scipy.optimize import curve_fit
 
 from mcdgs.diagnostics import cli
 from mcdgs.reduction.binning import bin_edges, bins_title
-from mcdgs.reduction.inelastic import DEFAULT_ENERGY_TRANSFER_RATIO
+from mcdgs.reduction.inelastic import DEFAULT_ENERGY_TRANSFER_RATIO, kf_over_ki
 from mcdgs.reduction.mdnorm import momentum_transfer, q_e_coverage
 
 # the incident beam in the frame of sample_pos, the frame of a run from the sample: its z axis
@@ -369,9 +370,11 @@ def q_e_maps(
 
     Every sub-pulse has the same bins, so that all the maps span the same range: in E those of
     :func:`energy_spectra`, wide enough for the arrival window of the highest Ei, and in |Q|
-    from 0 to the largest |Q| the detector reaches, at the largest 2θ and the highest Ei. In
-    each bin, the fraction of the incident neutrons of the sub-pulse scattered into it is
-    divided by its coverage from :func:`.q_e_coverage`: the solid angle of every pixel times
+    from 0 to the largest |Q| the detector reaches, at the largest 2θ and the highest Ei. Each
+    neutron is divided by its kf/ki, :func:`.kf_over_ki`, which the cross section holds on top of
+    S(Q, E): it is 1 at E = 0, above 1 where the neutron gains energy and below where it loses
+    it. In each bin, the fraction of the incident neutrons of the sub-pulse scattered into it is
+    then divided by its coverage from :func:`.q_e_coverage`: the solid angle of every pixel times
     the length in E of its trajectory inside the bin. That is S(Q, E) per steradian and per meV,
     whatever the part of the detector that sees the bin: the normalization of MDNorm, in |Q|.
 
@@ -410,6 +413,13 @@ def q_e_maps(
     fractions.data = events.data * events.coords["solid_angle"]  # of the incident neutrons
     fractions.coords["energy_transfer"] = events.coords["energy_transfer"].to(unit="meV")
     fractions.coords["Q"] = events.coords["Q"].to(unit="1/Å")
+    # the incident energy of each neutron, that of its sub-pulse, to take kf/ki off S(Q, E)
+    subpulse = events.coords["subpulse"].values
+    incident = energies.values[subpulse]
+    fractions.data = fractions.data / kf_over_ki(
+        sc.array(dims=events.dims, values=incident, unit="meV"),
+        fractions.coords["energy_transfer"],
+    )
     grouped = fractions.group(sc.arange("subpulse", pulses.sizes["subpulse"]))
     scattered = grouped.hist(energy_transfer=energy, Q=q).transpose(
         ["subpulse", "energy_transfer", "Q"]

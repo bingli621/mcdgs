@@ -8,6 +8,7 @@ from mcdgs.reduction.inelastic import (
     arrival_window,
     assign_subpulse,
     events_to_q_and_energy,
+    kf_over_ki,
     normalized_events,
     time_at_sample,
 )
@@ -205,3 +206,11 @@ def test_each_neutron_is_per_steradian_of_its_pixel_and_per_neutron_of_its_sub_p
     assert events.values == pytest.approx([1.0, 1.0])
     assert events.coords["solid_angle"].values == pytest.approx([0.5, 0.25])
     assert (events.values * events.coords["solid_angle"].values).tolist() == [0.5, 0.25]
+
+
+def test_kf_over_ki_is_one_when_elastic_above_one_on_gain_and_below_on_loss():
+    ei = sc.array(dims=["event"], values=[10.0, 10.0, 10.0, 4.0], unit="meV")
+    e = sc.array(dims=["event"], values=[0.0, 5000.0, -5000.0, 3000.0], unit="μeV")  # any unit
+    ratio = kf_over_ki(ei, e)
+    assert ratio.unit == sc.units.one
+    assert ratio.values == pytest.approx([1.0, np.sqrt(0.5), np.sqrt(1.5), 0.5])

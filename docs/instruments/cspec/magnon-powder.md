@@ -49,6 +49,22 @@ The magnetic form factor and the polarization factor are left out, so the intens
 fall with |Q|. `Isotropic_Sqw` has no horizontal focusing: it scatters over the whole horizontal
 circle, and the panels catch the part of it between −31.5° and 143.8°.
 
+### Both sides of E, with a Bose factor of 1
+
+A magnon is created when the neutron loses energy, at positive E, and annihilated when it gains
+energy, at negative E. In a sample at a temperature $T$, detailed balance ties the two sides by
+the Bose factor:
+
+$$
+S(Q, -E) = e^{-E / k_B T}\, S(Q, E)
+$$
+
+Here the two sides are equal at every energy transfer, a Bose factor of 1, the limit
+$k_B T \gg E$. `write_magnon_sqw` writes the table on both sides itself, $S(Q, -E) = S(Q, E)$,
+and `T=-1` makes `Isotropic_Sqw` take it as it is, with no detailed balance. The figure then shows
+the band on both sides of E, as strong on each: any difference between them comes from the
+instrument or the reduction, not from the sample.
+
 `simulate` writes the table into the builds folder of the workspace, `sqw_path`, as
 `cspec_magnon_powder.sqw`, apart from the table of T-Rex, before it runs McStas. McStas reads it
 when the instrument starts, in both parts of the run, so the path is absolute.
@@ -73,6 +89,21 @@ masked source, in the two parts of
 `mc_monitor`, every pixel of the panels, the neutrons of each sub-pulse divided by the solid
 angle of their pixel and by its flux, and `q_e_maps`, S(Q, E) normalized by the coverage of each
 bin, in bins of 0.1 meV and 0.05 Å⁻¹.
+
+The intensity a detector measures is the double-differential cross section, which holds a factor
+$k_f/k_i$ on top of S(Q, E):
+
+$$
+\frac{d^2\sigma}{d\Omega\, dE_f} = \frac{\sigma}{4\pi}\, \frac{k_f}{k_i}\, S(Q, E),
+\qquad \frac{k_f}{k_i} = \sqrt{\frac{E_f}{E_i}} = \sqrt{1 - \frac{E}{E_i}}
+$$
+
+`Isotropic_Sqw` scatters with it, so a neutron that gains energy, and leaves faster, counts more
+than one that loses as much. `q_e_maps` removes it: it divides each neutron by its $k_f/k_i$,
+from `kf_over_ki`, before it histograms them, so the maps are S(Q, E) itself. Without that, the
+gain side of a sub-pulse would be brighter than its loss side, though the sample scatters the same
+on both: by about 2 across the band at the lowest Ei, and by up to 3 at the edges of an arrival
+window, $\sqrt{1.8 / 0.2}$ at $E = \mp 0.8\, E_i$.
 
 ## S(Q, E)
 

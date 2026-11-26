@@ -12,6 +12,10 @@ an energy-transfer range reach the detector, and :func:`assign_subpulse` gives e
 sub-pulse of the window it arrives in. :func:`events_to_q_and_energy` does both for neutrons
 binned by pixel, keeps those inside a window and converts them with ``QE_GRAPH``.
 :func:`normalized_events` does the same per incident neutron and per steradian.
+
+A neutron scattered with an energy transfer E counts in the double-differential cross section
+with a factor kf/ki, of the phase space of the scattered neutron, on S(Q, E). :func:`kf_over_ki`
+gives it, so that the neutrons divided by it give S(Q, E).
 """
 
 from typing import cast
@@ -29,6 +33,7 @@ __all__ = [
     "assign_subpulse",
     "events_to_q_and_energy",
     "final_wavelength",
+    "kf_over_ki",
     "normalized_events",
     "time_at_sample",
 ]
@@ -337,6 +342,38 @@ def events_to_q_and_energy(
     return events.transform_coords(
         ["energy_transfer", "Q", "Qx", "Qy", "Qz"], graph=QE_GRAPH, keep_intermediate=False
     )
+
+
+def kf_over_ki(incident_energy: sc.Variable, energy_transfer: sc.Variable) -> sc.Variable:
+    """Return the ratio of the final to the incident wavevector of each neutron.
+
+    The double-differential cross section is (σ / 4π) (kf / ki) S(Q, E): a neutron that gains
+    energy leaves faster, and counts more, than one that loses as much. Dividing the neutrons by
+    kf / ki = √(Ef / Ei), with Ef = Ei − E, leaves S(Q, E).
+
+    Parameters
+    ----------
+    incident_energy:
+        The incident energy of each neutron, that of its sub-pulse.
+    energy_transfer:
+        The energy transfer ``Ei - Ef`` of each neutron, below Ei.
+
+    Returns
+    -------
+    :
+        kf / ki, dimensionless, with the dimensions of the inputs.
+
+    Examples
+    --------
+    A neutron of 10 meV that loses 7.5 meV leaves with a quarter of its energy, half its
+    wavevector; one that gains 30 meV, twice it:
+
+    >>> ei = sc.scalar(10.0, unit="meV")
+    >>> kf_over_ki(ei, sc.array(dims=["event"], values=[7.5, 0.0, -30.0], unit="meV")).values
+    array([0.5, 1. , 2. ])
+    """
+    final_energy = incident_energy - energy_transfer.to(unit=incident_energy.unit)
+    return sc.sqrt(final_energy / incident_energy)
 
 
 def normalized_events(
