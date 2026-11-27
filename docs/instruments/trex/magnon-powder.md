@@ -1,7 +1,7 @@
 # Powder magnon
 
 `TRexMagnonPowder`, in
-[`mcdgs.diagnostics.trex.magnon_powder`](https://github.com/bingli621/mcdgs/blob/main/src/mcdgs/diagnostics/trex/magnon_powder.py),
+[`mcdgs.diagnostics.trex.powder_magnon`](https://github.com/bingli621/mcdgs/blob/main/src/mcdgs/diagnostics/trex/powder_magnon.py),
 replaces the vanadium of
 [Elastic resolution (short wavelength)](elastic-resolution-incoherent-short.md) with a powder
 that scatters from one magnon branch. It draws S(Q, E) for each of the 15 sub-pulses in one
@@ -62,7 +62,7 @@ absolute.
 
 <!-- fmt:off -->
 ```python
---8<-- "src/mcdgs/diagnostics/trex/magnon_powder.py:instrument"
+--8<-- "src/mcdgs/diagnostics/trex/powder_magnon.py:instrument"
 ```
 <!-- fmt:on -->
 
@@ -150,9 +150,9 @@ what the sample does not have:
 ## Making the figure
 
 ```console
-pixi run python -c "from mcdgs.diagnostics.trex.magnon_powder import main; main()"
+pixi run python -c "from mcdgs.diagnostics.trex.powder_magnon import main; main()"
 ```
 
 This runs McStas, then `analyze`, which writes `trex_magnon_powder_ff_sqe.png` into the results
-folder. `pixi run python -m mcdgs.diagnostics.trex.magnon_powder` only reduces the runs again,
+folder. `pixi run python -m mcdgs.diagnostics.trex.powder_magnon` only reduces the runs again,
 without McStas.

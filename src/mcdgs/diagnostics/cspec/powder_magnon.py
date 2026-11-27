@@ -3,7 +3,7 @@
 :class:`CSPECMagnonPowder` is :class:`.CSPEC` with the powder of :func:`.magnon_powder` on
 ``sample_pos``, and the detector panels, as
 :mod:`.diagnostics.cspec.elastic_resolution_incoherent_short` has its vanadium: the same
-cylinder, the same choppers, so the same 14 sub-pulses, each with its own incident energy. It follows :mod:`.diagnostics.trex.magnon_powder`, with a magnon in reach of
+cylinder, the same choppers, so the same 14 sub-pulses, each with its own incident energy. It follows :mod:`.diagnostics.trex.powder_magnon`, with a magnon in reach of
 the sub-pulses of CSPEC, which have about a third of the Ei of those of T-Rex: the same cell of
 :data:`.MAGNON_A`, so the same zone centers in |Q|, with a gap of ``MAGNON_GAP`` and a top of
 ``MAGNON_TOP``, and a line of ``MAGNON_WIDTH``, far narrower than the resolution of CSPEC. The
@@ -26,11 +26,11 @@ their whole arrival windows, energy gain and energy loss, on a color scale up to
 :func:`main` is :func:`simulate`, which runs McStas, then :func:`analyze`, which reduces and
 draws. Run it to do both::
 
-    pixi run python -c "from mcdgs.diagnostics.cspec.magnon_powder import main; main()"
+    pixi run python -c "from mcdgs.diagnostics.cspec.powder_magnon import main; main()"
 
 Running the module only reduces the runs again, without McStas, with :func:`analyze`::
 
-    pixi run python -m mcdgs.diagnostics.cspec.magnon_powder
+    pixi run python -m mcdgs.diagnostics.cspec.powder_magnon
 """
 
 from pathlib import Path

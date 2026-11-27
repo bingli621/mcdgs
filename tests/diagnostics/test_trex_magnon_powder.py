@@ -1,6 +1,6 @@
 import pytest
 
-from mcdgs.diagnostics.trex import magnon_powder as diagnostic
+from mcdgs.diagnostics.trex import powder_magnon as diagnostic
 from mcdgs.diagnostics.trex.solid_angles import detector_window
 from mcdgs.mcstas import Workspace
 

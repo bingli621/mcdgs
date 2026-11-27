@@ -64,7 +64,7 @@ classDiagram
     class diagnostics {
         <<package>>
         compare
-        trex.overview to trex.magnon_powder
+        trex.overview to trex.powder_magnon
     }
     instruments ..> core
     samples ..> core

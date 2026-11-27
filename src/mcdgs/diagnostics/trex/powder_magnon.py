@@ -29,11 +29,11 @@ model, :func:`.magnon_band`, over them.
 :func:`main` is :func:`simulate`, which runs McStas, then :func:`analyze`, which reduces and
 draws. Run it to do both::
 
-    pixi run python -c "from mcdgs.diagnostics.trex.magnon_powder import main; main()"
+    pixi run python -c "from mcdgs.diagnostics.trex.powder_magnon import main; main()"
 
 Running the module only reduces the runs again, without McStas, with :func:`analyze`::
 
-    pixi run python -m mcdgs.diagnostics.trex.magnon_powder
+    pixi run python -m mcdgs.diagnostics.trex.powder_magnon
 """
 
 from pathlib import Path

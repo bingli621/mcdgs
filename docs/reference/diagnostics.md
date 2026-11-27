@@ -102,7 +102,7 @@ documentation. See [Source](../instruments/trex/source.md),
 
 ::: mcdgs.diagnostics.trex.powder_diffraction
 
-::: mcdgs.diagnostics.trex.magnon_powder
+::: mcdgs.diagnostics.trex.powder_magnon
 
 ::: mcdgs.diagnostics.trex.guides_diagnostics
 
@@ -138,4 +138,4 @@ documentation. See [Source](../instruments/trex/source.md),
 
 ::: mcdgs.diagnostics.cspec.powder_diffraction
 
-::: mcdgs.diagnostics.cspec.magnon_powder
+::: mcdgs.diagnostics.cspec.powder_magnon

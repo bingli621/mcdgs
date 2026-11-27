@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from mcdgs.diagnostics.cspec import magnon_powder as diagnostic
+from mcdgs.diagnostics.cspec import powder_magnon as diagnostic
 from mcdgs.diagnostics.cspec.elastic_resolution_incoherent_short import detector_window
 from mcdgs.diagnostics.cspec.incident_energy import MC_MONITOR_TIME_RESOLUTION
 from mcdgs.diagnostics.cspec.sample_runs import MONITOR

@@ -1,7 +1,7 @@
 # Powder magnon
 
 `CSPECMagnonPowder`, in
-[`mcdgs.diagnostics.cspec.magnon_powder`](https://github.com/bingli621/mcdgs/blob/main/src/mcdgs/diagnostics/cspec/magnon_powder.py),
+[`mcdgs.diagnostics.cspec.powder_magnon`](https://github.com/bingli621/mcdgs/blob/main/src/mcdgs/diagnostics/cspec/powder_magnon.py),
 replaces the vanadium of [Elastic resolution (short wavelength)](elastic-resolution-incoherent-short.md) with a powder
 that scatters from one magnon branch. It draws S(Q, E) for each of the 14 sub-pulses in one
 figure. Vanadium gives one line at E = 0, so it measures the resolution at a single energy
@@ -71,7 +71,7 @@ when the instrument starts, in both parts of the run, so the path is absolute.
 
 <!-- fmt:off -->
 ```python
---8<-- "src/mcdgs/diagnostics/cspec/magnon_powder.py:instrument"
+--8<-- "src/mcdgs/diagnostics/cspec/powder_magnon.py:instrument"
 ```
 <!-- fmt:on -->
 
@@ -174,9 +174,9 @@ that sends them towards the detector.
 ## Making the figure
 
 ```console
-pixi run python -c "from mcdgs.diagnostics.cspec.magnon_powder import main; main()"
+pixi run python -c "from mcdgs.diagnostics.cspec.powder_magnon import main; main()"
 ```
 
 This runs McStas, then `analyze`, which writes `cspec_magnon_powder_sqe.png` into the results
-folder. `pixi run python -m mcdgs.diagnostics.cspec.magnon_powder` only reduces the runs again,
+folder. `pixi run python -m mcdgs.diagnostics.cspec.powder_magnon` only reduces the runs again,
 without McStas.
