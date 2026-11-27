@@ -11,11 +11,18 @@ does the rest:
   that see each bin.
 - :func:`plot_powder_patterns` draws the patterns of all the sub-pulses over each other, on a
   linear scale, with their errors.
+- :func:`detector_views` reduces the neutrons of each sub-pulse to its intensity on the detector,
+  in the horizontal angle θ and the height of their pixel, per incident neutron and per
+  steradian, over the solid angle of the pixels in each bin.
+- :func:`plot_detector_views` draws the view of each sub-pulse on its own panel, on one log
+  color scale.
 """
 
 import matplotlib.pyplot as plt
 import numpy as np
 import scipp as sc
+from matplotlib.cm import ScalarMappable
+from matplotlib.colors import LogNorm
 from matplotlib.figure import Figure
 
 from mcdgs.diagnostics.diffraction import DIRECT_BEAM_RADIUS
@@ -24,6 +31,17 @@ from mcdgs.reduction.inelastic import DEFAULT_ENERGY_TRANSFER_RATIO
 
 PATTERN_Q_STEP = 0.01  # 1/Å, the bin width in |Q| of the patterns
 HEADROOM = 1.05  # the intensity axis reaches this much above the highest bin past the direct beam
+# the bins of the detector views, at least the pixels of both detectors, so that no bin inside a
+# detector is empty: the banana detector of T-Rex has 0.625° by 16 mm pixels, the panels of
+# CSPEC tubes 0.42° apart, 10 mm pixels
+THETA_STEP = 1.0  # deg
+HEIGHT_STEP = 0.02  # m
+DIRECT_BEAM_THETA = 5.0  # deg: the color scale of the detector views leaves out |θ| below this
+# the color scale of the detector views spans this many decades below the strongest line, down to
+# the incoherent scattering of the powder, about 1e-5 of it
+VIEW_LOG_DECADES = 6
+DETECTOR_COLUMNS = 2  # the detector views of the sub-pulses are drawn this many to a row
+DETECTOR_PANEL_WIDTH = 9.0  # inches, of each detector view
 
 
 def powder_patterns(
@@ -176,4 +194,252 @@ def plot_powder_patterns(
     )
     ax.grid(True, alpha=0.3)
     ax.legend(title="sub-pulse", fontsize="small", loc="upper right")  # above the high-|Q| peaks
+    return fig
+
+
+def horizontal_angle(position: sc.Variable, sample_position: sc.Variable) -> sc.Variable:
+    """Return the horizontal angle θ of each position about the vertical through the sample.
+
+    θ is 0 along the beam, +z, and positive toward +x, as the ``theta`` of the banana detector
+    of T-Rex and the :func:`.panel_angle` of the panels of CSPEC.
+
+    Parameters
+    ----------
+    position:
+        The positions, such as of the pixels.
+    sample_position:
+        The position of the sample.
+
+    Returns
+    -------
+    :
+        The angle in deg, from -180 to 180, along the dimensions of ``position``.
+    """
+    offset = position - sample_position
+    return sc.atan2(y=offset.fields.x, x=offset.fields.z).to(unit="deg")
+
+
+def covering_range(values: np.ndarray, step: float) -> tuple[float, float]:
+    """Return the first and the last edge of bins of ``step`` aligned on 0, covering ``values``.
+
+    Parameters
+    ----------
+    values:
+        The values to cover.
+    step:
+        The bin width.
+
+    Returns
+    -------
+    :
+        The edges, multiples of ``step``, the last above the largest value.
+    """
+    return float(np.floor(values.min() / step) * step), float(
+        (np.floor(values.max() / step) + 1) * step
+    )
+
+
+def detector_views(
+    events: sc.DataArray,
+    pulses: sc.DataArray,
+    position: sc.Variable,
+    sample_position: sc.Variable,
+    solid_angle: sc.Variable,
+    theta_step: float = THETA_STEP,
+    height_step: float = HEIGHT_STEP,
+) -> sc.DataArray:
+    """Return the intensity of each sub-pulse on the detector, in θ and height.
+
+    Each neutron is put at the horizontal angle θ of :func:`horizontal_angle` and the height of
+    the center of its pixel, as a detector shows it, unrolled about the vertical through the
+    sample. As in :func:`powder_patterns`, each neutron of :func:`.normalized_events` times the
+    solid angle of its pixel is the fraction of the incident neutrons of its sub-pulse it stands
+    for, with the variance of its square, and in each bin the sum is divided by its coverage, the
+    solid angle of the pixels whose center falls in it: the intensity per incident neutron and per
+    steradian, whatever the number of pixels in the bin. A bin wider than a pixel has at least
+    one, inside the detector. The radius of the detector is the median horizontal distance of the
+    pixels from the sample, to draw the views to the scale of the detector.
+
+    Parameters
+    ----------
+    events:
+        The neutrons of :func:`.normalized_events`, in 1/sr, with their ``subpulse``, the
+        ``solid_angle`` and ``position`` of their pixel.
+    pulses:
+        The sub-pulses, with their ``incident_wavelength`` and ``incident_energy``.
+    position, solid_angle:
+        The position and the solid angle of every pixel of the detector.
+    sample_position:
+        The position of the sample.
+    theta_step:
+        The bin width in θ, in deg.
+    height_step:
+        The bin width in height, in m.
+
+    Returns
+    -------
+    :
+        The intensity per incident neutron, at the monitor of :func:`.normalized_events`, and
+        per steradian, with its variances, along ``subpulse``, ``height`` and ``theta``, with the
+        bin edges ``theta`` in deg and ``height`` in m, covering the pixels, and the
+        ``incident_wavelength`` and ``incident_energy`` of each sub-pulse, and the ``radius`` of
+        the detector, in m. A bin without a pixel is NaN.
+    """
+    pixel_theta = horizontal_angle(position, sample_position).values
+    pixel_offset = position - sample_position
+    pixel_height = pixel_offset.fields.y.to(unit="m").values
+    radius = np.median(np.hypot(pixel_offset.fields.x.values, pixel_offset.fields.z.values))
+    edges = {
+        "theta": bin_edges("theta", *covering_range(pixel_theta, theta_step), theta_step, "deg"),
+        "height": bin_edges("height", *covering_range(pixel_height, height_step), height_step, "m"),
+    }
+    fractions = events.copy(deep=False)
+    fractions.data = events.data * events.coords["solid_angle"]
+    fractions.variances = fractions.values**2  # a neutron of weight w counts with variance w²
+    offset = events.coords["position"] - sample_position
+    fractions.coords["theta"] = horizontal_angle(events.coords["position"], sample_position)
+    fractions.coords["height"] = offset.fields.y.to(unit="m")
+    index = events.coords["subpulse"]
+    groups = sc.arange("subpulse", pulses.sizes["subpulse"], unit=index.unit, dtype=index.dtype)
+    scattered = fractions.group(groups).hist(height=edges["height"], theta=edges["theta"])
+    coverage, _, _ = np.histogram2d(
+        pixel_height,
+        pixel_theta,
+        bins=[edges["height"].values, edges["theta"].values],
+        weights=solid_angle.to(unit="sr").values,
+    )
+    covered = np.broadcast_to(coverage > 0, scattered.shape)
+    values = np.divide(
+        scattered.values, coverage, out=np.full(scattered.shape, np.nan), where=covered
+    )
+    variances = np.divide(
+        scattered.variances, coverage**2, out=np.full(scattered.shape, np.nan), where=covered
+    )
+    views = sc.DataArray(
+        sc.array(
+            dims=["subpulse", "height", "theta"],
+            values=values,
+            variances=variances,
+            unit=scattered.unit / sc.Unit("sr"),
+        ),
+        coords=edges,
+    )
+    for name in ("incident_wavelength", "incident_energy"):
+        views.coords[name] = pulses.coords[name].copy()
+    views.coords["radius"] = sc.scalar(float(radius), unit=pixel_offset.unit).to(unit="m")
+    return views
+
+
+def plot_detector_views(
+    views: sc.DataArray,
+    title: str,
+    monitor: str,
+    window: tuple[float, float] = DEFAULT_ENERGY_TRANSFER_RATIO,
+    log_decades: float = VIEW_LOG_DECADES,
+    direct_beam_theta: float = DIRECT_BEAM_THETA,
+    headroom: float = 1.0,
+    columns: int = DETECTOR_COLUMNS,
+) -> Figure:
+    """Draw the detector view of each sub-pulse on its own panel, θ across and the height up.
+
+    The panels are drawn to the scale of the detector: a degree of θ is as long across as its arc,
+    ``radius · π / 180``, is high, so that near the beam, where a Bragg cone crosses the
+    cylinder of the detector in a circle of radius ``radius · 2θ``, the ring is round.
+
+    θ runs from high to low, left to right. All the panels share the axes and one log color scale, in turbo, with the bins without a
+    neutron or a pixel in white. Its bottom is ``log_decades`` below the highest bin of any
+    sub-pulse past the direct beam, ``|θ| > direct_beam_theta``, and its top ``headroom`` times
+    that bin: the direct beam past the beamstop takes the color of the top. The bins are written under the title, as
+    :func:`.bins_title`.
+
+    Parameters
+    ----------
+    views:
+        The views of :func:`detector_views`.
+    title:
+        The title of the figure.
+    monitor:
+        The monitor whose intensity of each sub-pulse the views are normalized by, as
+        :func:`plot_powder_patterns`.
+    window:
+        The smallest and the largest ``E / Ei`` of the arrival windows, as
+        :func:`.arrival_window`, which the views sum over.
+    log_decades:
+        How many decades below its top the color scale starts.
+    direct_beam_theta:
+        The |θ| of the direct beam, in deg, that the color scale leaves out.
+    headroom:
+        The top of the color scale, as a multiple of the highest bin past the direct beam. Above
+        1, the strongest lines are no longer at the red end.
+    columns:
+        How many panels to a row.
+
+    Returns
+    -------
+    :
+        The figure.
+    """
+    theta = views.coords["theta"].values
+    height = views.coords["height"].values
+    past_beam = np.abs(sc.midpoints(views.coords["theta"]).values) > direct_beam_theta
+    highest = float(np.nanmax(views.values[..., past_beam]))
+    norm = LogNorm(vmin=highest / 10**log_decades, vmax=highest * headroom, clip=True)
+    cmap = plt.get_cmap("turbo").with_extremes(bad="white")
+    wavelengths = views.coords["incident_wavelength"].to(unit="Å").values
+    energies = views.coords["incident_energy"].to(unit="meV").values
+    # a meter of height is as long as a meter of arc, 180 / (π · radius) degrees of θ
+    aspect = 180 / (np.pi * views.coords["radius"].to(unit="m").value)
+
+    n = views.sizes["subpulse"]
+    rows = -(-n // columns)  # ceiling division
+    # panels as high as their aspect, plus room for their titles
+    span = aspect * (height[-1] - height[0]) / (theta[-1] - theta[0])
+    row_height = DETECTOR_PANEL_WIDTH * span + 0.6
+    fig, axes = plt.subplots(
+        rows,
+        columns,
+        figsize=(DETECTOR_PANEL_WIDTH * columns + 1.5, row_height * rows + 1.2),
+        sharex=True,
+        sharey=True,
+        squeeze=False,
+        layout="constrained",
+    )
+    bins = bins_title(
+        {
+            "θ": views.coords["theta"],
+            "height": views.coords["height"],
+            "E/Ei": bin_edges("E/Ei", *window),
+        }
+    )
+    fig.suptitle(f"{title}\n{bins}")
+    for i, ax in enumerate(axes.flat):
+        if i >= n:
+            ax.set_visible(False)  # the panels left over in the last row
+            continue
+        values = views["subpulse", i].values
+        ax.pcolormesh(
+            theta,
+            height,
+            np.ma.masked_where(~(values > 0), values),  # no neutron or no pixel: white
+            cmap=cmap,
+            norm=norm,
+        )
+        ax.set_aspect(aspect)  # to the scale of the detector: the rings are round
+        ax.set_xlim(theta[-1], theta[0])  # θ from high to low
+        ax.set_title(
+            f"sub-pulse {i}\nλi = {wavelengths[i]:.3f} Å, Ei = {energies[i]:.2f} meV",
+            fontsize="small",
+        )
+        ax.grid(True, alpha=0.3)
+    for ax in axes[-1]:
+        ax.set_xlabel("θ [deg], from the beam")
+    for ax in axes[:, 0]:
+        ax.set_ylabel("Height [m]")
+    fig.colorbar(
+        ScalarMappable(norm=norm, cmap=cmap),  # the scale that all the panels share
+        ax=axes,
+        shrink=0.6,
+        label=f"Intensity [{views.unit} per neutron at the {monitor}]",
+        extend="max",
+    )
     return fig

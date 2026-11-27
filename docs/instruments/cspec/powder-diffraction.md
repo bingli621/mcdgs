@@ -55,6 +55,32 @@ radius $k_i$ through the origin, and its Bragg neutrons lie where the arc crosse
 powder, of radius $2\pi / d$ about the origin. The spots are smaller than on T-Rex: the lines
 are sharper. The gap at Qx = 0 is the space between the two panels closest to the direct beam.
 
+## The detector view
+
+![The detector view of each of the 14 sub-pulses, in θ and height, on a log scale](figures/powder-diffraction/cspec_powder_diffraction_detector.png)
+
+`detector_views` puts every neutron at the horizontal angle θ and the height of the center of
+its pixel, as the detector shows it, unrolled about the vertical through the sample: θ is 0 along
+the beam and positive toward +x. In each bin of 1° by 0.02 m, as in `powder_patterns`, the
+fraction of the incident neutrons of the sub-pulse scattered into it is divided by the solid
+angle of the pixels whose center falls in it,
+
+$$I(\theta, y) = \frac{\sum_{n \in \text{bin}} w_n}{\sum_{p \in \text{bin}} \Omega_p},$$
+
+the intensity per incident neutron and per steradian. A bin is wider than a pixel, so every bin
+inside the detector holds at least one pixel, and one or two pixels in it give the same
+intensity.
+
+`plot_detector_views` draws the view of each sub-pulse on its own panel, θ from high to low, on one log color scale
+6 decades deep, from the strongest line past the direct beam, |θ| > 5°, down to the incoherent
+scattering. A bin without a neutron is white. Each panel is drawn to the scale of the detector:
+a degree of θ is as wide as its arc at the radius of the detector, 3.5 m, is high, so near the
+beam, where a cone crosses the detector in a circle of radius $R \cdot 2\theta_B$, the ring is
+round. Each Bragg cone of the powder, of half-angle
+$2\theta_B$ about the beam, crosses the detector as a Debye-Scherrer ring: arcs curving about the beam at small $2\theta_B$, the other way past 90°. They move out
+with λi, as $\sin\theta_B = \lambda_i / 2d$. The white band from −4° to 4° is the gap between
+the two panels closest to the direct beam, which passes through it.
+
 ## The intensity in |Q|
 
 ![The intensity in |Q| of each of the 14 sub-pulses, over each other](figures/powder-diffraction/cspec_powder_diffraction_q.png)

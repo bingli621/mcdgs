@@ -86,6 +86,33 @@ and its Bragg neutrons lie where the arc crosses a ring of the powder, of radius
 the origin. With 15 arcs, each ring is a row of peaks across them. Between the peaks, in dark
 blue, is the incoherent scattering of the powder.
 
+## The detector view
+
+![The detector view of each of the 15 sub-pulses, in θ and height, on a log scale](figures/powder-diffraction/trex_powder_diffraction_detector.png)
+
+`detector_views` puts every neutron at the horizontal angle θ and the height of the center of
+its pixel, as the detector shows it, unrolled about the vertical through the sample: θ is 0 along
+the beam and positive toward +x. In each bin of 1° by 0.02 m, as in `powder_patterns`, the
+fraction of the incident neutrons of the sub-pulse scattered into it is divided by the solid
+angle of the pixels whose center falls in it,
+
+$$I(\theta, y) = \frac{\sum_{n \in \text{bin}} w_n}{\sum_{p \in \text{bin}} \Omega_p},$$
+
+the intensity per incident neutron and per steradian. A bin is wider than a pixel, so every bin
+inside the detector holds at least one pixel, and one or two pixels in it give the same
+intensity.
+
+`plot_detector_views` draws the view of each sub-pulse on its own panel, θ from high to low, on one log color scale
+from 6 decades below the strongest line past the direct beam, |θ| > 5°, down at the incoherent
+scattering, to 5 times that line, so that the strong lines are not all at the red end. A bin without a neutron is white. Each panel is drawn to the scale of the detector:
+a degree of θ is as wide as its arc at the radius of the detector, 3 m, is high, so near the
+beam, where a cone crosses the detector in a circle of radius $R \cdot 2\theta_B$, the ring is
+round. Each Bragg cone of the powder, of half-angle
+$2\theta_B$ about the beam, crosses the detector as a Debye-Scherrer ring: closed circles about the beam where $2\theta_B$ is small, curving the other way past
+90°, and nearly straight lines in between. The rings move out with λi, as $\sin\theta_B =
+\lambda_i / 2d$. The small square at θ = 0 is the direct beam past the beamstop. The banana detector reaches 25°
+below the beam and 15° above, so the rings are cut off above.
+
 ## The intensity in |Q|
 
 ![The intensity in |Q| of each of the 15 sub-pulses, over each other](figures/powder-diffraction/trex_powder_diffraction_q.png)

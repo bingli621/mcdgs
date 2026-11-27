@@ -31,14 +31,18 @@ A powder scatters the same way about the beam, so its pattern depends on |Q| alo
 |Q| of their pixel, from every pixel, over the solid angle of the pixels that see each bin, and
 :func:`.plot_powder_patterns` draws those of all the sub-pulses over each other.
 
+:func:`.detector_views` puts the same neutrons on the detector, in the horizontal angle θ and the
+height of their pixel, and :func:`.plot_detector_views` draws the view of each sub-pulse on its
+own panel: each Bragg cone of the powder crosses the detector as a Debye-Scherrer ring.
+
 :func:`main` is :func:`simulate`, which runs McStas, then :func:`analyze`, which reduces and
 draws. Run it to do both::
 
     pixi run python -c "from mcdgs.diagnostics.trex.powder_diffraction import main; main()"
 
 Running the module only reduces the runs again, without McStas, with :func:`analyze`;
-:func:`reduce_runs` gives the sub-pulses, the neutrons and the
-patterns alone::
+:func:`reduce_runs` gives the sub-pulses, the neutrons, the patterns
+and the detector views alone::
 
     pixi run python -m mcdgs.diagnostics.trex.powder_diffraction
 """
@@ -50,7 +54,12 @@ import scipp as sc
 from mcdgs.diagnostics import cli
 from mcdgs.diagnostics.diffraction import plot_plane, print_subpulse_table
 from mcdgs.diagnostics.elastic_resolution import two_theta
-from mcdgs.diagnostics.powder_diffraction import plot_powder_patterns, powder_patterns
+from mcdgs.diagnostics.powder_diffraction import (
+    detector_views,
+    plot_detector_views,
+    plot_powder_patterns,
+    powder_patterns,
+)
 from mcdgs.diagnostics.trex import sample_runs as runs
 from mcdgs.diagnostics.trex.solid_angles import detector_window
 from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
@@ -63,6 +72,7 @@ TO_SAMPLE = f"{NAME}_run_to_sample"  # the run folder of the first part, source 
 FROM_SAMPLE = f"{NAME}_run_from_sample"  # that of the second part, sample_pos -> detector
 SAMPLE_SPLIT = 10  # McStas SPLIT on the powder: each neutron reaching it is repeated this often
 QY_HALF_WIDTH = 0.25  # 1/Å: the (Qx, Qz) plane keeps the neutrons with |Qy| below this
+VIEW_HEADROOM = 5.0  # the top of the color scale of the detector views, over the highest bin
 
 
 # --8<-- [start:instrument]
@@ -131,7 +141,7 @@ def simulate(ncount: float = 1e9, seed: int = 1) -> tuple[Path, Path]:
 
 def reduce_runs(
     to_sample: str | Path | None = None, from_sample: str | Path | None = None
-) -> tuple[sc.DataArray, sc.DataArray, sc.DataArray]:
+) -> tuple[sc.DataArray, sc.DataArray, sc.DataArray, sc.DataArray]:
     """Reduce the two parts of a McStas run of :func:`simulate`, without running McStas.
 
     Parameters
@@ -145,8 +155,8 @@ def reduce_runs(
     -------
     :
         The sub-pulses of :func:`.sample_runs.subpulse_timing`, the neutrons of
-        :func:`.normalized_events`, and the patterns of :func:`.powder_patterns`, from every
-        pixel.
+        :func:`.normalized_events`, the patterns of :func:`.powder_patterns`, from every
+        pixel, and the detector views of :func:`.detector_views`.
     """
     workspace = Workspace.find()
     to_sample = Path(to_sample or workspace.run_folder(TO_SAMPLE))
@@ -157,7 +167,11 @@ def reduce_runs(
     pixels, angles = runs.pixel_solid_angle(binned), two_theta(binned)
     binned.bins.coords["two_theta"] = sc.bins_like(binned, angles)  # each neutron, its pixel's
     events = normalized_events(binned, pulses, pixels)
-    return pulses, events, powder_patterns(events, pulses, angles, pixels)
+    patterns = powder_patterns(events, pulses, angles, pixels)
+    views = detector_views(
+        events, pulses, binned.coords["position"], binned.coords["sample_position"], pixels
+    )
+    return pulses, events, patterns, views
 
 
 def analyze(
@@ -165,12 +179,13 @@ def analyze(
     to_sample: str | Path | None = None,
     from_sample: str | Path | None = None,
 ) -> list[Path]:
-    """Reduce the two parts of a McStas run, print the sub-pulses and save their Q plane and I(|Q|).
+    """Reduce the two parts of a McStas run, print the sub-pulses and save their figures.
 
     It runs no McStas, so it can run again on the same runs; :func:`main` runs them first. The
     figures are ``trex_powder_diffraction.png``, the (Qx, Qz) plane of :func:`.plot_plane`, and
     ``trex_powder_diffraction_q.png``, the intensity in |Q| of every sub-pulse of
-    :func:`.plot_powder_patterns`.
+    :func:`.plot_powder_patterns`, and ``trex_powder_diffraction_detector.png``, the detector
+    view of every sub-pulse of :func:`.plot_detector_views`.
 
     Parameters
     ----------
@@ -183,9 +198,9 @@ def analyze(
     Returns
     -------
     :
-        The paths of the (Qx, Qz) plane and of the patterns in |Q|.
+        The paths of the (Qx, Qz) plane, of the patterns in |Q| and of the detector views.
     """
-    pulses, events, patterns = reduce_runs(to_sample, from_sample)
+    pulses, events, patterns, views = reduce_runs(to_sample, from_sample)
     print_subpulse_table(pulses, events)
 
     conditions = define_instrument().running_conditions()
@@ -201,9 +216,16 @@ def analyze(
         f"T-Rex, Al2O3 powder: I(|Q|) of each of {n} sub-pulses\n{conditions}",
         monitor="pre-sample monitor",
     )
+    detector = plot_detector_views(
+        views,
+        f"T-Rex, Al2O3 powder: detector view of each of {n} sub-pulses\n{conditions}",
+        monitor="pre-sample monitor",
+        headroom=VIEW_HEADROOM,
+    )
     return [
         cli.save_figure(plane, folder / f"{NAME}.png"),
         cli.save_figure(pattern, folder / f"{NAME}_q.png"),
+        cli.save_figure(detector, folder / f"{NAME}_detector.png"),
     ]
 
 
