@@ -6,6 +6,8 @@ tof run, on the bins of a McStas monitor.
 
 ::: mcdgs.tof.builder
 
+::: mcdgs.tof.sample
+
 ::: mcdgs.tof.acceptance
 
 ::: mcdgs.tof.time_distance

@@ -13,11 +13,21 @@ takes only the components tof understands, by type:
   further on.
 - the ``Monitor_nD`` that list pixels, the detector, whether one banana or several panels,
   become one :class:`tof.Detector`, ``DETECTOR``, where the first of them is in beam order. It is
-  as far beyond the sample as they are (:func:`sample_to_detector`), which they must agree on.
+  as far beyond the sample as they are (:func:`sample_to_detector`), which they must agree on;
+- each sample that changes the energy of the neutrons, an ``Isotropic_Sqw``, a
+  ``Phonon_simple`` or an inelastic or quasielastic ``Incoherent``, becomes a
+  :class:`tof.InelasticSample` named after it (:func:`.inelastic_sample`): every neutron that
+  reaches it loses or gains an energy drawn uniformly over the band of transfers of the McStas
+  sample, from its lowest to its highest ``|w|``.
 
 An instrument without a ``Monitor_nD`` gives a model without detectors.
 
-Every other component, such as the optics, the markers or a sample, is left out.
+Every other component, such as the optics, the markers or an elastic sample, is left out.
+
+tof runs its components in the order of their distances, not of the McStas instrument. A monitor
+that comes before an inelastic sample in beam order but lies beyond it, such as the beamstop
+monitor of T-Rex, records in McStas the beam as if there were no sample, in tof the beam after
+it.
 
 :func:`get_choppers` gives the scippneutron :class:`DiskChopper` of each disk chopper by name,
 which scippneutron can draw and :mod:`.acceptance` follows the pulse through.
@@ -43,6 +53,7 @@ from scippneutron.chopper.disk_chopper import DiskChopper
 
 from mcdgs.core import Instrument, evaluate
 from mcdgs.core.components import Component, ESS_butterfly, Monitor_nD, NXdisk_chopper
+from mcdgs.tof.sample import inelastic_sample
 
 # tof's pulse of the ESS moderator by beam port, ``sector`` and ``beamline``; else ``"ess"``
 TOF_SOURCES = {"W7": "ess-trex", "W3": "ess-cspec"}
@@ -181,22 +192,25 @@ def build_tof(
     neutrons:
         Number of neutrons per pulse.
     seed:
-        Seed of the random numbers of the source. If ``None``, every build differs.
+        Seed of the random numbers of the source and of the inelastic samples. If ``None``,
+        every build differs.
     n_pulses:
         Number of pulses of the source, one source period apart.
 
     Returns
     -------
     :
-        The tof model: the source, then the choppers and the detectors in beam order: one per
-        monitor, named after it, and ``DETECTOR`` for every ``Monitor_nD`` that lists pixels.
+        The tof model: the source, then the choppers, the inelastic samples and the detectors
+        in beam order: one detector per monitor, named after it, and ``DETECTOR`` for every
+        ``Monitor_nD`` that lists pixels.
 
     Raises
     ------
     ValueError
         If the instrument has no ``ESS_butterfly`` or ``Polygon_ESS_butterfly``, or more than
-        one; if a chopper is parked; or if the components of the detector are not all as far
-        from the sample, or not relative to a component after the source.
+        one; if a chopper is parked; if the components of the detector are not all as far
+        from the sample, or not relative to a component after the source; or if a file of an
+        ``Isotropic_Sqw`` is not an S(q, w) or a powder file.
     """
     source, after_source = beamline(instrument)
     distances = {name: distance for name, _, distance in after_source}
@@ -239,8 +253,10 @@ def build_tof(
             case Monitor_nD():  # a curved one is centered on its position: its radius further on
                 reached = distance + (component.curved_radius or 0)
                 model.add(tof.Detector(distance=sc.scalar(reached, unit="m"), name=name))  # type: ignore
-            case _:
-                pass  # not something tof understands
+            case _:  # a sample that changes the energy, else not something tof understands
+                sample = inelastic_sample(name, component, distance, seed)
+                if sample is not None:
+                    model.add(sample)
     return model
 
 

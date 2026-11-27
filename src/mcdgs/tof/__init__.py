@@ -1,6 +1,7 @@
 """The chopper cascade of an instrument, without its optics.
 
-:mod:`.builder` builds it as a tof model and gives its disks as scippneutron disk choppers;
+:mod:`.builder` builds it as a tof model and gives its disks as scippneutron disk choppers, with
+the tof sample of a McStas sample that changes the energy of the neutrons from :mod:`.sample`;
 :mod:`.acceptance` draws its chopper acceptance diagram, with scippneutron's chopper cascade;
 :mod:`.time_distance` draws its time-distance diagram, from the tof model; and :mod:`.reader`
 counts the neutrons of a tof run on any bins, such as those of a McStas monitor.
@@ -11,6 +12,7 @@ The names below are imported from here, ``from mcdgs.tof import build_tof``.
 from .acceptance import acceptance_diagram, chopper_cascade
 from .builder import beamline, build_tof, disk_chopper, get_choppers
 from .reader import read_tof_maps
+from .sample import inelastic_sample
 from .time_distance import time_distance_diagram
 
 __all__ = [
@@ -20,6 +22,7 @@ __all__ = [
     "chopper_cascade",
     "disk_chopper",
     "get_choppers",
+    "inelastic_sample",
     "read_tof_maps",
     "time_distance_diagram",
 ]
