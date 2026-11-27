@@ -24,7 +24,9 @@ The reduction is that of the vanadium
 their pixel and by its flux, and :func:`.q_e_maps`, S(Q, E) normalized by the coverage of each
 bin. :func:`.plot_magnon_maps` draws the 15 maps in one figure,
 over their whole arrival windows, energy gain and energy loss, with the edges of the band of the
-model, :func:`.magnon_band`, over them.
+model, :func:`.magnon_band`, over them. :func:`.plot_time_distance` draws the time-distance
+diagram of tof from ``TIME_DISTANCE_MONITOR``, ``pre_sample_monitor``, to the detector, where the
+powder spreads the arrival times of each sub-pulse over the energy gain and the energy loss.
 
 :func:`main` is :func:`simulate`, which runs McStas, then :func:`analyze`, which reduces and
 draws. Run it to do both::
@@ -44,7 +46,7 @@ import scipp as sc
 from mcdgs.core.components import Isotropic_Sqw
 from mcdgs.diagnostics import cli
 from mcdgs.diagnostics import elastic_resolution as resolution
-from mcdgs.diagnostics.powder_magnon import plot_magnon_maps
+from mcdgs.diagnostics.powder_magnon import plot_magnon_maps, plot_time_distance
 from mcdgs.diagnostics.trex import elastic_resolution_incoherent_short as vanadium
 from mcdgs.diagnostics.trex import sample_runs as runs
 from mcdgs.diagnostics.trex.solid_angles import detector_window
@@ -63,6 +65,7 @@ SAMPLE_SPLIT = 4  # each neutron of the beam goes through the powder this many t
 NCOUNT = 5e9  # McStas rays of the first part, from the masked source
 ENERGY_STEP = 0.25  # meV, the bin width in E of the maps
 Q_STEP = 0.1  # 1/Å, the bin width in |Q| of the maps
+TIME_DISTANCE_MONITOR = "pre_sample_monitor"  # where the time-distance diagram starts
 
 
 def sqw_path(workspace: Workspace | None = None) -> Path:
@@ -238,8 +241,9 @@ def analyze(out: Path | None = None, modes: tuple[Mode, ...] = MODES) -> list[Pa
     """Reduce the runs of each mode and draw the S(Q, E) of all its sub-pulses.
 
     It runs no McStas, so it can run again on the same runs; :func:`main` runs them first. For
-    each mode, ``m`` its name in lower case, the file is ``trex_magnon_powder_m_sqe.png``, from
-    :func:`.plot_magnon_maps`.
+    each mode, ``m`` its name in lower case, the files are ``trex_magnon_powder_m_sqe.png``, from
+    :func:`.plot_magnon_maps`, and ``trex_magnon_powder_m_time_distance.png``, from
+    :func:`.plot_time_distance`, which reads the S(|Q|, E) file at :func:`sqw_path`.
 
     Parameters
     ----------
@@ -267,6 +271,13 @@ def analyze(out: Path | None = None, modes: tuple[Mode, ...] = MODES) -> list[Pa
             gap=MAGNON_GAP,
         )
         files.append(cli.save_figure(fig, folder / f"{NAME}_{mode.lower()}_sqe.png"))
+        plt.close(fig)
+        fig = plot_time_distance(
+            define_instrument(mode),
+            TIME_DISTANCE_MONITOR,
+            "T-Rex, a powder magnon: from pre_sample_monitor to the detector",
+        )
+        files.append(cli.save_figure(fig, folder / f"{NAME}_{mode.lower()}_time_distance.png"))
         plt.close(fig)
     return files
 

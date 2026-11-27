@@ -9,6 +9,11 @@ module does the rest:
   windows, energy gain and energy loss, with the edges of the band of the model,
   :func:`.magnon_band`, over them: how far the intensity spreads past them is the resolution of
   each sub-pulse, and whatever lies elsewhere comes from the instrument or the reduction.
+- :func:`plot_time_distance` draws the time-distance diagram of tof, zoomed in on the flight from
+  a monitor before the sample to the detector: there the tof sample of the powder
+  (:mod:`.tof.sample`) gives each neutron an energy transfer over both sides of the band of its
+  S(|Q|, E), so the rays fan out from the sample, and show which sub-pulses reach the detector at
+  the same time.
 """
 
 import numpy as np
@@ -16,10 +21,22 @@ import scipp as sc
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
 
+from mcdgs.core import Instrument
 from mcdgs.diagnostics.elastic_resolution import MAP_PERCENTILE, plot_q_e_maps
 from mcdgs.samples.inelastic.powder import MAGNON_A, magnon_band
+from mcdgs.tof import time_distance_diagram
+from mcdgs.tof.builder import DETECTOR
 
 EDGE_COLOR = "white"  # of the edges of the band of the model, over the maps
+# the time-distance diagram: tof neutrons, of one pulse, whose sub-pulses overlap each other
+TIME_DISTANCE_NEUTRONS = 1_000_000
+TIME_DISTANCE_PULSES = 1
+# the end of its time axis, as a percentile of the arrivals at the detector: the few neutrons the
+# powder leaves with almost no energy arrive far later than the rest, and run past it
+TIME_DISTANCE_END_PERCENTILE = 99.0
+# Å above the longest incident wavelength at the top of its color scale, so that the rays the
+# powder slows down keep colors of their own after the sample
+TIME_DISTANCE_COLOR_HEADROOM = 3.0
 
 
 def plot_magnon_maps(
@@ -76,3 +93,53 @@ def plot_magnon_maps(
             labelcolor=EDGE_COLOR,
         )
     return fig
+
+
+def plot_time_distance(
+    instrument: Instrument,
+    monitor: str,
+    title: str,
+    neutrons: int = TIME_DISTANCE_NEUTRONS,
+    seed: int = 1,
+) -> Figure:
+    """Draw the time-distance diagram of tof, from a monitor before the sample to the detector.
+
+    It is :func:`.time_distance_diagram` of ``TIME_DISTANCE_PULSES`` pulse, zoomed in on the
+    flight from ``monitor`` to the detector, ``DETECTOR``, of the neutrons that reach it, without
+    the neutrons the choppers stop. The time axis ends at the ``TIME_DISTANCE_END_PERCENTILE``
+    percentile of their arrivals. The color scale spans the wavelengths at ``monitor``, the
+    incident ones, and ``TIME_DISTANCE_COLOR_HEADROOM`` more: each stretch of a ray takes the
+    wavelength where it starts, so before the sample each sub-pulse has its own color, and after
+    it the energy gain and the energy loss move the rays along the scale, past its ends for the
+    larger transfers.
+
+    Parameters
+    ----------
+    instrument:
+        The instrument, with its powder, whose S(|Q|, E) file must exist.
+    monitor:
+        The name of the monitor before the sample that the diagram starts from.
+    title:
+        A line above the running conditions.
+    neutrons:
+        Number of tof neutrons.
+    seed:
+        Seed of the random numbers.
+
+    Returns
+    -------
+    :
+        The figure.
+    """
+    return time_distance_diagram(
+        instrument,
+        neutrons,
+        seed=seed,
+        n_pulses=TIME_DISTANCE_PULSES,
+        blocked_rays=0,
+        between=(monitor, DETECTOR),
+        title=title,
+        color_by=monitor,
+        color_headroom=TIME_DISTANCE_COLOR_HEADROOM,
+        time_percentile=TIME_DISTANCE_END_PERCENTILE,
+    )

@@ -21,7 +21,9 @@ by the solid angle of their pixel and by its flux, and :func:`.q_e_maps`, S(Q, E
 the coverage of each bin. :func:`.plot_magnon_maps` draws the 14 maps in one figure, over
 their whole arrival windows, energy gain and energy loss, on a color scale up to the
 ``MAP_PERCENTILE`` percentile of the bins, with the edges of the band of the model,
-:func:`.magnon_band`, over them.
+:func:`.magnon_band`, over them. :func:`.plot_time_distance` draws the time-distance diagram of
+tof from ``TIME_DISTANCE_MONITOR``, ``mc_monitor``, to the detector, where the powder spreads the
+arrival times of each sub-pulse over the energy gain and the energy loss.
 
 :func:`main` is :func:`simulate`, which runs McStas, then :func:`analyze`, which reduces and
 draws. Run it to do both::
@@ -43,7 +45,7 @@ from mcdgs.diagnostics import cli
 from mcdgs.diagnostics import elastic_resolution as resolution
 from mcdgs.diagnostics.cspec import elastic_resolution_incoherent_short as vanadium
 from mcdgs.diagnostics.cspec import sample_runs as runs
-from mcdgs.diagnostics.powder_magnon import plot_magnon_maps
+from mcdgs.diagnostics.powder_magnon import plot_magnon_maps, plot_time_distance
 from mcdgs.instruments.cspec.model import CSPEC, DEFAULT_PARAMS, Params
 from mcdgs.mcstas import Simulation, Workspace
 from mcdgs.reduction.inelastic import normalized_events
@@ -67,6 +69,9 @@ Q_STEP = 0.05  # 1/Å, the bin width in |Q| of the maps
 # the top of the color scale, as a percentile of the bins with neutrons: lower than for vanadium,
 # so that the band shows in the upper colors, not only the hottest bins of the last sub-pulse
 MAP_PERCENTILE = 98.0
+# where the time-distance diagram starts: the monitor after the monochromatic choppers, the last
+# before the sample, as CSPEC has no pre_sample_monitor
+TIME_DISTANCE_MONITOR = "mc_monitor"
 
 
 def sqw_path(workspace: Workspace | None = None) -> Path:
@@ -255,16 +260,18 @@ def analyze(
     out: Path | None = None,
     to_sample: str | Path | None = None,
     from_sample: str | Path | None = None,
-) -> Path:
-    """Reduce the runs and draw the S(Q, E) of all the sub-pulses.
+) -> list[Path]:
+    """Reduce the runs and draw the S(Q, E) of all the sub-pulses, and the time-distance diagram.
 
     It runs no McStas, so it can run again on the same runs; :func:`main` runs them first. The
-    figure is ``cspec_magnon_powder_sqe.png``, from :func:`.plot_magnon_maps`.
+    figures are ``cspec_magnon_powder_sqe.png``, from :func:`.plot_magnon_maps`, and
+    ``cspec_magnon_powder_time_distance.png``, from :func:`.plot_time_distance`, which reads the
+    S(|Q|, E) file at :func:`sqw_path`.
 
     Parameters
     ----------
     out:
-        Folder of the figure. If ``None``, ``cspec_magnon_powder`` in the results folder of
+        Folder of the figures. If ``None``, ``cspec_magnon_powder`` in the results folder of
         :meth:`.Workspace.find`.
     to_sample, from_sample:
         The folders of the two parts, as :func:`reduce_runs`.
@@ -272,7 +279,7 @@ def analyze(
     Returns
     -------
     :
-        The path of the figure.
+        The paths of the figures.
     """
     pulses, maps = reduce_runs(to_sample, from_sample)
     fig = plot_magnon_maps(
@@ -283,25 +290,33 @@ def analyze(
         gap=MAGNON_GAP,
         percentile=MAP_PERCENTILE,
     )
-    path = cli.save_figure(fig, cli.output_folder(out, NAME) / f"{NAME}_sqe.png")
+    folder = cli.output_folder(out, NAME)
+    files = [cli.save_figure(fig, folder / f"{NAME}_sqe.png")]
     plt.close(fig)
-    return path
+    fig = plot_time_distance(
+        define_instrument(),
+        TIME_DISTANCE_MONITOR,
+        "CSPEC, a powder magnon: from mc_monitor to the detector",
+    )
+    files.append(cli.save_figure(fig, folder / f"{NAME}_time_distance.png"))
+    plt.close(fig)
+    return files
 
 
-def main(out: Path | None = None, ncount: float = NCOUNT, seed: int = 1) -> Path:
+def main(out: Path | None = None, ncount: float = NCOUNT, seed: int = 1) -> list[Path]:
     """Run McStas with :func:`simulate`, then reduce and draw with :func:`analyze`.
 
     Parameters
     ----------
     out:
-        Folder of the figure, as :func:`analyze`.
+        Folder of the figures, as :func:`analyze`.
     ncount, seed:
         As :func:`simulate`.
 
     Returns
     -------
     :
-        The path of the figure.
+        The paths of the figures.
     """
     to_sample, from_sample = simulate(ncount=ncount, seed=seed)
     return analyze(out, to_sample, from_sample)

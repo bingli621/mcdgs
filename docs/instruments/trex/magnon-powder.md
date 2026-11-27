@@ -147,12 +147,32 @@ what the sample does not have:
   loss band, and the more so the lower the Ei. The width of the gain band has not been measured
   yet.
 
-## Making the figure
+## Time-distance diagram
+
+`plot_time_distance` draws the time-distance diagram of tof for one pulse, zoomed in on the
+flight from `pre_sample_monitor`, 0.3 m before the sample, to the detector, for the neutrons that reach it. In tof the
+powder is an inelastic sample: every neutron that reaches it loses an energy drawn uniformly over
+both sides of the band of its S(|Q|, E), $-w_\mathrm{max}$ to $-w_\mathrm{min}$ and
+$w_\mathrm{min}$ to $w_\mathrm{max}$ (see
+[Simulate the choppers with tof](../../how-to/simulate-the-choppers-with-tof.md)). So the diagram
+shows every arrival time that the sample can give, not the intensities. tof colors each stretch
+of a ray by its wavelength where it starts, and the color scale spans the incident wavelengths,
+at the monitor, and 3 Å more. So before the sample each sub-pulse has its own color, and after it the rays
+take the color of their final wavelength, past the ends of the scale for the larger transfers.
+The few neutrons left with almost no energy arrive far later than the rest, so the time axis
+stops at the 99th percentile of the arrivals, and those few rays run off the right edge.
+
+![Time-distance diagram of T-Rex with the powder magnon in tof, one pulse, from pre_sample_monitor to the detector: the sub-pulses rise steeply to the sample, each in its own color, then fan out to the detector, colored by their final wavelength](figures/magnon-powder/trex_magnon_powder_ff_time_distance.png)
+
+Each sub-pulse rises steeply to the sample, then fans out: steeper for the neutrons that gain
+energy, shallower for those that lose it. The shallowest rays, the neutrons that lose the most energy, reach the detector among the rays of later sub-pulses. That is the frame overlap of the S(Q, E) maps, from sub-pulse 8 on.
+
+## Making the figures
 
 ```console
 pixi run python -c "from mcdgs.diagnostics.trex.powder_magnon import main; main()"
 ```
 
-This runs McStas, then `analyze`, which writes `trex_magnon_powder_ff_sqe.png` into the results
-folder. `pixi run python -m mcdgs.diagnostics.trex.powder_magnon` only reduces the runs again,
+This runs McStas, then `analyze`, which writes `trex_magnon_powder_ff_sqe.png` and
+`trex_magnon_powder_ff_time_distance.png` into the results folder. `pixi run python -m mcdgs.diagnostics.trex.powder_magnon` only reduces the runs again,
 without McStas.
