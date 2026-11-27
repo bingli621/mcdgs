@@ -115,8 +115,9 @@ def powder_patterns(
             dims=["subpulse", "Q"],
             values=values,
             variances=variances,
-            unit=scattered.unit / sc.Unit("sr"),
-        ),
+            unit=scattered.unit,
+        )
+        / sc.scalar(1.0, unit="sr"),
         coords={"Q": edges},
     )
     for name in ("incident_wavelength", "incident_energy"):
@@ -320,8 +321,9 @@ def detector_views(
             dims=["subpulse", "height", "theta"],
             values=values,
             variances=variances,
-            unit=scattered.unit / sc.Unit("sr"),
-        ),
+            unit=scattered.unit,
+        )
+        / sc.scalar(1.0, unit="sr"),
         coords=edges,
     )
     for name in ("incident_wavelength", "incident_energy"):
