@@ -40,6 +40,7 @@ nav = [
     { "Analytic resolution" = "instruments/trex/elastic-resolution-model.md" },
     { "Diffraction (single-crystal)" = "instruments/trex/diffraction.md" },
     { "Diffraction scan" = "instruments/trex/diffraction-scan.md" },
+    { "Diffraction (powder)" = "instruments/trex/powder-diffraction.md" },
     { "Powder magnon" = "instruments/trex/magnon-powder.md" },
   ] },
   { "CSPEC" = [
@@ -58,6 +59,7 @@ nav = [
     { "Elastic resolution (long wavelength)" = "instruments/cspec/elastic-resolution-incoherent-long.md" },
     { "Diffraction (single-crystal)" = "instruments/cspec/diffraction.md" },
     { "Diffraction scan" = "instruments/cspec/diffraction-scan.md" },
+    { "Diffraction (powder)" = "instruments/cspec/powder-diffraction.md" },
     { "Powder magnon" = "instruments/cspec/magnon-powder.md" },
   ] },
   { "How-to guides" = [

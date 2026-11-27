@@ -16,7 +16,8 @@ documentation. See [Source](../instruments/trex/source.md),
 [Elastic resolution (middle wavelength)](../instruments/trex/elastic-resolution-incoherent-middle.md),
 [Elastic resolution (long wavelength)](../instruments/trex/elastic-resolution-incoherent-long.md),
 [Diffraction (single-crystal)](../instruments/trex/diffraction.md),
-[Diffraction scan](../instruments/trex/diffraction-scan.md) and
+[Diffraction scan](../instruments/trex/diffraction-scan.md),
+[Diffraction (powder)](../instruments/trex/powder-diffraction.md) and
 [Powder magnon](../instruments/trex/magnon-powder.md) for what they show for T-Rex, and
 [Source](../instruments/cspec/source.md),
 [Guide transmission](../instruments/cspec/guides.md),
@@ -29,7 +30,8 @@ documentation. See [Source](../instruments/trex/source.md),
 [Elastic resolution (short wavelength)](../instruments/cspec/elastic-resolution-incoherent-short.md),
 [Elastic resolution (long wavelength)](../instruments/cspec/elastic-resolution-incoherent-long.md),
 [Diffraction (single-crystal)](../instruments/cspec/diffraction.md),
-[Diffraction scan](../instruments/cspec/diffraction-scan.md) and
+[Diffraction scan](../instruments/cspec/diffraction-scan.md),
+[Diffraction (powder)](../instruments/cspec/powder-diffraction.md) and
 [Powder magnon](../instruments/cspec/magnon-powder.md) for CSPEC.
 [Run McStasScript's diagnostics](../how-to/run-mcstasscript-diagnostics.md) has the code of
 `guides_diagnostics`, and [Guide transmission](../instruments/trex/guides.md) its figures.
@@ -59,6 +61,8 @@ documentation. See [Source](../instruments/trex/source.md),
 ::: mcdgs.diagnostics.diffraction
 
 ::: mcdgs.diagnostics.diffraction_scan
+
+::: mcdgs.diagnostics.powder_diffraction
 
 ::: mcdgs.diagnostics.magnon_powder
 
@@ -96,6 +100,8 @@ documentation. See [Source](../instruments/trex/source.md),
 
 ::: mcdgs.diagnostics.trex.diffraction_scan
 
+::: mcdgs.diagnostics.trex.powder_diffraction
+
 ::: mcdgs.diagnostics.trex.magnon_powder
 
 ::: mcdgs.diagnostics.trex.guides_diagnostics
@@ -129,5 +135,7 @@ documentation. See [Source](../instruments/trex/source.md),
 ::: mcdgs.diagnostics.cspec.diffraction
 
 ::: mcdgs.diagnostics.cspec.diffraction_scan
+
+::: mcdgs.diagnostics.cspec.powder_diffraction
 
 ::: mcdgs.diagnostics.cspec.magnon_powder
