@@ -69,7 +69,7 @@ absolute.
 ## Runs and reduction
 
 `simulate` runs FF only, the default `lambda0` = 2 Å and `rrm` = 18, with the masked source, in
-the two parts of [Diffraction](diffraction.md#two-runs-split-at-the-sample): from the source to
+the two parts of [Diffraction (single-crystal)](diffraction.md#two-runs-split-at-the-sample): from the source to
 `sample_pos` with 5e9 rays, then from that beam through the powder to the detector. Each neutron of
 the beam goes through the powder 4 times, which gives 67 million detector events.
 

@@ -1,4 +1,4 @@
-# Diffraction
+# Diffraction (single-crystal)
 
 `TRexWithLa2Ni7`, in
 [`mcdgs.diagnostics.trex.diffraction`](https://github.com/bingli621/mcdgs/blob/main/src/mcdgs/diagnostics/trex/diffraction.py),

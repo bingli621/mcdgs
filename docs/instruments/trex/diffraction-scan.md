@@ -3,7 +3,7 @@
 `TRexWithRotatingLa2Ni7`, in
 [`mcdgs.diagnostics.trex.diffraction_scan`](https://github.com/bingli621/mcdgs/blob/main/src/mcdgs/diagnostics/trex/diffraction_scan.py),
 turns the La2Ni7 crystal about the vertical, one angle at a time, and maps the horizontal plane
-of its reciprocal space. Each angle is reduced as on [Diffraction](diffraction.md); turned
+of its reciprocal space. Each angle is reduced as on [Diffraction (single-crystal)](diffraction.md); turned
 into the frame of the crystal, the angles add up to one map.
 
 ## The setup
@@ -14,10 +14,10 @@ defaults.
 
 | | |
 | - | - |
-| Crystal | La2Ni7, as on [Diffraction](diffraction.md#the-setup) |
+| Crystal | La2Ni7, as on [Diffraction (single-crystal)](diffraction.md#the-setup) |
 | Orientation at omega = 0 | c* along the beam; (2 1 0) in the horizontal plane, to the left of the beam |
 | omega | −30° to 30°, in 31 steps of 2° |
-| `SPLIT` | 10, as for one angle on [Diffraction](diffraction.md#the-setup) |
+| `SPLIT` | 10, as for one angle on [Diffraction (single-crystal)](diffraction.md#the-setup) |
 
 With (2 1 0) in the horizontal plane, 2a* + b* and c* span it, so turning the crystal about the
 vertical keeps that plane of reciprocal space horizontal. Each angle brings other reflections of
@@ -27,7 +27,7 @@ it onto the Ewald spheres of the sub-pulses.
 
 `simulate` runs only the part from `sample_pos` to the detector, with `scan_from_sample` of
 [`Simulation`](../../how-to/run-a-simulation.md), once per angle and in parallel. Each angle
-starts from the beam file of [Diffraction](diffraction.md#two-runs-split-at-the-sample), the
+starts from the beam file of [Diffraction (single-crystal)](diffraction.md#two-runs-split-at-the-sample), the
 6,629,716 neutrons at `sample_pos` from 1e9 rays of the masked source: the beam before the
 sample does not depend on the crystal. The 31 angles take under a minute on 18 cores,
 17 at a time, and about 6.3 GB, in one file with one entry per angle.
@@ -35,7 +35,7 @@ sample does not depend on the crystal. The 31 angles take under a minute on 18 c
 ## The reduction
 
 `reduce_angles` takes the sub-pulses from the run to the sample of
-[Diffraction](diffraction.md#the-reduction), the same for every angle, and reads the angles
+[Diffraction (single-crystal)](diffraction.md#the-reduction), the same for every angle, and reads the angles
 one at a time, with `read_detector`. Each is reduced and normalized as there, per incident neutron
 and per steradian. Then `crystal_frame` turns its Q by the angle of the crystal, with the McStas
 rotation matrix of `ROTATED (0, omega, 0)`: Q is then in the frame of the crystal as it stands at
@@ -50,7 +50,7 @@ that frame go into one (Qx, Qz) map per angle, and the maps of all angles add up
 the last frame is the whole scan. Qx is along (2 1 0) and Qz along (0 0 1). The crystal frame is
 fixed, so the region the detector covers turns about the origin with omega, and each reflection
 appears as that region passes it. The color scale is that of
-[Diffraction](diffraction.md#the-plane), logarithmic, in turbo, four decades deep below the
+[Diffraction (single-crystal)](diffraction.md#the-plane), logarithmic, in turbo, four decades deep below the
 highest bin beyond the direct beam, here of the whole scan for every frame, so the map grows
 brighter as the angles add up.
 
@@ -82,7 +82,7 @@ reaches it.
 
 The GIF and the figure need McStas, so they are not made with the site: `pixi run
 docs-diagnostics` makes them again, with the other files of the T-Rex pages. The scan starts
-from the beam file of [Diffraction](diffraction.md), so run that first. Then:
+from the beam file of [Diffraction (single-crystal)](diffraction.md), so run that first. Then:
 
 ```bash
 pixi run python -m mcdgs.diagnostics.trex.diffraction_scan

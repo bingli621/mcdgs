@@ -15,7 +15,7 @@ documentation. See [Source](../instruments/trex/source.md),
 [Elastic resolution (short wavelength)](../instruments/trex/elastic-resolution-incoherent-short.md),
 [Elastic resolution (middle wavelength)](../instruments/trex/elastic-resolution-incoherent-middle.md),
 [Elastic resolution (long wavelength)](../instruments/trex/elastic-resolution-incoherent-long.md),
-[Diffraction](../instruments/trex/diffraction.md),
+[Diffraction (single-crystal)](../instruments/trex/diffraction.md),
 [Diffraction scan](../instruments/trex/diffraction-scan.md) and
 [Powder magnon](../instruments/trex/magnon-powder.md) for what they show for T-Rex, and
 [Source](../instruments/cspec/source.md),
@@ -28,7 +28,7 @@ documentation. See [Source](../instruments/trex/source.md),
 [Incident energy](../instruments/cspec/incident-energy.md),
 [Elastic resolution (short wavelength)](../instruments/cspec/elastic-resolution-incoherent-short.md),
 [Elastic resolution (long wavelength)](../instruments/cspec/elastic-resolution-incoherent-long.md),
-[Diffraction](../instruments/cspec/diffraction.md),
+[Diffraction (single-crystal)](../instruments/cspec/diffraction.md),
 [Diffraction scan](../instruments/cspec/diffraction-scan.md) and
 [Powder magnon](../instruments/cspec/magnon-powder.md) for CSPEC.
 [Run McStasScript's diagnostics](../how-to/run-mcstasscript-diagnostics.md) has the code of

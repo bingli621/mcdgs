@@ -11,7 +11,7 @@ would come from the instrument or the reduction, not from the sample.
 at `lambda0` = 2 Å, and [Elastic resolution (long wavelength)](elastic-resolution-incoherent-long.md)
 at 3 Å, with the bender in.
 
-The reduction is the one used on [Diffraction](diffraction.md), with the sub-pulses and
+The reduction is the one used on [Diffraction (single-crystal)](diffraction.md), with the sub-pulses and
 incident energies of [Incident energy](incident-energy.md) and the
 [reduction package](../../reference/reduction.md).
 
@@ -50,7 +50,7 @@ as the bottom of the detector lies below it.
 
 ## Two runs, split at the sample
 
-As on [Diffraction](diffraction.md#two-runs-split-at-the-sample), `simulate` runs McStas in
+As on [Diffraction (single-crystal)](diffraction.md#two-runs-split-at-the-sample), `simulate` runs McStas in
 each mode in two parts, with `run_to_sample` and `run_from_sample` of
 [`Simulation`](../../how-to/run-a-simulation.md):
 

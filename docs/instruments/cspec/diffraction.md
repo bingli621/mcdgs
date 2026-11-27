@@ -1,4 +1,4 @@
-# Diffraction
+# Diffraction (single-crystal)
 
 `CSPECWithLa2Ni7`, in
 [`mcdgs.diagnostics.cspec.diffraction`](https://github.com/bingli621/mcdgs/blob/main/src/mcdgs/diagnostics/cspec/diffraction.py),
@@ -7,7 +7,7 @@ panels to its momentum transfer Q. It keeps every neutron in the arrival window 
 sub-pulse, whatever its energy transfer: the inelastic scattering is weak next to the Bragg
 peaks, so the plane is a diffraction pattern. The result is the horizontal plane of Q, where
 each of the 14 sub-pulses draws its own arc. It follows
-[Diffraction of T-Rex](../trex/diffraction.md), with the same crystal in the same orientation,
+[Diffraction (single-crystal) of T-Rex](../trex/diffraction.md), with the same crystal in the same orientation,
 and uses the sub-pulses and incident energies of [Incident energy](incident-energy.md) and the
 [reduction package](../../reference/reduction.md) throughout.
 
