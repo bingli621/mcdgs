@@ -16,6 +16,7 @@ from mcdgs.core.components import (
     Phonon_simple,
     Pol_bender,
     Polygon_ESS_butterfly,
+    PowderN,
     Progress_bar,
 )
 from mcdgs.core.components.masked_source import aperture, chopper_train
@@ -443,6 +444,46 @@ def test_the_isotropic_sqw_sample_defaults_are_those_of_mcstas():
         "p_interact": -1,
         "norm": -1,
     }
+
+
+def test_the_powder_sample_defaults_are_those_of_mcstas():
+    assert PowderN().mcstas_parameters() == {
+        "reflections": None,
+        "geometry": None,
+        "radius": 0,
+        "yheight": 0,
+        "xwidth": 0,
+        "zdepth": 0,
+        "thickness": 0,
+        "pack": 1,
+        "Vc": 0,
+        "sigma_abs": 0,
+        "sigma_inc": 0,
+        "delta_d_d": 0,
+        "p_inc": 0.1,
+        "p_transmit": 0.1,
+        "DW": 0,
+        "nb_atoms": 1,
+        "d_omega": 0,
+        "d_phi": 0,
+        "tth_sign": 0,
+        "p_interact": 0.8,
+        "concentric": 0,
+        "density": 0,
+        "weight": 0,
+        "barns": 1,
+        "Strain": 0,
+        "focus_flip": 0,
+        "target_index": 0,
+    }
+
+
+def test_the_powder_reflections_name_a_cif_file_of_the_samples_by_its_full_path():
+    path = PowderN(reflections="elastic/La2Ni7.cif").mcstas_parameters()["reflections"]
+    assert path.endswith("samples/elastic/La2Ni7.cif") and path.startswith("/")
+    assert PowderN(reflections="Al2O3_sapphire.laz").mcstas_parameters()["reflections"] == (
+        "Al2O3_sapphire.laz"
+    )
 
 
 def test_the_aperture_is_that_of_chopper_lib():

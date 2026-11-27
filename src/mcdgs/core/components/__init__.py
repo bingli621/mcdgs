@@ -19,6 +19,7 @@ from .misc import Arm, Progress_bar
 from .monitors import Monitor_nD
 from .optics import Beamstop, Guide_gravity, Pol_bender, Slit
 from .phonon import Phonon_simple
+from .powder import PowderN
 from .source import ESS_butterfly
 from .sqw import Isotropic_Sqw
 
@@ -36,6 +37,7 @@ __all__ = [
     "Phonon_simple",
     "Pol_bender",
     "Polygon_ESS_butterfly",
+    "PowderN",
     "Progress_bar",
     "Single_crystal",
     "Slit",
