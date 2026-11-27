@@ -101,6 +101,32 @@ scale takes its color.
   [between the sub-pulses](neutrons-on-sample.md#between-the-sub-pulses), so every neutron on
   the panels belongs to the window of its own sub-pulse.
 
+## The vertical planes
+
+![The intensity in (Qy, Qz) of each of the 14 sub-pulses, summed over Qx, on one log scale](figures/diffraction/cspec_diffraction_qy_qz.png)
+
+`plot_vertical_planes` draws each sub-pulse on its own panel, in (Qy, Qz), summed over
+|Qx| < 5 Å⁻¹, as on [T-Rex](../trex/diffraction.md#the-vertical-planes): Qz along the beam,
+across, and Qy up, with one color scale for all the panels. As on T-Rex, its bottom is four
+decades below the highest bin, and its top a tenth of that bin, so that the strong Bragg peaks
+reach the red end. The bottom is two decades lower than on [The plane](#the-plane): summed over
+Qx, the map takes in the reflection above the plane of sub-pulse 11, and that reflection is the
+highest bin.
+
+- **The reach of each sub-pulse.** The panels reach 1.75 m above and below the beam at 3.5 m,
+  26.6° at their middle, so each sub-pulse covers Qy from about $-k_i \sin 26.6°$ to
+  $k_i \sin 26.6°$, symmetric, unlike on T-Rex: ±1.22 Å⁻¹ for sub-pulse 0 and ±0.74 Å⁻¹ for
+  sub-pulse 13. Its reach in Qz shrinks with ki, from 4.9 to 3.0 Å⁻¹.
+- **The Bragg peaks in and out of the plane.** The row (−1 −1 l) of [The plane](#the-plane) is
+  at Qy = −0.22 Å⁻¹, in sub-pulses 0 to 2. The other peaks lie out of the horizontal plane, at
+  Qy ≈ 0.6 and −0.8 Å⁻¹, which the slice |Qy| < 0.5 Å⁻¹ of [The plane](#the-plane) leaves out.
+  The strongest, in sub-pulse 11 at (Qy, Qz) ≈ (0.58, 2.80) Å⁻¹, is the reflection that takes
+  most of what that sub-pulse scatters, as in [The sub-pulses](#the-sub-pulses).
+- **Sub-pulse 13** is brighter than the others, with fewer neutrons. Its flux at `mc_monitor` is
+  about 20 times lower than that of sub-pulse 12, so each of its neutrons carries about 20 times
+  the weight per incident neutron.
+- **No direct beam.** The beamstop leaves none, so nothing marks Q = 0, unlike on T-Rex.
+
 ## The sub-pulses
 
 `analyze` prints each sub-pulse: its Ei, its flux at `mc_monitor` and the fraction of its
@@ -123,14 +149,14 @@ at the sample of CSPEC it is about 45 mm wide and high, against 21 mm by 26 mm o
 
 ## Making the figures
 
-The figure needs McStas, so it is not made with the site. To run McStas and make it, run:
+The figures need McStas, so they are not made with the site. To run McStas and make them, run:
 
 ```bash
 pixi run python -c "from mcdgs.diagnostics.cspec.diffraction import main; main()"
 ```
 
 At its defaults, `main` runs both parts, 1e9 rays from the masked source with seed 1, as for the
-figure here. It prints the sub-pulses and saves the figure to
+figures here. It prints the sub-pulses and saves the figures to
 `mcdgs_workspace/results/cspec_diffraction/`, or to the folder given as `out`. Running the
 module, as `pixi run docs-diagnostics` does, only reduces the runs again, without McStas:
 

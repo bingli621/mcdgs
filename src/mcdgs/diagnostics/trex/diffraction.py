@@ -33,7 +33,8 @@ The reduction is that of :mod:`.diagnostics.trex.sample_runs`, with :mod:`mcdgs.
 :func:`.plot_plane` draws the intensity in (Qx, Qz) of every sub-pulse, summed over a slice of
 Qy near the horizontal plane, ``|Qy| < QY_HALF_WIDTH``, on a log color scale. Each sub-pulse has
 its own incident wavevector ki, so its elastic neutrons lie near its own circle, of radius ki
-through the origin, where the detector covers it.
+through the origin, where the detector covers it. :func:`.plot_vertical_planes` draws the
+intensity in (Qy, Qz) of each sub-pulse on its own panel, summed over ``|Qx| < QX_HALF_WIDTH``.
 
 :func:`main` is :func:`simulate`, which runs McStas, then :func:`analyze`, which reduces and
 draws. Run it to do both::
@@ -51,7 +52,7 @@ from pathlib import Path
 import scipp as sc
 
 from mcdgs.diagnostics import cli
-from mcdgs.diagnostics.diffraction import plot_plane, print_subpulse_table
+from mcdgs.diagnostics.diffraction import plot_plane, plot_vertical_planes, print_subpulse_table
 from mcdgs.diagnostics.trex import sample_runs as runs
 from mcdgs.instruments.trex.model import DEFAULT_PARAMS, Params, TRex
 from mcdgs.mcstas import Simulation, Workspace
@@ -156,16 +157,18 @@ def analyze(
     out: Path | None = None,
     to_sample: str | Path | None = None,
     from_sample: str | Path | None = None,
-) -> Path:
-    """Reduce the two parts of a McStas run, print the sub-pulses and save the (Qx, Qz) plane.
+) -> list[Path]:
+    """Reduce the two parts of a McStas run, print the sub-pulses and save their Q maps.
 
     It runs no McStas, so it can run again on the same runs; :func:`main` runs them first. The
-    figure is ``trex_diffraction.png``, from :func:`.plot_plane`.
+    figures are ``trex_diffraction.png``, the (Qx, Qz) plane of :func:`.plot_plane`, and
+    ``trex_diffraction_qy_qz.png``, the (Qy, Qz) map of each sub-pulse of
+    :func:`.plot_vertical_planes`.
 
     Parameters
     ----------
     out:
-        Folder of the figure. If ``None``, ``trex_diffraction`` in the results folder of
+        Folder of the figures. If ``None``, ``trex_diffraction`` in the results folder of
         :meth:`.Workspace.find`.
     to_sample, from_sample:
         The folders of the two parts, as :func:`reduce_runs`.
@@ -173,34 +176,39 @@ def analyze(
     Returns
     -------
     :
-        The path of the figure.
+        The paths of the (Qx, Qz) plane and of the (Qy, Qz) maps.
     """
     from_sample = Path(from_sample or Workspace.find().run_folder(FROM_SAMPLE))
     pulses, events = reduce_runs(to_sample, from_sample)
     print_subpulse_table(pulses, events)
 
-    fig = plot_plane(
-        events,
-        f"T-Rex, La2Ni7: (Qx, Qz) of {pulses.sizes['subpulse']} sub-pulses\n"
-        f"{define_instrument().running_conditions()}",
+    conditions = define_instrument().running_conditions()
+    n = pulses.sizes["subpulse"]
+    folder = cli.output_folder(out, NAME)
+    plane = plot_plane(events, f"T-Rex, La2Ni7: (Qx, Qz) of {n} sub-pulses\n{conditions}")
+    maps = plot_vertical_planes(
+        events, pulses, f"T-Rex, La2Ni7: (Qy, Qz) of each of {n} sub-pulses\n{conditions}"
     )
-    return cli.save_figure(fig, cli.output_folder(out, NAME) / f"{NAME}.png")
+    return [
+        cli.save_figure(plane, folder / f"{NAME}.png"),
+        cli.save_figure(maps, folder / f"{NAME}_qy_qz.png"),
+    ]
 
 
-def main(out: Path | None = None, ncount: float = 1e9, seed: int = 1) -> Path:
+def main(out: Path | None = None, ncount: float = 1e9, seed: int = 1) -> list[Path]:
     """Run McStas with :func:`simulate`, then reduce and draw it with :func:`analyze`.
 
     Parameters
     ----------
     out:
-        Folder of the figure, as :func:`analyze`.
+        Folder of the figures, as :func:`analyze`.
     ncount, seed:
         As :func:`simulate`.
 
     Returns
     -------
     :
-        The path of the figure.
+        The paths of the figures, as :func:`analyze`.
     """
     to_sample, from_sample = simulate(ncount=ncount, seed=seed)
     return analyze(out, to_sample, from_sample)

@@ -93,6 +93,29 @@ the top.
   [between the sub-pulses](neutrons-on-sample.md#between-the-sub-pulses), so every neutron on
   the detector belongs to the window of its own sub-pulse.
 
+## The vertical planes
+
+![The intensity in (Qy, Qz) of each of the 15 sub-pulses, summed over Qx, on one log scale](figures/diffraction/trex_diffraction_qy_qz.png)
+
+`plot_vertical_planes` draws each sub-pulse on its own panel, in (Qy, Qz): Qz along the beam,
+across, and Qy up. It sums the neutrons with |Qx| < 5 Å⁻¹, which is all of them, since the
+detector reaches Qx from −4.9 to 2.8 Å⁻¹. The panels share their axes and one color scale,
+logarithmic, in turbo, so their intensities compare directly. Its bottom is four decades below
+the highest bin of any sub-pulse beyond the direct beam, as on [The plane](#the-plane), and its
+top a tenth of that bin, so that the strong Bragg peaks reach the red end, not only the one bin.
+The bins above the top take its color.
+
+- **The reach of each sub-pulse.** Q = ki − kf, so a neutron scattered down has Qy up. The
+  detector reaches 25° below the beam and 15° above, so each sub-pulse covers Qy from about
+  $-k_i \sin 15°$ to $k_i \sin 25°$: from −1.2 to 2.0 Å⁻¹ for sub-pulse 0, and from −0.6 to
+  1.0 Å⁻¹ for sub-pulse 14. Its reach in Qz shrinks with ki too, from 8.8 to 4.2 Å⁻¹.
+- **The Bragg peaks in and out of the plane.** The two rows of [The plane](#the-plane) lie at
+  Qy = −0.22 and +0.39 Å⁻¹, as lines of peaks across a panel, such as the row at +0.39 Å⁻¹ in
+  sub-pulse 3. Above and below them, at |Qy| up to about 1.8 Å⁻¹, are the reflections out of
+  the horizontal plane, which the slice |Qy| < 0.5 Å⁻¹ of [The plane](#the-plane) leaves out.
+- **The direct beam** past the beamstop is at Q = 0, at the left of each panel, in the color
+  of the top.
+
 ## The sub-pulses
 
 `analyze` prints each sub-pulse: its Ei, its flux at the pre-sample monitor and the fraction of
@@ -114,14 +137,14 @@ The crystal scatters 0.03 to 0.5 % of each sub-pulse into the detector.
 
 ## Making the figures
 
-The figure needs McStas, so it is not made with the site. To run McStas and make it, run:
+The figures need McStas, so they are not made with the site. To run McStas and make them, run:
 
 ```bash
 pixi run python -c "from mcdgs.diagnostics.trex.diffraction import main; main()"
 ```
 
 At its defaults, `main` runs both parts, 1e9 rays from the masked source with seed 1, as for
-the figure here. It prints the sub-pulses and saves the figure to
+the figures here. It prints the sub-pulses and saves the figures to
 `mcdgs_workspace/results/trex_diffraction/`, or to the folder given as `out`.
 Running the module, as `pixi run docs-diagnostics` does, only reduces the runs again, without
 McStas:
