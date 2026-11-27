@@ -5,7 +5,8 @@ orientation, size and mosaic, and its CIF file (if any) next to it: they scatter
 elastically. :func:`lead` returns a :class:`.Phonon_simple`, which scatters from one phonon
 branch, and :func:`magnon_powder` an :class:`.Isotropic_Sqw`, a powder that scatters from one
 magnon branch, from the S(|Q|, E) file of :func:`write_magnon_sqw`. :func:`vanadium` returns
-an :class:`.Incoherent`, which scatters elastically in every direction. Placement is up to the
+an :class:`.Incoherent`, which scatters elastically in every direction, and :func:`al2o3` a
+:class:`.PowderN`, a powder that scatters elastically on its Debye-Scherrer rings. Placement is up to the
 caller: ``at``, and ``relative`` to a component of the instrument, e.g. the goniometer's
 ``"gonio_phi"``. Keyword arguments set the sample's other parameters or change the defaults, e.g.
 ``la2ni7(name="sample", mosaic=60, relative="gonio_phi")``.
@@ -29,9 +30,9 @@ To add a sample:
    (tests/samples/test_samples.py).
 """
 
-from mcdgs.samples.elastic.powder import vanadium
+from mcdgs.samples.elastic.powder import al2o3, vanadium
 from mcdgs.samples.elastic.single_crystal import aluminum, la2ni7
 from mcdgs.samples.inelastic.powder import magnon_powder, write_magnon_sqw
 from mcdgs.samples.inelastic.single_crystal import lead
 
-__all__ = ["aluminum", "la2ni7", "lead", "magnon_powder", "vanadium", "write_magnon_sqw"]
+__all__ = ["al2o3", "aluminum", "la2ni7", "lead", "magnon_powder", "vanadium", "write_magnon_sqw"]

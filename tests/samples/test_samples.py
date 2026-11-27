@@ -4,9 +4,15 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from mcdgs.core.components import Incoherent, Isotropic_Sqw, Phonon_simple, Single_crystal
+from mcdgs.core.components import (
+    Incoherent,
+    Isotropic_Sqw,
+    Phonon_simple,
+    PowderN,
+    Single_crystal,
+)
 from mcdgs.core.components.crystal import CIF_DIR
-from mcdgs.samples import aluminum, la2ni7, lead, magnon_powder, vanadium, write_magnon_sqw
+from mcdgs.samples import al2o3, aluminum, la2ni7, lead, magnon_powder, vanadium, write_magnon_sqw
 from mcdgs.samples.inelastic.powder import (
     MAGNON_JS,
     magnon_band,
@@ -139,6 +145,29 @@ def test_the_focusing_window_of_vanadium_is_given_by_the_caller():
     sample = vanadium(target_index=2, focus_aw=60, focus_ah=10, order=1, pack=0.6)
     assert (sample.target_index, sample.focus_aw, sample.focus_ah) == (2, 60, 10)
     assert (sample.order, sample.pack) == (1, 0.6)
+
+
+def test_al2o3_is_a_powder_sample_placed_like_any_component():
+    sample = al2o3(name="sample", at=[0, 0, 0.1], rotated=[0, 5, 0], relative="arm")
+    assert type(sample) is PowderN
+    assert sample.name == "sample"
+    assert (sample.at, sample.rotated, sample.relative) == ([0, 0, 0.1], [0, 5, 0], "arm")
+    assert (al2o3().at, al2o3().relative) == ([0, 0, 0], None)
+
+
+def test_al2o3_is_the_vanadium_cylinder_with_the_mcstas_reflections_of_corundum():
+    sample = al2o3()
+    assert (sample.radius, sample.yheight) == (vanadium().radius, vanadium().yheight)
+    assert sample.mcstas_parameters()["reflections"] == "Al2O3_sapphire.laz"  # McStas's own
+    # the cell and the cross-sections are left to the header of the reflections
+    assert (sample.Vc, sample.sigma_abs, sample.sigma_inc, sample.nb_atoms) == (0, 0, 0, 1)
+    assert (sample.delta_d_d, sample.DW) == (0, 0)
+
+
+def test_the_focusing_of_al2o3_is_given_by_the_caller():
+    assert al2o3().d_phi == 0
+    sample = al2o3(d_phi=30, pack=0.6)
+    assert (sample.d_phi, sample.pack) == (30, 0.6)
 
 
 def test_the_magnon_powder_reads_its_file_and_is_placed_like_any_component():
