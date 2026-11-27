@@ -43,7 +43,7 @@ from mcdgs.diagnostics import cli
 from mcdgs.diagnostics import elastic_resolution as resolution
 from mcdgs.diagnostics.cspec import elastic_resolution_incoherent_short as vanadium
 from mcdgs.diagnostics.cspec import sample_runs as runs
-from mcdgs.diagnostics.magnon_powder import plot_magnon_maps
+from mcdgs.diagnostics.powder_magnon import plot_magnon_maps
 from mcdgs.instruments.cspec.model import CSPEC, DEFAULT_PARAMS, Params
 from mcdgs.mcstas import Simulation, Workspace
 from mcdgs.reduction.inelastic import normalized_events

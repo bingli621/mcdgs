@@ -16,7 +16,7 @@ In the order of the beam, which is also the order ``pixi run docs-diagnostics`` 
 12. :mod:`.diffraction`: the horizontal scattering plane of a La2Ni7 crystal.
 13. :mod:`.diffraction_scan`: a diffraction scan of the crystal, turned through its angles, mapping
     a plane of reciprocal space.
-14. :mod:`.magnon_powder`: the S(Q, E) of a powder magnon in every sub-pulse.
+14. :mod:`.powder_magnon`: the S(Q, E) of a powder magnon in every sub-pulse.
 
 :mod:`.sample_runs` reduces the runs split at the sample of the diagnostics with a sample.
 """

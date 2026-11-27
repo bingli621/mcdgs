@@ -64,7 +64,7 @@ documentation. See [Source](../instruments/trex/source.md),
 
 ::: mcdgs.diagnostics.powder_diffraction
 
-::: mcdgs.diagnostics.magnon_powder
+::: mcdgs.diagnostics.powder_magnon
 
 ::: mcdgs.diagnostics.trex.overview
 

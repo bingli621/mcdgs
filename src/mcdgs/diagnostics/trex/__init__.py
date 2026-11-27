@@ -17,7 +17,7 @@ In the order of the beam, which is also the order ``pixi run docs-diagnostics`` 
 12. :mod:`.diffraction`: the diffraction of a La2Ni7 crystal, in the horizontal plane. It writes the
     beam file that the next one reads.
 13. :mod:`.diffraction_scan`: a diffraction scan of that crystal, turned through its angles.
-14. :mod:`.magnon_powder`: the S(Q, E) of a powder magnon in each sub-pulse.
+14. :mod:`.powder_magnon`: the S(Q, E) of a powder magnon in each sub-pulse.
 
 :mod:`.elastic_resolution_incoherent_middle` is the same at 2 Å, and
 :mod:`.elastic_resolution_incoherent_long` at 3 Å, with the bender in.

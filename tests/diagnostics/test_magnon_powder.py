@@ -1,7 +1,7 @@
 import numpy as np
 import scipp as sc
 
-from mcdgs.diagnostics import magnon_powder as magnon
+from mcdgs.diagnostics import powder_magnon as magnon
 
 
 def test_the_figure_has_a_panel_per_sub_pulse_with_the_band_over_it():

@@ -11,7 +11,7 @@ follows [Powder magnon of T-Rex](../trex/magnon-powder.md), with a magnon scaled
 energies of CSPEC.
 
 The reduction and the figure are those of T-Rex. The parts both instruments share are in
-[`mcdgs.diagnostics.magnon_powder`](../../reference/diagnostics.md).
+[`mcdgs.diagnostics.powder_magnon`](../../reference/diagnostics.md).
 
 ## The sample
 

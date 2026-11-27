@@ -44,7 +44,7 @@ import scipp as sc
 from mcdgs.core.components import Isotropic_Sqw
 from mcdgs.diagnostics import cli
 from mcdgs.diagnostics import elastic_resolution as resolution
-from mcdgs.diagnostics.magnon_powder import plot_magnon_maps
+from mcdgs.diagnostics.powder_magnon import plot_magnon_maps
 from mcdgs.diagnostics.trex import elastic_resolution_incoherent_short as vanadium
 from mcdgs.diagnostics.trex import sample_runs as runs
 from mcdgs.diagnostics.trex.solid_angles import detector_window
