@@ -67,7 +67,7 @@ def plot_magnon_maps(
         for edge in (low, high, -low, -high):  # on the loss side, and mirrored on the gain side
             ax.plot(q, edge, color=EDGE_COLOR, lw=0.8, ls="--")
     if panels:
-        panels[0].legend(
+        panels[-1].legend(  # the lowest Ei, whose map leaves the upper right white
             [Line2D([], [], color=EDGE_COLOR, lw=0.8, ls="--")],
             ["Edges of the band, without resolution"],
             loc="upper right",

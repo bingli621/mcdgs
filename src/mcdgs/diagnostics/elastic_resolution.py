@@ -46,7 +46,7 @@ FIT_FRACTION = 0.2
 SHIFT = 0.4  # each sub-pulse is lifted above the one below by this much of the highest bin
 FONT_SIZE = 14  # pt, of every text of the figure
 MAP_Q_STEP = 0.05  # 1/Å, the bin width in |Q| of the S(Q,E) maps; in E, ENERGY_STEP
-MAP_COLUMNS = 3  # the maps of the sub-pulses, in rows of this many
+MAP_COLUMNS = 5  # the maps of the sub-pulses, in rows of this many
 # the top of the color scale of the maps, as a percentile of the bins with neutrons: a bin on the
 # edge of the coverage, with little of it, can stand far above the rest
 MAP_PERCENTILE = 99.9
